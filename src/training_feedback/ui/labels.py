@@ -1,0 +1,162 @@
+"""界面文案：稳定内部枚举/状态码到中文标签的映射，以及通用对话框工具。"""
+
+from PySide6.QtWidgets import QComboBox, QDialogButtonBox, QMessageBox
+
+from ..domain.enums import AbortReason, DoseUnit, ExerciseResult, FeedbackValue, SessionStatus
+from ..domain.plans import PlanPhase
+
+RESULT_LABELS = {
+    ExerciseResult.EXCEEDED: "超额完成",
+    ExerciseResult.COMPLETED: "按计划完成",
+    ExerciseResult.PARTIAL: "部分完成",
+    ExerciseResult.NOT_COMPLETED: "未完成",
+}
+
+SESSION_STATUS_LABELS = {
+    SessionStatus.OPEN: "进行中",
+    SessionStatus.PAUSED: "已暂停",
+    SessionStatus.COMPLETED: "已完成",
+    SessionStatus.PARTIAL: "部分完成",
+    SessionStatus.ABORTED: "已中止",
+}
+
+ABORT_REASON_LABELS = {
+    AbortReason.DISCOMFORT: "身体不适",
+    AbortReason.PAIN_OR_INJURY: "疼痛或受伤",
+    AbortReason.URGENT_INTERRUPTION: "紧急中断",
+    AbortReason.INSUFFICIENT_TIME: "时间不足",
+    AbortReason.OTHER: "其他",
+}
+
+DOSE_UNIT_LABELS = {
+    DoseUnit.REPS: "次",
+    DoseUnit.SECONDS: "秒",
+    DoseUnit.MINUTES: "分钟",
+    DoseUnit.BREATHS: "呼吸次数",
+    DoseUnit.FREE: "自定义",
+}
+
+PLAN_PHASE_LABELS = {
+    PlanPhase.PREPARATION: "准备",
+    PlanPhase.MAIN: "主要训练",
+    PlanPhase.COOLDOWN: "放松",
+}
+
+GUIDANCE_STATUS_LABELS = {
+    "draft": "草稿",
+    "pending_review": "待审核",
+    "approved": "已批准",
+    "active": "已启用",
+    "rejected": "已拒绝",
+    "missing": "缺失",
+}
+
+PLAN_STATUS_LABELS = {
+    "draft": "草稿",
+    "active": "当前版本",
+    "superseded": "已被替代",
+}
+
+CATEGORY_LABELS = {
+    "main": "主要训练",
+    "supporting": "辅助训练",
+    "general": "常规",
+}
+
+FEEDBACK_VALUE_LABELS = {
+    FeedbackValue.SIGNIFICANT_SORENESS: "明显酸痛，已影响活动",
+    FeedbackValue.SOME_SORENESS: "有些酸痛",
+    FeedbackValue.NO_OBVIOUS_SENSATION: "没有明显感觉",
+    FeedbackValue.DISCOMFORT_OR_INJURY: "不适或受伤",
+}
+
+
+def label(mapping: dict, value) -> str:
+    return mapping.get(value, mapping.get(str(value), str(value)))
+
+
+def make_unit_combo(selected: DoseUnit | str | None = None) -> QComboBox:
+    """构造剂量单位下拉框；selected 为要预选的单位（枚举或其取值）。"""
+    combo = QComboBox()
+    for unit in DoseUnit:
+        combo.addItem(label(DOSE_UNIT_LABELS, unit), unit.value)
+    if selected is not None:
+        combo.setCurrentIndex(combo.findData(DoseUnit(selected).value))
+    return combo
+
+
+def localize_dialog_buttons(buttons: QDialogButtonBox) -> None:
+    texts = {
+        QDialogButtonBox.StandardButton.Ok: "确定",
+        QDialogButtonBox.StandardButton.Cancel: "取消",
+        QDialogButtonBox.StandardButton.Save: "保存",
+        QDialogButtonBox.StandardButton.Close: "关闭",
+        QDialogButtonBox.StandardButton.Open: "浏览",
+        QDialogButtonBox.StandardButton.Yes: "是",
+        QDialogButtonBox.StandardButton.No: "否",
+    }
+    for button_type, text in texts.items():
+        button = buttons.button(button_type)
+        if button is not None:
+            button.setText(text)
+
+
+ERROR_TRANSLATIONS = {
+    "An open or paused session already exists.": "已经存在进行中或已暂停的训练。",
+    "An active plan revision is required to start training.": "开始训练前必须先启用计划版本。",
+    "A plan day must be selected before starting training.": "开始训练前必须选择训练日。",
+    "The selected plan day was not found.": "没有找到所选训练日。",
+    "The session changed before it could be resumed.": "训练状态已发生变化，请重新打开训练。",
+    "The session changed before it could be updated.": "训练状态已发生变化，请刷新后重试。",
+    "Guidance revision cannot be changed after activation.": "动作指导启用后不能原地修改。",
+    "Guidance revision must be pending review before approval.": "动作指导必须先提交审核才能批准。",
+    "Guidance revision is already approved.": "该动作指导已经批准过了。",
+    "No open or paused session was found.": "没有找到进行中或已暂停的训练。",
+    "Only an open or paused session can record results.": "只有进行中或已暂停的训练才能记录结果。",
+    "A recorded action result cannot be changed.": "已记录的动作结果不能在普通训练流程中修改。",
+    "Only an open or paused session can finish.": "只有进行中或已暂停的训练才能完成。",
+    "Every exercise must have a result before finishing.": "完成训练前必须为每个动作记录结果。",
+    "An abort reason is required.": "中止训练必须选择原因。",
+    "Actual dose is required for exceeded or partial results.": (
+        "超额或部分完成时必须填写实际剂量。"
+    ),
+    "This session is not eligible for next-day feedback.": "这次训练目前不符合填写次日反馈的条件。",
+    "Next-day feedback has already been submitted.": "这次训练的次日反馈已经提交。",
+    "Feedback must be submitted before its note is corrected.": "提交反馈后才能修正备注。",
+    "Only supported note fields can be corrected.": "只能修正允许的备注字段。",
+    "Session was not found.": "没有找到这次训练。",
+    "Session action was not found.": "没有找到这项训练动作。",
+    "Guidance JSON must be an object.": "动作指导 JSON 必须是对象。",
+    "Reviewer type and source are required.": "审核人类型和来源不能为空。",
+    "Explicit user approval is required.": "必须明确批准。",
+    "Review time is required.": "审核时间不能为空。",
+    "Database is not open.": "数据库尚未打开。",
+    "Training session was not found.": "没有找到指定的训练会话。",
+    "Unsupported external plan schema.": "不支持此外部计划格式。",
+    "Unsupported external plan schema version.": "不支持此外部计划格式版本。",
+    "External plan content is missing.": "外部计划缺少计划内容。",
+    "External plan must contain at least one day.": "外部计划至少需要一个训练日。",
+    "External rationale must contain text.": "外部调整理由不能为空。",
+}
+
+
+def user_message(message: str) -> str:
+    translated = ERROR_TRANSLATIONS.get(message)
+    if translated is not None:
+        return translated
+    if message.startswith("Exercise ") and message.endswith(" was not found."):
+        return "没有找到指定的训练动作。"
+    if message.startswith("Plan revision cannot be activated:"):
+        return "计划版本无法启用：" + message.partition(":")[2]
+    return message
+
+
+def confirm(parent, title: str, message: str) -> bool:
+    dialog = QMessageBox(parent)
+    dialog.setIcon(QMessageBox.Icon.Question)
+    dialog.setWindowTitle(title)
+    dialog.setText(message)
+    yes = dialog.addButton("是", QMessageBox.ButtonRole.YesRole)
+    dialog.addButton("否", QMessageBox.ButtonRole.NoRole)
+    dialog.exec()
+    return dialog.clickedButton() is yes
