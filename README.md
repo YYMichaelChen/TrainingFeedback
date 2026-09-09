@@ -36,14 +36,18 @@ python -m ruff check src tests
 
 ## Package
 
-To create the current Windows smoke-test executable after installing PyInstaller, run:
+The Windows build produces a portable directory layout. The verified build
+environment and pinned toolchain are recorded in
+`packaging/requirements-build.txt`; with those installed, run:
 
 ```powershell
-pyinstaller --clean --noconfirm packaging/training_feedback.spec
+pwsh -File packaging/build.ps1
 ```
 
-The executable is written to `dist/TrainingFeedback.exe`. The directory-based
-release layout remains Phase 8 work.
+The entry point is `dist/TrainingFeedback/TrainingFeedback.exe`; move or copy
+the whole `dist/TrainingFeedback/` directory together. User data always lives
+in the separately chosen data root, never in the program directory.
+Independent-machine acceptance of the packaged build remains Phase 8 work.
 
 ## Documentation
 

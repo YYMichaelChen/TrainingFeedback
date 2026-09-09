@@ -1,6 +1,6 @@
 # TrainingFeedback Development Plan
 
-Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; release acceptance pending\
+Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; Phase 8 directory-based build implemented and smoke-verified on the build machine; release acceptance pending\
 Last updated: 2026-09-09
 
 This is the authoritative product scope, domain model, and delivery plan.
@@ -500,7 +500,7 @@ never real user data. Date-boundary checks cover 01:59, 02:00, and 02:01.
 | 2–3 | Catalog review and versioned-plan workflows implemented and tested | Seed guidance is still generic draft content; review and explicit plan confirmation are required before real activation. |
 | 4–6 | Execution, feedback/history, and external handoff implemented and regression-verified | Continue preserving their acceptance criteria during refinement. |
 | 7 | First workflow refinement slice implemented and tested | Multiple real sessions and an external expert's explainable revision based on actual feedback. |
-| 8 | Pending; current packaging spec produces a single-file development smoke build | Directory-based release, independent runtime, and upgrade/data isolation. Backup restore is regression-verified with synthetic data and documented in Section 7. |
+| 8 | Directory-based build (`dist/TrainingFeedback/`) with the packaged icon implemented and smoke-verified on the build machine via `packaging/build.ps1` | Independent Windows runtime acceptance, upgrade/data isolation on a copied real-class root, and packaged backup/restore drills. Backup restore is regression-verified with synthetic data and documented in Section 7. |
 
 Automated and synthetic-data checks establish implementation behavior. They do
 not complete real-use, content-review, or release acceptance. Phase requirements
