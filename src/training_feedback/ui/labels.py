@@ -137,6 +137,29 @@ ERROR_TRANSLATIONS = {
     "External plan content is missing.": "外部计划缺少计划内容。",
     "External plan must contain at least one day.": "外部计划至少需要一个训练日。",
     "External rationale must contain text.": "外部调整理由不能为空。",
+    "The selected path is not an empty directory.": "所选路径不是空目录，无法在此创建数据目录。",
+    "The selected directory is not empty.": "所选目录不是空目录，无法在此创建数据目录。",
+    "The directory is not a TrainingFeedback data root.": "所选目录不是训练反馈数据目录。",
+    "The data-root metadata is incomplete or invalid.": "所选目录的数据信息不完整或已损坏。",
+    "The data root requires a newer version of TrainingFeedback.": (
+        "该数据目录由更新版本的应用创建，请升级应用后再打开。"
+    ),
+    "The database requires a newer version of TrainingFeedback.": (
+        "该数据库由更新版本的应用创建，请升级应用后再打开。"
+    ),
+    "The data-root configuration belongs to another application.": "所选目录的配置属于其他应用。",
+    "The selected path is not a directory.": "所选路径不是目录。",
+    "The data root does not contain its database.": "所选数据目录缺少数据库文件。",
+    "The TrainingFeedback database is invalid.": "数据目录中的数据库无效或已损坏。",
+    "Cannot record the data-root location.": "无法记录数据目录位置，请检查磁盘权限。",
+    "Pause the active training session before switching data roots.": (
+        "请先暂停当前训练，再切换数据目录。"
+    ),
+    "The source data root does not exist.": "源数据目录不存在。",
+    "A backup destination cannot be inside the source data root.": "备份目录不能位于数据目录内部。",
+    "The backup destination must be empty.": "备份目录必须是空目录。",
+    "Cannot create the backup destination.": "无法创建备份目录，请检查磁盘权限。",
+    "The data-root backup could not be completed.": "备份未能完成，已清理不完整副本。",
 }
 
 

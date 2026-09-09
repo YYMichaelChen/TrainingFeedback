@@ -40,8 +40,8 @@ dependency.
   `seed/` (initial catalog and plan proposal).
 - `ui/` — PySide6 pages and dialogs; Chinese display labels live in
   `ui/labels.py` (including `make_unit_combo`); no SQL, no business rules.
-- Entry chain: `main.py` → `bootstrap.py` → `app.py` (`ApplicationContext`) →
-  `ui/main_window.py`.
+- Entry chain: `main.py` → `bootstrap.py` → `app.py` (`ApplicationContext`,
+  `DataRootSwitcher`) → `ui/main_window.py`.
 
 ## Documentation
 

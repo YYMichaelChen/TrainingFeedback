@@ -12,7 +12,7 @@ from .settings_page import SettingsPage
 
 class MainWindow(QMainWindow):
     """主窗口：导航切换页面，页面按约定可提供 refresh() 用于进入时刷新。"""
-    def __init__(self, context: ApplicationContext, parent=None):
+    def __init__(self, context: ApplicationContext, switch_request=None, parent=None):
         super().__init__(parent)
         self.setWindowTitle("训练反馈")
         self.resize(960, 640)
@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
             ("动作库", ExerciseLibraryPage(context, self)),
             ("训练计划", PlanPage(context, self)),
             ("训练历史", HistoryPage(context, self)),
-            ("设置", SettingsPage(context, parent=self)),
+            ("设置", SettingsPage(context, switch_request=switch_request, parent=self)),
         ]
         for name, page in entries:
             self.navigation.addItem(name)

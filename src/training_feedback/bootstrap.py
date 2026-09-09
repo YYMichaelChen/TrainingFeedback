@@ -23,14 +23,23 @@ def open_from_locator(locator: Locator) -> ApplicationContext | None:
 def choose_data_root(
     locator: Locator,
     choose: Callable[[], tuple[Path, bool] | None],
+    report_error: Callable[[DataRootError], None] | None = None,
 ) -> ApplicationContext | None:
-    selection = choose()
-    if selection is None:
-        return None
-    path, create = selection
-    try:
-        if create:
-            return ApplicationContext.create(path, locator)
-        return ApplicationContext.reopen(path, locator)
-    except DataRootError:
-        return None
+    """反复尝试打开所选数据根，直到成功或用户取消。
+
+    只有 choose() 返回 None（用户取消）时才返回 None；失败经 report_error
+    反馈后继续重选。未提供 report_error 时失败直接抛出，不静默吞错。
+    """
+    while True:
+        selection = choose()
+        if selection is None:
+            return None
+        path, create = selection
+        try:
+            if create:
+                return ApplicationContext.create(path, locator)
+            return ApplicationContext.reopen(path, locator)
+        except DataRootError as exc:
+            if report_error is None:
+                raise
+            report_error(exc)

@@ -18,6 +18,10 @@ from typing import Callable
 LATEST_SCHEMA_VERSION = 12
 
 
+class FutureSchemaError(sqlite3.DatabaseError):
+    """Raised when the database schema is newer than this application."""
+
+
 def _migration_1(connection: sqlite3.Connection) -> None:
     connection.executescript("""
     BEGIN;
@@ -473,7 +477,7 @@ def apply_migrations(connection: sqlite3.Connection) -> None:
         "SELECT COALESCE(MAX(version), 0) FROM schema_migration"
     ).fetchone()[0]
     if current > LATEST_SCHEMA_VERSION:
-        raise sqlite3.DatabaseError("Database schema is newer than this application.")
+        raise FutureSchemaError("Database schema is newer than this application.")
     if current == 0:
         # v1 的 executescript 自带 BEGIN，版本登记并入同一事务后统一提交。
         try:

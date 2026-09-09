@@ -8,9 +8,11 @@ from pathlib import Path
 from typing import Any
 
 from .database import Database
+from .migrations import FutureSchemaError
 
 APPLICATION_NAME = "TrainingFeedback"
 DATA_FORMAT_VERSION = 1
+CONFIG_VERSION = 1
 MARKER_FILENAME = "training_feedback.marker.json"
 CONFIG_FILENAME = "app_config.json"
 DATABASE_FILENAME = "training_feedback.sqlite3"
@@ -55,19 +57,30 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def _checked_version(metadata: dict[str, Any], key: str, supported: int) -> None:
+    """版本字段必须是整数；缺失、类型错误或低于当前版本视为无效，更高版本视为未来格式。"""
+    value = metadata.get(key)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise InvalidDataRootError("The data-root metadata is incomplete or invalid.")
+    if value > supported:
+        raise UnsupportedDataFormatError(
+            "The data root requires a newer version of TrainingFeedback."
+        )
+    if value != supported:
+        raise InvalidDataRootError("The data-root metadata is incomplete or invalid.")
+
+
 def _validate_metadata(root: Path) -> None:
     marker = _read_json(root / MARKER_FILENAME)
     if marker.get("application") != APPLICATION_NAME:
         raise InvalidDataRootError("The directory is not a TrainingFeedback data root.")
-    version = marker.get("data_format_version")
-    if version != DATA_FORMAT_VERSION:
-        raise UnsupportedDataFormatError(f"Unsupported data format version: {version!r}.")
+    _checked_version(marker, "data_format_version", DATA_FORMAT_VERSION)
 
     config = _read_json(root / CONFIG_FILENAME)
     if config.get("application") != APPLICATION_NAME:
         raise InvalidDataRootError("The data-root configuration belongs to another application.")
-    if config.get("data_format_version") != DATA_FORMAT_VERSION:
-        raise UnsupportedDataFormatError("The configuration uses an unsupported data format.")
+    _checked_version(config, "config_version", CONFIG_VERSION)
+    _checked_version(config, "data_format_version", DATA_FORMAT_VERSION)
 
 
 def _write_json(path: Path, value: dict[str, Any]) -> None:
@@ -103,7 +116,7 @@ def create_new(root_path: Path) -> DataRoot:
             root / CONFIG_FILENAME,
             {
                 "application": APPLICATION_NAME,
-                "config_version": 1,
+                "config_version": CONFIG_VERSION,
                 "data_format_version": DATA_FORMAT_VERSION,
             },
         )
@@ -129,8 +142,10 @@ def open_existing(root_path: Path) -> DataRoot:
     try:
         with Database(database_path):
             pass
+    except FutureSchemaError as exc:
+        raise UnsupportedDataFormatError(
+            "The database requires a newer version of TrainingFeedback."
+        ) from exc
     except Exception as exc:
-        if isinstance(exc, DataRootError):
-            raise
         raise InvalidDataRootError("The TrainingFeedback database is invalid.") from exc
     return DataRoot(root, database_path)

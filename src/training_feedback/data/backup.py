@@ -44,6 +44,8 @@ def create_backup(
             else:
                 shutil.copy2(item, target)
     except (OSError, sqlite3.Error) as exc:
+        # 目标目录在备份前为空（或由本次创建），失败时整体清理，不留半成品副本。
+        shutil.rmtree(destination, ignore_errors=True)
         raise BackupError("The data-root backup could not be completed.") from exc
     return destination
 

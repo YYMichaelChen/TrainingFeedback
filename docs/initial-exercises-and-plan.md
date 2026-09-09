@@ -1,12 +1,15 @@
 # Initial Exercises And Plan Proposal
 
-Status: approved catalog scope; proposed doses require user or external-expert
-confirmation before activation\
-Last updated: 2026-09-04
+Status: approved catalog scope; seeded guidance and plan remain drafts pending review and confirmation\
+Last updated: 2026-09-08
 
 This document defines the first catalog candidates and the initial plan used to
 develop and validate the application. It is not a medical assessment and its
 example doses are not automatically treated as a confirmed prescription.
+
+The [development plan](development-plan.md) defines review, activation, history,
+and release requirements. This document owns seed names, body areas, and proposed
+doses; it does not certify that bundled guidance has passed expert review.
 
 ## 1. Canonical Naming
 
@@ -15,6 +18,9 @@ They must not produce duplicate catalog entries, split history, or separate AI
 statistics.
 
 ## 2. Approved Launch Catalog
+
+The current seed contains the 14 exercises below: seven main and seven
+supporting exercises. Second-batch candidates are not seeded.
 
 ### Main Training Exercises
 
@@ -71,9 +77,17 @@ usable release:
 The old project may be consulted manually, but the completed guidance belongs
 to this repository's own seed data and must not be loaded from the old runtime.
 
+Current implementation: `data/seed/catalog.py` generates generic starter text
+for each exercise, with `review.status = draft` and an explicit missing-image
+state. Passing required-field validation does not make that text a completed,
+exercise-specific guide. Replace or refine it per exercise, record external
+review evidence, and obtain explicit user approval before guidance activation.
+Default seed metadata must never represent an expert review or user approval.
+
 ## 4. Initial Plan Proposal
 
 Plan name: `臀腿与核心基础`\
+Day name: `基础训练日`\
 Purpose: validate preparation, unequal/equal set models, repetitions, per-side
 work, timed holds, exercise results, next-day prompts, and external AI export.
 
@@ -97,6 +111,13 @@ These values exist to exercise the software model. Before this plan becomes a
 real active plan, the application must present it for explicit confirmation or
 replace it with a plan returned by an external AI expert.
 
+`data/seed/plans.py` creates this one-day proposal as a draft. Draft creation
+may reference exercises whose guidance is still awaiting review. Activation
+requires all referenced exercises to have approved active guidance and the user
+to confirm the full prescription; an external expert's replacement also goes
+through this confirmation flow. Reopening the application does not overwrite
+existing seed entries or reset a user's plan to this proposal.
+
 ## 5. Launch Catalog Versus Initial Plan
 
 The launch catalog intentionally includes `蝴蝶臀桥` and `跪姿臀冲`, while the
@@ -117,7 +138,10 @@ capability examples, not automatic progression rules.
 
 ## 6. Next-Day Prompt Derivation For This Plan
 
-Only performed main-training exercises contribute prompts:
+For this proposal, only performed main-training exercises contribute prompts.
+`completed`, `exceeded`, and `partial` count as performed; `not_completed` does
+not. The source is the session's frozen body-area and participation snapshots,
+so later catalog edits cannot change the prompts:
 
 - 臀桥 -> 臀部;
 - 蚌式开合 -> 臀部;
@@ -125,7 +149,7 @@ Only performed main-training exercises contribute prompts:
 - 死虫式 -> 核心;
 - 静态臀桥 -> 臀部、核心.
 
-The resulting deduplicated prompts are:
+If all five main exercises were performed, the deduplicated prompts are:
 
 ```text
 臀部
@@ -144,6 +168,9 @@ Each prompt offers:
 
 No choice is preselected. One optional overall note follows all body-area
 questions.
+
+If only some main exercises were performed, show only the corresponding subset
+of these areas.
 
 ## 7. Revision Example
 

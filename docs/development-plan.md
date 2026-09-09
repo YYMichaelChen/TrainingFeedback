@@ -1,7 +1,13 @@
 # TrainingFeedback Development Plan
 
-Status: product decisions finalized for the first implementation phase\
-Last updated: 2026-09-04
+Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; release acceptance pending\
+Last updated: 2026-09-09
+
+This is the authoritative product scope, domain model, and delivery plan.
+The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
+seed content and proposed doses. Current implementation status is summarized in
+Section 9; requirements elsewhere are not claims that every release gate has
+passed. Completed task history belongs in `.planning/archive/`.
 
 ## 1. Product Goal
 
@@ -106,6 +112,26 @@ Supported initial units:
 - `breaths`
 - `free`
 
+All sets of one action use the same unit. `per_side` is stored separately from
+the value and unit. Numeric doses and rest seconds must be finite and
+non-negative; a `free` dose may omit its numeric value only with a non-empty
+explanatory note. Day, action, and set orders are positive and unique within
+their parent. Action phases are `preparation`, `main`, and `cooldown`.
+
+Plan revisions move from `draft` to `active` to `superseded`. Editing an active
+revision creates a new draft. A saved draft has a name, at least one day, an
+action in each day, and sets in every action; it may reference guidance awaiting
+approval. Activation additionally requires active exercises with complete,
+reviewed, explicitly user-approved active guidance. The complete prescription
+and differences from the current revision are shown before confirmation.
+Saving a draft does not activate it. Superseding the previous revision and
+updating the active revision pointer form one transaction.
+
+The editor supports equal-set and individual-set entry; switching modes must
+not silently discard unsaved values. Revision diffs cover action additions,
+removals and ordering, phase, rest, notes, set values, units, per-side flags,
+and plan purpose without mutating either revision.
+
 ### 4.2 Exercise Results Stay Simple
 
 Each exercise presents four result actions:
@@ -158,12 +184,16 @@ Initial abort reasons:
 - insufficient time;
 - other.
 
-`Finish training` derives a proposed final result from exercise results:
+`Finish training` requires a recorded result for every planned action, then
+derives a proposed final result:
 
-- all performed actions completed or exceeded -> `completed`;
+- all actions completed or exceeded -> `completed`;
 - any action partial or not completed -> `partial`.
 
 The user confirms the final save but does not repeat exercise feedback.
+An unanswered action must not be silently converted into `not_completed`.
+Terminal sessions cannot resume; narrowly scoped note corrections are audited
+without rewriting execution results.
 
 Session statuses are:
 
@@ -258,6 +288,14 @@ Applying it creates a new immutable plan revision and records:
 
 No active plan is silently overwritten.
 
+The application owns the versioned contract; it is not tied to a particular AI
+provider. `domain/handoff.py` defines the external response schema
+(`training_feedback.plan`, version 1) and validation. `data/handoff.py` produces
+the evidence JSON, Markdown, and response schema. The current UI imports JSON
+files into drafts and retains the source in the managed imports directory.
+Clipboard import is not part of the current workflow. Validating and saving an
+import never imply activation or user approval.
+
 ## 5. Exercise Guidance Model
 
 Exercise guidance must be sufficiently complete for safe execution and
@@ -286,6 +324,28 @@ prescription needed to interpret that session.
 
 `Glute bridge` is the canonical object. `Standard glute bridge` is an alias,
 not a second exercise.
+
+Canonical names and aliases must not collide across exercises. Lookup may
+normalize whitespace, Unicode, and case for matching; stored names, guidance,
+and user text remain verbatim. Exercise identities and body-area relationships
+are relational; guidance content is validated JSON in immutable content
+revisions. Plan prescriptions remain normalized day/action/set records.
+
+### 5.1 Guidance Review And Activation
+
+Guidance review uses `draft -> pending_review -> approved -> active`, with
+`rejected` available during review. Incomplete guidance can be saved as a draft
+but cannot be approved or activated. Missing images are explicit and do not
+hide text or stop criteria; equipment may be an empty list when none is needed.
+Field-level completeness is not proof of exercise-specific content quality.
+
+External review evidence records reviewer type, source, review note, and review
+time. Approval requires an explicit user action and approval time; seed values
+must not supply either. The review form records external review evidence; the
+application performs no expert reasoning. Only approved guidance can activate.
+Editing guidance creates a new content revision, and rejecting a review leaves
+the previous active guidance unchanged. Related review/activation writes are
+transactional, and previous content remains available for historical sessions.
 
 ## 6. Minimum Domain Model
 
@@ -336,6 +396,7 @@ The user chooses a data root, for example:
 
 ```text
 D:\TrainingFeedbackData\
+|- training_feedback.marker.json
 |- training_feedback.sqlite3
 |- app_config.json
 |- backups\
@@ -367,6 +428,29 @@ The application must validate an application marker and schema version before
 opening a directory. It must refuse silent overwrite, partial copy, old-project
 database import, and automatic directory scanning.
 
+`training_feedback.marker.json` identifies `application: TrainingFeedback` and
+`data_format_version: 1`. Configuration uses the same application/format and
+`config_version: 1`; database migration state belongs in SQLite, not in the
+configuration. Opening validates the marker and configuration before accessing
+the database. Unsupported newer database schemas must not be modified.
+
+A backup copies the complete data root, including marker, configuration, images,
+exports, and imports, to an explicitly selected empty destination outside the
+source root. The running application uses SQLite's online backup API for a
+consistent database copy, rather than copying an open database file directly.
+Failures are reported, never delete the source, and clean up the incomplete
+copy so a partial backup is never presented as successful. Recovery uses the
+normal open/switch flow: select the backup copy as the data root. There is no
+overwrite-style restore.
+
+Current settings provide location display/open, complete backup, evidence
+export, and switching to another valid data root. Switching validates and
+prepares the target, rebuilds the main window and services in-process, and
+commits the locator only after preparation succeeds; any failure keeps the
+previous root, window, and database usable. An `open` training session blocks
+switching until paused; a paused session stays in its original root and can be
+resumed after switching back.
+
 Application upgrades must not overwrite the database, images, exports, or
 backups.
 
@@ -380,11 +464,12 @@ src/training_feedback/
 |- ui/                # PySide6 pages and dialogs (no SQL)
 |- domain/            # pure rules and value objects (no Qt, no SQL)
 |- application/       # use-case services coordinating domain and repositories
-|- data/              # SQLite repositories, migrations, data root, backup, seed, handoff
-`- packaging/         # PyInstaller packaging configuration
+`- data/              # SQLite repositories, migrations, data root, backup, seed, handoff
 ```
 
-See the repository for concrete file names; the layering rules below apply.
+`packaging/` lives at the repository root, alongside `src/` and `tests/`.
+See `AGENTS.md` for concrete layer responsibilities and `pyproject.toml` for
+runtime and tooling dependencies. The layering rules below apply.
 
 Architecture rules:
 
@@ -398,7 +483,28 @@ Architecture rules:
 - tests inject a clock and temporary data root;
 - no global Streamlit-like session dictionary is introduced.
 
+SQLite connections enable and verify foreign keys and configure a busy timeout.
+One user action commits or rolls back as a unit. Schema migrations are
+append-only, versioned, and transactional per migration; later changes must not
+edit an already applied migration. Failed migrations preserve the prior version.
+UI tests may use offscreen Qt; all tests use temporary databases and locators,
+never real user data. Date-boundary checks cover 01:59, 02:00, and 02:01.
+
 ## 9. Delivery Phases
+
+### Current Status (2026-09-09)
+
+| Phase | Current status | Remaining acceptance or release work |
+| --- | --- | --- |
+| 0–1 | Foundation, data-root shell, root validation/switching, and backup restore implemented and regression-verified | Visual acceptance of the startup error and switch dialogs on a real desktop session. |
+| 2–3 | Catalog review and versioned-plan workflows implemented and tested | Seed guidance is still generic draft content; review and explicit plan confirmation are required before real activation. |
+| 4–6 | Execution, feedback/history, and external handoff implemented and regression-verified | Continue preserving their acceptance criteria during refinement. |
+| 7 | First workflow refinement slice implemented and tested | Multiple real sessions and an external expert's explainable revision based on actual feedback. |
+| 8 | Pending; current packaging spec produces a single-file development smoke build | Directory-based release, independent runtime, and upgrade/data isolation. Backup restore is regression-verified with synthetic data and documented in Section 7. |
+
+Automated and synthetic-data checks establish implementation behavior. They do
+not complete real-use, content-review, or release acceptance. Phase requirements
+below remain the acceptance checklist; dated test runs belong in task records.
 
 ### Phase 0: Repository And Contracts
 
@@ -470,11 +576,6 @@ Acceptance:
 - an unfinished prior-day session is never presented as today's session;
 - unknown subjective facts remain unknown.
 
-Closeout status: accepted on 2026-09-06 after verification of multi-day session
-action identity, first-unfinished-action recovery, conditional actual-dose
-input, transactional controls, 02:00 labeling, and an independently launched
-PyInstaller directory build.
-
 ### Phase 5: Next-Day Feedback And History
 
 - derive prompts from performed primary training-area snapshots;
@@ -487,11 +588,6 @@ Acceptance:
 - only relevant main areas are shown;
 - unanswered values are not defaulted;
 - old sessions remain readable after exercise and plan edits.
-
-Implementation status: accepted on 2026-09-06 after verification of role-aware
-session area snapshots, delayed and late next-day feedback, four feedback
-values, one-submit enforcement, transactional rollback, audited note correction,
-history rendering, and the Home/Next-Day/History desktop workflow.
 
 ### Phase 6: External AI Handoff
 
@@ -506,13 +602,6 @@ Acceptance:
 - a round trip creates a new plan revision without changing the old one;
 - malformed or partial imports cannot leave half-written plans.
 
-Implementation status: accepted on 2026-09-07 and re-accepted on 2026-09-08
-after verification of the versioned evidence JSON contract, complete Markdown
-rendering, managed export and import files, schema-consistent external-plan
-validation, transactional draft creation, human-readable revision differences,
-explicit activation confirmation, import provenance, immutable earlier
-revisions, and rollback on malformed or failed imports.
-
 ### Phase 7: Real-Use Refinement
 
 - use the application over multiple sessions;
@@ -526,17 +615,10 @@ Acceptance:
 - the training workflow remains usable without developer intervention;
 - actual feedback can support an explainable plan revision.
 
-Implementation status: in progress as of 2026-09-08. The first refinement
-slice clarified actual-dose saving, prevented premature session completion,
-added final-save confirmation, synchronized Home immediately after starting a
-session, and made next-day feedback submission state explicit. Automated UI
-and full regression checks pass. Acceptance still requires observations from
-multiple real sessions and an external AI expert's explainable revision based
-on exported actual feedback; synthetic test data does not satisfy that gate.
-
 ### Phase 8: Windows Packaging
 
 - produce a directory-based Windows build;
+- use `icon/TrainingFeedback.ico` as the packaged Windows executable icon;
 - verify operation without a development environment;
 - verify upgrades against an existing copied user data root;
 - document backup and recovery.
@@ -552,6 +634,7 @@ Acceptance:
 The first usable release is complete when a user can:
 
 - choose a data directory;
+- back up the complete data root and switch to another valid root;
 - inspect the initial exercise guidance;
 - inspect and activate a plan with per-set doses;
 - start or resume training;
@@ -565,14 +648,19 @@ The first usable release is complete when a user can:
 - confirm a revised plan without losing the previous plan;
 - run the packaged Windows application without Streamlit or the old project.
 
+The release also requires reviewed exercise-specific seed guidance and the
+Phase 7 real-use and Phase 8 packaging/recovery acceptance above. A package
+version number alone does not establish release readiness.
+
 ## 11. Deferred Decisions
 
 The following remain intentionally open until implementation evidence or real
 use resolves them:
 
 - the final prescribed dose for the initial plan;
-- the exact JSON contract used by a particular external AI provider;
-- whether plan imports use files only or also support paste-from-clipboard;
-- advanced trend analysis;
-- installer and automatic-update strategy;
 - additional exercise images and later exercise batches.
+
+Clipboard import, provider-specific adapters, advanced trend analysis,
+installers, and automatic updates are optional later scope, not unresolved
+first-version requirements. The current application-owned JSON/file contract
+is defined in Section 4.6.

@@ -49,5 +49,3 @@ release layout remains Phase 8 work.
 
 - [Authoritative development plan](docs/development-plan.md)
 - [Initial exercise catalog and plan proposal](docs/initial-exercises-and-plan.md)
-- [Phase 0 and Phase 1 implementation design](docs/phase-0-and-1-implementation.md)
-- [Phase 2 and Phase 3 implementation design](docs/phase-2-and-3-implementation.md)
