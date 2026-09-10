@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .bundled_guidance_update_dialog import BundledGuidanceUpdateDialog
 from .exercise_detail_page import ExerciseDetailPage
 from .exercise_editor import ExerciseEditor
 from .labels import GUIDANCE_STATUS_LABELS, label
@@ -37,6 +38,9 @@ class ExerciseLibraryPage(QWidget):
         add_button = QPushButton("添加动作")
         add_button.clicked.connect(self.add_exercise)
         controls.addWidget(add_button)
+        self.update_button = QPushButton("接收内置指导草稿…")
+        self.update_button.clicked.connect(self.update_bundled_guidance)
+        controls.addWidget(self.update_button)
         layout.addLayout(controls)
         self.exercise_list = QListWidget()
         layout.addWidget(self.exercise_list)
@@ -64,6 +68,7 @@ class ExerciseLibraryPage(QWidget):
         if exercise is None:
             return
         self.detail_page = ExerciseDetailPage(exercise, self.service, self)
+        self.detail_page.exercise_changed.connect(self.refresh)
         self.detail_page.setWindowTitle(exercise["canonical_name"])
         self.detail_page.resize(600, 500)
         self.detail_page.show()
@@ -71,4 +76,9 @@ class ExerciseLibraryPage(QWidget):
     def add_exercise(self) -> None:
         editor = ExerciseEditor(self.service, parent=self)
         if editor.exec() == editor.DialogCode.Accepted:
+            self.refresh()
+
+    def update_bundled_guidance(self) -> None:
+        dialog = BundledGuidanceUpdateDialog(self.service, self)
+        if dialog.exec() == dialog.DialogCode.Accepted:
             self.refresh()

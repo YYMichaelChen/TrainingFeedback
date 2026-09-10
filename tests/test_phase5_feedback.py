@@ -343,5 +343,9 @@ def test_history_uses_session_snapshots_after_catalog_change(tmp_path):
     context.database.connection.commit()
     saved = FeedbackRepository(context.database.connection).history()[0]
     assert saved["actions"][0]["exercise_name_snapshot"] == "臀桥"
-    assert saved["actions"][0]["body_area_snapshots"] == [{"name": "臀部", "is_primary": True}]
+    assert saved["actions"][0]["body_area_snapshots"] == [
+        {"name": "臀部", "is_primary": True},
+        {"name": "大腿后侧", "is_primary": False},
+        {"name": "核心", "is_primary": False},
+    ]
     context.close()

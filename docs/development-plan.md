@@ -492,12 +492,12 @@ never real user data. Date-boundary checks cover 01:59, 02:00, and 02:01.
 
 ## 9. Delivery Phases
 
-### Current Status (2026-09-10)
+### Current Status (2026-09-11)
 
 | Phase | Current status | Remaining acceptance or release work |
 | --- | --- | --- |
 | 0–1 | Foundation, data-root shell, root validation/switching, and backup restore implemented and regression-verified | Visual acceptance of the startup error and switch dialogs on a real desktop session. |
-| 2–3 | Catalog review and versioned-plan workflows implemented and tested | Seed guidance is still generic draft content; review and explicit plan confirmation are required before real activation. |
+| 2–3 | W1–W3 implemented and independently code-reviewed for 0.3.0: transactional exercise editing, fresh drafts, complete Chinese guidance views/forms, revision selection, 14 exercise-specific bundled drafts, and explicit delivery to existing roots | Real external guidance review and explicit user approval; separate confirmation of the complete initial plan. Include the updated guidance windows in packaged desktop acceptance. |
 | 4–6 | Execution, feedback/history, and external handoff implemented and regression-verified | Continue preserving their acceptance criteria during refinement. |
 | 7 | First workflow refinement slice implemented and tested | Multiple real sessions and an external expert's explainable revision based on actual feedback. |
 | 8 | Directory-based build plus repeatable 8-B1 candidate preparation implemented and smoke-verified on the build machine; the build isolates binary discovery, records a manifest, and the synthetic fixture covers the required data classes | Execute 8-B2: independent Windows runtime acceptance, upgrade/data isolation on a copied real-class root, packaged backup/restore drills, and real-desktop scaling checks. Backup restore is regression-verified with synthetic data and documented in Section 7. |
@@ -506,14 +506,29 @@ Automated and synthetic-data checks establish implementation behavior. They do
 not complete real-use, content-review, or release acceptance. Phase requirements
 below remain the acceptance checklist; dated test runs belong in task records.
 
-### Next Delivery Plan After 0.2.2
+### Delivery Status For 0.3.0 And Remaining Work
 
-The next implementation task is Phase 8-B2: execute the independent-runtime,
-upgrade, recovery, and real-desktop gates. Version 0.2.2 completes the
-repeatable 8-B1 candidate-preparation slice and repairs training-page control
-accessibility; it does not complete the first usable release. Continue with the
-following order, with content preparation allowed while an independent Windows
-environment is being arranged.
+Version **0.3.0 delivers W1–W3** and their acceptance-review fixes. The next
+packaging acceptance gate is **8-B2**, using the 0.3.0 candidate. Guidance
+content review, explicit user approval, and initial-plan confirmation remain
+separate participant actions. This implementation delivery does not complete
+the first usable release defined in Section 10. An unavailable independent
+Windows environment must not block implementation delivery or be reported as a
+passed acceptance check.
+
+| Work item | Status and dependency | Reviewable result |
+| --- | --- | --- |
+| W1 — Exercise-edit correctness | Complete; 0.3.0 | One transactional save, honest new-draft state, and working alias/body-area edits. |
+| W2 — Readable guidance editing and review | Complete; 0.3.0 | Complete Chinese guidance forms/views with explicit revision selection and approval; original untouched text and usable small-window controls. |
+| W3 — Exercise-specific content and existing-root delivery | Implementation complete; 0.3.0; actual content review remains pending | All 14 launch guides, including the initial plan's 11, are available as drafts; existing users can explicitly receive selected drafts. |
+| 8-B2 — Packaged acceptance | P0 release gate; starts with the existing candidate when an independent environment is available | Candidate-specific independent-runtime, upgrade, recovery, and display evidence. |
+| W4 — Real use and expert revision | After packaged acceptance and guidance/plan confirmation | Multiple real sessions plus one evidence-based plan-revision cycle. |
+
+W1–W3 are implementation work; completion does not assert an external expert
+review, user approval, or real training. Those events require their actual
+participants and evidence. If a candidate changes during this work, identify
+the new build and rerun affected packaged scenarios before release. Assign
+subsequent application versions when their delivered scope is known.
 
 #### 1. Prepare The Acceptance Candidate (8-B1)
 
@@ -522,25 +537,13 @@ repeatable toolchain, manifest, synthetic fixture, local regressions, and a
 packaged startup smoke check; it does not claim any 8-B2 independent-machine
 or real-desktop result.
 
-- Align `packaging/build.ps1` and README interpreter setup: support an explicit
-  interpreter and the declared standard-venv/Conda layouts, with readable
-  failures when neither is available.
-- Verify both pinned packaging dependencies. State the supported Python and
-  PySide6 build baseline, and record actual versions, architecture, source
-  revision, application version, and artifact hashes with each candidate.
-- Provide a repeatable acceptance-data preparation entry point under
-  `packaging/`, using a new isolated root and locator. Include completed and
-  paused sessions, plan revisions, verbatim notes, next-day feedback, images,
-  exports, and an imported draft. Mark all fixture content as synthetic;
-  fixture approval metadata must never enter production seed data.
-- Add a concise packaged-acceptance runbook linked from README. Reference this
-  document for requirements; keep the runbook focused on steps, expected
-  results, and a pass/fail/not-run evidence table.
-
-Exit: a fresh build can be produced through the documented setup, the candidate
-is identifiable, and the fixtures and local checks use only temporary roots.
-Retain the existing regression suite; add targeted checks only for changed
-build behavior or defects reproduced during acceptance.
+Reuse `packaging/build.ps1`, the pinned toolchain, the build manifest, and
+`packaging/prepare-acceptance-data.ps1`. The existing
+[packaged-acceptance runbook](packaged-acceptance-runbook.md) owns execution
+steps and its ten-row evidence table. Keep fixture data and its synthetic
+approval metadata isolated from production seed content. Further build-tool
+changes should address a reproduced acceptance failure or a changed candidate
+requirement.
 
 #### 2. Execute Packaged Acceptance (8-B2)
 
@@ -574,22 +577,119 @@ not run and Phase 8 acceptance pending.
 
 #### 3. Complete Guidance And Confirm The Initial Plan (Phases 2–3)
 
-- Replace generic starter text with exercise-specific guidance owned by
-  `docs/initial-exercises-and-plan.md` and the seed catalog. Prioritize the
-  proposal's 11 referenced exercises, then complete all 14 launch exercises.
-- Record actual external review evidence; require explicit user approval for
-  activation and explicit confirmation of the complete plan prescription.
-  Proposed doses and bundled defaults remain proposals until confirmed.
-- Define and verify delivery to existing TrainingFeedback roots: current
-  seeding skips existing exercises, so seed edits alone cannot update them.
-  Offer explicit new guidance revisions through the existing review workflow;
-  preserve user edits, previous approval records, and historical sessions.
+##### W1. Make Exercise Editing Atomic And Preserve Review Meaning
+
+Status: implemented and reviewed for 0.3.0. The pre-W1 editor committed
+metadata separately from the guidance revision, copied prior approval facts
+into new drafts, and omitted editable aliases and primary areas. The following
+requirements and acceptance cases remain regression contracts.
+
+- Add one exercise-edit application use case covering metadata, aliases,
+  editable body-area assignments, and a new guidance draft in one transaction.
+  Detect duplicate names/aliases and invalid input before committing; a failed
+  later write rolls back the complete user action.
+- Save the fields the editor offers. Editing primary areas must preserve
+  secondary-area assignments that the user has not edited. Existing session
+  names, body-area participation, prescriptions, and guidance references remain
+  frozen; reopening a renamed seeded exercise must not duplicate or replace it.
+- Enforce fresh-draft review state in the application/domain path for both
+  creation and editing, including a copied active or approved guide. Do not
+  inherit reviewer, review date, or user-approval facts as approval of the new
+  text. Keep the prior revision and active pointer until explicit approval.
+- Audit other draft-creation callers so the same invariant applies to future
+  bundled updates. Preserve free-text content verbatim.
+
+Primary scope: `application/exercise_service.py`, `domain/exercises.py`,
+`data/exercise_repositories.py`, `ui/exercise_editor.py`, and focused exercise/UI
+tests; inspect seeding only as needed for rename/reopen behavior. Keep SQL in
+repositories and write orchestration in the application layer.
+
+Acceptance: injected failure leaves no metadata, alias, area, or revision
+changes after reopening; valid edits persist every editable field; duplicate
+aliases cause a full rollback; editing an approved guide creates an unapproved
+draft; old approval records, active pointers, and historical exports retain
+their meaning. Cover both new and existing exercises with temporary roots.
+
+##### W2. Make The Complete Guidance Readable And Reviewable
+
+Status: implemented and reviewed for 0.3.0. Acceptance fixes preserve untouched
+line separators, keep step numbering consistent after structural edits, carry
+the displayed revision into editing, prevent long revision identities from
+forcing horizontal scrolling, and keep detail-window actions reachable.
+
+- Replace the normal workflow's raw guidance JSON/dictionary display with
+  labeled Chinese fields and ordered lists. Cover every guidance requirement
+  in `docs/initial-exercises-and-plan.md`, including intended sensations,
+  compensations, regressions/progressions, equipment, applicability, cautions,
+  and explicit image availability.
+- Show the current active revision separately from drafts. Let the user select
+  the revision being edited/reviewed, read its full content and changes, and see
+  the actual review source and state. Do not silently review a different
+  revision from the one displayed.
+- Reuse the existing approval transaction and explicit checkbox. Saving a
+  draft, cancelling review, or merely installing content never approves it.
+  User-authored text must survive form loading and saving without rewriting.
+- Check long Chinese content and small-window layouts, with readable errors
+  and reachable save/cancel/approval controls.
+
+Primary scope: exercise detail/editor/review UI and shared Chinese labels;
+reuse application services from W1. A reusable guidance view/form is justified
+by these three consumers; a general UI framework is outside this slice.
+
+Acceptance: all required content is accessible without reading JSON; revision
+identity and draft/active states are unambiguous; cancellation makes no writes;
+activation requires deliberate approval; form round trips preserve verbatim
+text. Add focused Qt checks and include changed dialogs in 8-B2 desktop checks.
+
+##### W3. Deliver Exercise-Specific Drafts To New And Existing Roots
+
+Status: implementation reviewed for 0.3.0. All 14 bundled guides remain
+unreviewed drafts until actual external review and explicit user approval.
+
+- Write exercise-specific guidance owned by
+  `docs/initial-exercises-and-plan.md` and the seed catalog. Prepare the initial
+  proposal's 11 referenced exercises first; complete the other three launch
+  exercises before release. Required-field validation checks structure, while
+  actual external review checks content. Missing images may remain explicit.
+- Separate custom-exercise draft defaults from bundled launch content. A new
+  root receives the new content as drafts, with no invented review or approval.
+  Neither generic defaults nor proposed doses become user facts.
+- Provide an explicit local action to preview available bundled guidance and
+  create selected new drafts for existing exercises. Reuse the current revision
+  and review model; startup seeding must not overwrite existing guidance, user
+  edits, active pointers, or plans.
+- Track a stable bundled content identity/version and enough provenance to
+  avoid duplicate drafts on repeat acceptance or restart. Existing roots may
+  lack that identity: make ambiguous or renamed matches explicit instead of
+  guessing from a mutable name, overwriting edits, or creating duplicates.
+  Add a schema migration only if persisted identity requires one; migrations
+  remain append-only and must not fabricate historical provenance.
+- Allow skipping or cancelling an update with no writes. Accepting selected
+  drafts is one transaction; a failure must not leave a partial batch. Record
+  actual external review evidence and obtain explicit user approval through W2.
+  Confirm the complete initial plan separately before activation.
+
+Primary scope: the authoritative initial-content document, `data/seed/`, the
+exercise application/repository boundary, and a small update-preview UI using
+W2. This is delivery of application-owned local content, not an application
+auto-updater or an external-provider integration.
+
+Acceptance: a new root has 14 exercise-specific drafts; a pre-update temporary
+root can receive selected new versions without losing custom text or approvals;
+repeating the update creates no duplicates; ambiguous matches and cancellations
+do not modify data; injected failure rolls back the batch. Paused/completed
+session snapshots and prior exports remain interpretable after update, reopen,
+and backup/restore. Real review and plan confirmation are recorded separately
+from synthetic test approvals.
 
 Exit: all launch guidance meets the documented content/review requirements,
 and the user has a deliberately confirmed usable plan. Missing images may
 remain explicit; adding image assets or more exercises is not a prerequisite.
 
 #### 4. Validate Real Use And Close The Release Gates (Phase 7)
+
+This is W4. It requires real training and external expert participation;
+automated tests or synthetic fixtures cannot complete it.
 
 - After technical acceptance and guidance/plan confirmation, use the packaged
   application for multiple real sessions and next-day feedback. Record friction
@@ -605,6 +705,24 @@ remain explicit; adding image assets or more exercises is not a prerequisite.
 Exit: the Phase 7 criteria and Section 10 release definition are supported by
 actual evidence. No installer, automatic updater, dashboard, embedded AI,
 cloud/mobile access, or speculative refactor is included in this sequence.
+
+#### Verification And Completion For Each Work Item
+
+- Begin W1 with regression cases for the reproduced failures, then implement
+  the smallest complete save operation. W2 and W3 follow as separately
+  reviewable changes with the acceptance cases stated above.
+- Use PowerShell 7, the repository interpreter, temporary roots/locators, and
+  an injectable clock where needed. Run focused tests during implementation;
+  before delivering a code change run the full pytest suite, Ruff for `src`
+  and `tests`, and `git diff --check`. Include packaging tests when its fixtures
+  or tooling change. Test results belong in `progress.md`, not release claims.
+- Attach packaged evidence to the exact candidate manifest and environment.
+  Use a real previous-version build for cross-version upgrade evidence. When a
+  candidate changes, retain earlier evidence as historical and rerun affected
+  checks; mark unavailable scenarios not run.
+- Review the three root task records for stale/duplicate entries at completion.
+  Keep personal training data outside Git; record only the minimum nonpersonal
+  acceptance summary needed to assess the release gates.
 
 ### Phase 0: Repository And Contracts
 

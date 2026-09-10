@@ -133,6 +133,73 @@ class ExerciseRepository:
         ).fetchone()
         return dict(row) if row is not None else None
 
+    def get_by_bundled_key(self, key: str) -> dict[str, Any] | None:
+        row = self.connection.execute(
+            "SELECT * FROM exercise WHERE bundled_exercise_key = ?", (key,)
+        ).fetchone()
+        return dict(row) if row is not None else None
+
+    def find_identity_matches(self, names: list[str]) -> list[dict[str, Any]]:
+        """Return every exercise whose canonical name or alias matches a bundled name."""
+        keys = {normalize_name(name) for name in names if normalize_name(name)}
+        matches = []
+        for row in self.connection.execute("SELECT * FROM exercise ORDER BY id"):
+            aliases = [
+                alias[0]
+                for alias in self.connection.execute(
+                    "SELECT alias FROM exercise_alias WHERE exercise_id = ? ORDER BY id",
+                    (row["id"],),
+                )
+            ]
+            if any(
+                normalize_name(name) in keys
+                for name in (row["canonical_name"], *aliases)
+            ):
+                matches.append(dict(row))
+        return matches
+
+    @staticmethod
+    def _distinct_names(values: list[str], kind: str) -> list[str]:
+        result: list[str] = []
+        seen: set[str] = set()
+        for value in values:
+            stored = value.strip()
+            key = normalize_name(value)
+            if not key:
+                raise ValueError(f"{kind} cannot be empty.")
+            if key in seen:
+                raise ValueError(f"Duplicate {kind.lower()} values are not allowed.")
+            seen.add(key)
+            result.append(stored)
+        return result
+
+    def validate_identity(
+        self, exercise_id: int | None, name: str, aliases: list[str]
+    ) -> tuple[str, list[str]]:
+        """Validate the final canonical-name/alias set using domain normalization rules."""
+        canonical_name = name.strip()
+        canonical_key = normalize_name(name)
+        if not canonical_key:
+            raise ValueError("Canonical name cannot be empty.")
+        final_aliases = self._distinct_names(aliases, "Alias")
+        requested_keys = [canonical_key, *(normalize_name(alias) for alias in final_aliases)]
+        if len(requested_keys) != len(set(requested_keys)):
+            raise ValueError("The canonical name and aliases must be distinct.")
+        if exercise_id is not None:
+            exists = self.connection.execute(
+                "SELECT 1 FROM exercise WHERE id = ?", (exercise_id,)
+            ).fetchone()
+            if exists is None:
+                raise ValueError("Exercise was not found.")
+        requested = set(requested_keys)
+        for row in self.connection.execute("SELECT id, canonical_name FROM exercise"):
+            if row["id"] != exercise_id and normalize_name(row["canonical_name"]) in requested:
+                raise ValueError("The canonical name or alias is already in use.")
+        for row in self.connection.execute("SELECT exercise_id, alias FROM exercise_alias"):
+            if row["exercise_id"] != exercise_id and normalize_name(row["alias"]) in requested:
+                raise ValueError("The canonical name or alias is already in use.")
+        return canonical_name, final_aliases
+
     def resolve(self, name: str) -> dict[str, Any] | None:
         row = self.connection.execute(
             "SELECT * FROM exercise WHERE canonical_name = ? COLLATE NOCASE",
@@ -149,30 +216,35 @@ class ExerciseRepository:
         return dict(row)
 
     def create(
-        self, name: str, category: str, equipment: str, body_areas: list[tuple[str, bool]]
+        self,
+        name: str,
+        category: str,
+        equipment: str,
+        body_areas: list[tuple[str, bool]],
+        *,
+        bundled_exercise_key: str | None = None,
     ) -> int:
-        name = name.strip()
-        if not name:
-            raise ValueError("Canonical name cannot be empty.")
-        if self.get_by_canonical_name(name) is not None:
-            raise ValueError("The canonical name is already in use.")
-        alias_match = self.connection.execute(
-            "SELECT 1 FROM exercise_alias WHERE alias = ? COLLATE NOCASE", (name,)
-        ).fetchone()
-        if alias_match is not None:
-            raise ValueError("The canonical name is already in use as an alias.")
+        name, _ = self.validate_identity(None, name, [])
+        prepared_areas: list[tuple[str, bool]] = []
+        seen_areas: set[str] = set()
+        for area, primary in body_areas:
+            stored_area = area.strip()
+            key = normalize_name(area)
+            if not key:
+                raise ValueError("Body area cannot be empty.")
+            if key in seen_areas:
+                raise ValueError("Duplicate body area values are not allowed.")
+            seen_areas.add(key)
+            prepared_areas.append((stored_area, primary))
         now = datetime.now(UTC).isoformat()
         cursor = self.connection.execute(
             "INSERT INTO exercise(canonical_name, category, equipment_summary, "
-            "created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (name, category, equipment, now, now),
+            "created_at, updated_at, bundled_exercise_key) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (name, category, equipment, now, now, bundled_exercise_key),
         )
-        for area, primary in body_areas:
-            self.connection.execute("INSERT OR IGNORE INTO body_area(name) VALUES (?)", (area,))
-            area_id = self.connection.execute(
-                "SELECT id FROM body_area WHERE name = ?", (area,)
-            ).fetchone()[0]
+        for area, primary in prepared_areas:
+            area_id = self._body_area_id(area)
             self.connection.execute(
                 "INSERT INTO exercise_body_area(exercise_id, body_area_id, is_primary) "
                 "VALUES (?, ?, ?)",
@@ -181,19 +253,14 @@ class ExerciseRepository:
         return cursor.lastrowid
 
     def update_metadata(self, exercise_id: int, name: str, category: str, equipment: str) -> None:
-        name = name.strip()
-        if not name:
-            raise ValueError("Canonical name cannot be empty.")
-        conflict = self.connection.execute(
-            "SELECT 1 FROM exercise WHERE canonical_name = ? COLLATE NOCASE AND id != ?",
-            (name, exercise_id),
-        ).fetchone()
-        alias_conflict = self.connection.execute(
-            "SELECT 1 FROM exercise_alias WHERE alias = ? COLLATE NOCASE AND exercise_id != ?",
-            (name, exercise_id),
-        ).fetchone()
-        if conflict is not None or alias_conflict is not None:
-            raise ValueError("The canonical name is already in use.")
+        current_aliases = [
+            row[0]
+            for row in self.connection.execute(
+                "SELECT alias FROM exercise_alias WHERE exercise_id = ? ORDER BY id",
+                (exercise_id,),
+            )
+        ]
+        name, _ = self.validate_identity(exercise_id, name, current_aliases)
         cursor = self.connection.execute(
             "UPDATE exercise SET canonical_name = ?, category = ?, equipment_summary = ?, "
             "updated_at = ? WHERE id = ?",
@@ -203,18 +270,70 @@ class ExerciseRepository:
             raise ValueError("Exercise was not found.")
 
     def add_alias(self, exercise_id: int, alias: str) -> None:
-        alias = alias.strip()
-        if not alias:
-            raise ValueError("Alias cannot be empty.")
-        existing_alias = self.connection.execute(
-            "SELECT 1 FROM exercise_alias WHERE alias = ? COLLATE NOCASE", (alias,)
+        exercise = self.connection.execute(
+            "SELECT canonical_name FROM exercise WHERE id = ?", (exercise_id,)
         ).fetchone()
-        if existing_alias is not None or self.get_by_canonical_name(alias) is not None:
-            raise ValueError("The name or alias is already in use.")
+        if exercise is None:
+            raise ValueError("Exercise was not found.")
+        current_aliases = [
+            row[0]
+            for row in self.connection.execute(
+                "SELECT alias FROM exercise_alias WHERE exercise_id = ? ORDER BY id",
+                (exercise_id,),
+            )
+        ]
+        _, aliases = self.validate_identity(
+            exercise_id, exercise["canonical_name"], [*current_aliases, alias]
+        )
         self.connection.execute(
             "INSERT INTO exercise_alias(exercise_id, alias) VALUES (?, ?)",
-            (exercise_id, alias),
+            (exercise_id, aliases[-1]),
         )
+
+    def replace_aliases(
+        self, exercise_id: int, aliases: list[str], canonical_name: str | None = None
+    ) -> None:
+        exercise = self.connection.execute(
+            "SELECT canonical_name FROM exercise WHERE id = ?", (exercise_id,)
+        ).fetchone()
+        if exercise is None:
+            raise ValueError("Exercise was not found.")
+        _, final_aliases = self.validate_identity(
+            exercise_id, canonical_name or exercise["canonical_name"], aliases
+        )
+        self.connection.execute("DELETE FROM exercise_alias WHERE exercise_id = ?", (exercise_id,))
+        self.connection.executemany(
+            "INSERT INTO exercise_alias(exercise_id, alias) VALUES (?, ?)",
+            [(exercise_id, alias) for alias in final_aliases],
+        )
+
+    def replace_primary_body_areas(self, exercise_id: int, primary_areas: list[str]) -> None:
+        exists = self.connection.execute(
+            "SELECT 1 FROM exercise WHERE id = ?", (exercise_id,)
+        ).fetchone()
+        if exists is None:
+            raise ValueError("Exercise was not found.")
+        final_areas = self._distinct_names(primary_areas, "Body area")
+        area_ids = [self._body_area_id(area) for area in final_areas]
+        self.connection.execute(
+            "DELETE FROM exercise_body_area WHERE exercise_id = ? AND is_primary = 1",
+            (exercise_id,),
+        )
+        for area_id in area_ids:
+            self.connection.execute(
+                "INSERT INTO exercise_body_area(exercise_id, body_area_id, is_primary) "
+                "VALUES (?, ?, 1) ON CONFLICT(exercise_id, body_area_id) "
+                "DO UPDATE SET is_primary = 1",
+                (exercise_id, area_id),
+            )
+
+    def _body_area_id(self, name: str) -> int:
+        key = normalize_name(name)
+        for row in self.connection.execute("SELECT id, name FROM body_area"):
+            if normalize_name(row["name"]) == key:
+                return row["id"]
+        cursor = self.connection.execute("INSERT INTO body_area(name) VALUES (?)", (name,))
+        return cursor.lastrowid
 
     def set_active(self, exercise_id: int, active: bool) -> None:
         cursor = self.connection.execute(
@@ -224,7 +343,52 @@ class ExerciseRepository:
         if cursor.rowcount != 1:
             raise ValueError("Exercise was not found.")
 
-    def add_guidance_revision(self, exercise_id: int, guidance: dict[str, Any]) -> int:
+    def set_bundled_exercise_key(self, exercise_id: int, key: str) -> None:
+        row = self.connection.execute(
+            "SELECT bundled_exercise_key FROM exercise WHERE id = ?", (exercise_id,)
+        ).fetchone()
+        if row is None:
+            raise ValueError("Exercise was not found.")
+        current = row["bundled_exercise_key"]
+        if current == key:
+            return
+        if current is not None:
+            raise ValueError("Exercise is already linked to different bundled content.")
+        existing = self.get_by_bundled_key(key)
+        if existing is not None and existing["id"] != exercise_id:
+            raise ValueError("Bundled exercise is already linked to another exercise.")
+        self.connection.execute(
+            "UPDATE exercise SET bundled_exercise_key = ? WHERE id = ?",
+            (key, exercise_id),
+        )
+
+    def has_bundled_guidance(
+        self, exercise_id: int, content_id: str, content_version: int
+    ) -> bool:
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM exercise_guidance_revision "
+                "WHERE exercise_id = ? AND bundled_content_id = ? "
+                "AND bundled_content_version = ?",
+                (exercise_id, content_id, content_version),
+            ).fetchone()
+            is not None
+        )
+
+    def add_guidance_revision(
+        self,
+        exercise_id: int,
+        guidance: dict[str, Any],
+        *,
+        bundled_content_id: str | None = None,
+        bundled_content_version: int | None = None,
+    ) -> int:
+        if (bundled_content_id is None) != (bundled_content_version is None):
+            raise ValueError("Bundled content identity and version must be stored together.")
+        if bundled_content_version is not None and (
+            not isinstance(bundled_content_version, int) or bundled_content_version < 1
+        ):
+            raise ValueError("Bundled content version must be a positive integer.")
         payload = guidance_to_json(guidance)
         revision = self.connection.execute(
             "SELECT COALESCE(MAX(revision_number), 0) + 1 "
@@ -233,9 +397,17 @@ class ExerciseRepository:
         ).fetchone()[0]
         cursor = self.connection.execute(
             "INSERT INTO exercise_guidance_revision("
-            "exercise_id, revision_number, guidance_json, created_at) "
-            "VALUES (?, ?, ?, ?)",
-            (exercise_id, revision, payload, datetime.now(UTC).isoformat()),
+            "exercise_id, revision_number, guidance_json, created_at, "
+            "bundled_content_id, bundled_content_version) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                exercise_id,
+                revision,
+                payload,
+                datetime.now(UTC).isoformat(),
+                bundled_content_id,
+                bundled_content_version,
+            ),
         )
         return cursor.lastrowid
 

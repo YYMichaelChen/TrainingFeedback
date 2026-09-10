@@ -1,12 +1,12 @@
 import pytest
 
+from tests.guidance_fixtures import complete_guidance as starter_guidance
 from training_feedback.app import ApplicationContext
 from training_feedback.application.exercise_service import ExerciseService
 from training_feedback.data.data_root import create_new
 from training_feedback.data.exercise_repositories import ExerciseRepository
 from training_feedback.data.locator import Locator
 from training_feedback.data.plan_repositories import PlanRepository
-from training_feedback.data.seed.catalog import starter_guidance
 from training_feedback.data.seed.plans import seed_initial_proposal
 from training_feedback.domain.enums import DoseUnit
 from training_feedback.domain.plans import (

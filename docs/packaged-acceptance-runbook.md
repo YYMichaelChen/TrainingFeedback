@@ -83,6 +83,10 @@ scenarios so the application asks for a data root.
 - At 100%, 125%, and 150% scaling, at recorded resolutions including 1366x768
   and 1920x1080 where available: check startup errors, root switching dialogs,
   long Chinese text, and an action with many actual-set rows.
+- For the 0.3.0 guidance workflow, also check the exercise detail window,
+  complete editor, revision review, and bundled-update preview. Open a selected
+  older revision for editing, inspect long Chinese guidance, reorder steps,
+  and confirm save/cancel/approval controls remain reachable.
 - Expected: Pause / Abort / Finish remain accessible without scrolling the
   training content in every checked configuration.
 

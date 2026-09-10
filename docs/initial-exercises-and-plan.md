@@ -1,7 +1,7 @@
 # Initial Exercises And Plan Proposal
 
-Status: approved catalog scope; seeded guidance and plan remain drafts pending review and confirmation\
-Last updated: 2026-09-08
+Status: approved catalog scope; bundled guidance v1 and plan remain drafts pending review and confirmation\
+Last updated: 2026-09-11
 
 This document defines the first catalog candidates and the initial plan used to
 develop and validate the application. It is not a medical assessment and its
@@ -24,27 +24,27 @@ supporting exercises. Second-batch candidates are not seeded.
 
 ### Main Training Exercises
 
-| Canonical name | Aliases | Role | Primary next-day areas | Initial dose unit |
-| --- | --- | --- | --- | --- |
-| 臀桥 | 常规臀桥 | Glute strength | 臀部 | reps |
-| 蚌式开合 |  | Hip-abduction strength | 臀部 | reps per side |
-| 椅子深蹲 |  | Squat pattern | 大腿前侧、臀部 | reps |
-| 死虫式 |  | Anterior core control | 核心 | reps per side |
-| 蝴蝶臀桥 |  | Glute bridge variation | 臀部 | reps |
-| 跪姿臀冲 |  | Hip-extension strength | 臀部、核心 | reps |
-| 静态臀桥 |  | Isometric hip extension | 臀部、核心 | seconds |
+| Canonical name | Aliases | Role | Primary next-day areas | Secondary guidance areas | Initial dose unit |
+| --- | --- | --- | --- | --- | --- |
+| 臀桥 | 常规臀桥 | Glute strength | 臀部 | 大腿后侧、核心 | reps |
+| 蚌式开合 |  | Hip-abduction strength | 臀部 | 髋部、核心 | reps per side |
+| 椅子深蹲 |  | Squat pattern | 大腿前侧、臀部 | 核心 | reps |
+| 死虫式 |  | Anterior core control | 核心 | 髋部 | reps per side |
+| 蝴蝶臀桥 |  | Glute bridge variation | 臀部 | 大腿内侧、核心 | reps |
+| 跪姿臀冲 |  | Hip-extension strength | 臀部、核心 | 大腿前侧 | reps |
+| 静态臀桥 |  | Isometric hip extension | 臀部、核心 | 大腿后侧 | seconds |
 
 ### Supporting Exercises
 
-| Canonical name | Role | Training phase | Creates soreness prompt by default |
-| --- | --- | --- | --- |
-| 仰卧360°膈肌呼吸 | Breathing and trunk preparation/recovery | preparation or cooldown | no |
-| 小幅猫牛式 | Spinal mobility and trunk control | preparation | no |
-| 坐姿90/90髋转换 | Hip rotation mobility | preparation | no |
-| 蝴蝶式 | Inner-thigh and hip cooldown | cooldown | no |
-| 仰卧4字臀部拉伸 | Glute stretch | cooldown | no |
-| 半跪髋屈肌拉伸 | Front-hip stretch | cooldown | no |
-| 站立体前屈 | Posterior-chain cooldown | cooldown | no |
+| Canonical name | Role | Primary guidance areas | Secondary guidance areas | Training phase | Creates soreness prompt by default |
+| --- | --- | --- | --- | --- | --- |
+| 仰卧360°膈肌呼吸 | Breathing and trunk preparation/recovery | 核心 | 胸廓 | preparation or cooldown | no |
+| 小幅猫牛式 | Spinal mobility and trunk control | 背部 | 核心、颈部 | preparation | no |
+| 坐姿90/90髋转换 | Hip rotation mobility | 髋部 | 臀部、大腿内侧 | preparation | no |
+| 蝴蝶式 | Inner-thigh and hip cooldown | 大腿内侧 | 髋部 | cooldown | no |
+| 仰卧4字臀部拉伸 | Glute stretch | 臀部 | 髋部 | cooldown | no |
+| 半跪髋屈肌拉伸 | Front-hip stretch | 髋前侧 | 大腿前侧、核心 | cooldown | no |
+| 站立体前屈 | Posterior-chain cooldown | 大腿后侧 | 臀部、背部 | cooldown | no |
 
 Second-batch supporting candidates:
 
@@ -77,12 +77,15 @@ usable release:
 The old project may be consulted manually, but the completed guidance belongs
 to this repository's own seed data and must not be loaded from the old runtime.
 
-Current implementation: `data/seed/catalog.py` generates generic starter text
-for each exercise, with `review.status = draft` and an explicit missing-image
-state. Passing required-field validation does not make that text a completed,
-exercise-specific guide. Replace or refine it per exercise, record external
-review evidence, and obtain explicit user approval before guidance activation.
-Default seed metadata must never represent an expert review or user approval.
+Current implementation: `data/seed/catalog.py` owns exercise-specific bundled
+guidance v1 for all 14 launch exercises. Each item has a stable bundled exercise
+key and content identity/version, `review.status = draft`, blank review facts,
+and an explicit missing-image state. New roots receive these drafts directly;
+existing roots receive selected drafts only through the local preview and
+acceptance action. Required-field validation still does not constitute content
+review. Record real external review evidence and obtain explicit user approval
+before activation. Bundled metadata must never represent an expert review,
+user approval, or confirmed exercise dose.
 
 ## 4. Initial Plan Proposal
 

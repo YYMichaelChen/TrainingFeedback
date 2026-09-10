@@ -93,22 +93,20 @@ class PlanDetailPage(QWidget):
                 exercise = self.exercise_service.repository.get(action["exercise_id"])
                 if exercise is None or action["exercise_id"] in reviewed:
                     continue
-                guidance = next(
-                    (
-                        item
-                        for item in exercise["guidance"]
-                        if item["id"] == exercise.get("active_guidance_revision_id")
-                    ),
-                    exercise["guidance"][-1] if exercise["guidance"] else None,
-                )
-                if (
-                    guidance is None
-                    or guidance["guidance"].get("review", {}).get("status") == "active"
-                ):
+                reviewable = [
+                    item
+                    for item in exercise["guidance"]
+                    if item["guidance"].get("review", {}).get("status")
+                    in {"draft", "pending_review", "rejected"}
+                ]
+                if not reviewable:
                     reviewed.add(action["exercise_id"])
                     continue
                 dialog = GuidanceReviewDialog(
-                    self.exercise_service, guidance["id"], guidance["guidance"], self
+                    self.exercise_service,
+                    exercise,
+                    selected_revision_id=reviewable[-1]["id"],
+                    parent=self,
                 )
                 if not dialog.exec():
                     return

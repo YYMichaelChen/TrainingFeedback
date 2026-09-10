@@ -81,8 +81,12 @@ def test_start_snapshots_plan_and_exercise_facts(tmp_path):
     assert session["status"] == "open"
     assert session["training_date"] == "2026-09-06"
     assert action["exercise_name_snapshot"] == "臀桥"
-    assert action["body_areas"] == ["臀部"]
-    assert action["body_area_snapshots"] == [{"name": "臀部", "is_primary": True}]
+    assert action["body_areas"] == ["臀部", "大腿后侧", "核心"]
+    assert action["body_area_snapshots"] == [
+        {"name": "臀部", "is_primary": True},
+        {"name": "大腿后侧", "is_primary": False},
+        {"name": "核心", "is_primary": False},
+    ]
     assert action["guidance_revision_id"] is not None
     assert action["sets"][0]["planned_value"] == 12
     assert action["sets"][0]["planned_per_side"] == 1

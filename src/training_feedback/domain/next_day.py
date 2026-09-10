@@ -23,6 +23,10 @@ def performed_actions(session: dict) -> list[dict]:
 def feedback_areas(session: dict) -> tuple[str, ...]:
     areas: list[str] = []
     for action in performed_actions(session):
+        # Supporting movements can have anatomically useful primary-area metadata
+        # without creating next-day soreness prompts in their supporting phase.
+        if action.get("phase_snapshot", "main") != "main":
+            continue
         snapshots = action.get("body_area_snapshots", [])
         for area in snapshots:
             if isinstance(area, dict) and area.get("is_primary") is True:

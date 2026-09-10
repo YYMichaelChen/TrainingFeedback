@@ -15,7 +15,7 @@ import sqlite3
 from datetime import UTC, datetime
 from typing import Callable
 
-LATEST_SCHEMA_VERSION = 12
+LATEST_SCHEMA_VERSION = 13
 
 
 class FutureSchemaError(sqlite3.DatabaseError):
@@ -428,6 +428,38 @@ def _migration_12(connection: sqlite3.Connection) -> None:
     )
 
 
+def _migration_13(connection: sqlite3.Connection) -> None:
+    """Persist future bundled-content identity without inventing it for old rows."""
+    exercise_columns = {
+        row["name"] for row in connection.execute("PRAGMA table_info(exercise)")
+    }
+    if "bundled_exercise_key" not in exercise_columns:
+        connection.execute("ALTER TABLE exercise ADD COLUMN bundled_exercise_key TEXT")
+    connection.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS bundled_exercise_identity "
+        "ON exercise(bundled_exercise_key) WHERE bundled_exercise_key IS NOT NULL"
+    )
+    revision_columns = {
+        row["name"]
+        for row in connection.execute("PRAGMA table_info(exercise_guidance_revision)")
+    }
+    if "bundled_content_id" not in revision_columns:
+        connection.execute(
+            "ALTER TABLE exercise_guidance_revision ADD COLUMN bundled_content_id TEXT"
+        )
+    if "bundled_content_version" not in revision_columns:
+        connection.execute(
+            "ALTER TABLE exercise_guidance_revision ADD COLUMN bundled_content_version INTEGER "
+            "CHECK (bundled_content_version IS NULL OR bundled_content_version > 0)"
+        )
+    connection.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS bundled_guidance_delivery "
+        "ON exercise_guidance_revision("
+        "exercise_id, bundled_content_id, bundled_content_version) "
+        "WHERE bundled_content_id IS NOT NULL AND bundled_content_version IS NOT NULL"
+    )
+
+
 # 版本号从 1 开始连续递增；新增迁移时追加条目并同步 LATEST_SCHEMA_VERSION。
 _MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {
     2: _migration_2,
@@ -441,6 +473,7 @@ _MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {
     10: _migration_10,
     11: _migration_11,
     12: _migration_12,
+    13: _migration_13,
 }
 
 

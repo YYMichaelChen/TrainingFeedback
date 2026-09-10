@@ -51,6 +51,17 @@ GUIDANCE_STATUS_LABELS = {
     "missing": "缺失",
 }
 
+IMAGE_STATUS_LABELS = {
+    "available": "有可用图片",
+    "missing": "缺失图片",
+}
+
+REVIEWER_TYPE_LABELS = {
+    None: "未记录",
+    "external_ai_expert": "外部 AI 专家",
+    "human_expert": "人工专家",
+}
+
 PLAN_STATUS_LABELS = {
     "draft": "草稿",
     "active": "当前版本",
@@ -127,6 +138,36 @@ ERROR_TRANSLATIONS = {
     "Session was not found.": "没有找到这次训练。",
     "Session action was not found.": "没有找到这项训练动作。",
     "Guidance JSON must be an object.": "动作指导 JSON 必须是对象。",
+    "Guidance must be an object.": "动作指导内容格式无效。",
+    "Canonical name cannot be empty.": "标准名称不能为空。",
+    "Alias cannot be empty.": "别名不能为空。",
+    "Body area cannot be empty.": "身体部位不能为空。",
+    "Duplicate alias values are not allowed.": "别名不能重复。",
+    "Duplicate body area values are not allowed.": "身体部位不能重复。",
+    "The canonical name and aliases must be distinct.": "标准名称与别名不能相同。",
+    "The canonical name or alias is already in use.": "该标准名称或别名已被其他动作使用。",
+    "Exercise was not found.": "没有找到指定的训练动作。",
+    "Complete guidance and explicit user approval are required.": (
+        "请先补全动作指导内容，并明确批准该版本后再启用。"
+    ),
+    "Unknown bundled exercise selection.": "所选内置动作不存在，请重新打开预览。",
+    "Each bundled exercise requires a different local exercise.": (
+        "每项内置指导必须对应不同的本地动作，请检查目标选择。"
+    ),
+    "Selected exercise was not found.": "没有找到所选本地动作，请重新打开预览。",
+    "Selected exercise is linked to different bundled content.": (
+        "所选动作已关联其他内置指导，请选择对应的本地动作。"
+    ),
+    "Exercise is already linked to different bundled content.": (
+        "该动作已关联其他内置指导，无法重复关联。"
+    ),
+    "Bundled exercise is already linked to another exercise.": (
+        "这项内置指导已关联其他本地动作，请使用已关联的目标。"
+    ),
+    "Bundled guidance is incomplete.": "内置指导内容不完整，无法接收此草稿。",
+    "Step order must be a positive integer.": "动作步骤顺序必须是正整数。",
+    "Guidance revision was not found.": "没有找到指定的动作指导版本。",
+    "No reviewable guidance revision is selected.": "请选择一个可复核的动作指导版本。",
     "Reviewer type and source are required.": "审核人类型和来源不能为空。",
     "Explicit user approval is required.": "必须明确批准。",
     "Review time is required.": "审核时间不能为空。",

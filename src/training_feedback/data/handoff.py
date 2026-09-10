@@ -223,6 +223,14 @@ def _append_catalog(lines: list[str], catalog: list[dict[str, Any]]) -> None:
         for guidance in exercise["guidance"]:
             content = guidance["guidance"]
             lines.append(f"- 指导版本 {guidance['revision_number']}（稳定指导，不是用户报告）")
+            lines.append(
+                "  - 指导主要部位："
+                f"{'、'.join(content.get('primary_body_areas', [])) or '未记录'}"
+            )
+            lines.append(
+                "  - 指导次要部位："
+                f"{'、'.join(content.get('secondary_body_areas', [])) or '未记录'}"
+            )
             for key, title in (
                 ("purpose", "目的"),
                 ("starting_position", "起始姿势"),

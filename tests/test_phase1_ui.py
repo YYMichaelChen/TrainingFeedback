@@ -71,8 +71,9 @@ def test_guidance_review_dialog_approves_and_activates(qt_app, tmp_path, monkeyp
     repository = ExerciseRepository(context.database.connection)
     service = ExerciseService(repository)
     exercise_id = repository.resolve("臀桥")["id"]
-    revision = repository.get(exercise_id)["guidance"][0]
-    dialog = GuidanceReviewDialog(service, revision["id"], revision["guidance"])
+    exercise = repository.get(exercise_id)
+    revision = exercise["guidance"][0]
+    dialog = GuidanceReviewDialog(service, exercise, selected_revision_id=revision["id"])
     dialog.source_edit.setText("review-1")
     dialog.approved.setChecked(True)
     dialog._approve()

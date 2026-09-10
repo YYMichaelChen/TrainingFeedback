@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import unicodedata
+from copy import deepcopy
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -46,7 +47,59 @@ def normalize_name(value: str) -> str:
     return unicodedata.normalize("NFKC", value.strip()).casefold()
 
 
-def validate_guidance(value: dict[str, Any]) -> GuidanceValidation:
+def fresh_guidance_draft(value: dict[str, Any]) -> dict[str, Any]:
+    """Copy guidance content while removing review facts that belong to an older revision."""
+    if not isinstance(value, dict):
+        raise ValueError("Guidance must be an object.")
+    draft = deepcopy(value)
+    draft["review"] = {
+        "status": GuidanceStatus.DRAFT.value,
+        "reviewer_type": None,
+        "review_source": None,
+        "review_note": "",
+        "reviewed_at": None,
+        "user_approved_at": None,
+    }
+    return draft
+
+
+def custom_guidance_draft(_name: str) -> dict[str, Any]:
+    """Return neutral editable defaults for a user-created exercise.
+
+    These placeholders deliberately do not reuse application-owned launch content and
+    do not claim that a purpose, technique, review, or approval is already known.
+    """
+    return {
+        "purpose": "",
+        "primary_body_areas": [],
+        "secondary_body_areas": [],
+        "starting_position": "",
+        "steps": [],
+        "breathing": "",
+        "tempo_or_pacing": "",
+        "intended_sensations": [],
+        "common_compensations": [],
+        "stop_criteria": [],
+        "regressions": [],
+        "progressions": [],
+        "equipment": [],
+        "applicability": "",
+        "cautions": "",
+        "images": [{"path": None, "caption": "暂无图片", "status": "missing"}],
+        "review": {
+            "status": GuidanceStatus.DRAFT.value,
+            "reviewer_type": None,
+            "review_source": None,
+            "review_note": "",
+            "reviewed_at": None,
+            "user_approved_at": None,
+        },
+    }
+
+
+def validate_guidance(
+    value: dict[str, Any], *, require_body_areas: bool = False
+) -> GuidanceValidation:
     errors: list[str] = []
     for field in REQUIRED_SCALARS:
         if not isinstance(value.get(field), str) or not value[field].strip():
@@ -62,6 +115,15 @@ def validate_guidance(value: dict[str, Any]) -> GuidanceValidation:
             )
         ):
             errors.append(f"{field} must contain meaningful entries")
+    if require_body_areas:
+        for field in ("primary_body_areas", "secondary_body_areas"):
+            entries = value.get(field)
+            if (
+                not isinstance(entries, list)
+                or not entries
+                or any(not isinstance(entry, str) or not entry.strip() for entry in entries)
+            ):
+                errors.append(f"{field} must contain meaningful entries")
     steps = value.get("steps")
     if not isinstance(steps, list) or not steps:
         errors.append("steps must contain at least one item")
@@ -124,7 +186,14 @@ def has_review_metadata(review: Any) -> bool:
 
 
 def require_review_metadata(review: dict[str, Any]) -> None:
-    if not review.get("reviewer_type") or not review.get("review_source"):
+    reviewer_type = review.get("reviewer_type")
+    review_source = review.get("review_source")
+    if (
+        not isinstance(reviewer_type, str)
+        or not reviewer_type.strip()
+        or not isinstance(review_source, str)
+        or not review_source.strip()
+    ):
         raise ValueError("Reviewer type and source are required.")
     if not review.get("user_approved_at"):
         raise ValueError("Explicit user approval is required.")
