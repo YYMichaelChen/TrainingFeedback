@@ -142,7 +142,11 @@ class HomePage(QWidget):
         page.go_to_first_unfinished()
         page.session_ended.connect(self.refresh)
         page.session_ended.connect(page.close)
-        page.resize(520, 700)
+        available = page.screen().availableGeometry()
+        page.resize(
+            max(360, min(560, available.width() - 80)),
+            max(400, min(640, available.height() - 80)),
+        )
         page.show()
 
     def _open_feedback(self):

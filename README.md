@@ -44,9 +44,25 @@ environment and pinned toolchain are recorded in
 pwsh -File packaging/build.ps1
 ```
 
+The build interpreter resolves to `-Python <path>` when given, then
+`.venv\Scripts\python.exe` (standard venv), then `.venv\python.exe` (Conda
+layout). The build verifies both pinned packaging dependencies and the
+declared Python/PySide6 baseline, isolates binary discovery from unrelated
+developer-tool `PATH` entries, and writes
+`dist/TrainingFeedback.build-manifest.json` with versions, source revision,
+and artifact hashes.
+
 The entry point is `dist/TrainingFeedback/TrainingFeedback.exe`; move or copy
 the whole `dist/TrainingFeedback/` directory together. User data always lives
 in the separately chosen data root, never in the program directory.
+
+Packaged acceptance uses a synthetic fixture and a step-by-step runbook:
+
+```powershell
+pwsh -File packaging/prepare-acceptance-data.ps1 D:\TF-Acceptance
+```
+
+See [docs/packaged-acceptance-runbook.md](docs/packaged-acceptance-runbook.md).
 Independent-machine acceptance of the packaged build remains Phase 8 work.
 
 ## Documentation

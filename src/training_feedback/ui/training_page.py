@@ -1,16 +1,18 @@
 """训练执行页：逐动作记录结果（含实际剂量两步录入）、暂停/中止/完成。"""
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -58,7 +60,7 @@ class TrainingPage(QWidget):
     session_ended = Signal()
 
     def __init__(self, controller, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, Qt.WindowType.Window)
         self.controller = controller
         self.action_index = 0
         self.value_edits = []
@@ -75,6 +77,14 @@ class TrainingPage(QWidget):
         self.planned = QLabel()
         self.actual_hint = QLabel("填写每组实际剂量后，再次点击结果按钮保存。")
         self.actual_hint.setVisible(False)
+        for text_label in (
+            self.title,
+            self.status,
+            self.progress,
+            self.planned,
+            self.actual_hint,
+        ):
+            text_label.setWordWrap(True)
         self.note = QLineEdit()
         self.note.setPlaceholderText("可选备注")
         self.values = QWidget()
@@ -83,16 +93,17 @@ class TrainingPage(QWidget):
         self.add_actual_set_button = QPushButton("增加实际完成组")
         self.add_actual_set_button.setVisible(False)
         self.add_actual_set_button.clicked.connect(self._add_actual_set)
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.title)
-        layout.addWidget(self.status)
-        layout.addWidget(self.progress)
-        layout.addWidget(self.action_selector)
-        layout.addWidget(self.planned)
-        layout.addWidget(self.actual_hint)
-        layout.addWidget(self.values)
-        layout.addWidget(self.add_actual_set_button)
-        layout.addWidget(self.note)
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.addWidget(self.title)
+        content_layout.addWidget(self.status)
+        content_layout.addWidget(self.progress)
+        content_layout.addWidget(self.action_selector)
+        content_layout.addWidget(self.planned)
+        content_layout.addWidget(self.actual_hint)
+        content_layout.addWidget(self.values)
+        content_layout.addWidget(self.add_actual_set_button)
+        content_layout.addWidget(self.note)
         for result_label, result_value in (
             (label(RESULT_LABELS, result), result)
             for result in (
@@ -104,8 +115,22 @@ class TrainingPage(QWidget):
         ):
             button = QPushButton(result_label)
             button.clicked.connect(lambda _checked=False, result=result_value: self._record(result))
-            layout.addWidget(button)
+            content_layout.addWidget(button)
             self.result_button_by_value[result_value] = button
+        content_layout.addStretch()
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.scroll_area.setWidget(content)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.scroll_area, 1)
+        session_controls = QWidget()
+        controls_layout = QHBoxLayout(session_controls)
+        controls_layout.setContentsMargins(0, 0, 0, 0)
         pause = QPushButton("暂停训练")
         pause.clicked.connect(self._pause)
         abort = QPushButton("中止训练")
@@ -113,7 +138,9 @@ class TrainingPage(QWidget):
         finish = QPushButton("完成训练")
         finish.clicked.connect(self._finish)
         for button in (pause, abort, finish):
-            layout.addWidget(button)
+            controls_layout.addWidget(button)
+        layout.addWidget(session_controls)
+        self.session_controls = session_controls
         self.pause_button = pause
         self.abort_button = abort
         self.finish_button = finish

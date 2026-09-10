@@ -1,7 +1,7 @@
 # TrainingFeedback Development Plan
 
-Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; Phase 8 directory-based build implemented and smoke-verified on the build machine; release acceptance pending\
-Last updated: 2026-09-09
+Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; Phase 8-B1 candidate preparation implemented and smoke-verified on the build machine; release acceptance pending\
+Last updated: 2026-09-10
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
@@ -492,7 +492,7 @@ never real user data. Date-boundary checks cover 01:59, 02:00, and 02:01.
 
 ## 9. Delivery Phases
 
-### Current Status (2026-09-09)
+### Current Status (2026-09-10)
 
 | Phase | Current status | Remaining acceptance or release work |
 | --- | --- | --- |
@@ -500,11 +500,111 @@ never real user data. Date-boundary checks cover 01:59, 02:00, and 02:01.
 | 2–3 | Catalog review and versioned-plan workflows implemented and tested | Seed guidance is still generic draft content; review and explicit plan confirmation are required before real activation. |
 | 4–6 | Execution, feedback/history, and external handoff implemented and regression-verified | Continue preserving their acceptance criteria during refinement. |
 | 7 | First workflow refinement slice implemented and tested | Multiple real sessions and an external expert's explainable revision based on actual feedback. |
-| 8 | Directory-based build (`dist/TrainingFeedback/`) with the packaged icon implemented and smoke-verified on the build machine via `packaging/build.ps1` | Independent Windows runtime acceptance, upgrade/data isolation on a copied real-class root, and packaged backup/restore drills. Backup restore is regression-verified with synthetic data and documented in Section 7. |
+| 8 | Directory-based build plus repeatable 8-B1 candidate preparation implemented and smoke-verified on the build machine; the build isolates binary discovery, records a manifest, and the synthetic fixture covers the required data classes | Execute 8-B2: independent Windows runtime acceptance, upgrade/data isolation on a copied real-class root, packaged backup/restore drills, and real-desktop scaling checks. Backup restore is regression-verified with synthetic data and documented in Section 7. |
 
 Automated and synthetic-data checks establish implementation behavior. They do
 not complete real-use, content-review, or release acceptance. Phase requirements
 below remain the acceptance checklist; dated test runs belong in task records.
+
+### Next Delivery Plan After 0.2.2
+
+The next implementation task is Phase 8-B2: execute the independent-runtime,
+upgrade, recovery, and real-desktop gates. Version 0.2.2 completes the
+repeatable 8-B1 candidate-preparation slice and repairs training-page control
+accessibility; it does not complete the first usable release. Continue with the
+following order, with content preparation allowed while an independent Windows
+environment is being arranged.
+
+#### 1. Prepare The Acceptance Candidate (8-B1)
+
+Status (2026-09-10): complete on the build machine. This status covers the
+repeatable toolchain, manifest, synthetic fixture, local regressions, and a
+packaged startup smoke check; it does not claim any 8-B2 independent-machine
+or real-desktop result.
+
+- Align `packaging/build.ps1` and README interpreter setup: support an explicit
+  interpreter and the declared standard-venv/Conda layouts, with readable
+  failures when neither is available.
+- Verify both pinned packaging dependencies. State the supported Python and
+  PySide6 build baseline, and record actual versions, architecture, source
+  revision, application version, and artifact hashes with each candidate.
+- Provide a repeatable acceptance-data preparation entry point under
+  `packaging/`, using a new isolated root and locator. Include completed and
+  paused sessions, plan revisions, verbatim notes, next-day feedback, images,
+  exports, and an imported draft. Mark all fixture content as synthetic;
+  fixture approval metadata must never enter production seed data.
+- Add a concise packaged-acceptance runbook linked from README. Reference this
+  document for requirements; keep the runbook focused on steps, expected
+  results, and a pass/fail/not-run evidence table.
+
+Exit: a fresh build can be produced through the documented setup, the candidate
+is identifiable, and the fixtures and local checks use only temporary roots.
+Retain the existing regression suite; add targeted checks only for changed
+build behavior or defects reproduced during acceptance.
+
+#### 2. Execute Packaged Acceptance (8-B2)
+
+- Run the complete program directory in an independent Windows x64 environment
+  with no Python, Conda, source checkout, or access to the build environment.
+  A clean VM or separate machine is suitable; a new account on the build
+  machine alone is insufficient evidence of runtime independence.
+- Exercise first launch, new-root creation, reopening, invalid/occupied-root
+  errors, cancellation, and restart. Include Chinese and space-containing
+  program/data paths and ordinary non-administrator operation.
+- On an isolated representative root, replace only application files with the
+  candidate. Prefer an actual previous-version build and record both versions;
+  same-version relocation is not cross-version upgrade evidence. Close the
+  application before taking baselines. Compare logical records and historical
+  snapshots after launch, and resource-file hashes; allow only declared schema
+  migrations, without rewriting prior facts.
+- Through the packaged UI, back up the complete root while open, close the
+  application, open the backup copy through the normal flow, resume the paused
+  session, inspect history/feedback, and export evidence again. Verify source
+  isolation and readable rejection of an invalid or occupied destination.
+- On a real desktop, check 100%, 125%, and 150% scaling at recorded screen
+  resolutions, including 1366x768 and 1920x1080 where available. Cover startup
+  errors, root switching, long Chinese text, and many actual-set rows; pause,
+  abort, and finish must remain accessible without scrolling the content.
+
+Exit: record candidate/environment identity and evidence for every scenario;
+reproduce and fix blocking failures, then rerun affected checks. Offscreen
+tests and process-survival smoke checks are supporting evidence only. If the
+independent environment or desktop checks are unavailable, leave those rows
+not run and Phase 8 acceptance pending.
+
+#### 3. Complete Guidance And Confirm The Initial Plan (Phases 2–3)
+
+- Replace generic starter text with exercise-specific guidance owned by
+  `docs/initial-exercises-and-plan.md` and the seed catalog. Prioritize the
+  proposal's 11 referenced exercises, then complete all 14 launch exercises.
+- Record actual external review evidence; require explicit user approval for
+  activation and explicit confirmation of the complete plan prescription.
+  Proposed doses and bundled defaults remain proposals until confirmed.
+- Define and verify delivery to existing TrainingFeedback roots: current
+  seeding skips existing exercises, so seed edits alone cannot update them.
+  Offer explicit new guidance revisions through the existing review workflow;
+  preserve user edits, previous approval records, and historical sessions.
+
+Exit: all launch guidance meets the documented content/review requirements,
+and the user has a deliberately confirmed usable plan. Missing images may
+remain explicit; adding image assets or more exercises is not a prerequisite.
+
+#### 4. Validate Real Use And Close The Release Gates (Phase 7)
+
+- After technical acceptance and guidance/plan confirmation, use the packaged
+  application for multiple real sessions and next-day feedback. Record friction
+  such as unnecessary clicks, unclear save states, or inaccessible controls;
+  keep personal training evidence in the user's data root, outside Git.
+- Complete one genuine evidence-export -> external expert rationale -> imported
+  draft -> reviewed diff -> explicitly activated revision cycle, and verify
+  that earlier history remains readable and unchanged.
+- Address reproducible workflow defects, rerun the relevant regressions and
+  packaged scenarios, then update the release-gate evidence and choose the
+  version number appropriate to the delivered change.
+
+Exit: the Phase 7 criteria and Section 10 release definition are supported by
+actual evidence. No installer, automatic updater, dashboard, embedded AI,
+cloud/mobile access, or speculative refactor is included in this sequence.
 
 ### Phase 0: Repository And Contracts
 

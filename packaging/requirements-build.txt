@@ -1,4 +1,6 @@
 # Verified build constraints for the Windows directory build (see build.ps1).
-# Environment verified on: Windows x64, Python 3.12.14, PySide6 6.11.2.
+# Verified on: Windows x64, Python 3.12.14, PySide6 6.11.2.
+# build.ps1 verifies both pins below plus the Python/PySide6 build baseline
+# declared in build.ps1; update baselines only after verifying a new toolchain.
 pyinstaller==6.22.2
 pyinstaller-hooks-contrib==2026.7

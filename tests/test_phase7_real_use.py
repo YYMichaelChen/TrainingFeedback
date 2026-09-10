@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QMessageBox
 
 from tests.test_phase4_sessions import FixedClock, _active_plan
@@ -11,6 +12,7 @@ from training_feedback.data.session_repositories import SessionRepository
 from training_feedback.domain.enums import ExerciseResult
 from training_feedback.domain.session_controller import SessionController
 from training_feedback.ui.home_page import HomePage
+from training_feedback.ui.main_window import MainWindow
 from training_feedback.ui.next_day_page import NextDayPage
 from training_feedback.ui.training_page import TrainingPage
 
@@ -97,6 +99,44 @@ def test_starting_training_immediately_updates_home_state(qt_app, tmp_path):
     assert "未完成的训练" in page.status.text()
     page.training_page.close()
     page.close()
+    context.close()
+
+
+def test_home_training_window_keeps_controls_visible_when_actual_sets_scroll(qt_app, tmp_path):
+    context = ApplicationContext.open(
+        create_new(tmp_path / "data"), Locator(tmp_path / "locator.json")
+    )
+    _plans, _exercises, plan_id = _active_plan(context)
+    service = context.training_service()
+    service.start(plan_id)
+    service.pause()
+    window = MainWindow(context)
+    window.show()
+    qt_app.processEvents()
+
+    home = window.pages.widget(0)
+    home._resume()
+    page = home.training_page
+    page.resize(520, 440)
+    page._record(ExerciseResult.EXCEEDED)
+    for _ in range(8):
+        page._add_actual_set()
+    qt_app.processEvents()
+
+    assert page.isWindow()
+    assert page.parent() is home
+    assert page.scroll_area.verticalScrollBar().maximum() > 0
+    controls = (page.pause_button, page.abort_button, page.finish_button)
+    assert all(not button.visibleRegion().isEmpty() for button in controls)
+    before_scroll = [button.mapToGlobal(QPoint(0, 0)) for button in controls]
+    page.scroll_area.verticalScrollBar().setValue(
+        page.scroll_area.verticalScrollBar().maximum()
+    )
+    qt_app.processEvents()
+    assert [button.mapToGlobal(QPoint(0, 0)) for button in controls] == before_scroll
+
+    page.close()
+    window.close()
     context.close()
 
 
