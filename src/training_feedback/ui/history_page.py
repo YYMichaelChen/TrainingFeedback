@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMessageBox,
+    QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -20,6 +21,7 @@ from .labels import (
     RESULT_LABELS,
     SESSION_STATUS_LABELS,
     label,
+    session_prescription_text,
     user_message,
 )
 
@@ -38,9 +40,9 @@ class HistoryPage(QWidget):
         self.history_list = QListWidget()
         self.history_list.currentItemChanged.connect(self._show_details)
         layout.addWidget(self.history_list)
-        self.details = QLabel()
-        self.details.setWordWrap(True)
-        layout.addWidget(self.details)
+        self.details = QPlainTextEdit()
+        self.details.setReadOnly(True)
+        layout.addWidget(self.details, 1)
         self.export_button = QPushButton("导出所选训练证据")
         self.export_button.clicked.connect(self._export_selected)
         layout.addWidget(self.export_button)
@@ -90,10 +92,7 @@ class HistoryPage(QWidget):
             "训练动作：",
         ]
         for action in session["actions"]:
-            planned = ", ".join(
-                f"{item['planned_value']} {label(DOSE_UNIT_LABELS, item['planned_unit'])}"
-                for item in action["sets"]
-            )
+            planned = session_prescription_text(action)
             actual = ", ".join(
                 f"{item['value']} {label(DOSE_UNIT_LABELS, item['unit'])}"
                 + (" / 每侧" if item["per_side"] else "")
@@ -126,7 +125,7 @@ class HistoryPage(QWidget):
                     f"{label(FEEDBACK_VALUE_LABELS, area['value']) if area['value'] else '未回答'}"
                 )
             lines.append(f"备注修正次数：{len(feedback['audit'])}")
-        self.details.setText("\n".join(lines))
+        self.details.setPlainText("\n".join(lines))
 
     def _export_selected(self) -> None:
         item = self.history_list.currentItem()

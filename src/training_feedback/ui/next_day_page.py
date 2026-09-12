@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFormLayout,
@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QRadioButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -27,19 +28,20 @@ class NextDayPage(QWidget):
     submitted = Signal()
 
     def __init__(self, context, session, clock=None, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, Qt.WindowType.Window)
         self.session = session
         self.service = context.feedback_service(clock)
         self.groups: dict[str, QButtonGroup] = {}
         self.action_note_buttons: dict[int, QPushButton] = {}
         self.setWindowTitle("次日反馈")
-        layout = QVBoxLayout(self)
+        content = QWidget()
+        layout = QVBoxLayout(content)
         title = QLabel(f"次日反馈：{session['training_date']}")
         title.setObjectName("pageTitle")
         layout.addWidget(title)
         layout.addWidget(QLabel(f"训练状态：{label(SESSION_STATUS_LABELS, session['status'])}"))
         self.submission_status = QLabel("尚未提交；未选择的部位将保留为未知。")
-        layout.addWidget(self.submission_status)
+        self.submission_status.setWordWrap(True)
         for area in self.service.areas(session):
             box = QGroupBox(area)
             box_layout = QVBoxLayout(box)
@@ -61,7 +63,10 @@ class NextDayPage(QWidget):
             if action.get("result") is None:
                 continue
             row = QVBoxLayout()
-            row.addWidget(QLabel(f"动作备注：{action['exercise_name_snapshot']}"))
+            action_label = QLabel(f"动作备注：{action['exercise_name_snapshot']}")
+            action_label.setTextFormat(Qt.TextFormat.PlainText)
+            action_label.setWordWrap(True)
+            row.addWidget(action_label)
             button = QPushButton("修正动作备注")
             button.setVisible(False)
             button.clicked.connect(
@@ -73,12 +78,21 @@ class NextDayPage(QWidget):
         layout.addLayout(self.action_notes)
         self.submit_button = QPushButton("提交反馈")
         self.submit_button.clicked.connect(self._submit)
-        layout.addWidget(self.submit_button)
         self.correct_note_button = QPushButton("修正总体备注")
         self.correct_note_button.clicked.connect(self._correct_note)
         self.correct_note_button.setVisible(False)
         layout.addWidget(self.correct_note_button)
         layout.addStretch()
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll_area.setWidget(content)
+        outer = QVBoxLayout(self)
+        outer.addWidget(self.scroll_area, 1)
+        outer.addWidget(self.submission_status)
+        outer.addWidget(self.submit_button)
+        available = self.screen().availableGeometry()
+        self.resize(min(520, available.width() - 40), min(600, available.height() - 60))
         existing = self.service.get(session["id"])
         if existing is not None:
             self._render_existing(existing)

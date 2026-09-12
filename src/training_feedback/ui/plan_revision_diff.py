@@ -5,7 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from ..domain.plans import diff_revisions, revision_from_snapshot
-from .labels import DOSE_UNIT_LABELS, PLAN_PHASE_LABELS, PLAN_STATUS_LABELS, label
+from .labels import (
+    DOSE_UNIT_LABELS,
+    PLAN_PHASE_LABELS,
+    PLAN_STATUS_LABELS,
+    label,
+    planned_set_text,
+)
 
 
 def render_revision(revision: dict[str, Any]) -> str:
@@ -25,12 +31,7 @@ def render_revision(revision: dict[str, Any]) -> str:
             if action["note"]:
                 lines.append(f"     备注：{action['note']}")
             for planned_set in action["sets"]:
-                side = " / 每侧" if planned_set["per_side"] else ""
-                dose = planned_set["note"] if planned_set["value"] is None else planned_set["value"]
-                lines.append(
-                    f"     第 {planned_set['set_order']} 组：{dose} "
-                    f"{label(DOSE_UNIT_LABELS, planned_set['unit'])}{side}"
-                )
+                lines.append(f"     {planned_set_text(planned_set)}")
     return "\n".join(lines)
 
 

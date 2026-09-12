@@ -86,6 +86,35 @@ def label(mapping: dict, value) -> str:
     return mapping.get(value, mapping.get(str(value), str(value)))
 
 
+def planned_set_text(item: dict, *, snapshot: bool = False) -> str:
+    """显示计划或会话逐组处方；原文只读，空数值不补成零。"""
+    prefix = "planned_" if snapshot else ""
+    value = item[f"{prefix}value"]
+    unit = item[f"{prefix}unit"]
+    note = item.get("plan_note_snapshot" if snapshot else "note") or ""
+    dose = str(value) if value is not None else "未记录数值"
+    if value is None and unit == DoseUnit.FREE and note:
+        dose = note
+    text = f"第 {item['set_order']} 组：{dose} {label(DOSE_UNIT_LABELS, unit)}"
+    if item[f"{prefix}per_side"]:
+        text += " / 每侧"
+    if note and not (value is None and unit == DoseUnit.FREE):
+        text += f"；组备注：{note}"
+    return text
+
+
+def session_prescription_text(action: dict) -> str:
+    """显示会话中的冻结处方，不访问当前计划或目录。"""
+    lines = [planned_set_text(item, snapshot=True) for item in action["sets"]]
+    if action.get("phase_snapshot") is not None:
+        lines.append(f"阶段：{label(PLAN_PHASE_LABELS, action['phase_snapshot'])}")
+    rest = action.get("rest_seconds_snapshot")
+    lines.append(f"休息：{str(rest) + ' 秒' if rest is not None else '未记录'}")
+    if action.get("plan_note_snapshot"):
+        lines.append(f"处方动作备注：{action['plan_note_snapshot']}")
+    return "\n".join(lines)
+
+
 def make_unit_combo(selected: DoseUnit | str | None = None) -> QComboBox:
     """构造剂量单位下拉框；selected 为要预选的单位（枚举或其取值）。"""
     combo = QComboBox()

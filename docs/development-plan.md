@@ -1,7 +1,7 @@
 # TrainingFeedback Development Plan
 
 Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; Phase 8-B1 candidate preparation implemented and smoke-verified on the build machine; release acceptance pending\
-Last updated: 2026-09-10
+Last updated: 2026-09-12
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
@@ -492,7 +492,7 @@ never real user data. Date-boundary checks cover 01:59, 02:00, and 02:01.
 
 ## 9. Delivery Phases
 
-### Current Status (2026-09-11)
+### Current Status (2026-09-12)
 
 | Phase | Current status | Remaining acceptance or release work |
 | --- | --- | --- |
@@ -524,11 +524,94 @@ passed acceptance check.
 | 8-B2 — Packaged acceptance | P0 release gate; starts with the existing candidate when an independent environment is available | Candidate-specific independent-runtime, upgrade, recovery, and display evidence. |
 | W4 — Real use and expert revision | After packaged acceptance and guidance/plan confirmation | Multiple real sessions plus one evidence-based plan-revision cycle. |
 
+#### Completed Preparation: Acceptance And Review Materials
+
+Executable acceptance materials and external review inputs have been prepared
+using the 0.3.0 candidate. An independent Windows environment
+is currently unavailable; actual external review and user approval are also
+pending. Preparation alone does not require a version bump, a new application
+interface, or a schema migration.
+
+| Remaining work | Work that can proceed now | Completion evidence |
+| --- | --- | --- |
+| Packaged acceptance preparation | Verify the candidate manifest and every artifact; prepare functional fixtures, a previous-version upgrade baseline, operator steps, and evidence forms. | An operator can execute the ten scenarios without reading application source. |
+| Guidance and plan review preparation | Export all 14 normal seed drafts and the complete initial plan; prepare a review request, per-item return checklist, and a validated plan-file example. | Complete, version-identified materials; no invented review facts or personal training records. |
+| 8-B2 independent Windows acceptance | Keep environment-dependent scenarios not run; execute when the environment is available and turn failures into reproducible repair tasks. | Candidate-specific passing evidence for runtime independence, upgrade, recovery, and desktop checks. |
+| W4 real-use revision cycle | Prepare the observation procedure; begin after technical acceptance, guidance approval, and full plan confirmation. | At least three real sessions as the initial verification sample, next-day feedback workflow, and one justified revision cycle. |
+
+The [packaged acceptance runbook](packaged-acceptance-runbook.md) owns technical
+sample preparation and execution. The [guidance review runbook](guidance-review-runbook.md)
+owns review inputs, return requirements, and applying actual responses. Guidance
+content and proposed doses remain owned by
+[initial-exercises-and-plan.md](initial-exercises-and-plan.md) and the seed.
+Generated packages, synthetic roots, candidate hashes, and dated verification
+results stay in local task artifacts; personal evidence stays in the user's
+data root. The three root task records track only the current development task.
+
+Review all 14 launch guides, prioritizing the initial plan's 11 references.
+Content review and acceptance-environment preparation can proceed concurrently.
+The user explicitly approves the required guidance and separately confirms the
+entire plan. Once 8-B2 also passes, conduct W4. Record unanswered feedback as
+unknown; the session sample is a software-verification starting point, not a
+training frequency or dose prescription. Complete the actual evidence export,
+external rationale, imported draft, reviewed diff, and explicit activation
+cycle before closing that gate.
+
+Prioritize reproduced data/history errors, workflow blockers, then redundant
+operations and unclear messages. Each repair needs reproduction steps,
+expected behavior, and a focused acceptance case. Identify any changed candidate
+and rerun affected packaged checks; retain earlier results as historical.
+
 W1–W3 are implementation work; completion does not assert an external expert
 review, user approval, or real training. Those events require their actual
 participants and evidence. If a candidate changes during this work, identify
 the new build and rerun affected packaged scenarios before release. Assign
 subsequent application versions when their delivered scope is known.
+
+#### Follow-Up Releases: 0.3.1 Corrections And 0.4.0 Review Workflow
+
+Deliver these as separate candidates with their own source identity, manifest,
+regression results, and packaged evidence. Runtime-independent acceptance and
+actual content review may proceed alongside development; neither is implied by
+an implementation version.
+
+0.3.1 corrects prescription display and feedback/history window usability:
+
+- Show each set's order, value, unit, per-side flag and original note in plan
+  details/activation, training and history. Free doses without a numeric value
+  display their explanation. Numeric doses must not hide their accompanying note.
+- Training/history use frozen action and set prescription notes, phase and rest.
+  Markdown session exports include these existing snapshots alongside the same
+  JSON facts. Rendering does not update storage or infer missing actual doses.
+- Open next-day feedback as a separate window bounded by the available screen;
+  scroll its content while keeping submission state and action fixed. History
+  details scroll independently of the export action. Unknown responses and audited
+  note correction retain their existing meaning.
+
+0.4.0 then makes plan revision and review targets explicit:
+
+- Select one plan revision. Default to the active revision, or the newest draft
+  if no active revision exists; import/clone selects the newly created revision.
+  Editing, guidance review, diff and activation target that displayed revision.
+  Published revisions are read-only and can be cloned; a stale target is rejected
+  and refreshed without performing the action on a different revision.
+- Show the original import rationale, source references and managed original
+  file for the selected imported revision. Subsequent draft editing does not
+  rewrite that original evidence. Importing still creates only a draft.
+- Record the external review occurrence separately from approval. The occurrence
+  input starts empty and accepts a calendar date or a timezone-aware datetime,
+  retaining the supplied precision. An application use case validates the review
+  and explicit confirmation, then generates approval time from an injectable clock
+  and performs transactional approval/activation. Changing guidance selection
+  clears the current input and confirmation; saved evidence remains read-only.
+- Existing review times remain unchanged; earlier UI versions may have stored the
+  submission time. Never infer or backfill their actual external occurrence.
+
+Both releases reuse database schema 13, evidence v1 and plan v1. Exercise/plan
+content and dose proposals do not change. Add focused regressions before each
+fix, run the full suite and lint, build and preserve each candidate separately.
+Test v0.2.2 copied-root migration as well as adjacent-version opening, backup and
+restore. Actual independent-desktop checks must identify the tested candidate.
 
 #### 1. Prepare The Acceptance Candidate (8-B1)
 
@@ -555,7 +638,10 @@ requirement.
   errors, cancellation, and restart. Include Chinese and space-containing
   program/data paths and ordinary non-administrator operation.
 - On an isolated representative root, replace only application files with the
-  candidate. Prefer an actual previous-version build and record both versions;
+  candidate. For the 0.3.0 gate, generate the sample from this repository's
+  v0.2.2 source and open/close it with the corresponding previous-version build
+  before capturing the baseline. Preserve an original never opened by 0.3.0,
+  and upgrade a separate copy. Record both versions;
   same-version relocation is not cross-version upgrade evidence. Close the
   application before taking baselines. Compare logical records and historical
   snapshots after launch, and resource-file hashes; allow only declared schema
@@ -692,7 +778,9 @@ This is W4. It requires real training and external expert participation;
 automated tests or synthetic fixtures cannot complete it.
 
 - After technical acceptance and guidance/plan confirmation, use the packaged
-  application for multiple real sessions and next-day feedback. Record friction
+  application for at least three real sessions as the initial verification
+  sample and cover the next-day feedback workflow, leaving unanswered facts
+  unknown. Record friction
   such as unnecessary clicks, unclear save states, or inaccessible controls;
   keep personal training evidence in the user's data root, outside Git.
 - Complete one genuine evidence-export -> external expert rationale -> imported

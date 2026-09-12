@@ -27,6 +27,7 @@ from .labels import (
     label,
     localize_dialog_buttons,
     make_unit_combo,
+    session_prescription_text,
     user_message,
 )
 
@@ -75,6 +76,7 @@ class TrainingPage(QWidget):
         self.action_selector = QComboBox()
         self.action_selector.currentIndexChanged.connect(self._select_action)
         self.planned = QLabel()
+        self.planned.setTextFormat(Qt.TextFormat.PlainText)
         self.actual_hint = QLabel("填写每组实际剂量后，再次点击结果按钮保存。")
         self.actual_hint.setVisible(False)
         for text_label in (
@@ -202,14 +204,7 @@ class TrainingPage(QWidget):
             f"训练日期：{session['training_date']} | 状态："
             f"{label(SESSION_STATUS_LABELS, session['status'])}"
         )
-        self.planned.setText(
-            "计划剂量："
-            + ", ".join(
-                f"{item['planned_value']} {label(DOSE_UNIT_LABELS, item['planned_unit'])}"
-                + (" / 每侧" if item["planned_per_side"] else "")
-                for item in action["sets"]
-            )
-        )
+        self.planned.setText("计划剂量：\n" + session_prescription_text(action))
         while self.values_layout.rowCount():
             self.values_layout.removeRow(0)
         self.value_edits = []

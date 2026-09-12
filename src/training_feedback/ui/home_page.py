@@ -159,7 +159,6 @@ class HomePage(QWidget):
             return
         session_id = self.feedback_selector.currentData()
         session = next((item for item in choices if item["id"] == session_id), choices[0])
-        self.feedback_page = NextDayPage(self.context, session, parent=self)
+        self.feedback_page = NextDayPage(self.context, session, clock=self.clock, parent=self)
         self.feedback_page.submitted.connect(self.refresh)
-        self.feedback_page.resize(520, 520)
         self.feedback_page.show()

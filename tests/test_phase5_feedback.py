@@ -313,7 +313,7 @@ def test_history_page_renders_session_details(qt_app, tmp_path):
     assert page.history_list.count() == 2
     assert "2026-09-06" in page.history_list.item(0).text()
     assert "臀桥" in page.history_list.item(1).text()
-    assert "训练日期：2026-09-06" in page.details.text()
+    assert "训练日期：2026-09-06" in page.details.toPlainText()
     page.close()
     context.close()
 
@@ -325,7 +325,7 @@ def test_history_details_use_refresh_snapshot_without_reloading_history(qt_app, 
 
     page.history_list.setCurrentRow(1)
 
-    assert "臀桥" in page.details.text()
+    assert "臀桥" in page.details.toPlainText()
     page.close()
     context.close()
 

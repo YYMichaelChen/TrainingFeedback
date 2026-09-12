@@ -303,6 +303,11 @@ def _append_sessions(lines: list[str], sessions: list[dict[str, Any]]) -> None:
                 f"指导版本 ID：{_unknown(action.get('guidance_revision_id'))}；"
                 f"备注：{_unknown(action.get('note'))}"
             )
+            lines.append(
+                f"  - 处方快照：阶段 {_unknown(action.get('phase_snapshot'))}；"
+                f"休息 {_unknown(action.get('rest_seconds_snapshot'))} 秒；"
+                f"动作备注：{_unknown(action.get('plan_note_snapshot'))}"
+            )
             for session_set in action["sets"]:
                 lines.append(
                     f"  - 第 {session_set['set_order']} 组：计划 "
@@ -311,6 +316,7 @@ def _append_sessions(lines: list[str], sessions: list[dict[str, Any]]) -> None:
                     f"{_unknown(session_set['actual_value'])} "
                     f"{_unknown(session_set['actual_unit'])}，"
                     f"每侧 {_unknown(session_set['actual_per_side'])}"
+                    f"；计划组备注：{_unknown(session_set.get('plan_note_snapshot'))}"
                 )
             if action.get("actual_sets"):
                 lines.append("  - 实际完成组：")
