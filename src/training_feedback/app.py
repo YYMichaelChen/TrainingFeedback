@@ -102,11 +102,11 @@ class ApplicationContext:
             self.database.connection, ExerciseRepository(self.database.connection)
         )
 
-    def exercise_service(self):
+    def exercise_service(self, clock=None):
         from .application.exercise_service import ExerciseService
         from .data.exercise_repositories import ExerciseRepository
 
-        return ExerciseService(ExerciseRepository(self.database.connection))
+        return ExerciseService(ExerciseRepository(self.database.connection), clock)
 
 
 class DataRootSwitcher:

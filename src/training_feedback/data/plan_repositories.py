@@ -40,6 +40,14 @@ class PlanRepository:
         ]
         return result
 
+    def get_import_for_revision(self, plan_id: int, revision_id: int) -> dict[str, Any] | None:
+        """Read the original imported basis without deriving it from edited draft content."""
+        row = self.connection.execute(
+            "SELECT * FROM plan_import WHERE plan_id = ? AND revision_id = ? ORDER BY id LIMIT 1",
+            (plan_id, revision_id),
+        ).fetchone()
+        return dict(row) if row is not None else None
+
     def get_revision(self, plan_id: int, revision_id: int) -> dict[str, Any] | None:
         revision = self.connection.execute(
             "SELECT * FROM training_plan_revision WHERE id = ? AND plan_id = ?",
@@ -190,11 +198,15 @@ class PlanRepository:
                 raise ValueError("Only draft revisions can be edited.")
             self._insert_children(revision_id, revision)
 
-    def activate_revision(self, plan_id: int, revision_id: int) -> None:
+    def activate_revision(
+        self, plan_id: int, revision_id: int, *, expected_revision: dict[str, Any] | None = None
+    ) -> None:
         with transaction(self.connection, immediate=True):
             source = self.get_revision(plan_id, revision_id)
             if source is None:
                 raise ValueError("Plan revision was not found.")
+            if expected_revision is not None and source != expected_revision:
+                raise ValueError("The displayed plan revision has changed. Reopen its preview.")
             if source["status"] != PlanStatus.DRAFT:
                 raise ValueError("Only draft revisions can be activated.")
             revision = revision_from_snapshot(source)

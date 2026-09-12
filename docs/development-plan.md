@@ -3,6 +3,10 @@
 Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; Phase 8-B1 candidate preparation implemented and smoke-verified on the build machine; release acceptance pending\
 Last updated: 2026-09-12
 
+Current implementation: 0.4.0, following the separately preserved 0.3.1 correction
+candidate. Independent runtime/desktop acceptance, actual content review and W4
+remain pending.
+
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
 seed content and proposed doses. Current implementation status is summarized in
@@ -508,8 +512,10 @@ below remain the acceptance checklist; dated test runs belong in task records.
 
 ### Delivery Status For 0.3.0 And Remaining Work
 
-Version **0.3.0 delivers W1–W3** and their acceptance-review fixes. The next
-packaging acceptance gate is **8-B2**, using the 0.3.0 candidate. Guidance
+Version **0.3.0 delivered W1–W3** and their acceptance-review fixes. Follow-up
+0.3.1/0.4.0 implementation is specified below. The next packaging acceptance
+gate is **8-B2**, using the identified 0.4.0 candidate with separate evidence
+for the preserved 0.3.1 candidate. Guidance
 content review, explicit user approval, and initial-plan confirmation remain
 separate participant actions. This implementation delivery does not complete
 the first usable release defined in Section 10. An unavailable independent
@@ -521,7 +527,7 @@ passed acceptance check.
 | W1 — Exercise-edit correctness | Complete; 0.3.0 | One transactional save, honest new-draft state, and working alias/body-area edits. |
 | W2 — Readable guidance editing and review | Complete; 0.3.0 | Complete Chinese guidance forms/views with explicit revision selection and approval; original untouched text and usable small-window controls. |
 | W3 — Exercise-specific content and existing-root delivery | Implementation complete; 0.3.0; actual content review remains pending | All 14 launch guides, including the initial plan's 11, are available as drafts; existing users can explicitly receive selected drafts. |
-| 8-B2 — Packaged acceptance | P0 release gate; starts with the existing candidate when an independent environment is available | Candidate-specific independent-runtime, upgrade, recovery, and display evidence. |
+| 8-B2 — Packaged acceptance | P0 release gate; run the identified current candidate when an independent environment is available | Candidate-specific independent-runtime, upgrade, recovery, and display evidence. |
 | W4 — Real use and expert revision | After packaged acceptance and guidance/plan confirmation | Multiple real sessions plus one evidence-based plan-revision cycle. |
 
 #### Completed Preparation: Acceptance And Review Materials
@@ -534,8 +540,8 @@ interface, or a schema migration.
 
 | Remaining work | Work that can proceed now | Completion evidence |
 | --- | --- | --- |
-| Packaged acceptance preparation | Verify the candidate manifest and every artifact; prepare functional fixtures, a previous-version upgrade baseline, operator steps, and evidence forms. | An operator can execute the ten scenarios without reading application source. |
-| Guidance and plan review preparation | Export all 14 normal seed drafts and the complete initial plan; prepare a review request, per-item return checklist, and a validated plan-file example. | Complete, version-identified materials; no invented review facts or personal training records. |
+| Packaged acceptance preparation | The 0.3.0 materials are prepared; refresh candidate files, baselines and forms for each follow-up build. | An operator can execute the ten scenarios without reading application source. |
+| Guidance and plan review preparation | All 14 seed drafts and the complete initial plan are exported with review request, checklist and validated example; actual review is pending. | Complete, version-identified materials; no invented review facts or personal training records. |
 | 8-B2 independent Windows acceptance | Keep environment-dependent scenarios not run; execute when the environment is available and turn failures into reproducible repair tasks. | Candidate-specific passing evidence for runtime independence, upgrade, recovery, and desktop checks. |
 | W4 real-use revision cycle | Prepare the observation procedure; begin after technical acceptance, guidance approval, and full plan confirmation. | At least three real sessions as the initial verification sample, next-day feedback workflow, and one justified revision cycle. |
 
@@ -575,7 +581,9 @@ regression results, and packaged evidence. Runtime-independent acceptance and
 actual content review may proceed alongside development; neither is implied by
 an implementation version.
 
-0.3.1 corrects prescription display and feedback/history window usability:
+0.3.1 implements prescription display and feedback/history window corrections;
+its candidate and source snapshot are preserved separately. The acceptance
+contracts are:
 
 - Show each set's order, value, unit, per-side flag and original note in plan
   details/activation, training and history. Free doses without a numeric value
@@ -588,7 +596,7 @@ an implementation version.
   details scroll independently of the export action. Unknown responses and audited
   note correction retain their existing meaning.
 
-0.4.0 then makes plan revision and review targets explicit:
+0.4.0 implements explicit plan revision and review targets:
 
 - Select one plan revision. Default to the active revision, or the newest draft
   if no active revision exists; import/clone selects the newly created revision.
@@ -606,6 +614,12 @@ an implementation version.
   clears the current input and confirmation; saved evidence remains read-only.
 - Existing review times remain unchanged; earlier UI versions may have stored the
   submission time. Never infer or backfill their actual external occurrence.
+
+The plan repository exposes a read-only import lookup by plan/revision and an
+optional expected-revision argument for activation. The latter compares the
+displayed draft in the same write transaction, rejecting changed content.
+Existing repository callers remain compatible. ExerciseService's confirmation
+use case owns approval time through Clock; lower-level review APIs remain usable.
 
 Both releases reuse database schema 13, evidence v1 and plan v1. Exercise/plan
 content and dose proposals do not change. Add focused regressions before each
@@ -638,14 +652,17 @@ requirement.
   errors, cancellation, and restart. Include Chinese and space-containing
   program/data paths and ordinary non-administrator operation.
 - On an isolated representative root, replace only application files with the
-  candidate. For the 0.3.0 gate, generate the sample from this repository's
+  candidate. For the migration gate, generate the sample from this repository's
   v0.2.2 source and open/close it with the corresponding previous-version build
-  before capturing the baseline. Preserve an original never opened by 0.3.0,
+  before capturing the baseline. Preserve an original never opened by the candidate,
   and upgrade a separate copy. Record both versions;
   same-version relocation is not cross-version upgrade evidence. Close the
   application before taking baselines. Compare logical records and historical
   snapshots after launch, and resource-file hashes; allow only declared schema
   migrations, without rewriting prior facts.
+- Also test adjacent-version opening: use the exact preserved 0.3.1 source and
+  executable to prepare a schema-13 baseline for 0.4.0. The separate 0.3.1
+  candidate uses a 0.3.0 baseline. Preserve originals and compare copies as above.
 - Through the packaged UI, back up the complete root while open, close the
   application, open the backup copy through the normal flow, resume the paused
   session, inspect history/feedback, and export evidence again. Verify source

@@ -1,7 +1,5 @@
 """动作指导复核对话框：所见版本就是被批准和启用的版本。"""
 
-from datetime import UTC, datetime
-
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -86,11 +84,14 @@ class GuidanceReviewDialog(QDialog):
         self.scroll_area.setWidget(content)
 
         self.source_edit = QLineEdit()
+        self.reviewed_at_edit = QLineEdit()
+        self.reviewed_at_edit.setPlaceholderText("2026-09-12 或 2026-09-12T09:30+08:00")
         self.note_edit = QPlainTextEdit()
         self.note_edit.setMaximumHeight(80)
         self.approved = QCheckBox("我明确批准当前显示的这个指导版本")
         review_form = QFormLayout()
         review_form.addRow("本次外部 AI 审核来源", self.source_edit)
+        review_form.addRow("外部审核发生时间", self.reviewed_at_edit)
         review_form.addRow("本次审核备注", self.note_edit)
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -111,9 +112,9 @@ class GuidanceReviewDialog(QDialog):
         self.revision_id = revision["id"] if revision else None
         self.guidance_view.set_guidance(revision["guidance"] if revision else None)
         self.guidance_changes.set_revisions(active_revision(self.exercise), revision)
-        review = revision.get("guidance", {}).get("review", {}) if revision else {}
-        self.source_edit.setText(review.get("review_source") or "")
-        self.note_edit.setPlainText(review.get("review_note") or "")
+        self.source_edit.clear()
+        self.reviewed_at_edit.clear()
+        self.note_edit.clear()
         self.approved.setChecked(False)
         save_button = self.button_box.button(QDialogButtonBox.StandardButton.Save)
         save_button.setEnabled(revision is not None)
@@ -129,17 +130,13 @@ class GuidanceReviewDialog(QDialog):
         if not self.approved.isChecked():
             QMessageBox.warning(self, "需要批准", "必须明确勾选批准后才能继续。")
             return
-        now = datetime.now(UTC).isoformat()
         try:
-            self.service.review_and_activate_guidance(
+            self.service.confirm_guidance_review(
                 self.revision_id,
-                {
-                    "reviewer_type": "external_ai_expert",
-                    "review_source": self.source_edit.text(),
-                    "review_note": self.note_edit.toPlainText(),
-                    "reviewed_at": now,
-                    "user_approved_at": now,
-                },
+                review_source=self.source_edit.text(),
+                reviewed_at=self.reviewed_at_edit.text(),
+                review_note=self.note_edit.toPlainText(),
+                user_confirmed=self.approved.isChecked(),
             )
         except ValueError as exc:
             QMessageBox.warning(self, "无法批准动作指导", user_message(str(exc)))

@@ -155,7 +155,7 @@ def render_guidance_html(guidance: dict[str, Any] | None) -> str:
             f"<div><b>审核人类型：</b>{_text_html(reviewer, '未记录')}</div>",
             f"<div><b>审核来源：</b>{_text_html(review.get('review_source'), '未记录')}</div>",
             f"<div><b>审核备注：</b>{_text_html(review.get('review_note'), '未记录')}</div>",
-            f"<div><b>审核时间：</b>{_text_html(review.get('reviewed_at'), '未记录')}</div>",
+            f"<div><b>记录的审核时间：</b>{_text_html(review.get('reviewed_at'), '未记录')}</div>",
             "<div><b>用户批准时间：</b>"
             f"{_text_html(review.get('user_approved_at'), '未批准')}</div>",
         ]
@@ -593,7 +593,7 @@ def revision_review_text(revision: dict[str, Any] | None) -> str:
         f"审核人类型：{label(REVIEWER_TYPE_LABELS, review.get('reviewer_type'))}",
         f"来源：{review.get('review_source') or '未记录'}",
         f"备注：{review.get('review_note') or '未记录'}",
-        f"审核时间：{review.get('reviewed_at') or '未记录'}",
+        f"记录的审核时间：{review.get('reviewed_at') or '未记录'}",
         f"用户批准时间：{review.get('user_approved_at') or '未批准'}",
     )
     return "所选版本复核记录：" + "；".join(values)

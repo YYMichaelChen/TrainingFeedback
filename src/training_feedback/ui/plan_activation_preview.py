@@ -51,7 +51,9 @@ class PlanActivationPreview(QDialog):
         ):
             return
         try:
-            self.repository.activate_revision(self.plan["id"], self.draft["id"])
+            self.repository.activate_revision(
+                self.plan["id"], self.draft["id"], expected_revision=self.draft
+            )
         except ValueError as exc:
             QMessageBox.warning(self, "无法启用计划版本", user_message(str(exc)))
             return

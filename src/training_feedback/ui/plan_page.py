@@ -52,7 +52,8 @@ class PlanPage(QWidget):
         self.plan_list.clear()
         for plan in self.repository.list_plans():
             active = plan["active_revision_id"]
-            status = f"当前版本 {active}" if active else "仅有草稿"
+            revision = self.repository.get_revision(plan["id"], active) if active else None
+            status = f"启用版本 {revision['revision_number']}" if revision else "没有启用版本"
             item = QListWidgetItem(f"{plan['name']} | {status}")
             item.setData(Qt.ItemDataRole.UserRole, plan["id"])
             self.plan_list.addItem(item)
@@ -63,13 +64,20 @@ class PlanPage(QWidget):
             self.show_detail(item)
 
     def show_detail(self, item: QListWidgetItem) -> None:
-        plan = self.repository.get_plan(item.data(Qt.ItemDataRole.UserRole))
+        self.open_plan(item.data(Qt.ItemDataRole.UserRole))
+
+    def open_plan(self, plan_id: int, selected_revision_id: int | None = None) -> None:
+        plan = self.repository.get_plan(plan_id)
         if plan is None:
             return
-        self.detail_page = PlanDetailPage(plan, self.repository, self.exercise_service, self)
+        if self.detail_page is not None:
+            self.detail_page.close()
+        self.detail_page = PlanDetailPage(
+            plan, self.repository, self.exercise_service, self,
+            selected_revision_id=selected_revision_id,
+        )
         self.detail_page.plan_changed.connect(self.refresh)
         self.detail_page.setWindowTitle(plan["name"])
-        self.detail_page.resize(760, 600)
         self.detail_page.show()
 
     def _import_plan(self) -> None:
@@ -86,9 +94,10 @@ class PlanPage(QWidget):
             QMessageBox.warning(self, "导入失败", user_message(str(exc)))
             return
         self.refresh()
+        self.open_plan(plan_id, selected_revision_id=revision_id)
         QMessageBox.information(
             self,
             "导入完成",
-            f"外部计划已保存为草稿。计划 {plan_id}，版本 {revision_id}。"
-            "请打开计划，检查差异后再明确启用。",
+            "外部计划已保存为草稿，并已打开该版本。请检查完整处方、差异和导入时依据，"
+            "再明确启用。",
         )

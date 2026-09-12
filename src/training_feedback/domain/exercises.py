@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import re
 import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -199,3 +201,24 @@ def require_review_metadata(review: dict[str, Any]) -> None:
         raise ValueError("Explicit user approval is required.")
     if not review.get("reviewed_at"):
         raise ValueError("Review time is required.")
+
+
+def require_review_occurrence(value: str) -> None:
+    """Validate newly entered occurrence precision without rewriting legacy records."""
+    message = "Review occurrence must be a valid date or timezone-aware datetime."
+    if not isinstance(value, str):
+        raise ValueError(message)
+    try:
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+            date.fromisoformat(value)
+        elif re.fullmatch(
+            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?"
+            r"(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)", value
+        ):
+            parsed = datetime.fromisoformat(value)
+            if parsed.utcoffset() is None:
+                raise ValueError(message)
+        else:
+            raise ValueError(message)
+    except ValueError as exc:
+        raise ValueError(message) from exc

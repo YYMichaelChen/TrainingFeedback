@@ -181,7 +181,7 @@ def test_review_dialog_cancel_is_read_only_and_approval_targets_visible_revision
     calls = []
 
     class RecordingService:
-        def review_and_activate_guidance(self, revision_id, review):
+        def confirm_guidance_review(self, revision_id, **review):
             calls.append((revision_id, review))
 
     exercise = _exercise_with_revisions()
@@ -194,6 +194,7 @@ def test_review_dialog_cancel_is_read_only_and_approval_targets_visible_revision
     dialog = GuidanceReviewDialog(RecordingService(), exercise, selected_revision_id=13)
     assert "待复核来源" in dialog.guidance_view.toPlainText()
     dialog.source_edit.setText("  本次审核来源  ")
+    dialog.reviewed_at_edit.setText("2026-09-01")
     dialog.note_edit.setPlainText("  本次审核备注  ")
     dialog.approved.setChecked(True)
     dialog._approve()
@@ -275,6 +276,12 @@ def test_plan_review_does_not_skip_new_draft_when_active_exists(qt_app, monkeypa
     class PlanRepository:
         def get_plan(self, _plan_id):
             return plan
+
+        def get_revision(self, _plan_id, revision_id):
+            return next(item for item in plan["revisions"] if item["id"] == revision_id)
+
+        def get_import_for_revision(self, _plan_id, _revision_id):
+            return None
 
     class ExerciseRepository:
         def get(self, _exercise_id):

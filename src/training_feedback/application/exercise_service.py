@@ -8,10 +8,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable
 
+from ..domain.clock import Clock, SystemClock
 from ..domain.exercises import (
     GuidanceStatus,
     fresh_guidance_draft,
     require_review_metadata,
+    require_review_occurrence,
     validate_guidance,
 )
 
@@ -20,8 +22,9 @@ if TYPE_CHECKING:
 
 
 class ExerciseService:
-    def __init__(self, repository: "ExerciseRepository"):
+    def __init__(self, repository: "ExerciseRepository", clock: Clock | None = None):
         self.repository = repository
+        self.clock = clock or SystemClock()
 
     def list(self, query: str = "", include_inactive: bool = False) -> list[dict[str, Any]]:
         if query.strip():
@@ -218,6 +221,27 @@ class ExerciseService:
         """审核并立即启用指导；仓储方法内部已用单个立即事务保证原子性。"""
         require_review_metadata(review)
         self.repository.review_and_activate_guidance(revision_id, review)
+
+    def confirm_guidance_review(
+        self,
+        revision_id: int,
+        *,
+        review_source: str,
+        reviewed_at: str,
+        review_note: str = "",
+        user_confirmed: bool = False,
+    ) -> None:
+        """Record actual external evidence and this explicit approval as separate facts."""
+        if user_confirmed is not True:
+            raise ValueError("Explicit user approval is required.")
+        require_review_occurrence(reviewed_at)
+        self.review_and_activate_guidance(revision_id, {
+            "reviewer_type": "external_ai_expert",
+            "review_source": review_source,
+            "reviewed_at": reviewed_at,
+            "review_note": review_note,
+            "user_approved_at": self.clock.now().isoformat(),
+        })
 
     def set_active(self, exercise_id: int, active: bool) -> None:
         self._run_transaction(lambda: self.repository.set_active(exercise_id, active))

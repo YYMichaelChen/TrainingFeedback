@@ -1,7 +1,9 @@
 # Packaged Acceptance Runbook
 
 Requirements live in [development-plan.md](development-plan.md), Sections 7–9.
-This runbook covers the 0.3.0 candidate and the v0.2.2 → 0.3.0 upgrade.
+This runbook covers the 0.4.0 candidate, with 0.3.1 retained as a separate
+correction release. Test v0.2.2 → 0.4.0 migration and 0.3.1 → 0.4.0 adjacent
+opening. For the 0.3.1 candidate, test 0.3.0 → 0.3.1 separately.
 Use only isolated synthetic roots belonging to this application.
 
 Preparation and build-machine startup checks are supporting evidence. Execute
@@ -12,20 +14,24 @@ on the build machine does not establish runtime independence.
 
 ## 1. Candidate And Transfer Preparation — Build Machine
 
-Reuse the existing 0.3.0 candidate from commit
-`ec611f0464e579e6bc5ea2adf335278df0ac3d1c`. Rebuild only when the candidate is
-missing, damaged, or intentionally changed; use `packaging/build.ps1` and its
-pinned toolchain. A rebuild gets its own manifest and acceptance identity.
+Use the identified candidate directory and its manifest. The previous 0.3.0
+candidate is from commit `ec611f0464e579e6bc5ea2adf335278df0ac3d1c`; its checks
+remain historical evidence. Build changed candidates with `packaging/build.ps1`
+and the pinned toolchain. A rebuild gets its own acceptance identity. If
+`source_dirty=true`, retain the exact source ZIP, file hashes and base commit on
+the build machine; the base commit alone does not identify those source changes.
 
 The local preparation delivery contains these transfer inputs:
 
 | Input | Purpose |
 | --- | --- |
-| `programs/0.3.0/TrainingFeedback/` and adjacent build manifest | Complete candidate directory; copy the executable and `_internal` together. |
+| `programs/0.4.0/TrainingFeedback/` and adjacent build manifest | Complete candidate directory; copy the executable and `_internal` together. |
+| `programs/0.3.1/TrainingFeedback/` and adjacent build manifest | Previous candidate for the adjacent-version scenario. |
 | `programs/0.2.2/TrainingFeedback/`, manifest, and source-provenance record | Previous-version build recreated from this repository's tag. |
 | `inputs/functional/data-root/` | Current synthetic training, feedback, imported draft, and recovery fixture. |
 | `inputs/upgrade-original/data-root/` | Closed schema-12 baseline; never open with the new application. |
 | `inputs/upgrade-copy/data-root/` | Unmodified copy for the independent upgrade scenario. |
+| `inputs/adjacent-original/data-root/` and `inputs/adjacent-copy/data-root/` | 0.3.1-generated, normally opened/closed baseline and unopened copy. |
 | `baselines/upgrade-original.json` | Logical records, schema version, resource hashes, and original database hash. |
 | `candidate-verification.json`, `START-HERE.md`, `acceptance-evidence.md` | Local preparation evidence, operator instructions, and unfilled independent acceptance results. |
 
@@ -39,7 +45,7 @@ unexpected extra files, on the build machine and after transfer. With PowerShell
 set the path to the version directory and run:
 
 ```powershell
-$candidateDir = 'D:\TF 验收\programs\0.3.0'
+$candidateDir = 'D:\TF 验收\programs\0.4.0'
 $programDir = Join-Path $candidateDir 'TrainingFeedback'
 $manifest = Get-Content -LiteralPath (Join-Path $candidateDir 'TrainingFeedback.build-manifest.json') -Raw | ConvertFrom-Json
 $files = @(Get-ChildItem -LiteralPath $programDir -Recurse -File)
@@ -55,10 +61,9 @@ foreach ($entry in $manifest.artifact_hashes) {
 }
 ```
 
-For this candidate, expect version `0.3.0`, the commit above,
-`source_dirty=false`, and 210 manifest entries. Record the manifest hash and
-the entry executable hash in the environment record. If verifying a newly
-identified candidate, use its actual manifest rather than these historical values.
+Expect the selected version (normally `0.4.0`) and use its actual source identity,
+dirty flag and manifest file count. Record the manifest hash and entry executable
+hash in the environment record; never substitute the previous candidate's values.
 
 ## 2. Prepare Three Separate Inputs — Build Machine
 
@@ -102,7 +107,7 @@ This fixture must never be used for actual exercise-content review. Follow the
    business-table records, schema version, and resource-file hashes. Preserve
    the original database hash for source-isolation checks.
 5. Copy the original into `upgrade-copy/data-root`. Confirm its files match the
-   original. Do not open this transfer copy with 0.3.0 during preparation;
+   original. Do not open this transfer copy with the candidate during preparation;
    use a separate local rehearsal copy for build-machine checks.
 
 For source extraction, run from the current repository:
@@ -127,6 +132,10 @@ tag commit, build log, and manifest hash in a separate provenance record;
 do not replace null fields with a fabricated clean-checkout claim.
 
 Do not create the upgrade fixture with current code and then open it in 0.2.2.
+For adjacent-version coverage, generate a second fixture using the preserved
+0.3.1 source snapshot, open/close it with the corresponding 0.3.1 executable,
+and create original/copy baselines in the same way. Expect schema 13 → 13 and
+no changes to existing records/resources. Keep source helpers on the build machine.
 That produces schema 13 before the upgrade test has started.
 
 ## 3. Execute On Independent Windows
@@ -141,7 +150,7 @@ $acceptanceBase = 'D:\TF 验收'
 $previousLocalAppData = $env:LOCALAPPDATA
 try {
     $env:LOCALAPPDATA = Join-Path $acceptanceBase 'operator-localappdata'
-    & (Join-Path $acceptanceBase 'programs\0.3.0\TrainingFeedback\TrainingFeedback.exe')
+    & (Join-Path $acceptanceBase 'programs\0.4.0\TrainingFeedback\TrainingFeedback.exe')
 } finally {
     $env:LOCALAPPDATA = $previousLocalAppData
 }
@@ -168,13 +177,16 @@ processes before copying roots.
    no partial root, and no changes to unrelated files. Do not damage originals.
 5. **Ordinary user.** Perform the sequence without elevation; record account
    privilege and any request for administrator access. A required elevation fails.
-6. **Upgrade.** Open only `upgrade-copy` with 0.3.0, then close normally before
+6. **Upgrade.** Open only `upgrade-copy` with the 0.4.0 candidate, then close normally before
    exporting or changing any content. Preserve the closed upgraded copy for
    comparison on the build machine. Expect schema 12 → 13, identical old fields
    and business rows, unchanged historical snapshots and resources. New bundled
    identity fields stay null; startup creates no new guidance drafts. Keep
    `upgrade-original` unopened and byte-identical. After this capture, inspect
    history and feedback on a working copy and export evidence through the UI.
+   Repeat on `adjacent-copy` for 0.3.1 → 0.4.0; expect schema 13 → 13. Record both
+   outcomes in row 6 and preserve both originals. Candidate 0.3.1 uses a separate
+   0.3.0 → 0.3.1 baseline and evidence form.
 7. **Online backup/errors.** Open a working copy of the functional fixture. In
    Settings, back up while the paused session exists to an explicitly selected
    empty directory outside the source. Try occupied, nested, and unavailable
@@ -218,7 +230,7 @@ previous version and source-provenance record; monitor/resolution/scaling.
 | 3 | Locator reopen and restart | not run | Pending independent environment | |
 | 4 | Invalid root and occupied directory | not run | Pending independent environment | |
 | 5 | Non-administrator operation | not run | Pending independent environment | |
-| 6 | v0.2.2 → 0.3.0 upgrade; original isolated | not run | Pending independent environment | |
+| 6 | v0.2.2 → 0.4.0 migration and 0.3.1 → 0.4.0 opening; originals isolated | not run | Pending independent environment | |
 | 7 | Online backup and destination failures | not run | Pending independent environment | |
 | 8 | Open backup, resume, inspect, export | not run | Pending independent environment | |
 | 9 | Actual-desktop display matrix | not run | Pending real desktop | |
@@ -232,6 +244,22 @@ If the functional fixture has only one guidance revision, first save a new
 draft on a working copy, then select the older revision for this check.
 Use fixture copies for edits and synthetic approvals; never treat these as
 actual content review.
+
+For 0.3.1 and later, include numeric-set notes, per-side prescriptions and a
+free-dose explanation in training/history/exports; edit the catalog on a working
+copy and confirm history still uses frozen text. Open next-day feedback from
+Home with four primary areas and eleven performed actions. Scroll all content
+and confirm submission state/button remain accessible; unanswered choices stay
+unknown after submission. Long history details must not displace Export.
+
+For 0.4.0, create two drafts and deliberately select the older one. Check that
+editing, guidance review and activation target it, while a published selection
+is read-only and can be cloned. Importing opens the new draft; original rationale
+and managed source remain unchanged after local edits. Confirming a changed
+preview must ask for a fresh review. In guidance review, occurrence starts empty;
+test a date-only value and a timezone-aware value, separate approval time, invalid
+or empty input, unchecked approval, cancellation and clearing inputs on revision
+switch. Test approvals must retain explicit synthetic labels.
 
 | Resolution | Scaling | Result | Checked windows and control visibility | Evidence / unavailable reason |
 | --- | --- | --- | --- | --- |

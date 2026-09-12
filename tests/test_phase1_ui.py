@@ -75,6 +75,7 @@ def test_guidance_review_dialog_approves_and_activates(qt_app, tmp_path, monkeyp
     revision = exercise["guidance"][0]
     dialog = GuidanceReviewDialog(service, exercise, selected_revision_id=revision["id"])
     dialog.source_edit.setText("review-1")
+    dialog.reviewed_at_edit.setText("2026-09-01")
     dialog.approved.setChecked(True)
     dialog._approve()
     current = repository.get(exercise_id)

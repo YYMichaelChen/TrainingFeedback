@@ -200,6 +200,12 @@ ERROR_TRANSLATIONS = {
     "Reviewer type and source are required.": "审核人类型和来源不能为空。",
     "Explicit user approval is required.": "必须明确批准。",
     "Review time is required.": "审核时间不能为空。",
+    "Review occurrence must be a valid date or timezone-aware datetime.": (
+        "请填写有效的审核发生日期，或包含时区的日期时间；只知道日期时无需补填时刻。"
+    ),
+    "The displayed plan revision has changed. Reopen its preview.": (
+        "所显示的计划版本已发生变化，请重新打开预览、核对内容后再启用。"
+    ),
     "Database is not open.": "数据库尚未打开。",
     "Training session was not found.": "没有找到指定的训练会话。",
     "Unsupported external plan schema.": "不支持此外部计划格式。",
