@@ -320,7 +320,7 @@ def test_plan_editor_preserves_unequal_sets_notes_and_other_actions(qt_app, tmp_
     )
     draft = repository.get_revision(plan["id"], draft["id"])
     editor = PlanEditor(repository, plan, draft)
-    editor.action_selector.setCurrentIndex(3)
+    editor.action_selector.setCurrentRow(3)
     rebuilt = editor._build_revision()
     selected = rebuilt.days[0].actions[3].sets
     assert [item.value for item in selected] == [12, 12, 10]
@@ -340,7 +340,7 @@ def test_plan_editor_edits_action_metadata_without_changing_other_actions(qt_app
     repository = PlanRepository(context.database.connection)
     plan = repository.get_plan(repository.list_plans()[0]["id"])
     editor = PlanEditor(repository, plan, plan["revisions"][0])
-    editor.action_selector.setCurrentIndex(3)
+    editor.action_selector.setCurrentRow(3)
     editor.phase.setCurrentIndex(editor.phase.findData("cooldown"))
     editor.rest.setValue(75)
     editor.action_note.setText("保留动作说明")
@@ -372,7 +372,7 @@ def test_plan_editor_uses_controlled_units_and_preserves_individual_sets_on_mode
     repository = PlanRepository(context.database.connection)
     plan = repository.get_plan(repository.list_plans()[0]["id"])
     editor = PlanEditor(repository, plan, plan["revisions"][0])
-    editor.action_selector.setCurrentIndex(3)
+    editor.action_selector.setCurrentRow(3)
     assert editor.table.cellWidget(0, 2).currentData() == "reps"
     assert editor.table.cellWidget(0, 2).currentText() == "次"
     assert editor.table.cellWidget(0, 3).isChecked() is False
@@ -385,8 +385,9 @@ def test_plan_editor_uses_controlled_units_and_preserves_individual_sets_on_mode
     assert rebuilt.days[0].actions[3].sets[0].unit == DoseUnit.MINUTES
     assert rebuilt.days[0].actions[3].sets[0].value == 2
     monkeypatch.setattr("training_feedback.ui.plan_editor.confirm", lambda *args: True)
-    editor.mode.setCurrentIndex(0)
-    assert [item.value for item in editor._build_revision().days[0].actions[3].sets] == [12, 12, 10]
+    editor.equal_toggle.setChecked(True)
+    editor.equal_toggle.setChecked(False)
+    assert [item.value for item in editor._build_revision().days[0].actions[3].sets] == [2, 2, 2]
     editor.close()
     context.close()
 

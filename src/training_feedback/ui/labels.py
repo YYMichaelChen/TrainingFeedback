@@ -155,6 +155,8 @@ ERROR_TRANSLATIONS = {
     "Only an open or paused session can record results.": "只有进行中或已暂停的训练才能记录结果。",
     "A recorded action result cannot be changed.": "已记录的动作结果不能在普通训练流程中修改。",
     "Only an open or paused session can finish.": "只有进行中或已暂停的训练才能完成。",
+    "Only an open or paused session can retract results.": "训练已结束，不能撤回动作结果。",
+    "Select a recorded action to retract.": "请选择一个已记录结果的动作。",
     "Every exercise must have a result before finishing.": "完成训练前必须为每个动作记录结果。",
     "An abort reason is required.": "中止训练必须选择原因。",
     "Actual dose is required for exceeded or partial results.": (

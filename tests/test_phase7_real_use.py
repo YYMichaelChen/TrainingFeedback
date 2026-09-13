@@ -32,12 +32,13 @@ def test_actual_dose_second_step_and_finish_state_are_explicit(qt_app, tmp_path)
     page = TrainingPage(controller)
 
     assert not page.finish_button.isEnabled()
-    assert "请先记录全部动作" in page.finish_button.text()
+    assert "所有动作记录后" in page.finish_button.toolTip()
 
     page._record(ExerciseResult.EXCEEDED)
 
-    assert page.result_button_by_value[ExerciseResult.EXCEEDED].text() == "保存超额完成结果"
-    assert "保存超额完成结果" in page.actual_hint.text()
+    assert page.save_result_button.text() == "保存超额完成结果"
+    assert page.result_choices.isHidden()
+    assert not page.pending_controls.isHidden()
 
     page.value_edits[0].setText("14")
     page._record(ExerciseResult.EXCEEDED)
@@ -135,6 +136,7 @@ def test_home_training_window_keeps_controls_visible_when_actual_sets_scroll(qt_
     qt_app.processEvents()
     assert [button.mapToGlobal(QPoint(0, 0)) for button in controls] == before_scroll
 
+    page._cancel_result()
     page.close()
     window.close()
     context.close()

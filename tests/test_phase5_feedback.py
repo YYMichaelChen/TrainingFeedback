@@ -310,9 +310,9 @@ def test_next_day_page_submits_and_then_becomes_read_only(qt_app, tmp_path):
 def test_history_page_renders_session_details(qt_app, tmp_path):
     context, _session = _completed_session(tmp_path)
     page = HistoryPage(context)
-    assert page.history_list.count() == 2
+    assert page.history_list.count() == 1
     assert "2026-09-06" in page.history_list.item(0).text()
-    assert "臀桥" in page.history_list.item(1).text()
+    assert "臀桥" in page.details.toPlainText()
     assert "训练日期：2026-09-06" in page.details.toPlainText()
     page.close()
     context.close()
@@ -323,7 +323,8 @@ def test_history_details_use_refresh_snapshot_without_reloading_history(qt_app, 
     page = HistoryPage(context)
     page.service.history = lambda: pytest.fail("history should not reload on selection")
 
-    page.history_list.setCurrentRow(1)
+    page.history_list.setCurrentRow(-1)
+    page.history_list.setCurrentRow(0)
 
     assert "臀桥" in page.details.toPlainText()
     page.close()

@@ -12,11 +12,13 @@ from training_feedback.data.locator import Locator, default_locator_path
 from training_feedback.ui.data_root_dialog import DataRootDialog, suggested_data_root
 from training_feedback.ui.labels import user_message
 from training_feedback.ui.main_window import MainWindow
+from training_feedback.ui.theme import apply_theme
 
 
 def main() -> int:
     """Start the native desktop application."""
     application = QApplication(sys.argv)
+    apply_theme(application)
     locator = Locator(default_locator_path())
     context = open_from_locator(locator)
     if context is None:

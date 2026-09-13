@@ -77,6 +77,18 @@ class SessionRepository:
                     if planned_set["actual_value"] is not None
                 ]
             result["actions"].append(item)
+        result["result_retractions"] = [
+            {
+                "id": audit["id"],
+                "session_action_id": audit["session_action_id"],
+                "previous_action": json.loads(audit["previous_action_json"]),
+                "retracted_at": audit["retracted_at"],
+            }
+            for audit in self.connection.execute(
+                "SELECT * FROM session_result_retraction WHERE session_id = ? ORDER BY id",
+                (session_id,),
+            )
+        ]
         return result
 
     def create_from_plan(
@@ -177,8 +189,9 @@ class SessionRepository:
         with transaction(self.connection):
             cursor = self.connection.execute(
                 "UPDATE training_session_action SET result = ?, note = ? "
-                "WHERE id = ? AND result IS NULL",
-                (result.result, result.note, action_id),
+                "WHERE id = ? AND result IS NULL AND session_id IN "
+                "(SELECT id FROM training_session WHERE status IN (?, ?))",
+                (result.result, result.note, action_id, SessionStatus.OPEN, SessionStatus.PAUSED),
             )
             if cursor.rowcount != 1:
                 raise ValueError("A recorded action result cannot be changed.")
@@ -228,6 +241,37 @@ class SessionRepository:
                 (now.isoformat(), session_id),
             )
 
+    def retract_action_result(self, session_id: int, action_id: int, now) -> None:
+        """Reset a selected result and audit its complete previous values atomically."""
+        with transaction(self.connection, immediate=True):
+            session = self.get(session_id)
+            if session is None or not is_active_session(session["status"]):
+                raise ValueError("Only an open or paused session can retract results.")
+            action = next((item for item in session["actions"] if item["id"] == action_id), None)
+            if action is None or action["result"] is None:
+                raise ValueError("Select a recorded action to retract.")
+            self.connection.execute(
+                "INSERT INTO session_result_retraction(session_id, session_action_id, "
+                "previous_action_json, retracted_at) VALUES (?, ?, ?, ?)",
+                (session_id, action_id, json.dumps(action, ensure_ascii=False), now.isoformat()),
+            )
+            self.connection.execute(
+                "DELETE FROM training_session_actual_set WHERE session_action_id = ?",
+                (action_id,),
+            )
+            self.connection.execute(
+                "UPDATE training_session_set SET actual_value = NULL, actual_unit = NULL, "
+                "actual_per_side = NULL WHERE session_action_id = ?", (action_id,),
+            )
+            self.connection.execute(
+                "UPDATE training_session_action SET result = NULL, note = NULL WHERE id = ?",
+                (action_id,),
+            )
+            self.connection.execute(
+                "UPDATE training_session SET updated_at = ? WHERE id = ?",
+                (now.isoformat(), session_id),
+            )
+
     def change_status(
         self, session_id: int, target: SessionStatus, now, reason=None, note=None
     ) -> None:
@@ -238,7 +282,14 @@ class SessionRepository:
         transition_status(current, target)
         if target is SessionStatus.ABORTED and not reason:
             raise ValueError("An abort reason is required.")
-        with transaction(self.connection):
+        with transaction(self.connection, immediate=True):
+            if target in (SessionStatus.COMPLETED, SessionStatus.PARTIAL):
+                latest = self.get(session_id)
+                if any(action["result"] is None for action in latest["actions"]):
+                    raise ValueError("Every exercise must have a result before finishing.")
+                results = tuple(ExerciseResult(action["result"]) for action in latest["actions"])
+                if derive_final_status(results) != target:
+                    raise ValueError("The session changed before it could be updated.")
             finished_at = now.isoformat() if is_terminal_session(target) else None
             # 带上读取时的当前状态做乐观校验，避免并发下覆盖他人已改的状态。
             cursor = self.connection.execute(

@@ -59,6 +59,9 @@ class TrainingApplicationService:
             action_id, result, actual_values, note, actual_sets
         )
 
+    def retract_result(self, action_id: int) -> dict:
+        return self._controller().retract_result(action_id)
+
     def pause(self) -> dict:
         return self._controller().pause()
 

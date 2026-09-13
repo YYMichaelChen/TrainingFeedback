@@ -9,7 +9,7 @@ def test_database_enables_foreign_keys_and_migrates(tmp_path):
     database = Database(tmp_path / "test.sqlite3")
     with database as connection:
         assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
-        assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 13
+        assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 14
         assert connection.execute(
             "SELECT name FROM sqlite_master WHERE name = 'exercise'"
         ).fetchone()
@@ -82,7 +82,7 @@ def test_migrations_are_idempotent_after_reopen(tmp_path):
     with Database(path):
         pass
     with Database(path) as connection:
-        assert connection.execute("SELECT COUNT(*) FROM schema_migration").fetchone()[0] == 13
+        assert connection.execute("SELECT COUNT(*) FROM schema_migration").fetchone()[0] == 14
 
 
 def test_legacy_area_snapshot_migration_does_not_infer_roles(tmp_path):
@@ -112,8 +112,9 @@ def test_legacy_area_snapshot_migration_does_not_infer_roles(tmp_path):
             (session_id, '["臀部", "核心"]'),
         )
         connection.execute(
-            "DELETE FROM schema_migration WHERE version IN (8, 9, 10, 11, 12, 13)"
+            "DELETE FROM schema_migration WHERE version >= 8"
         )
+        connection.execute("DROP TABLE session_result_retraction")
         connection.commit()
     with Database(path) as connection:
         snapshot = connection.execute(

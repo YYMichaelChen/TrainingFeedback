@@ -2,7 +2,16 @@
 
 from datetime import date
 
-from PySide6.QtWidgets import QComboBox, QInputDialog, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QInputDialog,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ..app import ApplicationContext
 from ..application import TrainingApplicationService
@@ -21,31 +30,70 @@ class HomePage(QWidget):
         self.clock = clock or SystemClock()
         self.feedback_service = context.feedback_service(self.clock)
         layout = QVBoxLayout(self)
-        title = QLabel("训练反馈")
+        title = QLabel("今天的训练")
         title.setObjectName("pageTitle")
         layout.addWidget(title)
-        layout.addWidget(QLabel(f"数据目录：{context.data_root.path}"))
-        layout.addWidget(QLabel("数据库：已就绪"))
+        subtitle = QLabel("按自己的节奏练习，留下准确的记录。")
+        subtitle.setObjectName("muted")
+        layout.addWidget(subtitle)
+        layout.addSpacing(20)
+        hero = QFrame()
+        hero.setObjectName("hero")
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(26, 24, 26, 24)
+        self.eyebrow = QLabel("准备开始")
+        self.eyebrow.setObjectName("eyebrow")
+        hero_layout.addWidget(self.eyebrow)
+        self.plan_summary = QLabel()
+        self.plan_summary.setTextFormat(Qt.TextFormat.PlainText)
+        self.plan_summary.setWordWrap(True)
+        self.plan_summary.setObjectName("sectionTitle")
+        hero_layout.addWidget(self.plan_summary)
         self.status = QLabel()
-        layout.addWidget(self.status)
+        self.status.setWordWrap(True)
+        hero_layout.addWidget(self.status)
+        hero_layout.addSpacing(12)
         self.start_button = QPushButton("开始今天的训练")
+        self.start_button.setObjectName("primaryButton")
         self.start_button.clicked.connect(self._start)
-        layout.addWidget(self.start_button)
+        hero_layout.addWidget(self.start_button)
         self.refresh_button = QPushButton("恢复未完成的训练")
+        self.refresh_button.setObjectName("primaryButton")
         self.refresh_button.clicked.connect(self._resume)
-        layout.addWidget(self.refresh_button)
+        hero_layout.addWidget(self.refresh_button)
+        layout.addWidget(hero)
+        layout.addSpacing(12)
+        feedback_card = QFrame()
+        feedback_card.setObjectName("card")
+        feedback_layout = QVBoxLayout(feedback_card)
+        feedback_layout.setContentsMargins(26, 22, 26, 22)
+        feedback_title = QLabel("练习之后，听听身体的反馈")
+        feedback_title.setObjectName("sectionTitle")
+        feedback_title.setWordWrap(True)
+        feedback_layout.addWidget(feedback_title)
+        feedback_hint = QLabel("次日记录相关部位的感受。没有填写的内容会保留为未知。")
+        feedback_hint.setObjectName("muted")
+        feedback_hint.setWordWrap(True)
+        feedback_layout.addWidget(feedback_hint)
         self.feedback_button = QPushButton("填写次日反馈")
         self.feedback_button.clicked.connect(self._open_feedback)
         self.feedback_selector = QComboBox()
         self.feedback_selector.setVisible(False)
-        layout.addWidget(self.feedback_selector)
-        layout.addWidget(self.feedback_button)
+        feedback_layout.addWidget(self.feedback_selector)
+        feedback_layout.addWidget(self.feedback_button)
+        layout.addWidget(feedback_card)
         self.refresh()
         layout.addStretch()
 
     def refresh(self):
+        plans = self.context.plan_repository().list_plans()
+        active_plans = [plan for plan in plans if plan["active_revision_id"]]
+        self.plan_summary.setText(
+            active_plans[0]["name"] if active_plans else "先准备一份训练计划"
+        )
         active = self.context.session_repository().get_active()
         if active:
+            self.eyebrow.setText("继续练习")
             state_label = "未完成的训练"
             training_date = date.fromisoformat(active["training_date"])
             if has_previous_day_label(training_date, active["status"], self.clock):
@@ -56,10 +104,15 @@ class HomePage(QWidget):
             )
             self.start_button.setEnabled(False)
             self.refresh_button.setEnabled(True)
+            self.refresh_button.setVisible(True)
+            self.start_button.setVisible(False)
         else:
+            self.eyebrow.setText("准备开始")
             self.status.setText("没有未完成的训练。")
             self.start_button.setEnabled(True)
             self.refresh_button.setEnabled(False)
+            self.refresh_button.setVisible(False)
+            self.start_button.setVisible(True)
         pending, submitted = self._feedback_choices()
         choices = pending or submitted
         self.feedback_selector.blockSignals(True)
@@ -144,8 +197,8 @@ class HomePage(QWidget):
         page.session_ended.connect(page.close)
         available = page.screen().availableGeometry()
         page.resize(
-            max(360, min(560, available.width() - 80)),
-            max(400, min(640, available.height() - 80)),
+            max(360, min(840, available.width() - 80)),
+            max(400, min(760, available.height() - 80)),
         )
         page.show()
 

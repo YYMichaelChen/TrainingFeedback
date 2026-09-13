@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QSplitter,
     QVBoxLayout,
     QWidget,
 )
@@ -38,11 +39,17 @@ class HistoryPage(QWidget):
         title.setObjectName("pageTitle")
         layout.addWidget(title)
         self.history_list = QListWidget()
+        self.history_list.setMinimumWidth(210)
+        self.history_list.setWordWrap(True)
         self.history_list.currentItemChanged.connect(self._show_details)
-        layout.addWidget(self.history_list)
         self.details = QPlainTextEdit()
         self.details.setReadOnly(True)
-        layout.addWidget(self.details, 1)
+        splitter = QSplitter()
+        splitter.addWidget(self.history_list)
+        splitter.addWidget(self.details)
+        splitter.setSizes([240, 560])
+        splitter.setStretchFactor(1, 1)
+        layout.addWidget(splitter, 1)
         self.export_button = QPushButton("导出所选训练证据")
         self.export_button.clicked.connect(self._export_selected)
         layout.addWidget(self.export_button)
@@ -56,22 +63,11 @@ class HistoryPage(QWidget):
             feedback = session["feedback"]
             feedback_status = "已提交反馈" if feedback else "尚未填写反馈"
             item = QListWidgetItem(
-                f"训练日期：{session['training_date']} | "
-                f"{label(SESSION_STATUS_LABELS, session['status'])} | {feedback_status}"
+                f"{session['training_date']}\n"
+                f"{label(SESSION_STATUS_LABELS, session['status'])} · {feedback_status}"
             )
             item.setData(Qt.ItemDataRole.UserRole, session["id"])
             self.history_list.addItem(item)
-            for action in session["actions"]:
-                result = (
-                    label(RESULT_LABELS, action["result"])
-                    if action["result"]
-                    else "未记录"
-                )
-                action_item = QListWidgetItem(
-                    f"  {action['exercise_name_snapshot']} | {result}"
-                )
-                action_item.setData(Qt.ItemDataRole.UserRole, session["id"])
-                self.history_list.addItem(action_item)
         if self.history_list.count():
             self.history_list.setCurrentRow(0)
 
@@ -97,15 +93,29 @@ class HistoryPage(QWidget):
                 f"{item['value']} {label(DOSE_UNIT_LABELS, item['unit'])}"
                 + (" / 每侧" if item["per_side"] else "")
                 for item in action.get("actual_sets", [])
-            ) or "未知"
+            ) or ("按计划完成（未另填实际剂量）" if action["result"] == "completed" else "未填写")
             lines.append(
                 f"{action['exercise_name_snapshot']}："
                 f"{label(RESULT_LABELS, action['result']) if action['result'] else '未记录'}；"
                 f"计划剂量：{planned}；实际剂量：{actual}；"
                 f"备注：{action.get('note') or ''}"
             )
+        for audit in session.get("result_retractions", []):
+            previous = audit["previous_action"]
+            prior_dose = "、".join(
+                f"{item['value']:g} {label(DOSE_UNIT_LABELS, item['unit'])}"
+                + (" / 每侧" if item["per_side"] else "")
+                for item in previous.get("actual_sets", [])
+            ) or "未另填"
+            lines.append(
+                f"\n结果撤回 · {audit['retracted_at']}\n"
+                f"{previous['exercise_name_snapshot']}：原结果 "
+                f"{label(RESULT_LABELS, previous['result'])}；原实际剂量：{prior_dose}；"
+                f"原备注：{previous.get('note') or ''}"
+            )
         event_labels = {
             "pause": "暂停",
+            "resume": "恢复",
             "completed": "完成",
             "partial": "部分完成",
             "aborted": "中止",

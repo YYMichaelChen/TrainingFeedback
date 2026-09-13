@@ -87,6 +87,13 @@ class SessionController:
         self.session = self.sessions.get(self.session["id"])
         return self.session
 
+    def retract_result(self, action_id: int) -> dict:
+        if self.session is None:
+            raise RuntimeError("No session is loaded.")
+        self.sessions.retract_action_result(self.session["id"], action_id, self.clock.now())
+        self.session = self.sessions.get(self.session["id"])
+        return self.session
+
     def pause(self) -> dict:
         return self._change_status(SessionStatus.PAUSED)
 

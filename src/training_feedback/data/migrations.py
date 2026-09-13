@@ -15,7 +15,7 @@ import sqlite3
 from datetime import UTC, datetime
 from typing import Callable
 
-LATEST_SCHEMA_VERSION = 13
+LATEST_SCHEMA_VERSION = 14
 
 
 class FutureSchemaError(sqlite3.DatabaseError):
@@ -460,6 +460,17 @@ def _migration_13(connection: sqlite3.Connection) -> None:
     )
 
 
+def _migration_14(connection: sqlite3.Connection) -> None:
+    """Keep explicit result retractions without rewriting finished session facts."""
+    connection.execute(
+        "CREATE TABLE session_result_retraction ("
+        "id INTEGER PRIMARY KEY, "
+        "session_id INTEGER NOT NULL REFERENCES training_session(id), "
+        "session_action_id INTEGER NOT NULL REFERENCES training_session_action(id), "
+        "previous_action_json TEXT NOT NULL, retracted_at TEXT NOT NULL)"
+    )
+
+
 # 版本号从 1 开始连续递增；新增迁移时追加条目并同步 LATEST_SCHEMA_VERSION。
 _MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {
     2: _migration_2,
@@ -474,6 +485,7 @@ _MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {
     11: _migration_11,
     12: _migration_12,
     13: _migration_13,
+    14: _migration_14,
 }
 
 

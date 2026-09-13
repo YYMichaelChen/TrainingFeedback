@@ -1,13 +1,14 @@
 # TrainingFeedback Development Plan
 
 Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; Phase 8-B1 candidate preparation implemented and smoke-verified on the build machine; release acceptance pending\
-Last updated: 2026-09-13
+Last updated: 2026-09-14
 
-Current implementation: 0.4.0, following the separately preserved 0.3.1 correction
-candidate. Both are tagged releases (v0.3.1, v0.4.0) and passed a contract-by-contract
-implementation acceptance review on 2026-09-13 (full test suite, Ruff, and source
-review against the acceptance contracts below). Independent runtime/desktop
-acceptance, actual content review and W4 remain pending.
+Current implementation: 0.6.0, with a redesigned native interface and audited
+result retraction before session completion. Local plan guidance review and
+explicit plan activation are complete. Phase C is the local personal-use
+self-check; it does not replace independent Windows acceptance (8-B2) or the
+three real sessions and expert revision cycle (W4). A simulated session is not
+real-use evidence.
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
@@ -133,8 +134,11 @@ and differences from the current revision are shown before confirmation.
 Saving a draft does not activate it. Superseding the previous revision and
 updating the active revision pointer form one transaction.
 
-The editor supports equal-set and individual-set entry; switching modes must
-not silently discard unsaved values. Revision diffs cover action additions,
+The editor places an action list beside a single per-set table. Equal-set entry
+is an optional collapsible batch-fill tool, with explicit confirmation before
+replacing current values and notes. Opening or closing that tool does not change
+the table. Invalid values block saving or switching actions without losing the
+input. Revision diffs cover action additions,
 removals and ordering, phase, rest, notes, set values, units, per-side flags,
 and plan purpose without mutating either revision.
 
@@ -154,6 +158,16 @@ Behavior:
 - `not_completed`: no fabricated actual dose is stored;
 - all four states allow an optional free-text note;
 - the original note is preserved verbatim.
+
+Actual-dose entry and not-completed confirmation hide the other result actions
+and provide dedicated save/cancel controls. A saved result stays visible until
+the user chooses the next unfinished action; repeated clicks cannot spill into
+the next action. Before the session ends, an explicit confirmed retraction can
+return a result to unrecorded. It atomically archives the prior action result,
+actual sets and original note, then clears the recorded fields. Prescription
+and guidance snapshots never change. Retractions appear in history and exports.
+Finished or aborted sessions cannot retract results. Unsaved input requires an
+explicit discard before leaving or pausing; it is never counted as saved work.
 
 Clicking `completed` confirms dose completion only. It must not silently record
 good technique, absence of pain, absence of fatigue, or any other subjective
@@ -494,11 +508,14 @@ One user action commits or rolls back as a unit. Schema migrations are
 append-only, versioned, and transactional per migration; later changes must not
 edit an already applied migration. Failed migrations preserve the prior version.
 UI tests may use offscreen Qt; all tests use temporary databases and locators,
-never real user data. Date-boundary checks cover 01:59, 02:00, and 02:01.
+never real user data. One QApplication is shared for a whole run, so a UI test
+must let Qt destroy the windows it created; widget graphs abandoned to Python
+garbage collection crash the interpreter later in the run. Date-boundary checks
+cover 01:59, 02:00, and 02:01.
 
 ## 9. Delivery Phases
 
-### Current Status (2026-09-13)
+### Current Status (2026-09-14)
 
 | Phase | Current status | Remaining acceptance or release work |
 | --- | --- | --- |
@@ -530,7 +547,7 @@ passed acceptance check.
 | W1 — Exercise-edit correctness | Complete; 0.3.0 | One transactional save, honest new-draft state, and working alias/body-area edits. |
 | W2 — Readable guidance editing and review | Complete; 0.3.0 | Complete Chinese guidance forms/views with explicit revision selection and approval; original untouched text and usable small-window controls. |
 | W3 — Exercise-specific content and existing-root delivery | Implementation complete; 0.3.0; actual content review remains pending | All 14 launch guides, including the initial plan's 11, are available as drafts; existing users can explicitly receive selected drafts. |
-| Local personal go-live | In progress; 0.4.1 installed outside the repository with a separate data root | Verified installed program files, real data root, approved guidance for the plan's exercises, an activated plan revision, and a local self-check that is not 8-B2. |
+| Local personal go-live | A/B complete; 0.6.0 Phase C local checks in progress | Separate program/data directories; plan guidance approved and plan activated; candidate-specific self-check and backup/restore evidence, distinct from 8-B2. |
 | 8-B2 — Packaged acceptance | P0 release gate; run the identified current candidate when an independent environment is available | Candidate-specific independent-runtime, upgrade, recovery, and display evidence. |
 | W4 — Real use and expert revision | After packaged acceptance and guidance/plan confirmation | Multiple real sessions plus one evidence-based plan-revision cycle. |
 
@@ -680,6 +697,44 @@ content and dose proposals do not change. Add focused regressions before each
 fix, run the full suite and lint, build and preserve each candidate separately.
 Test v0.2.2 copied-root migration as well as adjacent-version opening, backup and
 restore. Actual independent-desktop checks must identify the tested candidate.
+
+#### 0.6.0 Native Workflow Refinement
+
+- A consistent light content palette with dark navigation, teal primary actions,
+  blue secondary actions and muted disabled states covers pages and dialogs.
+  Home focuses on starting/resuming and next-day feedback; technical data paths
+  remain available in settings. Exercise tools use separate rows; history has
+  one row per session and a detail pane.
+- Plan editing and training behavior follow Sections 4.1–4.3 above. Save/cancel
+  for actual doses and pause/abort/finish remain outside the scroll area.
+- Schema 14 adds only `session_result_retraction`; no old rows are backfilled.
+  Existing plan/exercise facts and terminal histories remain unchanged.
+  Evidence v1 gains an additive `result_retractions` list with prior facts.
+- Package and runtime version constants both identify 0.6.0. The runtime
+  constant previously lagged packaging at 0.4.0. Existing evidence exports
+  record the database schema rather than the application version; retain those
+  files verbatim and use installation manifests to establish binary identity.
+- Preserve a complete schema-13 backup before upgrading. Rolling back to
+  0.5.1 requires that backup in a separate data root; the old binary cannot open
+  the upgraded schema-14 root.
+
+#### Phase C Local Self-Check (0.6.0)
+
+Status (2026-09-14): the drill passed on the build machine against isolated
+copies of the real data root. It covered v13 to v14 migration keeping every
+existing row, cross-process pause and resume, all four results including extra
+and partial sets, audited retraction, finish and abort, a simulated next-day
+answer left unknown, JSON and Markdown agreement, an unchanged original session,
+and online backup plus restore producing equal history. Windows-platform
+rendering at DPR 2.25 and 1707×960 logical pixels covered home, plan, training,
+and actual-dose entry; offscreen Qt lacks Chinese glyphs on this machine and
+cannot support a visual claim.
+
+The installed program directory and the user data root stay separate, and the
+schema-13 backup was verified logically equal to the live database before any
+upgrade. The real data root remains on schema 13 until the user explicitly
+approves upgrading it. This self-check is local personal go-live evidence only:
+the exercised session is simulated, so it satisfies neither 8-B2 nor W4.
 
 #### 1. Prepare The Acceptance Candidate (8-B1)
 

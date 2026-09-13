@@ -35,7 +35,7 @@ a = Analysis(
     [str(project_root / "src" / "training_feedback" / "main.py")],
     pathex=[str(project_root / "src")],
     binaries=[],
-    datas=[],
+    datas=[(str(project_root / "src/training_feedback/ui/chevron.svg"), "training_feedback/ui")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

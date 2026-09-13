@@ -326,6 +326,18 @@ def _append_sessions(lines: list[str], sessions: list[dict[str, Any]]) -> None:
                         f"{actual_set['value']} {actual_set['unit']}；"
                         f"每侧：{bool(actual_set['per_side'])}"
                     )
+        for audit in session.get("result_retractions", []):
+            previous = audit["previous_action"]
+            lines.append(
+                f"- 结果撤回：{previous['exercise_name_snapshot']}；"
+                f"原结果：{previous['result']}；时间：{audit['retracted_at']}；"
+                f"原备注：{_unknown(previous.get('note'))}"
+            )
+            for actual in previous.get("actual_sets", []):
+                lines.append(
+                    f"  - 撤回前实际第 {actual['actual_order']} 组：{actual['value']} "
+                    f"{actual['unit']}；每侧：{bool(actual['per_side'])}"
+                )
         for event in session["events"]:
             lines.append(
                 f"- 事件：{event['event_type']}，时间：{event['occurred_at']}，"
