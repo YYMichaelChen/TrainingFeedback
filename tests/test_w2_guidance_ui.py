@@ -1,14 +1,21 @@
 from copy import deepcopy
+from types import SimpleNamespace
 
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QWidget
 
 from tests.guidance_fixtures import complete_guidance as starter_guidance
+from training_feedback.domain.clock import SystemClock
 from training_feedback.domain.exercises import GuidanceStatus
 from training_feedback.ui.exercise_detail_page import ExerciseDetailPage
 from training_feedback.ui.exercise_editor import ExerciseEditor
 from training_feedback.ui.guidance_review_page import GuidanceReviewDialog
 from training_feedback.ui.guidance_widgets import GuidanceForm, GuidanceStepsEditor, GuidanceView
 from training_feedback.ui.plan_detail_page import PlanDetailPage
+
+
+def _clock_service():
+    """复核对话框需要服务提供时钟来支持发生时间的一键填入。"""
+    return SimpleNamespace(clock=SystemClock())
 
 
 def _revision(revision_id: int, number: int, guidance: dict) -> dict:
@@ -181,6 +188,8 @@ def test_review_dialog_cancel_is_read_only_and_approval_targets_visible_revision
     calls = []
 
     class RecordingService:
+        clock = SystemClock()
+
         def confirm_guidance_review(self, revision_id, **review):
             calls.append((revision_id, review))
 
@@ -211,6 +220,8 @@ def test_review_dialog_never_approves_without_explicit_checkbox(qt_app, monkeypa
     warnings = []
 
     class RecordingService:
+        clock = SystemClock()
+
         def review_and_activate_guidance(self, *args):
             calls.append(args)
 
@@ -328,7 +339,9 @@ def test_editor_keeps_save_and_cancel_reachable_in_small_window(qt_app):
 
 
 def test_review_dialog_keeps_approval_controls_reachable_in_small_window(qt_app):
-    dialog = GuidanceReviewDialog(object(), _exercise_with_revisions(), selected_revision_id=12)
+    dialog = GuidanceReviewDialog(
+        _clock_service(), _exercise_with_revisions(), selected_revision_id=12
+    )
     dialog.resize(380, 320)
     dialog.show()
     qt_app.processEvents()
@@ -350,7 +363,7 @@ def test_long_revision_identity_does_not_force_guidance_content_sideways(qt_app)
             "training-feedback.launch.supine-360-diaphragmatic-breathing.zh-CN"
         )
         revision["bundled_content_version"] = 1
-    windows = [ExerciseEditor(object(), exercise), GuidanceReviewDialog(object(), exercise)]
+    windows = [ExerciseEditor(object(), exercise), GuidanceReviewDialog(_clock_service(), exercise)]
     for window in windows:
         window.resize(685, 520)
         window.show()

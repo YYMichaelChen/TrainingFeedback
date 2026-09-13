@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox
 
 from tests.test_phase4_sessions import FixedClock, _active_plan
 from tests.test_phase6_handoff import _context, _import_payload
-from tests.test_w2_guidance_ui import _exercise_with_revisions
+from tests.test_w2_guidance_ui import _clock_service, _exercise_with_revisions
 from training_feedback.domain.plans import revision_from_snapshot
 from training_feedback.ui.guidance_review_page import GuidanceReviewDialog
 from training_feedback.ui.plan_activation_preview import PlanActivationPreview
@@ -94,7 +94,7 @@ def test_confirmation_failure_rolls_back_old_and_new_guidance(tmp_path):
 def test_review_switch_clears_only_new_inputs_and_keeps_saved_evidence(qt_app):
     exercise = _exercise_with_revisions()
     before = deepcopy(exercise)
-    dialog = GuidanceReviewDialog(object(), exercise, selected_revision_id=13)
+    dialog = GuidanceReviewDialog(_clock_service(), exercise, selected_revision_id=13)
     assert not dialog.source_edit.text() and not dialog.reviewed_at_edit.text()
     assert not dialog.note_edit.toPlainText()
     assert "待复核来源" in dialog.guidance_view.toPlainText()

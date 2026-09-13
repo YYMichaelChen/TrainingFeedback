@@ -31,6 +31,7 @@ from .guidance_widgets import (
     draft_revisions_text,
 )
 from .labels import localize_dialog_buttons, user_message
+from .review_occurrence import OccurrenceQuickFill, remember_occurrence
 
 
 class GuidanceReviewDialog(QDialog):
@@ -107,9 +108,13 @@ class GuidanceReviewDialog(QDialog):
         answer_row.addWidget(self.answer_label, 1)
         answer_widget = QWidget()
         answer_widget.setLayout(answer_row)
+        self.occurrence_quick_fill = OccurrenceQuickFill(
+            self.reviewed_at_edit, service.clock
+        )
         review_form = QFormLayout()
         review_form.addRow("本次外部 AI 审核来源", self.source_edit)
         review_form.addRow("外部审核发生时间", self.reviewed_at_edit)
+        review_form.addRow("", self.occurrence_quick_fill)
         review_form.addRow("本次审核备注", self.note_edit)
         review_form.addRow("审核答复原件（可选）", answer_widget)
         self.button_box = QDialogButtonBox(
@@ -171,4 +176,5 @@ class GuidanceReviewDialog(QDialog):
         except (ValueError, DataRootError) as exc:
             QMessageBox.warning(self, "无法批准动作指导", user_message(str(exc)))
             return
+        remember_occurrence(self.reviewed_at_edit.text())
         self.accept()

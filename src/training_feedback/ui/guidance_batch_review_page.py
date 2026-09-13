@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from .guidance_widgets import GuidanceChangesView, GuidanceView
 from .labels import GUIDANCE_STATUS_LABELS, label, localize_dialog_buttons, user_message
+from .review_occurrence import OccurrenceQuickFill, remember_occurrence
 
 
 class GuidanceBatchReviewDialog(QDialog):
@@ -90,9 +91,13 @@ class GuidanceBatchReviewDialog(QDialog):
         answer_widget = QWidget()
         answer_widget.setLayout(answer_row)
 
+        self.occurrence_quick_fill = OccurrenceQuickFill(
+            self.reviewed_at_edit, service.clock
+        )
         form = QFormLayout()
         form.addRow("本次外部 AI 审核来源", self.source_edit)
         form.addRow("外部审核发生时间", self.reviewed_at_edit)
+        form.addRow("", self.occurrence_quick_fill)
         form.addRow("本次审核备注", self.note_edit)
         form.addRow("审核答复原件（可选）", answer_widget)
 
@@ -183,6 +188,7 @@ class GuidanceBatchReviewDialog(QDialog):
         except Exception as exc:  # 领域/数据校验失败：整批未写入，保留当前输入以便修正
             QMessageBox.warning(self, "无法批准", user_message(str(exc)))
             return
+        remember_occurrence(self.reviewed_at_edit.text())
         QMessageBox.information(
             self, "已批准", f"本次已批准并启用 {self.approved_count} 个指导版本。"
         )

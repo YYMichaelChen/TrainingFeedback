@@ -664,7 +664,18 @@ personal use:
   `bundled_exercise_key`, and never rewrites a user-edited exercise. Bundled
   content still cannot supply approval or activation facts.
 
-All four releases reuse database schema 13, evidence v1 and plan v1. Exercise/plan
+0.5.1 keeps the review occurrence a user-stated fact while removing the typing:
+
+- The occurrence field still starts empty and is never auto-filled, so an
+  untouched form cannot assert when an external review happened. Buttons fill
+  today's date, the current timezone-aware local time, or the value used in the
+  previous approval of this program run; each click is the user's explicit choice
+  and the filled value stays editable.
+- The remembered value comes only from an approval that actually succeeded, which
+  keeps one review's occurrence consistent across separate approvals. A failed
+  approval remembers nothing.
+
+All five releases reuse database schema 13, evidence v1 and plan v1. Exercise/plan
 content and dose proposals do not change. Add focused regressions before each
 fix, run the full suite and lint, build and preserve each candidate separately.
 Test v0.2.2 copied-root migration as well as adjacent-version opening, backup and
