@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from typing import Any
@@ -461,31 +462,45 @@ class ExerciseRepository:
     ) -> None:
         """Complete the user-visible guidance approval action atomically."""
         with sqlite_transaction(self.connection, immediate=True):
-            row = self.connection.execute(
-                "SELECT exercise_id, guidance_json FROM exercise_guidance_revision WHERE id = ?",
-                (revision_id,),
-            ).fetchone()
-            if row is None:
-                raise ValueError("Guidance revision was not found.")
-            payload = json.loads(row[1])
-            current_status = review_status(payload)
-            if current_status == GuidanceStatus.ACTIVE:
-                raise ValueError("Guidance revision cannot be changed after activation.")
-            if current_status not in {
-                GuidanceStatus.DRAFT,
-                GuidanceStatus.PENDING_REVIEW,
-                GuidanceStatus.REJECTED,
-            }:
-                raise ValueError("Guidance revision is already approved.")
-            metadata = {
-                **payload.get("review", {}),
-                **review,
-                "status": GuidanceStatus.APPROVED.value,
-            }
-            payload["review"] = metadata
-            if not can_activate_guidance(payload):
-                raise ValueError("Complete guidance and explicit user approval are required.")
-            self._activate_guidance_revision(revision_id, row[0], payload)
+            self._review_and_activate_guidance(revision_id, review)
+
+    def review_and_activate_guidance_batch(
+        self, revision_ids: Sequence[int], review: dict[str, Any]
+    ) -> None:
+        """批准并启用多个版本；同一次真实审核证据写入每一项，任一项失败整体回滚。"""
+        if not revision_ids:
+            raise ValueError("Select at least one guidance revision to approve.")
+        with sqlite_transaction(self.connection, immediate=True):
+            for revision_id in revision_ids:
+                self._review_and_activate_guidance(revision_id, review)
+
+    def _review_and_activate_guidance(self, revision_id: int, review: dict[str, Any]) -> None:
+        """Apply one approval inside the caller's transaction."""
+        row = self.connection.execute(
+            "SELECT exercise_id, guidance_json FROM exercise_guidance_revision WHERE id = ?",
+            (revision_id,),
+        ).fetchone()
+        if row is None:
+            raise ValueError("Guidance revision was not found.")
+        payload = json.loads(row[1])
+        current_status = review_status(payload)
+        if current_status == GuidanceStatus.ACTIVE:
+            raise ValueError("Guidance revision cannot be changed after activation.")
+        if current_status not in {
+            GuidanceStatus.DRAFT,
+            GuidanceStatus.PENDING_REVIEW,
+            GuidanceStatus.REJECTED,
+        }:
+            raise ValueError("Guidance revision is already approved.")
+        metadata = {
+            **payload.get("review", {}),
+            **review,
+            "status": GuidanceStatus.APPROVED.value,
+        }
+        payload["review"] = metadata
+        if not can_activate_guidance(payload):
+            raise ValueError("Complete guidance and explicit user approval are required.")
+        self._activate_guidance_revision(revision_id, row[0], payload)
 
     def _activate_guidance_revision(
         self, revision_id: int, exercise_id: int, payload: dict[str, Any]

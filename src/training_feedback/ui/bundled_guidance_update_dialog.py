@@ -20,11 +20,13 @@ from PySide6.QtWidgets import (
 from .guidance_widgets import GuidanceChangesView, GuidanceView, active_revision
 from .labels import localize_dialog_buttons, user_message
 
+IMPORT_AS_NEW = "__import_as_new__"
+
 _MATCH_LABELS = {
     "bound": "已按稳定内容身份匹配，可创建新版草稿",
     "name_match": "仅按名称找到候选，请确认目标动作",
     "ambiguous": "名称对应多个候选，未自动选择目标",
-    "missing": "没有名称候选，请手动选择目标动作",
+    "missing": "本地没有此动作，可作为新动作导入或手动选择目标",
     "conflict": "名称候选已绑定其他内置动作，未自动选择目标",
     "up_to_date": "此目标已接收同一内置内容版本",
 }
@@ -136,6 +138,9 @@ class BundledGuidanceUpdateDialog(QDialog):
         self.guidance_view.set_guidance(item["guidance"])
         self.target_combo.clear()
         self.target_combo.addItem("请选择本地目标动作", None)
+        if item["match_status"] == "missing":
+            # 本地没有这个动作时，允许按内置内容创建新动作，而不是硬挂到别的动作上。
+            self.target_combo.addItem("作为新动作导入（本地尚无此动作）", IMPORT_AS_NEW)
         for option in item["target_options"]:
             inactive = "（未启用）" if not option.get("active", True) else ""
             self.target_combo.addItem(
@@ -183,7 +188,7 @@ class BundledGuidanceUpdateDialog(QDialog):
         if item is None:
             return
         target_id = self.target_selections.get(item["exercise_key"])
-        target = self.service.get(target_id) if target_id is not None else None
+        target = self.service.get(target_id) if isinstance(target_id, int) else None
         selected = {"id": None, "guidance": item["guidance"]}
         self.changes_view.set_revisions(active_revision(target or {}), selected)
 
@@ -191,21 +196,28 @@ class BundledGuidanceUpdateDialog(QDialog):
         selections = {
             key: self.target_selections[key]
             for key in self.accepted_keys
-            if self.target_selections.get(key) is not None
+            if isinstance(self.target_selections.get(key), int)
         }
-        if not selections:
+        import_keys = [
+            key
+            for key in self.accepted_keys
+            if self.target_selections.get(key) == IMPORT_AS_NEW
+        ]
+        if not selections and not import_keys:
             QMessageBox.information(
-                self, "尚未选择", "请勾选至少一个已确认目标的内置指导草稿。"
+                self, "尚未选择", "请勾选至少一个已确认目标或选择作为新动作导入的内置动作。"
             )
             return
         try:
-            created = self.service.accept_bundled_guidance(selections)
+            created = self.service.accept_bundled_guidance(selections, import_keys=import_keys)
         except ValueError as exc:
             QMessageBox.warning(self, "无法创建草稿", user_message(str(exc)))
             return
+        imported_text = f"，其中 {len(import_keys)} 个作为新动作导入" if import_keys else ""
         QMessageBox.information(
             self,
             "草稿已创建",
-            f"已创建 {len(created)} 个新草稿；现有启用版本和审核事实均未改变。",
+            f"已创建 {len(created)} 个新草稿{imported_text}；"
+            "现有启用版本和审核事实均未改变。",
         )
         self.accept()

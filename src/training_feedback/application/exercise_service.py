@@ -6,14 +6,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
+from ..data.review_attachments import ReviewAttachmentError, store_review_answer
 from ..domain.clock import Clock, SystemClock
 from ..domain.exercises import (
     GuidanceStatus,
     fresh_guidance_draft,
     require_review_metadata,
     require_review_occurrence,
+    review_status,
     validate_guidance,
 )
 
@@ -22,9 +26,16 @@ if TYPE_CHECKING:
 
 
 class ExerciseService:
-    def __init__(self, repository: "ExerciseRepository", clock: Clock | None = None):
+    def __init__(
+        self,
+        repository: "ExerciseRepository",
+        clock: Clock | None = None,
+        data_root: Path | None = None,
+    ):
         self.repository = repository
         self.clock = clock or SystemClock()
+        # 数据根仅用于保存受管的审核答复原件；没有它时附件功能明确不可用，而不是静默跳过。
+        self.data_root = Path(data_root) if data_root is not None else None
 
     def list(self, query: str = "", include_inactive: bool = False) -> list[dict[str, Any]]:
         if query.strip():
@@ -103,21 +114,32 @@ class ExerciseService:
             )
         return preview
 
-    def accept_bundled_guidance(self, selections: dict[str, int]) -> list[int]:
-        """Link selected local exercises and append the selected bundled drafts atomically."""
+    def accept_bundled_guidance(
+        self, selections: dict[str, int], import_keys: Sequence[str] = ()
+    ) -> list[int]:
+        """Link selected local exercises and append the selected bundled drafts atomically.
+
+        `import_keys` 里的内置动作在本地不存在，按用户明确选择创建为新动作，连带别名、
+        分类、器械与主次部位，并只附一份未审核草稿；不会写入任何批准或启用事实。
+        """
         from ..data.seed.catalog import bundled_catalog
 
-        if not selections:
+        imports = list(dict.fromkeys(import_keys))
+        if not selections and not imports:
             return []
         bundled = bundled_catalog()
         by_key = {item["exercise_key"]: item for item in bundled}
-        unknown = set(selections) - set(by_key)
+        unknown = (set(selections) | set(imports)) - set(by_key)
         if unknown:
             raise ValueError("Unknown bundled exercise selection.")
+        if set(selections) & set(imports):
+            raise ValueError("A bundled exercise is either imported or mapped, not both.")
         if len(set(selections.values())) != len(selections):
             raise ValueError("Each bundled exercise requires a different local exercise.")
         created = []
         with self.repository.transaction(immediate=True):
+            for key in imports:
+                created.append(self._import_bundled_exercise(by_key[key]))
             for item in bundled:
                 if item["exercise_key"] not in selections:
                     continue
@@ -152,6 +174,36 @@ class ExerciseService:
                     )
                 )
         return created
+
+    def _import_bundled_exercise(self, item: dict[str, Any]) -> int:
+        """在调用方事务内把一个内置动作创建为新动作，返回其未审核草稿的版本 id。"""
+        if self.repository.get_by_bundled_key(item["exercise_key"]) is not None:
+            raise ValueError("The bundled exercise is already present in this data root.")
+        # 事务内重查同名/别名，避免预览之后本地又出现同一动作。
+        if self.repository.find_identity_matches(
+            [item["canonical_name"], *item["aliases"]]
+        ):
+            raise ValueError(
+                "A local exercise already uses that name or alias; map it instead of importing."
+            )
+        validation = validate_guidance(item["guidance"], require_body_areas=True)
+        if not validation.complete:
+            raise ValueError("Bundled guidance is incomplete.")
+        exercise_id = self.repository.create(
+            item["canonical_name"],
+            item["category"],
+            item["equipment_summary"],
+            item["body_areas"],
+            bundled_exercise_key=item["exercise_key"],
+        )
+        for alias in item["aliases"]:
+            self.repository.add_alias(exercise_id, alias)
+        return self.repository.add_guidance_revision(
+            exercise_id,
+            fresh_guidance_draft(item["guidance"]),
+            bundled_content_id=item["content_id"],
+            bundled_content_version=item["content_version"],
+        )
 
     def add_guidance_draft(self, exercise_id: int, guidance: dict[str, Any]) -> int:
         draft = fresh_guidance_draft(guidance)
@@ -230,18 +282,102 @@ class ExerciseService:
         reviewed_at: str,
         review_note: str = "",
         user_confirmed: bool = False,
+        answer_file: Path | None = None,
     ) -> None:
         """Record actual external evidence and this explicit approval as separate facts."""
+        self.confirm_guidance_reviews(
+            [revision_id],
+            review_source=review_source,
+            reviewed_at=reviewed_at,
+            review_note=review_note,
+            user_confirmed=user_confirmed,
+            answer_file=answer_file,
+        )
+
+    def confirm_guidance_reviews(
+        self,
+        revision_ids: Sequence[int],
+        *,
+        review_source: str,
+        reviewed_at: str,
+        review_note: str = "",
+        user_confirmed: bool = False,
+        answer_file: Path | None = None,
+    ) -> int:
+        """把同一次真实外部审核批准到多个明确选中的版本上。
+
+        每一项都是独立的用户批准事实，但共享这一次审核的来源、发生时间和可选原件；
+        任一项失败则整体回滚，并删除本次刚复制的受管原件。
+        """
         if user_confirmed is not True:
             raise ValueError("Explicit user approval is required.")
+        selected = list(dict.fromkeys(revision_ids))
+        if not selected:
+            raise ValueError("Select at least one guidance revision to approve.")
         require_review_occurrence(reviewed_at)
-        self.review_and_activate_guidance(revision_id, {
+        review = {
             "reviewer_type": "external_ai_expert",
             "review_source": review_source,
             "reviewed_at": reviewed_at,
             "review_note": review_note,
             "user_approved_at": self.clock.now().isoformat(),
-        })
+        }
+        require_review_metadata(review)
+        attachment = None
+        if answer_file is not None:
+            if self.data_root is None:
+                raise ReviewAttachmentError(
+                    "This data root cannot store review answer files."
+                )
+            attachment = store_review_answer(self.data_root, answer_file)
+            review["review_answer_file"] = attachment.relative_path
+            review["review_answer_sha256"] = attachment.sha256
+            review["review_answer_original_name"] = attachment.original_name
+        try:
+            self.repository.review_and_activate_guidance_batch(selected, review)
+        except Exception:
+            if attachment is not None:
+                attachment.remove_from(self.data_root)
+            raise
+        return len(selected)
+
+    def list_reviewable_guidance(self) -> list[dict[str, Any]]:
+        """列出可进入批准流程的版本（草稿、待审核、已拒绝），供批量审核使用。"""
+        reviewable = []
+        for summary in self.repository.list(include_inactive=True):
+            exercise = self.repository.get(summary["id"])
+            if exercise is None:
+                continue
+            active_id = exercise.get("active_guidance_revision_id")
+            for revision in exercise.get("guidance", []):
+                if review_status(revision["guidance"]) not in {
+                    GuidanceStatus.DRAFT,
+                    GuidanceStatus.PENDING_REVIEW,
+                    GuidanceStatus.REJECTED,
+                }:
+                    continue
+                reviewable.append(
+                    {
+                        "exercise_id": exercise["id"],
+                        "exercise_name": exercise["canonical_name"],
+                        "exercise_active": bool(exercise.get("active")),
+                        "revision_id": revision["id"],
+                        "revision_number": revision["revision_number"],
+                        "bundled_content_id": revision.get("bundled_content_id"),
+                        "bundled_content_version": revision.get("bundled_content_version"),
+                        "guidance": revision["guidance"],
+                        "active_revision_id": active_id,
+                        "active_guidance": next(
+                            (
+                                item["guidance"]
+                                for item in exercise.get("guidance", [])
+                                if item["id"] == active_id
+                            ),
+                            None,
+                        ),
+                    }
+                )
+        return reviewable
 
     def set_active(self, exercise_id: int, active: bool) -> None:
         self._run_transaction(lambda: self.repository.set_active(exercise_id, active))

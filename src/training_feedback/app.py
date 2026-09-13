@@ -106,7 +106,11 @@ class ApplicationContext:
         from .application.exercise_service import ExerciseService
         from .data.exercise_repositories import ExerciseRepository
 
-        return ExerciseService(ExerciseRepository(self.database.connection), clock)
+        return ExerciseService(
+            ExerciseRepository(self.database.connection),
+            clock,
+            data_root=self.data_root.path,
+        )
 
 
 class DataRootSwitcher:

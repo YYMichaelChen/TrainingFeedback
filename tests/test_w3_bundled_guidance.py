@@ -410,6 +410,7 @@ def test_update_reopen_and_backup_keep_history_plan_and_prior_export_interpretab
 class _DialogService:
     def __init__(self):
         self.accepted = []
+        self.imported = []
         self.exercises = {
             7: {
                 "id": 7,
@@ -435,8 +436,9 @@ class _DialogService:
     def get(self, exercise_id):
         return self.exercises.get(exercise_id)
 
-    def accept_bundled_guidance(self, selections):
+    def accept_bundled_guidance(self, selections, import_keys=()):
         self.accepted.append(selections)
+        self.imported.append(list(import_keys))
         return [99]
 
 

@@ -1,20 +1,26 @@
 """动作指导复核对话框：所见版本就是被批准和启用的版本。"""
 
+from pathlib import Path
+
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QFormLayout,
     QFrame,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QMessageBox,
     QPlainTextEdit,
+    QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
+from ..data.data_root import DataRootError
 from .guidance_widgets import (
     REVIEWABLE_STATUSES,
     GuidanceChangesView,
@@ -89,10 +95,23 @@ class GuidanceReviewDialog(QDialog):
         self.note_edit = QPlainTextEdit()
         self.note_edit.setMaximumHeight(80)
         self.approved = QCheckBox("我明确批准当前显示的这个指导版本")
+        self.answer_file: Path | None = None
+        self.answer_label = QLabel("未选择原件")
+        answer_row = QHBoxLayout()
+        choose_answer = QPushButton("选择审核答复原件…")
+        choose_answer.clicked.connect(self._choose_answer_file)
+        clear_answer = QPushButton("清除")
+        clear_answer.clicked.connect(self._clear_answer_file)
+        answer_row.addWidget(choose_answer)
+        answer_row.addWidget(clear_answer)
+        answer_row.addWidget(self.answer_label, 1)
+        answer_widget = QWidget()
+        answer_widget.setLayout(answer_row)
         review_form = QFormLayout()
         review_form.addRow("本次外部 AI 审核来源", self.source_edit)
         review_form.addRow("外部审核发生时间", self.reviewed_at_edit)
         review_form.addRow("本次审核备注", self.note_edit)
+        review_form.addRow("审核答复原件（可选）", answer_widget)
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
@@ -106,6 +125,16 @@ class GuidanceReviewDialog(QDialog):
         layout.addWidget(self.button_box)
         self.revision_selector.currentIndexChanged.connect(self._revision_changed)
         self._revision_changed()
+
+    def _choose_answer_file(self) -> None:
+        selected, _ = QFileDialog.getOpenFileName(self, "选择外部审核答复原件")
+        if selected:
+            self.answer_file = Path(selected)
+            self.answer_label.setText(str(self.answer_file))
+
+    def _clear_answer_file(self) -> None:
+        self.answer_file = None
+        self.answer_label.setText("未选择原件")
 
     def _revision_changed(self) -> None:
         revision = self.revision_selector.selected_revision()
@@ -137,8 +166,9 @@ class GuidanceReviewDialog(QDialog):
                 reviewed_at=self.reviewed_at_edit.text(),
                 review_note=self.note_edit.toPlainText(),
                 user_confirmed=self.approved.isChecked(),
+                answer_file=self.answer_file,
             )
-        except ValueError as exc:
+        except (ValueError, DataRootError) as exc:
             QMessageBox.warning(self, "无法批准动作指导", user_message(str(exc)))
             return
         self.accept()

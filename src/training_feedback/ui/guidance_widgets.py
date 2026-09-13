@@ -133,6 +133,21 @@ def _field_value_html(field: str, value: Any) -> str:
     return _text_html(value)
 
 
+def _review_answer_html(review: dict[str, Any]) -> str:
+    """显示受管的审核答复原件位置；旧记录没有该字段时明确说明未保存。"""
+    relative = review.get("review_answer_file")
+    if not relative:
+        return _text_html(None, "未保存原件")
+    original = review.get("review_answer_original_name") or ""
+    digest = (review.get("review_answer_sha256") or "")[:12]
+    parts = [f"数据目录内 {relative}"]
+    if original:
+        parts.append(f"原始文件名 {original}")
+    if digest:
+        parts.append(f"SHA-256 {digest}…")
+    return _text_html("；".join(parts))
+
+
 def render_guidance_html(guidance: dict[str, Any] | None) -> str:
     """Render every supported guidance field without exposing raw JSON syntax."""
     if not guidance:
@@ -158,6 +173,8 @@ def render_guidance_html(guidance: dict[str, Any] | None) -> str:
             f"<div><b>记录的审核时间：</b>{_text_html(review.get('reviewed_at'), '未记录')}</div>",
             "<div><b>用户批准时间：</b>"
             f"{_text_html(review.get('user_approved_at'), '未批准')}</div>",
+            "<div><b>审核答复原件：</b>"
+            f"{_review_answer_html(review)}</div>",
         ]
     )
     return "".join(sections)

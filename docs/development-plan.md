@@ -643,7 +643,28 @@ local personal go-live:
   It never scans directories for candidate roots and never opens a database, so
   no migration can run before the user confirms.
 
-All three releases reuse database schema 13, evidence v1 and plan v1. Exercise/plan
+0.5.0 implements review-workflow and bundled-catalog corrections found during real
+personal use:
+
+- One actual external review can be approved onto several explicitly checked
+  guidance revisions in a single transaction. The shared facts are that review's
+  source, occurrence, note and optional answer file; each approval remains a
+  separate explicit user act, nothing is checked by default, and the selected row
+  shows its full guidance and its difference from the active revision.
+- Approval optionally attaches the external answer file. The application copies it
+  into `reviews/` inside the data root and records the relative path, SHA-256 and
+  original filename beside the review, so evidence travels with backups and
+  complete-root copies instead of depending on a hand-written path. A failed write
+  removes the copy; earlier reviews without these fields stay valid and display as
+  having no stored answer file.
+- Bundled catalog entries that have no local exercise can be imported as new
+  exercises, with their category, equipment, aliases and body areas plus one
+  unreviewed guidance draft. Import stays explicit per entry, re-checks name and
+  alias conflicts inside the write transaction, is idempotent through
+  `bundled_exercise_key`, and never rewrites a user-edited exercise. Bundled
+  content still cannot supply approval or activation facts.
+
+All four releases reuse database schema 13, evidence v1 and plan v1. Exercise/plan
 content and dose proposals do not change. Add focused regressions before each
 fix, run the full suite and lint, build and preserve each candidate separately.
 Test v0.2.2 copied-root migration as well as adjacent-version opening, backup and
