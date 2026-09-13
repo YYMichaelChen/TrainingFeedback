@@ -3,7 +3,51 @@ from training_feedback.application.exercise_service import ExerciseService
 from training_feedback.data.data_root import create_new
 from training_feedback.data.exercise_repositories import ExerciseRepository
 from training_feedback.data.locator import Locator
+from training_feedback.ui.data_root_dialog import DataRootDialog
 from training_feedback.ui.main_window import MainWindow
+
+
+def test_first_launch_suggests_creating_the_default_data_root(qt_app, tmp_path):
+    suggestion = tmp_path / "Documents" / "TrainingFeedbackData"
+
+    dialog = DataRootDialog(suggested_path=suggestion)
+
+    assert dialog.selected_path() == suggestion
+    assert dialog.creates_new_root() is True
+    assert str(suggestion) in dialog.suggestion_label.text()
+    dialog.close()
+
+
+def test_first_launch_suggests_opening_an_existing_default_root(qt_app, tmp_path):
+    suggestion = tmp_path / "Documents" / "TrainingFeedbackData"
+    create_new(suggestion)
+
+    dialog = DataRootDialog(suggested_path=suggestion)
+
+    assert dialog.selected_path() == suggestion
+    assert dialog.creates_new_root() is False
+    dialog.close()
+
+
+def test_first_launch_does_not_suggest_an_occupied_directory(qt_app, tmp_path):
+    suggestion = tmp_path / "Documents" / "TrainingFeedbackData"
+    suggestion.mkdir(parents=True)
+    (suggestion / "unrelated.txt").write_text("keep", encoding="utf-8")
+
+    dialog = DataRootDialog(suggested_path=suggestion)
+
+    assert dialog.path_edit.text() == ""
+    assert dialog.suggestion_label.text() == ""
+    assert (suggestion / "unrelated.txt").read_text(encoding="utf-8") == "keep"
+    dialog.close()
+
+
+def test_data_root_switch_dialog_has_no_prefilled_suggestion(qt_app):
+    dialog = DataRootDialog()
+
+    assert dialog.path_edit.text() == ""
+    assert dialog.creates_new_root() is False
+    dialog.close()
 
 
 def test_main_window_has_explicit_navigation(qt_app, tmp_path):

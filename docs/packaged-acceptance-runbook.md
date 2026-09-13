@@ -167,9 +167,13 @@ processes before copying roots.
 1. **Candidate identity.** Record environment details and recheck the transferred
    manifest and all program files. A mismatch fails this scenario; obtain a
    correct complete copy before continuing.
-2. **First launch/cancel/create.** Launch with an empty locator. Cancel directory
-   selection: the process exits and no root is created. Relaunch and create a
-   root in a separate empty Chinese-and-space path. Program files stay separate.
+2. **First launch/cancel/create.** Launch with an empty locator. From 0.4.1 the
+   dialog prefills the documents-folder default and preselects create for a new or
+   empty path, open for a path that already has a marker; an occupied path is not
+   prefilled. Confirm the suggestion is only a suggestion: cancel directory
+   selection and the process exits with no root created, including no root at the
+   suggested default. Relaunch, replace the suggestion, and create a root in a
+   separate empty Chinese-and-space path. Program files stay separate.
 3. **Reopen/restart.** Close and relaunch with the same locator. The selected root
    opens without asking again; repeat after a Windows restart.
 4. **Invalid/occupied roots.** Through startup selection, try an unrelated

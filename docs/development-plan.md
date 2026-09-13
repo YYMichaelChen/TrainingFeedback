@@ -1,11 +1,13 @@
 # TrainingFeedback Development Plan
 
 Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; Phase 8-B1 candidate preparation implemented and smoke-verified on the build machine; release acceptance pending\
-Last updated: 2026-09-12
+Last updated: 2026-09-13
 
 Current implementation: 0.4.0, following the separately preserved 0.3.1 correction
-candidate. Independent runtime/desktop acceptance, actual content review and W4
-remain pending.
+candidate. Both are tagged releases (v0.3.1, v0.4.0) and passed a contract-by-contract
+implementation acceptance review on 2026-09-13 (full test suite, Ruff, and source
+review against the acceptance contracts below). Independent runtime/desktop
+acceptance, actual content review and W4 remain pending.
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
@@ -496,7 +498,7 @@ never real user data. Date-boundary checks cover 01:59, 02:00, and 02:01.
 
 ## 9. Delivery Phases
 
-### Current Status (2026-09-12)
+### Current Status (2026-09-13)
 
 | Phase | Current status | Remaining acceptance or release work |
 | --- | --- | --- |
@@ -513,9 +515,10 @@ below remain the acceptance checklist; dated test runs belong in task records.
 ### Delivery Status For 0.3.0 And Remaining Work
 
 Version **0.3.0 delivered W1–W3** and their acceptance-review fixes. Follow-up
-0.3.1/0.4.0 implementation is specified below. The next packaging acceptance
-gate is **8-B2**, using the identified 0.4.0 candidate with separate evidence
-for the preserved 0.3.1 candidate. Guidance
+0.3.1/0.4.0 implementation is specified below; both are now tagged releases whose
+implementation passed the 2026-09-13 contract-by-contract acceptance review. The
+next packaging acceptance gate is **8-B2**, using the identified 0.4.0 candidate
+with separate evidence for the preserved 0.3.1 candidate. Guidance
 content review, explicit user approval, and initial-plan confirmation remain
 separate participant actions. This implementation delivery does not complete
 the first usable release defined in Section 10. An unavailable independent
@@ -527,6 +530,7 @@ passed acceptance check.
 | W1 — Exercise-edit correctness | Complete; 0.3.0 | One transactional save, honest new-draft state, and working alias/body-area edits. |
 | W2 — Readable guidance editing and review | Complete; 0.3.0 | Complete Chinese guidance forms/views with explicit revision selection and approval; original untouched text and usable small-window controls. |
 | W3 — Exercise-specific content and existing-root delivery | Implementation complete; 0.3.0; actual content review remains pending | All 14 launch guides, including the initial plan's 11, are available as drafts; existing users can explicitly receive selected drafts. |
+| Local personal go-live | In progress; 0.4.1 installed outside the repository with a separate data root | Verified installed program files, real data root, approved guidance for the plan's exercises, an activated plan revision, and a local self-check that is not 8-B2. |
 | 8-B2 — Packaged acceptance | P0 release gate; run the identified current candidate when an independent environment is available | Candidate-specific independent-runtime, upgrade, recovery, and display evidence. |
 | W4 — Real use and expert revision | After packaged acceptance and guidance/plan confirmation | Multiple real sessions plus one evidence-based plan-revision cycle. |
 
@@ -576,10 +580,12 @@ subsequent application versions when their delivered scope is known.
 
 #### Follow-Up Releases: 0.3.1 Corrections And 0.4.0 Review Workflow
 
-Deliver these as separate candidates with their own source identity, manifest,
-regression results, and packaged evidence. Runtime-independent acceptance and
-actual content review may proceed alongside development; neither is implied by
-an implementation version.
+Status (2026-09-13): both delivered as tagged releases (v0.3.1, v0.4.0) with
+source identity, manifest, regression results, and packaged evidence preserved
+per candidate. Their implementations passed a contract-by-contract acceptance
+review against the requirements below (full suite, Ruff, source review).
+Runtime-independent acceptance and actual content review remain open gates;
+neither is implied by an implementation version.
 
 0.3.1 implements prescription display and feedback/history window corrections;
 its candidate and source snapshot are preserved separately. The acceptance
@@ -621,7 +627,23 @@ displayed draft in the same write transaction, rejecting changed content.
 Existing repository callers remain compatible. ExerciseService's confirmation
 use case owns approval time through Clock; lower-level review APIs remain usable.
 
-Both releases reuse database schema 13, evidence v1 and plan v1. Exercise/plan
+0.4.1 implements first-launch data-root selection corrections found during the
+local personal go-live:
+
+- Data-root metadata failures report fixed, translatable messages. They never
+  interpolate a filename or a full path into user-visible text, so a Chinese
+  interface cannot fall back to raw English. Selecting an empty directory in open
+  mode states that the directory is empty and points at the create flow.
+- First launch prefills a documents-folder default data root and preselects
+  create for a nonexistent or empty path, open for a path that already holds a
+  marker file. An occupied path is not prefilled. The suggestion is a suggestion
+  only: confirmation is still explicit, nothing is created or opened without it,
+  and switching data roots later prefills nothing.
+- The suggestion checks that single path through a read-only data-layer helper.
+  It never scans directories for candidate roots and never opens a database, so
+  no migration can run before the user confirms.
+
+All three releases reuse database schema 13, evidence v1 and plan v1. Exercise/plan
 content and dose proposals do not change. Add focused regressions before each
 fix, run the full suite and lint, build and preserve each candidate separately.
 Test v0.2.2 copied-root migration as well as adjacent-version opening, backup and
@@ -643,6 +665,19 @@ changes should address a reproduced acceptance failure or a changed candidate
 requirement.
 
 #### 2. Execute Packaged Acceptance (8-B2)
+
+Status (2026-09-13): transfer preflight was rerun for the preserved 0.2.2,
+0.3.1, and 0.4.0 programs. All 630 manifest entries, the upgrade/adjacent
+original-copy pairs, and the refreshed 689-file transfer archive passed local
+integrity and archive round-trip checks. The refreshed package adds the
+runbook-required candidate verification record without changing any program
+candidate. No independent Windows environment or real-desktop evidence was
+available, so all ten 8-B2 scenarios remain not run. The sole current user has
+explicitly deferred this gate: local build-machine operation is sufficient for
+current personal use. The deferral does not mark 8-B2 as passed, but it does
+remove it as a blocker for ordinary local use and continued non-release work.
+Execute it before broader distribution, adding users, or claiming formal release
+acceptance.
 
 - Run the complete program directory in an independent Windows x64 environment
   with no Python, Conda, source checkout, or access to the build environment.

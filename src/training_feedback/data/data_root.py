@@ -40,20 +40,47 @@ class DataRootAccessError(DataRootError):
     pass
 
 
+CANDIDATE_EXISTING = "existing"
+CANDIDATE_NEW = "new"
+CANDIDATE_OCCUPIED = "occupied"
+
+
 @dataclass(frozen=True)
 class DataRoot:
     path: Path
     database_path: Path
 
 
-def _read_json(path: Path) -> dict[str, Any]:
+def describe_candidate(root_path: Path) -> str:
+    """判断一个确切路径可用于打开还是新建；只读文件系统，不打开数据库、不做目录扫描。
+
+    `existing` 表示该目录带有本应用的标记文件，`new` 表示路径不存在或是空目录，
+    `occupied` 表示目录里有其他内容。无法读取时按 `occupied` 处理，不建议在此新建。
+    """
+    root = Path(root_path)
+    try:
+        if (root / MARKER_FILENAME).is_file():
+            return CANDIDATE_EXISTING
+        if not root.exists():
+            return CANDIDATE_NEW
+        if root.is_dir() and not any(root.iterdir()):
+            return CANDIDATE_NEW
+    except OSError:
+        return CANDIDATE_OCCUPIED
+    return CANDIDATE_OCCUPIED
+
+
+def _read_json(path: Path, *, missing_message: str) -> dict[str, Any]:
+    """读取数据目录元数据。消息保持固定字面量，UI 才能给出中文提示而不漏出文件名。"""
     try:
         with path.open("r", encoding="utf-8") as file:
             value = json.load(file)
+    except FileNotFoundError as exc:
+        raise InvalidDataRootError(missing_message) from exc
     except (OSError, json.JSONDecodeError) as exc:
-        raise InvalidDataRootError(f"Cannot read {path.name}.") from exc
+        raise InvalidDataRootError("The data-root metadata cannot be read.") from exc
     if not isinstance(value, dict):
-        raise InvalidDataRootError(f"{path.name} must contain a JSON object.")
+        raise InvalidDataRootError("The data-root metadata cannot be read.")
     return value
 
 
@@ -71,12 +98,18 @@ def _checked_version(metadata: dict[str, Any], key: str, supported: int) -> None
 
 
 def _validate_metadata(root: Path) -> None:
-    marker = _read_json(root / MARKER_FILENAME)
+    marker = _read_json(
+        root / MARKER_FILENAME,
+        missing_message="The directory is not a TrainingFeedback data root.",
+    )
     if marker.get("application") != APPLICATION_NAME:
         raise InvalidDataRootError("The directory is not a TrainingFeedback data root.")
     _checked_version(marker, "data_format_version", DATA_FORMAT_VERSION)
 
-    config = _read_json(root / CONFIG_FILENAME)
+    config = _read_json(
+        root / CONFIG_FILENAME,
+        missing_message="The data-root metadata is incomplete or invalid.",
+    )
     if config.get("application") != APPLICATION_NAME:
         raise InvalidDataRootError("The data-root configuration belongs to another application.")
     _checked_version(config, "config_version", CONFIG_VERSION)
@@ -89,7 +122,7 @@ def _write_json(path: Path, value: dict[str, Any]) -> None:
             json.dump(value, file, ensure_ascii=True, indent=2)
             file.write("\n")
     except OSError as exc:
-        raise DataRootAccessError(f"Cannot write {path.name}.") from exc
+        raise DataRootAccessError("Cannot create the data root.") from exc
 
 
 def create_new(root_path: Path) -> DataRoot:
@@ -127,7 +160,7 @@ def create_new(root_path: Path) -> DataRoot:
     except DataRootError:
         raise
     except OSError as exc:
-        raise DataRootAccessError(f"Cannot create data root at {root}.") from exc
+        raise DataRootAccessError("Cannot create the data root.") from exc
 
 
 def open_existing(root_path: Path) -> DataRoot:
@@ -135,6 +168,15 @@ def open_existing(root_path: Path) -> DataRoot:
     root = Path(root_path)
     if not root.is_dir():
         raise InvalidDataRootError("The selected path is not a directory.")
+    # 空目录是首次启动最常见的误选：报缺少标记文件无法帮助用户，明确指向创建流程。
+    try:
+        selected_is_empty = not any(root.iterdir())
+    except OSError:
+        selected_is_empty = False
+    if selected_is_empty:
+        raise InvalidDataRootError(
+            "The selected directory is empty. Create a new data root instead."
+        )
     _validate_metadata(root)
     database_path = root / DATABASE_FILENAME
     if not database_path.is_file():

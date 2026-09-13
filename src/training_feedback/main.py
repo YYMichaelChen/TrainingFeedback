@@ -9,7 +9,7 @@ from training_feedback.app import ApplicationContext, DataRootSwitcher
 from training_feedback.bootstrap import choose_data_root, open_from_locator
 from training_feedback.data.data_root import DataRootError
 from training_feedback.data.locator import Locator, default_locator_path
-from training_feedback.ui.data_root_dialog import DataRootDialog
+from training_feedback.ui.data_root_dialog import DataRootDialog, suggested_data_root
 from training_feedback.ui.labels import user_message
 from training_feedback.ui.main_window import MainWindow
 
@@ -22,7 +22,8 @@ def main() -> int:
     if context is None:
 
         def choose() -> tuple[Path, bool] | None:
-            dialog = DataRootDialog()
+            # 首启（或 locator 失效）时给出文档目录下的默认位置建议；切换数据目录不预填。
+            dialog = DataRootDialog(suggested_path=suggested_data_root())
             if dialog.exec() != DataRootDialog.DialogCode.Accepted:
                 return None
             return dialog.selected_path(), dialog.creates_new_root()

@@ -217,6 +217,11 @@ ERROR_TRANSLATIONS = {
     "The selected directory is not empty.": "所选目录不是空目录，无法在此创建数据目录。",
     "The directory is not a TrainingFeedback data root.": "所选目录不是训练反馈数据目录。",
     "The data-root metadata is incomplete or invalid.": "所选目录的数据信息不完整或已损坏。",
+    "The data-root metadata cannot be read.": "所选目录的标记或配置文件无法读取，可能已损坏。",
+    "The selected directory is empty. Create a new data root instead.": (
+        "所选目录是空目录。请改选「创建新的数据目录」，在此新建数据目录。"
+    ),
+    "Cannot create the data root.": "无法在所选位置创建数据目录，请检查磁盘权限。",
     "The data root requires a newer version of TrainingFeedback.": (
         "该数据目录由更新版本的应用创建，请升级应用后再打开。"
     ),
