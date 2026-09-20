@@ -18,4 +18,11 @@ user_data/
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
+
+# Read-only application catalog; user databases remain ignored.
+!src/training_feedback/catalog/catalog.sqlite3
 *.sqlite3-journal
+
+# Frozen synthetic schema-16 baseline root; conversion fixtures and
+# packaging/prepare_acceptance_data.py require these exact bytes.
+!docs/contracts/baseline/schema16-root/training_feedback.sqlite3

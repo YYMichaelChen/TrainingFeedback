@@ -1,0 +1,1174 @@
+{
+  "application_baseline": "0.6.1",
+  "database_schema_baseline": 16,
+  "notice": "070-A mapping of source content; not shipped 0.7.0 artwork or approval.",
+  "entries": [
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.glute-bridge"
+      },
+      "canonical_name": "臀桥",
+      "aliases": [
+        "常规臀桥"
+      ],
+      "classification": {
+        "family_key": "family.glute-bridge",
+        "variant_role": "base",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.launch.glute-bridge.zh-CN",
+        "version": 2,
+        "sha256": "428c4b6bff7886e6e3ffffb8432c97618562854ea52f05b34a0a71ad65104d8a"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": true
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.clamshell"
+      },
+      "canonical_name": "蚌式开合",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "side_lying"
+      },
+      "content": {
+        "id": "training-feedback.launch.clamshell.zh-CN",
+        "version": 2,
+        "sha256": "087507406bef8439801d95b75e545512320e9a47e53dca282907f75861743863"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.chair-squat"
+      },
+      "canonical_name": "椅子深蹲",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "standing"
+      },
+      "content": {
+        "id": "training-feedback.launch.chair-squat.zh-CN",
+        "version": 2,
+        "sha256": "600461b154f551a1b39308fc3c0917fcd82b0c3c219c52ff46cb24656a01b388"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.dead-bug"
+      },
+      "canonical_name": "死虫式",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.launch.dead-bug.zh-CN",
+        "version": 2,
+        "sha256": "6d38bc48986f8aa796e83683997a33cd4e9a480fa6e260069db94eddaf4814a6"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.butterfly-glute-bridge"
+      },
+      "canonical_name": "蝴蝶臀桥",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.glute-bridge",
+        "variant_role": "variant",
+        "variant_order": 3,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.launch.butterfly-glute-bridge.zh-CN",
+        "version": 2,
+        "sha256": "5cd1292b231276e4d70552d7a96f86c6afcc09b5e07352200a61e740374bc563"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": true
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.supine-straight-leg-open-close"
+      },
+      "canonical_name": "仰卧直腿开合",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.main.supine-straight-leg-open-close.zh-CN",
+        "version": 2,
+        "sha256": "4d6108523793a51e7867afcb715f4c80a46eaf86631dd809710896895cbf3cc0"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.crunch-leg-extension"
+      },
+      "canonical_name": "卷腹伸腿",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.seated-supported-core",
+        "variant_role": "base",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "seated"
+      },
+      "content": {
+        "id": "training-feedback.main.crunch-leg-extension.zh-CN",
+        "version": 2,
+        "sha256": "0be0f8c99ecc3dadaa12d2910a82e4e348be0f5eee4595b7c34fc5685e787e5c"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.crunch-leg-extension-bicycle"
+      },
+      "canonical_name": "卷腹踩单车",
+      "aliases": [
+        "卷腹伸腿变式1"
+      ],
+      "classification": {
+        "family_key": "family.seated-supported-core",
+        "variant_role": "variant",
+        "variant_order": 2,
+        "parent_exercise_key": null,
+        "starting_position_class": "seated"
+      },
+      "content": {
+        "id": "training-feedback.main.crunch-leg-extension-bicycle.zh-CN",
+        "version": 2,
+        "sha256": "9ad4e78e26efa79f4c66d1f6d3deffaf5124c3d9097dd17ad4858b5f5ae9bcbe"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.crunch-leg-extension-lateral"
+      },
+      "canonical_name": "卷腹并腿左右伸",
+      "aliases": [
+        "卷腹伸腿变式2"
+      ],
+      "classification": {
+        "family_key": "family.seated-supported-core",
+        "variant_role": "variant",
+        "variant_order": 3,
+        "parent_exercise_key": null,
+        "starting_position_class": "seated"
+      },
+      "content": {
+        "id": "training-feedback.main.crunch-leg-extension-lateral.zh-CN",
+        "version": 2,
+        "sha256": "668522d30c52113fdc84f3cd4913227b9903c889a4ce200c35584837fd47e503"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.crunch-leg-extension-combination"
+      },
+      "canonical_name": "卷腹并腿分腿交替伸",
+      "aliases": [
+        "卷腹伸腿变式3"
+      ],
+      "classification": {
+        "family_key": "family.seated-supported-core",
+        "variant_role": "variant",
+        "variant_order": 4,
+        "parent_exercise_key": null,
+        "starting_position_class": "seated"
+      },
+      "content": {
+        "id": "training-feedback.main.crunch-leg-extension-combination.zh-CN",
+        "version": 2,
+        "sha256": "7b48ebca47866a6803f8cce7e44068ee035312ca0d2cfa599bb6f08e495d633e"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.glute-bridge-leg-open-close"
+      },
+      "canonical_name": "臀桥腿开合",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.glute-bridge",
+        "variant_role": "variant",
+        "variant_order": 4,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.main.glute-bridge-leg-open-close.zh-CN",
+        "version": 2,
+        "sha256": "3d12e9e409402bf4f059e5e0cfc5a5cc98ba80b5fbb5dd5e0b90a47ce7be9ec2"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.kneeling-hip-thrust"
+      },
+      "canonical_name": "跪姿臀冲",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "kneeling"
+      },
+      "content": {
+        "id": "training-feedback.launch.kneeling-hip-thrust.zh-CN",
+        "version": 2,
+        "sha256": "4b007976941bdf47c751654fa578dd03feff13b8b27ecf378f34725a11c3e10c"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.static-glute-bridge"
+      },
+      "canonical_name": "静态臀桥",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.glute-bridge",
+        "variant_role": "variant",
+        "variant_order": 2,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.launch.static-glute-bridge.zh-CN",
+        "version": 2,
+        "sha256": "5972e089817e338748b84b3c66e34a57db351633d7868d819485901e2914f60b"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.supine-360-diaphragmatic-breathing"
+      },
+      "canonical_name": "仰卧360°膈肌呼吸",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.launch.supine-360-diaphragmatic-breathing.zh-CN",
+        "version": 2,
+        "sha256": "9fab0fb4d1680b7ac4044bba41d1359a0ebb6c7768f327e10525dad1451d4087"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.small-cat-cow"
+      },
+      "canonical_name": "小幅猫牛式",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "quadruped"
+      },
+      "content": {
+        "id": "training-feedback.launch.small-cat-cow.zh-CN",
+        "version": 2,
+        "sha256": "d0080b9a17a7f287fe5a09c4f1b63410d7b395e48db1c83d19042138f8882b8b"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.seated-90-90-hip-switch"
+      },
+      "canonical_name": "坐姿90/90髋转换",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "seated"
+      },
+      "content": {
+        "id": "training-feedback.launch.seated-90-90-hip-switch.zh-CN",
+        "version": 3,
+        "sha256": "cb9575709766e3855b3b6f9dda2bded0f8fb50a12e58106b282b52ce461904b8"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.butterfly-stretch"
+      },
+      "canonical_name": "蝴蝶式",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "seated"
+      },
+      "content": {
+        "id": "training-feedback.launch.butterfly-stretch.zh-CN",
+        "version": 1,
+        "sha256": "306dafa47381a99bc624a4e532a9d71e38286dc87cc3a26851fe1d5a7f2bf85d"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.supine-figure-four-stretch"
+      },
+      "canonical_name": "仰卧4字臀部拉伸",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.launch.supine-figure-four-stretch.zh-CN",
+        "version": 3,
+        "sha256": "2a6c8ddafbc39787b76ab1a7e8341a434925a2bfac503e021745ab9fd7dbb821"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.half-kneeling-hip-flexor-stretch"
+      },
+      "canonical_name": "半跪髋屈肌拉伸",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "kneeling"
+      },
+      "content": {
+        "id": "training-feedback.launch.half-kneeling-hip-flexor-stretch.zh-CN",
+        "version": 2,
+        "sha256": "0d7689247ddb0bbccc2c531c1244397c03cefdd6b39f14137925df5175e0bf66"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "launch.standing-forward-fold"
+      },
+      "canonical_name": "站立体前屈",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "standing"
+      },
+      "content": {
+        "id": "training-feedback.launch.standing-forward-fold.zh-CN",
+        "version": 3,
+        "sha256": "3de1b288e00430ab4ba37435c6c3aabd746c9398cb11aa16ff7f9a9ed53b6bb6"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "support.wall-calf-stretch"
+      },
+      "canonical_name": "扶墙小腿拉伸",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "standing"
+      },
+      "content": {
+        "id": "training-feedback.support.wall-calf-stretch.zh-CN",
+        "version": 2,
+        "sha256": "76bb056784f6780fbbcc08a60c79784e80cbd2ac172212b572f5661e8eff5054"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "support.supine-single-knee-to-chest"
+      },
+      "canonical_name": "仰卧单膝抱胸",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.support.supine-single-knee-to-chest.zh-CN",
+        "version": 2,
+        "sha256": "e25ad21e4d9c12d32992b4eeab80fef85db909f58056aa2530f8decf46482528"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.wall-supported-calf-raise"
+      },
+      "canonical_name": "扶墙提踵",
+      "aliases": [
+        "提踵",
+        "双脚提踵"
+      ],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "standing"
+      },
+      "content": {
+        "id": "training-feedback.main.wall-supported-calf-raise.zh-CN",
+        "version": 1,
+        "sha256": "cced2d0e183c583a418eba3751a414f88bd1a43826a40797b5b4d436c159acf2"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.bird-dog"
+      },
+      "canonical_name": "鸟狗式",
+      "aliases": [],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "quadruped"
+      },
+      "content": {
+        "id": "training-feedback.main.bird-dog.zh-CN",
+        "version": 1,
+        "sha256": "8ac94f64190d139571d4f0da12d52d36712733b3ce50efd0f884c2abb5862d3d"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.kneeling-straight-arm-lean"
+      },
+      "canonical_name": "跪姿冲肩",
+      "aliases": [
+        "跪姿直臂冲肩"
+      ],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "kneeling"
+      },
+      "content": {
+        "id": "training-feedback.main.kneeling-straight-arm-lean.zh-CN",
+        "version": 2,
+        "sha256": "3b924652113c73da74845a73dc5c6c2b94e2a8cf12f6596f21fc0046f490d204"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "support.seated-upper-back-stretch"
+      },
+      "canonical_name": "跪姿双臂前伸拉伸",
+      "aliases": [
+        "婴儿式前伸拉伸"
+      ],
+      "classification": {
+        "family_key": null,
+        "variant_role": "standalone",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "kneeling"
+      },
+      "content": {
+        "id": "training-feedback.support.seated-upper-back-stretch.zh-CN",
+        "version": 2,
+        "sha256": "08ffbcfaf09fa3d00e1394144e4424abc104ca3541b2bf8fbed1804aa1ab75b9"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.glute-bridge-single-leg-kick"
+      },
+      "canonical_name": "臀桥单侧踢腿",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.glute-bridge",
+        "variant_role": "variant",
+        "variant_order": 5,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.main.glute-bridge-single-leg-kick.zh-CN",
+        "version": 1,
+        "sha256": "178b7833503a1de0161a610c9e3c4ff0a775dfab19e8b8375d0563bc734f70ff"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.single-leg-glute-bridge"
+      },
+      "canonical_name": "单腿臀桥",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.glute-bridge",
+        "variant_role": "variant",
+        "variant_order": 6,
+        "parent_exercise_key": null,
+        "starting_position_class": "supine"
+      },
+      "content": {
+        "id": "training-feedback.main.single-leg-glute-bridge.zh-CN",
+        "version": 1,
+        "sha256": "abffee8dd315052a63b1ae53e60442c62e384699f2ba7593086dc6e382749104"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.quadruped-straight-leg-kickback"
+      },
+      "canonical_name": "直腿后踢",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.quadruped-hip",
+        "variant_role": "variant",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "quadruped"
+      },
+      "content": {
+        "id": "training-feedback.main.quadruped-straight-leg-kickback.zh-CN",
+        "version": 2,
+        "sha256": "959ce7a7b813fc7924beef2e767c6432a292c55116c02c0e55620148db8f45e7"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.donkey-kick"
+      },
+      "canonical_name": "驴踢",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.quadruped-hip",
+        "variant_role": "variant",
+        "variant_order": 2,
+        "parent_exercise_key": null,
+        "starting_position_class": "quadruped"
+      },
+      "content": {
+        "id": "training-feedback.main.donkey-kick.zh-CN",
+        "version": 1,
+        "sha256": "71e502e2ca2835b6b4ce4515dcbbfec657086bc43c79471ab0a2336a1e189847"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.donkey-kick-pulse"
+      },
+      "canonical_name": "驴踢脉冲",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.quadruped-hip",
+        "variant_role": "variant",
+        "variant_order": 3,
+        "parent_exercise_key": null,
+        "starting_position_class": "quadruped"
+      },
+      "content": {
+        "id": "training-feedback.main.donkey-kick-pulse.zh-CN",
+        "version": 1,
+        "sha256": "2015e934c613c09b5aaeb037887a9af7d3115194a9e8e584fadc4e3150ba081f"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.diagonal-donkey-kick"
+      },
+      "canonical_name": "斜向驴踢",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.quadruped-hip",
+        "variant_role": "variant",
+        "variant_order": 4,
+        "parent_exercise_key": null,
+        "starting_position_class": "quadruped"
+      },
+      "content": {
+        "id": "training-feedback.main.diagonal-donkey-kick.zh-CN",
+        "version": 1,
+        "sha256": "d0b0c35c9f054fc8e60c265546277f737efc19fa23e23b6a30fa8654d91bcc7b"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.fire-hydrant"
+      },
+      "canonical_name": "消防栓",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.quadruped-hip",
+        "variant_role": "variant",
+        "variant_order": 5,
+        "parent_exercise_key": null,
+        "starting_position_class": "quadruped"
+      },
+      "content": {
+        "id": "training-feedback.main.fire-hydrant.zh-CN",
+        "version": 1,
+        "sha256": "0f4b192b126982fcb14131559e02e600026bea41f638ccaf249558b25996efd5"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.prone-straight-leg-raise"
+      },
+      "canonical_name": "俯卧直腿抬腿",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.prone-hip-extension",
+        "variant_role": "base",
+        "variant_order": 1,
+        "parent_exercise_key": null,
+        "starting_position_class": "prone"
+      },
+      "content": {
+        "id": "training-feedback.main.prone-straight-leg-raise.zh-CN",
+        "version": 1,
+        "sha256": "55789b3e86b7730010d45d1b49e8121a07311aef069723947c518d3f3666fddb"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.prone-bent-knee-leg-raise"
+      },
+      "canonical_name": "俯卧屈腿抬腿",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.prone-hip-extension",
+        "variant_role": "variant",
+        "variant_order": 2,
+        "parent_exercise_key": null,
+        "starting_position_class": "prone"
+      },
+      "content": {
+        "id": "training-feedback.main.prone-bent-knee-leg-raise.zh-CN",
+        "version": 1,
+        "sha256": "56a89bcff99a7953a68f50e836b6dee144d9db54c392a8195df1750726ea0879"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    },
+    {
+      "exercise": {
+        "source": "bundled",
+        "key": "main.prone-double-bent-knee-leg-raise"
+      },
+      "canonical_name": "俯卧双腿屈腿抬腿",
+      "aliases": [],
+      "classification": {
+        "family_key": "family.prone-hip-extension",
+        "variant_role": "variant",
+        "variant_order": 3,
+        "parent_exercise_key": null,
+        "starting_position_class": "prone"
+      },
+      "content": {
+        "id": "training-feedback.main.prone-double-bent-knee-leg-raise.zh-CN",
+        "version": 1,
+        "sha256": "1ea96f06f960c80c1642dbebe71c6747d3ff1553e4026ec529910cc60aa799e1"
+      },
+      "images": [
+        {
+          "path": null,
+          "caption": "暂无动作示意图",
+          "status": "missing",
+          "required": true,
+          "sha256": null
+        }
+      ],
+      "image_readiness": "missing",
+      "external_review": "unreviewed",
+      "target_content_pending": false
+    }
+  ]
+}

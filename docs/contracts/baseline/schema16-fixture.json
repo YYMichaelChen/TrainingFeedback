@@ -1,0 +1,28 @@
+{
+  "notice": "Frozen synthetic schema-16 acceptance root metadata; pair with schema16-root/.",
+  "sessions": {
+    "completed": 1,
+    "partial": 2,
+    "paused": 3
+  },
+  "exports": [
+    "evidence-20260920T124647Z-87d8b17f.json",
+    "evidence-20260920T124647Z-87d8b17f.md"
+  ],
+  "mapping_expectations": {
+    "renamed_bundled": {
+      "old_id": 1,
+      "source": "bundled",
+      "key": "launch.glute-bridge"
+    },
+    "custom_old_ids": [
+      37,
+      38,
+      2
+    ],
+    "historical_guidance_id": 1,
+    "selected_override_id": 37,
+    "plan_pin_provenance": "migration_time",
+    "historical_image_readiness": null
+  }
+}

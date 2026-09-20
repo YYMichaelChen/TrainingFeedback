@@ -1,0 +1,4 @@
+# Frozen synthetic schema-16 baseline (docs/contracts/baseline/): evidence bytes
+# must survive clean checkouts/archives unchanged. CRLF text evidence and binary
+# payloads alike stay byte-exact regardless of core.autocrlf. Never renormalize.
+docs/contracts/baseline/** -text
