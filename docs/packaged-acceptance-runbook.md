@@ -1,281 +1,180 @@
-# Packaged Acceptance Runbook
+# Packaged Acceptance Runbook — 0.7.0
 
-Requirements live in [development-plan.md](development-plan.md), Sections 7–9.
-This runbook covers the 0.4.0 candidate, with 0.3.1 retained as a separate
-correction release. Test v0.2.2 → 0.4.0 migration and 0.3.1 → 0.4.0 adjacent
-opening. For the 0.3.1 candidate, test 0.3.0 → 0.3.1 separately.
-Use only isolated synthetic roots belonging to this application.
+Updated: 2026-09-21. Status: local directory candidate exists; formal installer
+and independent acceptance **not run**. Product scope and supported versions live
+in [development-plan.md](development-plan.md), §§7–9, 12–13. The
+[release review](release-readiness-0.7.0.md) records findings and execution order.
+Historical procedures are in the [version history](history/README.md).
 
-Preparation and build-machine startup checks are supporting evidence. Execute
-8-B2 in an independent Windows x64 environment with no Python, Conda,
-application source checkout, or access to the build environment. Use a clean VM
-or separate machine and an ordinary non-administrator account. A new account
-on the build machine does not establish runtime independence.
+All changing/destructive checks use isolated synthetic roots. Development content
+belongs in the built-in catalog; these fixtures do not establish personal facts.
 
-## 1. Candidate And Transfer Preparation — Build Machine
+## 1. Candidate And Installer Preparation — Build Machine
 
-Use the identified candidate directory and its manifest. The previous 0.3.0
-candidate is from commit `ec611f0464e579e6bc5ea2adf335278df0ac3d1c`; its checks
-remain historical evidence. Build changed candidates with `packaging/build.ps1`
-and the pinned toolchain. A rebuild gets its own acceptance identity. If
-`source_dirty=true`, retain the exact source ZIP, file hashes and base commit on
-the build machine; the base commit alone does not identify those source changes.
+1. Close 070-R1/R2 and content prerequisites from the active plan. Record application,
+   database schema, catalog and wire-contract versions separately. Capture the exact
+   source commit/snapshot; dirty-source manifests require a matching source snapshot.
+2. With the pinned toolchain, build the complete PyInstaller directory plus installer:
 
-The local preparation delivery contains these transfer inputs:
+   ```powershell
+   pwsh -File packaging/build.ps1 -Installer -ISCC 'C:\Users\41315\AppData\Local\Programs\Inno Setup 6\ISCC.exe'
+   ```
 
-| Input | Purpose |
-| --- | --- |
-| `programs/0.4.0/TrainingFeedback/` and adjacent build manifest | Complete candidate directory; copy the executable and `_internal` together. |
-| `programs/0.3.1/TrainingFeedback/` and adjacent build manifest | Previous candidate for the adjacent-version scenario. |
-| `programs/0.2.2/TrainingFeedback/`, manifest, and source-provenance record | Previous-version build recreated from this repository's tag. |
-| `inputs/functional/data-root/` | Current synthetic training, feedback, imported draft, and recovery fixture. |
-| `inputs/upgrade-original/data-root/` | Closed schema-12 baseline; never open with the new application. |
-| `inputs/upgrade-copy/data-root/` | Unmodified copy for the independent upgrade scenario. |
-| `inputs/adjacent-original/data-root/` and `inputs/adjacent-copy/data-root/` | 0.3.1-generated, normally opened/closed baseline and unopened copy. |
-| `baselines/upgrade-original.json` | Logical records, schema version, resource hashes, and original database hash. |
-| `candidate-verification.json`, `START-HERE.md`, `acceptance-evidence.md` | Local preparation evidence, operator instructions, and unfilled independent acceptance results. |
+   The inspected compiler exists; actual compilation is still required. Substitute
+   the verified compiler path on another build machine. Output:
+   `dist/TrainingFeedback/`, its adjacent manifest, and
+   `dist/installer/TrainingFeedback-<version>-Setup.exe` plus installer manifest.
+3. Verify all payload paths, counts, sizes and hashes, including unexpected files.
+   Catalog verification must cover actual illustration bytes and readiness for every
+   entry. A filename or prompt is not an asset. Include v2 contracts and sqlite3.dll.
+4. Record build time, version, source revision/dirty flag, source snapshot identity,
+   architecture, Python/PySide6/PyInstaller versions, installer/manifest/executable
+   hashes and Authenticode status. Unsigned builds may support development testing;
+   the existing broad-distribution signing requirement still applies.
+5. Verify the installed executable and complete payload. Program replacement must
+   not touch locator/root files; first application launch may perform the declared
+   supported migration. Validate these as separate boundaries.
 
-Keep source archives, Python helpers, build logs, and development environments
-on the build machine. Transfer only the package above to the independent
-environment. Keep program and data directories separate after unpacking.
+Directory-only builds are supporting checks, not installer/upgrade acceptance.
+Archive a changed candidate separately and rerun affected checks; never relabel an
+older candidate's evidence. Retain artifacts within the three-version window.
 
-Record build time, app version, source revision, source-dirty flag, architecture,
-Python/PySide6/PyInstaller versions, and file count. Verify every file, including
-unexpected extra files, on the build machine and after transfer. With PowerShell 7,
-set the path to the version directory and run:
+## 2. Isolated Input And Transfer Preparation
 
-```powershell
-$candidateDir = 'D:\TF 验收\programs\0.4.0'
-$programDir = Join-Path $candidateDir 'TrainingFeedback'
-$manifest = Get-Content -LiteralPath (Join-Path $candidateDir 'TrainingFeedback.build-manifest.json') -Raw | ConvertFrom-Json
-$files = @(Get-ChildItem -LiteralPath $programDir -Recurse -File)
-if ($files.Count -ne $manifest.file_count -or $manifest.artifact_hashes.Count -ne $manifest.file_count) {
-    throw 'Candidate file count mismatch'
-}
-foreach ($entry in $manifest.artifact_hashes) {
-    $file = Get-Item -LiteralPath (Join-Path $programDir $entry.path) -ErrorAction Stop
-    $hash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
-    if ($file.Length -ne $entry.bytes -or $hash -ne $entry.sha256) {
-        throw "Candidate mismatch: $($entry.path)"
-    }
-}
-```
+- Prepare a clean first-launch profile and new empty Chinese/space-containing root
+  path; cancellation must create nothing. Keep program and data paths separate.
+- The source fixture helper copies the frozen synthetic schema16 baseline:
 
-Expect the selected version (normally `0.4.0`) and use its actual source identity,
-dirty flag and manifest file count. Record the manifest hash and entry executable
-hash in the environment record; never substitute the previous candidate's values.
+  ```powershell
+  pwsh -File packaging/prepare-acceptance-data.ps1 D:\TF-Preparation\functional
+  ```
 
-## 2. Prepare Three Separate Inputs — Build Machine
+  Use a new/empty base. Its generated locator contains an absolute build-machine
+  path; do not reuse it after transfer. The frozen source fixture is not evidence
+  of actual old-binary use. 070-R1 must make its DB and byte hashes reproducible.
+- Prepare actual **0.6.0/schema14** and **0.6.1/schema16** baselines with matching
+  retained binaries. Open/close normally before capturing logical facts, original
+  text, unknown fields, resource hashes and original database hash. Preserve closed
+  originals; create unopened transfer copies and separate local-rehearsal copies.
+- Cover renamed/missing bundled keys, overrides/custom actions, complete/missing/
+  corrupt images, review originals, selected/disabled content, draft/active plans,
+  paused/terminal sessions, feedback, retractions and original imports/exports.
+  Mark synthetic reviews and training explicitly. No real roots for fault injection.
+- Prepare current-model groups with repeated actions, distinct units, side orders,
+  partial/batch outcomes and removal references, plus a later catalog withdrawal.
+- Supply interrupted-root fixtures for recovery/publication failures and an
+  out-of-window root for unchanged rejection. Arbitrary earlier schemas are not
+  upgrade promises; the accepted version/schema map is the authority. Future-schema
+  rejection and free-space/access failures also require coverage.
+- Expected conversion differences identify new structures/provenance/eligibility,
+  not blanket permission to rewrite original facts. Compare before later training,
+  exports or approvals intentionally add rows.
 
-### First launch
+Transfer only versioned programs/installers/manifests, isolated fixture copies,
+baseline descriptions/hashes, operator instructions and empty evidence forms.
+Keep source archives, Python helpers and build environments on the build machine.
+Record returned closed-copy comparisons there without changing the independent
+machine's runtime environment. Original baselines must remain byte-identical.
 
-Use an absent/empty locator directory and an empty data destination. Never
-reuse a developer's default locator. The operator launch procedure below sets
-an explicit isolated `LOCALAPPDATA` even for first launch.
+## 3. Independent Environment And Launch
 
-### Functional and recovery fixture
+Use Windows x64 on a clean VM or separate machine, ordinary non-administrator
+account, with no Python, Conda, source checkout or access to the build environment.
+A new account on the build machine does not prove independence.
 
-Run from the current repository using PowerShell 7:
-
-```powershell
-pwsh -File packaging/prepare-acceptance-data.ps1 D:\TF-Preparation\functional
-```
-
-The base directory must be empty or absent. The result contains synthetic
-completed, partial, and paused sessions, revisions, original notes, next-day
-feedback, PNG images, exports, and an imported draft. The content and approval
-metadata are explicitly synthetic. Copy only `data-root/` into the transfer
-package; after moving it, select it through the normal UI. Its original locator
-contains an absolute build-machine path and must not be reused after transfer.
-
-This fixture must never be used for actual exercise-content review. Follow the
-[guidance review runbook](guidance-review-runbook.md) for normal seed drafts.
-
-### Cross-version upgrade fixture
-
-1. Export **this repository's** `v0.2.2` source to a new staging directory.
-   Record the peeled commit and SHA-256 of the archive. Do not change the main
-   checkout or consult another project's database.
-2. In the extracted source, run its `packaging/build.ps1` and
-   `packaging/prepare-acceptance-data.ps1`, passing the build interpreter
-   explicitly. Its fixture script imports its own source, which creates schema 12.
-3. Open that fixture with the resulting **0.2.2 executable** using an isolated
-   locator; close the application normally before taking the baseline. Record
-   the executable identity and actual startup/close result. A hidden-desktop
-   check supports preparation only; desktop acceptance remains pending.
-4. Preserve that closed root as `upgrade-original/data-root`. Capture all
-   business-table records, schema version, and resource-file hashes. Preserve
-   the original database hash for source-isolation checks.
-5. Copy the original into `upgrade-copy/data-root`. Confirm its files match the
-   original. Do not open this transfer copy with the candidate during preparation;
-   use a separate local rehearsal copy for build-machine checks.
-
-For source extraction, run from the current repository:
-
-```powershell
-$staging = 'D:\TF-Preparation'
-New-Item -ItemType Directory -Path $staging -ErrorAction Stop | Out-Null
-git rev-parse 'v0.2.2^{commit}'
-git archive --format=zip --output="$staging\v0.2.2-source.zip" v0.2.2
-Get-FileHash -LiteralPath "$staging\v0.2.2-source.zip" -Algorithm SHA256
-Expand-Archive -LiteralPath "$staging\v0.2.2-source.zip" -DestinationPath "$staging\previous-source"
-pwsh -File "$staging\previous-source\packaging\build.ps1" -Python 'E:\Github\TrainingFeedback\.venv\python.exe'
-pwsh -File "$staging\previous-source\packaging\prepare-acceptance-data.ps1" "$staging\previous-fixture" -Python 'E:\Github\TrainingFeedback\.venv\python.exe'
-```
-
-Choose an unused staging location and replace the interpreter path with the
-verified build interpreter. When staging inside another Git checkout, prevent
-Git from discovering that enclosing checkout (set `GIT_CEILING_DIRECTORIES` to
-the enclosing repository root for the child build). An archive has no `.git`:
-its manifest can legitimately have null source fields. Keep the archive hash,
-tag commit, build log, and manifest hash in a separate provenance record;
-do not replace null fields with a fabricated clean-checkout claim.
-
-Do not create the upgrade fixture with current code and then open it in 0.2.2.
-For adjacent-version coverage, generate a second fixture using the preserved
-0.3.1 source snapshot, open/close it with the corresponding 0.3.1 executable,
-and create original/copy baselines in the same way. Expect schema 13 → 13 and
-no changes to existing records/resources. Keep source helpers on the build machine.
-That produces schema 13 before the upgrade test has started.
-
-## 3. Execute On Independent Windows
-
-### Isolated launch
-
-Unpack under a path containing Chinese characters and spaces, for example
-`D:\TF 验收\`. Use a new locator directory for first launch. In PowerShell 7:
+Install under the normal per-user location, or record the actual chosen path.
+Use an isolated locator, including for first launch:
 
 ```powershell
 $acceptanceBase = 'D:\TF 验收'
+$program = 'C:\Users\Tester\AppData\Local\Programs\TrainingFeedback\TrainingFeedback.exe'
 $previousLocalAppData = $env:LOCALAPPDATA
 try {
     $env:LOCALAPPDATA = Join-Path $acceptanceBase 'operator-localappdata'
-    & (Join-Path $acceptanceBase 'programs\0.4.0\TrainingFeedback\TrainingFeedback.exe')
+    & $program
 } finally {
     $env:LOCALAPPDATA = $previousLocalAppData
 }
 ```
 
-Use the same locator for restart tests. Use a new, explicitly named locator
-directory to select another fixture at startup. Do not use the source-root
-switch action while the fixture has a paused session: open the backup or
-upgrade copy through a fresh startup locator instead. Close all application
-processes before copying roots.
+Resolve the installed executable path before changing LOCALAPPDATA. Use the same
+isolated profile for restart checks, fresh named profiles for independent fixtures,
+and close applications before copying roots. Pause open sessions before normal
+root switching; resumed work belongs to the selected root. Do not launch an old
+program on the sole upgraded copy; rollback checks use preserved old roots.
 
-### Scenarios And Expected Results
+## 4. Evidence Form And Display Matrix
 
-1. **Candidate identity.** Record environment details and recheck the transferred
-   manifest and all program files. A mismatch fails this scenario; obtain a
-   correct complete copy before continuing.
-2. **First launch/cancel/create.** Launch with an empty locator. From 0.4.1 the
-   dialog prefills the documents-folder default and preselects create for a new or
-   empty path, open for a path that already has a marker; an occupied path is not
-   prefilled. Confirm the suggestion is only a suggestion: cancel directory
-   selection and the process exits with no root created, including no root at the
-   suggested default. Relaunch, replace the suggestion, and create a root in a
-   separate empty Chinese-and-space path. Program files stay separate.
-3. **Reopen/restart.** Close and relaunch with the same locator. The selected root
-   opens without asking again; repeat after a Windows restart.
-4. **Invalid/occupied roots.** Through startup selection, try an unrelated
-   nonempty directory and a copy missing its marker. Expect readable errors,
-   no partial root, and no changes to unrelated files. Do not damage originals.
-5. **Ordinary user.** Perform the sequence without elevation; record account
-   privilege and any request for administrator access. A required elevation fails.
-6. **Upgrade.** Open only `upgrade-copy` with the 0.4.0 candidate, then close normally before
-   exporting or changing any content. Preserve the closed upgraded copy for
-   comparison on the build machine. Expect schema 12 → 13, identical old fields
-   and business rows, unchanged historical snapshots and resources. New bundled
-   identity fields stay null; startup creates no new guidance drafts. Keep
-   `upgrade-original` unopened and byte-identical. After this capture, inspect
-   history and feedback on a working copy and export evidence through the UI.
-   Repeat on `adjacent-copy` for 0.3.1 → 0.4.0; expect schema 13 → 13. Record both
-   outcomes in row 6 and preserve both originals. Candidate 0.3.1 uses a separate
-   0.3.0 → 0.3.1 baseline and evidence form.
-7. **Online backup/errors.** Open a working copy of the functional fixture. In
-   Settings, back up while the paused session exists to an explicitly selected
-   empty directory outside the source. Try occupied, nested, and unavailable
-   destinations separately: errors must be readable, without partial copies.
-8. **Recovery.** Close the program; with a fresh locator select the backup root.
-   Resume the paused session, inspect history and feedback, and export evidence.
-   Check original notes and images; subsequent edits in the backup must not
-   modify the closed source. Compare the source against the baseline taken
-   immediately after it was closed, before opening the backup.
-9. **Display.** On the actual desktop, record resolution and Windows scaling.
-   Run the matrix below, checking long Chinese text and all listed dialogs.
-10. **Training controls.** Open an action with many actual-set rows. At every
-    tested display combination, Pause / Abort / Finish stay reachable without
-    scrolling training content. Record evidence before interacting with controls.
+Record date/operator, Windows edition/build/x64, VM/machine identity, absence of
+development dependencies, ordinary-user status, program/data paths, exact candidate
+and catalog/schema identities, source provenance, installer/executable/manifest
+SHA-256 and signature status, plus previous binary identities.
 
-Schema migration can change the database file hash; compare logical data and
-resources for the upgraded copy. The original's database hash must stay fixed.
-Separate automatic-upgrade comparison from later exports, training, or content
-acceptance, which intentionally create new records. Build-machine comparison
-of returned closed copies does not change the independent-runtime environment.
+Each scenario needs input baseline, exact operations, expected/observed result,
+logical/resource comparison, evidence path/hash and pass/fail/not run. Retain the
+first failure reproduction before repair. Offscreen survival or an isolated image
+of a window does not prove interactive behavior.
 
-If a check fails, record reproduction, expected/actual behavior, candidate,
-environment, and evidence before repair. A changed candidate receives a new
-identity and reruns affected checks; retain prior results as historical.
+| Resolution | Scaling | Result | Checked windows / reachable controls / evidence |
+| --- | --- | --- | --- |
+| 1366×768 | 100% | not run | |
+| 1366×768 | 125% | not run | |
+| 1366×768 | 150% | not run | |
+| 1920×1080 | 100% | not run | |
+| 1920×1080 | 125% | not run | |
+| 1920×1080 | 150% | not run | |
 
-## 4. Evidence Forms
+Check startup/errors/root selection, families, full guidance/image/review forms,
+group/member editors, long Chinese content, removal impact, feedback/history and
+many actual-set rows. Save/cancel and pause/abort/finish must stay reachable.
+Record actual alternatives where a resolution is unavailable; required scaling
+coverage remains open until evidenced. Execute invalid-input retention, cancelled
+save/retraction, stale preview and explicit confirmation, not just visual inspection.
 
-Copy these forms per candidate/environment. Use `pass`, `fail`, or `not run`;
-unavailable scenarios remain `not run` with the reason. Do not prefill a pass
-from a build-machine check.
+## 5. Current Candidate Acceptance
 
-Environment: date/operator; Windows edition/build/x64; clean VM or machine;
-absence of Python/Conda/source/build access; ordinary-user status; program/data
-paths; candidate version/commit/build time; manifest and executable SHA-256;
-previous version and source-provenance record; monitor/resolution/scaling.
+### 5.1 Preparation Status
 
-| # | Scenario | Result | Actual steps and expected/actual result | Evidence / blocker |
-| --- | --- | --- | --- | --- |
-| 1 | Candidate identity and transferred hashes | not run | Pending independent environment | |
-| 2 | First launch, cancel, create Chinese + space root | not run | Pending independent environment | |
-| 3 | Locator reopen and restart | not run | Pending independent environment | |
-| 4 | Invalid root and occupied directory | not run | Pending independent environment | |
-| 5 | Non-administrator operation | not run | Pending independent environment | |
-| 6 | v0.2.2 → 0.4.0 migration and 0.3.1 → 0.4.0 opening; originals isolated | not run | Pending independent environment | |
-| 7 | Online backup and destination failures | not run | Pending independent environment | |
-| 8 | Open backup, resume, inspect, export | not run | Pending independent environment | |
-| 9 | Actual-desktop display matrix | not run | Pending real desktop | |
-| 10 | Fixed session controls | not run | Pending real desktop | |
+The 0.7.0 directory candidate has 257 verified files, schema22 runtime, v2 contracts
+and catalog070-baseline-1 (36 entries, zero illustrations). Its dirty source is based
+on `072c931`. Local offscreen schema16 conversion/restart/first-launch checks passed
+7/7; see `.tmp/070-h-package/verification.json` and `rehearsal-result.json`.
+These checks are not repeated here as independent results. The
+[delivery history](history/0.7.0/development.md) records completed A–G and local H.
 
-For every display row check startup errors, root selection/switching, training
-with many actual sets, exercise detail, complete editor, revision review, and
-bundled-update preview. Select an older guidance revision and edit it, inspect
-long Chinese text, reorder steps, and check save/cancel/approval controls.
-If the functional fixture has only one guidance revision, first save a new
-draft on a working copy, then select the older revision for this check.
-Use fixture copies for edits and synthetic approvals; never treat these as
-actual content review.
+Before formal execution: finish reproducible frozen inputs, three-version runtime
+support, actual current content/images, release regression, installer and actual
+retained-binary baselines. The Inno compiler is present; no 0.7.0 installer result
+has yet been recorded. Refresh transfer inputs for the final candidate.
 
-For 0.3.1 and later, include numeric-set notes, per-side prescriptions and a
-free-dose explanation in training/history/exports; edit the catalog on a working
-copy and confirm history still uses frozen text. Open next-day feedback from
-Home with four primary areas and eleven performed actions. Scroll all content
-and confirm submission state/button remain accessible; unanswered choices stay
-unknown after submission. Long history details must not displace Export.
+### 5.2 Independent Candidate Scenarios
 
-For 0.4.0, create two drafts and deliberately select the older one. Check that
-editing, guidance review and activation target it, while a published selection
-is read-only and can be cloned. Importing opens the new draft; original rationale
-and managed source remain unchanged after local edits. Confirming a changed
-preview must ask for a fresh review. In guidance review, occurrence starts empty;
-test a date-only value and a timezone-aware value, separate approval time, invalid
-or empty input, unchecked approval, cancellation and clearing inputs on revision
-switch. Test approvals must retain explicit synthetic labels.
+| ID | Operation | Required result | Status |
+| --- | --- | --- | --- |
+| 070-01 | Install; cancel first launch; create Chinese/space root as ordinary user; try invalid/occupied paths. | Current built-in catalog works without old data/import or full seed copy; no program writes or partial roots; cancel creates nothing. | not run |
+| 070-02 | Install over retained 0.6.1/schema16 and oldest retained 0.6.0/schema14; start with their selected roots. | Program replacement preserves data; launch separately snapshots/converts automatically, preserving locator/settings/facts with no re-import or compatibility selector. | not run |
+| 070-03 | Compare converted facts; restart twice, restart Windows and switch roots. | Verbatim originals and unknowns preserved; no duplicate conversion/assets or repeated approval of unchanged eligible plans; isolation and paused position survive. | not run |
+| 070-04 | Open interrupted roots; exercise disk/access/backup failures; try expired and future roots. | Recover a consistent supported root; actionable errors, retained recovery copy. Unsupported roots unchanged; expired development root explains reinstall plus explicit new directory. | not run |
+| 070-05 | Exercise text/image gate through library/review/plan/start. | Missing/corrupt/escaping/mismatched images block use; unreviewed valid images invent no approval; original review survives invalidation. | not run |
+| 070-06 | Browse families; edit/activate A→B groups, rounds/sides and repeated members. | Distinct identities/units, exact side/rest/transition order, immutable pins, stale/invalid input rejected without loss. | not run |
+| 070-07 | Individual/round results; partial work, retraction/cancel, pause/restart, abort/finish. | Correct member/round/side position; atomic batches; no duplicate/defaulted facts; terminal guards and history/export agreement. | not run |
+| 070-08 | Request/review/approve/reject/cancel/restore removal and publisher withdrawal. | Root-local decisions, no evidence/variant cascade loss, new use blocked, frozen unfinished/history usable; restoration not automatic enablement. | not run |
+| 070-09 | Export portable evidence/images; import v2; try new v1 file. | JSON/Markdown/current schema and hashes agree; original file preserved; draft only; v1 clearly rejected with current-format guidance. | not run |
+| 070-10 | Online backup with paused work/reviews/retractions; try bad destinations; reopen with newer catalog and resume/re-export. | Complete custom/review/snapshot assets survive; source isolated, errors leave no misleading partial backup; old installed catalog unnecessary. | not run |
+| 070-11 | Inspect settings/library/import; upgrade/uninstall/reinstall program. | No old-settings/export-all/bundled-acceptance controls; locator/root untouched by installer/uninstaller; new root reads latest built-ins. | not run |
+| 070-12 | Execute real-desktop scaling/small-window/long-content matrix. | Readable family/group/image/removal/training states; fixed save/cancel/session controls accessible. | not run |
 
-| Resolution | Scaling | Result | Checked windows and control visibility | Evidence / unavailable reason |
-| --- | --- | --- | --- | --- |
-| 1366×768 | 100% | not run | | |
-| 1366×768 | 125% | not run | | |
-| 1366×768 | 150% | not run | | |
-| 1920×1080 | 100% | not run | | |
-| 1920×1080 | 125% | not run | | |
-| 1920×1080 | 150% | not run | | |
+### 5.3 Exit
 
-Use these resolutions where available and document actual alternatives and
-unavailable combinations. The 100%/125%/150% checks are required; unavailable
-required coverage keeps the display gate pending. Phase 8 closes only when all
-ten scenario rows have the required passing evidence. Offscreen, hidden-desktop,
-and process-survival checks remain supporting evidence only.
+Every required row needs candidate-specific passing evidence. A missing-image
+supported plan remains viewable with exact remediation; frozen paused sessions
+remain usable. No supported-upgrade pass may rely on resetting a root. Deliberate
+new-root handling is the declared behavior only for expired development versions.
+
+Recovery snapshots must not recursively include backups or masquerade as complete
+ordinary roots. Unsupported future roots stay untouched. The old binary must
+reject an upgraded schema, not corrupt it; there is no in-app downgrade mode.
+
+Keep independent technical acceptance, real content review and user-authorized
+personal/W4 evidence distinct. Apply the three-version retention inventory after
+evidence dependencies are accounted for; do not reset active test-budget ledgers.

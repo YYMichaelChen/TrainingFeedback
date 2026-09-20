@@ -4,7 +4,9 @@ Reviewed: 2026-09-20; decisions consolidated: 2026-09-21.
 **Verdict: local development candidate verified; formal release not accepted.**
 Authority: [development plan](development-plan.md), especially §§9, 12–13.
 This file records evidence and execution tasks; it does not duplicate product rules.
-It belongs to the 0.7.0 retention slot, moving to that archive after closeout.
+It belongs to the 0.7.0 retention slot; after closeout it stays in the tracked
+`docs/history/0.7.0/` until the version rotates out of the window, then it moves
+to the untracked local `docs/archive/` holding area.
 
 ## 1. Observed Baseline
 
@@ -151,13 +153,26 @@ results. Retain `.venv` (~0.82 GiB) for the verified build toolchain.
 
 ### C. Rotate documents, schemas and source together
 
-- Completed plan material is now indexed under `docs/archive/` for the three versions.
-  Still classify/trim historical local `.planning/archive/` and `.tmp/` material;
-  moving it into another unlimited backup is not policy compliance.
+- Completed plan material is indexed under the tracked `docs/history/<version>/`
+  for the three versions; expired versions move to the untracked local
+  `docs/archive/` holding area.
+  Historical local `.planning/archive/` and `.tmp/` material was classified and trimmed
+  on 2026-09-21 (pre-0.6.0 records removed; in-window records kept; see §4.B results).
 - Retire old-version-exclusive contracts, schemas, fixtures and migration entry paths
   together with 070-R2, after dependency checks. The current synthetic schema16
-  baseline remains necessary even though it is an older schema.
+  baseline remains necessary even though it is an older schema. Migration-code
+  retirement is complete with 070-R2; contract/fixture rotation finished with the
+  2026-09-21 archive trim.
 - Stage only reviewed source/docs/assets; check clean-checkout reproducibility and
   retain a known source identity before making the next formal candidate.
 - Final inventory records retained versions, evidence locations, removed items and
-  recovered space. Actual disk cleanup and migration-code changes remain pending.
+  recovered space.
+
+**Executed 2026-09-21:** `.tmp` went 5.90 GiB → ~4 MiB (136 pytest roots 3,571 MiB;
+development-updates-20260912 1,324 MiB; release-readiness-20260912 456 MiB;
+070-[b-f] payloads ~619 MiB with `070-e/f` verification.json preserved under
+`.tmp/releases/0.7.0/`; 27 stale loose scripts/logs) and `.planning` was trimmed by
+50 pre-0.6.0 archive entries. Kept: `test-budgets/`, `070-h-package/`,
+`070-e-visual/`, `070-f-visual/`, `catalog-070-b-regenerated/`,
+`three-exercises-20260915/`, `releases/`, and all in-window archive records.
+Migration-code window enforcement was implemented separately by 070-R2.

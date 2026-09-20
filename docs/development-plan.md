@@ -15,7 +15,7 @@ seed content and proposed doses. Use these entry points:
   ownership, eligibility, execution, removal and supported-root conversion.
 - [Version and development-data policy](#13-version-retention-and-development-data-policy):
   three application versions, schema bumps and the user-directed personal-data transition.
-- [Versioned delivery archive](archive/README.md): completed work and superseded rules.
+- [Versioned delivery history](history/README.md): completed work and superseded rules.
 - [Release review and cleanup execution plan](release-readiness-0.7.0.md): findings,
   evidence, ordered tasks and acceptance criteria; no implied release approval.
 
@@ -407,7 +407,7 @@ are never inferred or backfilled.
 
 Bundled updates travel with the application; no manual bundled-draft import is
 required. Development content delivery follows Section 13.3. Superseded review
-and manual-delivery rules are in the [0.6.1 archive](archive/0.6.1/development.md).
+and manual-delivery rules are in the [0.6.1 history](history/0.6.1/development.md).
 
 ## 6. Minimum Domain Model
 
@@ -567,7 +567,7 @@ cover 01:59, 02:00, and 02:01.
 
 Current source and local directory candidate are **0.7.0 / schema 22**.
 070-A–G implementation is complete; detailed deliveries live in the
-[0.7.0 archive](archive/0.7.0/development.md). 070-H remains open. The catalog is
+[0.7.0 history](history/0.7.0/development.md). 070-H remains open. The catalog is
 `070-baseline-1`: 36 unreviewed entries, no actual bundled illustrations, and a
 13-action initial-plan proposal. This is development, not a personal-data launch.
 The user decides when that transition occurs; old local approvals and simulations
@@ -737,7 +737,7 @@ is defined in Section 4.6.
 
 This is the current 0.7.0 product contract, not a completed-task log. The desktop
 uses `LibraryContext` with schema 22. Source delivery is recorded in the
-[version archive](archive/0.7.0/development.md); open acceptance is in Section 9.
+[version history](history/0.7.0/development.md); open acceptance is in Section 9.
 Section 13 narrows supported upgrades and governs future schema/version changes.
 
 The release delivers an application-owned bundled catalog, exercise families
@@ -1141,7 +1141,7 @@ to render recorded history.
 ### 12.9 Remaining Delivery And Verification
 
 Section 9.1 is the single active work list. Completed A–G milestones and the
-local part of H are in the [0.7.0 delivery archive](archive/0.7.0/development.md),
+local part of H are in the [0.7.0 delivery history](history/0.7.0/development.md),
 not additional pending development plans. The [contract annex](contracts/0.7.0-contracts.md)
 owns detailed current serialization/mapping. Changes to backup, root switching,
 fixtures, resources and current imports must be covered in their implementing task.
@@ -1241,8 +1241,10 @@ artifact rotation is DEV-CLEAN, not completed by documenting the policy.
 Complete development plans, task records, acceptance evidence, schema documents,
 contract snapshots, synthetic baselines and runtime migration entry support share
 the three-application-version window. Current specifications keep valid rules and
-open work; completed work goes under `docs/archive/<version>/` or local
-`.planning/archive/<version>/`. Archiving is not permanent retention.
+open work; completed work of a retained version is tracked under
+`docs/history/<version>/` (or local `.planning/archive/<version>/`), and moves to
+the untracked local `docs/archive/` holding area when the version expires.
+Archiving is not permanent retention.
 
 At rotation, inventory references, merge still-valid rules into current documents,
 then remove the expired version's full records and exclusive fixtures/helpers.

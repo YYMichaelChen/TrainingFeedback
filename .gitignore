@@ -26,3 +26,7 @@ user_data/
 # Frozen synthetic schema-16 baseline root; conversion fixtures and
 # packaging/prepare_acceptance_data.py require these exact bytes.
 !docs/contracts/baseline/schema16-root/training_feedback.sqlite3
+
+# Expired-version holding area: intentionally untracked local material only.
+# In-window retained version documents live in the tracked docs/history/<version>/.
+docs/archive/

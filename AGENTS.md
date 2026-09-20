@@ -97,7 +97,9 @@ dependency.
   initial-plan proposal until real use or an external AI expert revises it.
 - Avoid duplicating those specifications in the README or source comments.
 - `docs/release-readiness-0.7.0.md` records the current review, ordered closeout and
-  workspace cleanup tasks. `docs/archive/README.md` indexes retained version history.
+  workspace cleanup tasks. `docs/history/README.md` indexes retained version history;
+  expired versions move from the tracked `docs/history/<version>/` to the untracked
+  local `docs/archive/` holding area.
 
 ## Development Records
 
