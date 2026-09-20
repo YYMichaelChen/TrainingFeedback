@@ -1,20 +1,27 @@
 # TrainingFeedback Development Plan
 
-Status: implementation through Phase 6 plus the data-root lifecycle (validation, switching, backup restore); Phase 7 refinement in progress; Phase 8-B1 candidate preparation implemented and smoke-verified on the build machine; release acceptance pending\
-Last updated: 2026-09-14
-
-Current implementation: 0.6.0, with a redesigned native interface and audited
-result retraction before session completion. Local plan guidance review and
-explicit plan activation are complete. Phase C is the local personal-use
-self-check; it does not replace independent Windows acceptance (8-B2) or the
-three real sessions and expert revision cycle (W4). A simulated session is not
-real-use evidence.
+Status: development stage; 0.7.0 / schema 22 local candidate; 070-A–G complete;
+070-H and release acceptance open; three-version policy implementation pending\
+Last updated: 2026-09-21
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
-seed content and proposed doses. Current implementation status is summarized in
-Section 9; requirements elsewhere are not claims that every release gate has
-passed. Completed task history belongs in `.planning/archive/`.
+seed content and proposed doses. Use these entry points:
+
+- [Product rules and current baseline](#1-product-goal): Sections 1–8.
+- [Open delivery work](#9-open-delivery-work): review, W4 and packaging gates.
+- [First usable release](#10-first-usable-release-definition): completion criteria.
+- [Current catalog/group contract](#12-current-catalog-and-group-contract):
+  ownership, eligibility, execution, removal and supported-root conversion.
+- [Version and development-data policy](#13-version-retention-and-development-data-policy):
+  three application versions, schema bumps and the user-directed personal-data transition.
+- [Versioned delivery archive](archive/README.md): completed work and superseded rules.
+- [Release review and cleanup execution plan](release-readiness-0.7.0.md): findings,
+  evidence, ordered tasks and acceptance criteria; no implied release approval.
+
+This document contains current requirements and open work. Completed delivery
+details belong in the versioned archive. Policy acceptance does not establish
+implementation or candidate acceptance; Section 9.1 names the remaining gaps.
 
 ## 1. Product Goal
 
@@ -75,7 +82,7 @@ The first usable version includes:
 - JSON and Markdown exports for an external AI expert;
 - confirmed plan revision import or manual entry;
 - data backup and data-directory management;
-- directory-based Windows packaging.
+- directory-based Windows packaging and a conventional per-user installer.
 
 The first version excludes:
 
@@ -86,12 +93,16 @@ The first version excludes:
 - wardrobe data and clothing questions;
 - trend dashboards and advanced analytics;
 - cloud backup, accounts, network access, and mobile access;
-- an installer or automatic updater;
-- old data migration.
+- an automatic updater or background network update service;
+- migration from the unrelated old project; development-version support for this
+  application's own databases follows Section 13.
 
 ## 4. Core Product Decisions
 
 ### 4.1 Plans Drive Training
+
+For 0.7.0, Section 12.3 extends this model with ordered action groups and rounds;
+Section 12.5 pins content and images before catalog updates can change a plan.
 
 An exercise describes how a movement is performed. A plan describes what to do
 on a specific training day. Dose, set sequence, rest, and plan-specific notes
@@ -127,9 +138,12 @@ their parent. Action phases are `preparation`, `main`, and `cooldown`.
 
 Plan revisions move from `draft` to `active` to `superseded`. Editing an active
 revision creates a new draft. A saved draft has a name, at least one day, an
-action in each day, and sets in every action; it may reference guidance awaiting
-approval. Activation additionally requires active exercises with complete,
-reviewed, explicitly user-approved active guidance. The complete prescription
+action in each day, and sets in every action; it may reference guidance that has
+not been reviewed. Activation additionally requires enabled exercises whose
+guidance in use has complete text and valid required images under Section 12.4.
+Review state does not gate activation: unreviewed
+guidance is reported before confirmation and recorded in training evidence, but
+it does not block activation or training. The complete prescription
 and differences from the current revision are shown before confirmation.
 Saving a draft does not activate it. Superseding the previous revision and
 updating the active revision pointer form one transaction.
@@ -141,6 +155,14 @@ the table. Invalid values block saving or switching actions without losing the
 input. Revision diffs cover action additions,
 removals and ordering, phase, rest, notes, set values, units, per-side flags,
 and plan purpose without mutating either revision.
+
+All editing, review, diff and activation operations target the displayed
+revision: default to the active revision or newest draft, and select a newly
+imported/cloned draft. Reject stale targets rather than acting on another revision.
+Show every set's order, value, unit, per-side flag and original note in plan,
+training, history and exports; free doses retain their explanation. Imported
+rationale, source references and the managed original file remain unchanged by
+later draft edits.
 
 ### 4.2 Exercise Results Stay Simple
 
@@ -309,12 +331,13 @@ Applying it creates a new immutable plan revision and records:
 No active plan is silently overwritten.
 
 The application owns the versioned contract; it is not tied to a particular AI
-provider. `domain/handoff.py` defines the external response schema
-(`training_feedback.plan`, version 1) and validation. `data/handoff.py` produces
-the evidence JSON, Markdown, and response schema. The current UI imports JSON
-files into drafts and retains the source in the managed imports directory.
-Clipboard import is not part of the current workflow. Validating and saving an
-import never imply activation or user approval.
+provider. New imports use `training_feedback.plan` v2 and new evidence uses
+`training_feedback.evidence` v2. `contracts/plan-v2.schema.json` ships with the
+application; `data/plan_contract.py` loads it, domain/services validate it, and
+`group_plan_handoff.py` / `group_session_handoff.py` produce portable evidence.
+The UI imports JSON files into drafts and retains original bytes in managed
+imports. Clipboard import is outside current scope. Validation and saving never
+imply activation or approval. Section 12.8 owns the detailed wire contract.
 
 ## 5. Exercise Guidance Model
 
@@ -336,7 +359,8 @@ high-quality external analysis. Each exercise supports:
 - progressions;
 - applicability and cautions;
 - image references;
-- active state.
+- an enabled state, which decides whether the exercise may be used in plans and
+  training and is independent of guidance review.
 
 The guidance model and training evidence are separate. Session history freezes
 the exercise name, primary body areas, guidance revision identifier, and plan
@@ -351,51 +375,53 @@ and user text remain verbatim. Exercise identities and body-area relationships
 are relational; guidance content is validated JSON in immutable content
 revisions. Plan prescriptions remain normalized day/action/set records.
 
-### 5.1 Guidance Review And Activation
+### 5.1 Guidance Review, Use, And The Enabled State
 
-Guidance review uses `draft -> pending_review -> approved -> active`, with
-`rejected` available during review. Incomplete guidance can be saved as a draft
-but cannot be approved or activated. Missing images are explicit and do not
-hide text or stop criteria; equipment may be an empty list when none is needed.
-Field-level completeness is not proof of exercise-specific content quality.
+Section 12.4 owns one eligibility matrix for text, images, review and enablement.
+Selection and enablement are explicit root-local facts; neither supplies review.
+Complete text and valid required images may be used without external review,
+with disclosure. Missing/invalid images leave readable drafts ineligible for use.
 
-External review evidence records reviewer type, source, review note, and review
-time. Approval requires an explicit user action and approval time; seed values
-must not supply either. The review form records external review evidence; the
-application performs no expert reasoning. Only approved guidance can activate.
-Editing guidance creates a new content revision, and rejecting a review leaves
-the previous active guidance unchanged. Related review/activation writes are
-transactional, and previous content remains available for historical sessions.
+Actual review binds the exact content/image hashes and records source, actual
+occurrence and separate explicit confirmation. Withdrawal appends an event and
+retains original evidence; it never erases historical review observations.
+Changing text or images creates new unreviewed content, retaining the selected
+revision until an explicit change. Batch targets are explicit and transactional.
+
+Bundled images belong to the program catalog; custom images and frozen assets
+belong to the selected root (Section 12.1). All image references are managed,
+portable and validated. Field completeness and technical image validity do not
+establish content quality. Equipment may be empty when none is needed.
+
+Chinese forms show complete guidance, the selected version and differences,
+preserve original text and unedited secondary body areas, and keep controls
+reachable with long text and small windows.
+
+External review occurrence starts empty, accepts a date or timezone-aware time,
+and retains the supplied precision; explicit fill shortcuts do not become defaults.
+The application generates confirmation time separately through its clock. Batch
+review requires explicit selection of every target and commits atomically.
+Optional answer files are copied into `reviews/` with relative path, SHA-256 and
+original filename; failed writes clean up the copy. Old times and missing evidence
+are never inferred or backfilled.
+
+Bundled updates travel with the application; no manual bundled-draft import is
+required. Development content delivery follows Section 13.3. Superseded review
+and manual-delivery rules are in the [0.6.1 archive](archive/0.6.1/development.md).
 
 ## 6. Minimum Domain Model
 
 Names below describe responsibilities; final SQL naming may vary while keeping
 the relationships and invariants.
 
-```text
-exercise
-exercise_alias
-exercise_guidance_revision
-body_area
-exercise_body_area
-
-training_plan
-training_plan_revision
-training_plan_day
-training_plan_action
-training_plan_set
-
-training_session
-training_session_action
-training_session_set
-session_event
-
-next_day_feedback
-next_day_feedback_area
-
-ai_export
-plan_import
-```
+| Responsibility | Current model |
+| --- | --- |
+| Bundled content | Read-only catalog identities, families, guidance and image manifest. |
+| Root-local library | Stable references, custom/override content, selection/enablement, immutable review and lifecycle events. |
+| Plans | `group_plan` revisions/days/items/sets, member/round/side rules and immutable activation pins. |
+| Execution | `group_session`, frozen occurrences, actual sets, batch membership, saved controller position and audited events. |
+| Feedback and handoff | Performed-area feedback, preserved original imports, portable plan/session exports and provenance. |
+| Retention and conversion | Immutable content/assets, supported-version mappings, original facts and recovery journal. |
 
 Important invariants:
 
@@ -405,12 +431,16 @@ Important invariants:
 - actual dose remains `NULL` when unknown;
 - `0` means an explicitly recorded zero, not unknown;
 - user notes are preserved verbatim;
-- one session action maps to ordered planned and actual set rows;
+- one execution occurrence maps to ordered planned and actual set rows;
 - one session can have at most one next-day feedback record;
 - foreign keys are enabled for every connection;
 - final session save and its action results commit transactionally.
 
 ## 7. User Data Directory
+
+Section 12.1 separates bundled resources from root-local state; Section 12.7
+owns supported-root conversion and recovery. During development these roots are
+development/test data until the user authorizes the transition in Section 13.3.
 
 The user chooses a data root, for example:
 
@@ -421,9 +451,15 @@ D:\TrainingFeedbackData\
 |- app_config.json
 |- backups\
 |- exercise-images\
+|- custom-exercise-images\
+|- snapshot-assets\
 |- exports\
-`- imports\
+|- imports\
+`- reviews\
 ```
+
+`exercise-images/` can retain original supported-version resources; new custom
+assets use `custom-exercise-images/`. The installed `catalog/` is outside this root.
 
 `app_config.json` inside the selected root is the authoritative configuration
 for that data set. A tiny locator under `%LOCALAPPDATA%\TrainingFeedback\` may
@@ -437,7 +473,7 @@ First launch supports:
 - create a new data root in an empty directory;
 - open an existing valid TrainingFeedback data root.
 
-Settings later support:
+Settings support:
 
 - show and open the current data root;
 - create an immediate backup;
@@ -452,7 +488,9 @@ database import, and automatic directory scanning.
 `data_format_version: 1`. Configuration uses the same application/format and
 `config_version: 1`; database migration state belongs in SQLite, not in the
 configuration. Opening validates the marker and configuration before accessing
-the database. Unsupported newer database schemas must not be modified.
+the database. Future schemas and development schemas outside the three-version
+support mapping must be rejected unchanged. Section 13.2 defines the latter
+policy; enforcing the lower bound is still open work in Section 9.1.
 
 A backup copies the complete data root, including marker, configuration, images,
 exports, and imports, to an explicitly selected empty destination outside the
@@ -463,16 +501,23 @@ copy so a partial backup is never presented as successful. Recovery uses the
 normal open/switch flow: select the backup copy as the data root. There is no
 overwrite-style restore.
 
-Current settings provide location display/open, complete backup, evidence
-export, and switching to another valid data root. Switching validates and
-prepares the target, rebuilds the main window and services in-process, and
+Current settings provide catalog information, location display/open, complete
+backup and root switching; evidence export belongs to plan/session pages.
+Switching validates and prepares the target, rebuilds the main window and services
+in-process, and
 commits the locator only after preparation succeeds; any failure keeps the
 previous root, window, and database usable. An `open` training session blocks
 switching until paused; a paused session stays in its original root and can be
 resumed after switching back.
 
-Application upgrades must not overwrite the database, images, exports, or
-backups.
+Installer replacement must not write the database, images, exports or backups.
+Normal application startup may apply the declared supported-version migration.
+
+Windows distribution uses a directory payload with `icon/TrainingFeedback.ico`
+and a per-user Inno Setup installer with stable application identity, normal
+shortcuts and an uninstaller. The default installation directory is
+`%LocalAppData%\Programs\TrainingFeedback`; upgrades replace program files in
+place. Install, upgrade and uninstall own no locator or user-root files.
 
 ## 8. Application Architecture
 
@@ -480,7 +525,7 @@ backups.
 src/training_feedback/
 |- main.py            # Qt entry point
 |- bootstrap.py       # startup coordination (data-root location/selection)
-|- app.py             # ApplicationContext composition root
+|- app.py             # LibraryContext and DataRootSwitcher composition
 |- ui/                # PySide6 pages and dialogs (no SQL)
 |- domain/            # pure rules and value objects (no Qt, no SQL)
 |- application/       # use-case services coordinating domain and repositories
@@ -504,575 +549,149 @@ Architecture rules:
 - no global Streamlit-like session dictionary is introduced.
 
 SQLite connections enable and verify foreign keys and configure a busy timeout.
-One user action commits or rolls back as a unit. Schema migrations are
-append-only, versioned, and transactional per migration; later changes must not
-edit an already applied migration. Failed migrations preserve the prior version.
+One user action commits or rolls back as a unit. Migrations within the supported
+window are versioned, append-only and transactional; never rewrite an applied
+migration. When a version leaves the window, retire its entry path and consolidate
+fresh-database initialization under Section 13.2, preserving the remaining paths.
+Every subsequent schema change also bumps the application version (Section 13.1).
+Failed migrations preserve the prior version.
 UI tests may use offscreen Qt; all tests use temporary databases and locators,
 never real user data. One QApplication is shared for a whole run, so a UI test
 must let Qt destroy the windows it created; widget graphs abandoned to Python
 garbage collection crash the interpreter later in the run. Date-boundary checks
 cover 01:59, 02:00, and 02:01.
 
-## 9. Delivery Phases
+## 9. Open Delivery Work
 
-### Current Status (2026-09-14)
+### 9.1 Current Baseline
 
-| Phase | Current status | Remaining acceptance or release work |
+Current source and local directory candidate are **0.7.0 / schema 22**.
+070-A–G implementation is complete; detailed deliveries live in the
+[0.7.0 archive](archive/0.7.0/development.md). 070-H remains open. The catalog is
+`070-baseline-1`: 36 unreviewed entries, no actual bundled illustrations, and a
+13-action initial-plan proposal. This is development, not a personal-data launch.
+The user decides when that transition occurs; old local approvals and simulations
+do not establish approval of the current catalog or a personal baseline.
+
+The [dated release review](release-readiness-0.7.0.md) records candidate evidence
+and the cleanup sequence. Required open work:
+
+| ID | Next action | Completion evidence |
 | --- | --- | --- |
-| 0–1 | Foundation, data-root shell, root validation/switching, and backup restore implemented and regression-verified | Visual acceptance of the startup error and switch dialogs on a real desktop session. |
-| 2–3 | W1–W3 implemented and independently code-reviewed for 0.3.0: transactional exercise editing, fresh drafts, complete Chinese guidance views/forms, revision selection, 14 exercise-specific bundled drafts, and explicit delivery to existing roots | Real external guidance review and explicit user approval; separate confirmation of the complete initial plan. Include the updated guidance windows in packaged desktop acceptance. |
-| 4–6 | Execution, feedback/history, and external handoff implemented and regression-verified | Continue preserving their acceptance criteria during refinement. |
-| 7 | First workflow refinement slice implemented and tested | Multiple real sessions and an external expert's explainable revision based on actual feedback. |
-| 8 | Directory-based build plus repeatable 8-B1 candidate preparation implemented and smoke-verified on the build machine; the build isolates binary discovery, records a manifest, and the synthetic fixture covers the required data classes | Execute 8-B2: independent Windows runtime acceptance, upgrade/data isolation on a copied real-class root, packaged backup/restore drills, and real-desktop scaling checks. Backup restore is regression-verified with synthetic data and documented in Section 7. |
+| 070-R1 — Reproducible source | Track the frozen synthetic DB explicitly and protect fixture bytes from Git newline filters; capture the complete source state. | Clean-checkout fixture/hash validation and a reproducible candidate identity. |
+| 070-R2 — Version support window | Enforce Section 13: accepted version/schema map, too-old rejection, current fresh initialization and only necessary migration paths. Replace out-of-window positive fixtures with rejection coverage. | Fresh create; 0.6.0/schema14 and 0.6.1/schema16 supported upgrades; too-old/future roots unchanged; restart/failure preservation. **Implemented 2026-09-21**: schema-14 lower-bound guard at `inspect_existing`/`apply_migrations`, Section 13.2 refusal message, schema 1/9/13 rejection and schema14 conversion coverage (dev scope 070-R2, 27/27). Candidate-level re-verification remains with 070-H2. |
+| 070-H1 — Built-in content | Deliver revised bridge definitions/aliases and real illustrations, prioritizing the initial 13 references; rebuild the catalog and classify all 36 entries. | Current content/image version/hash inventory; usable actions satisfy Section 12.4; actual review remains separately evidenced. |
+| 070-H2 — Candidate and installer | Commit the reviewed source, run the minor release selection, build the installer with the pinned toolchain and retain manifests. | Candidate-specific regression, payload hashes and actual installation evidence. Inno Setup is present; installer execution is pending. |
+| 070-H3 — Independent Windows | Execute the packaged runbook on an independent ordinary-user Windows machine/VM. | Passing supported upgrades, recovery, backup/reopen, uninstall isolation and 100/125/150% desktop checks. All 12 scenario rows currently not run. |
+| DEV-CLEAN — Workspace retention | Apply the three-version inventory after preserving development content and required evidence; remove redundant generated files and expired material. | Version/file/hash inventory, no missing supported fixtures/evidence, reduced workspace and reviewed Git changes. |
+| PERSONAL — User-directed transition | Await explicit user readiness, then establish a personal root/content baseline and confirm a complete plan. | User decision, deliberate content transfer and explicit plan activation; no synthetic facts promoted to personal evidence. |
+| W4 — Real-use refinement | After PERSONAL and applicable checks, record at least three real sessions, feedback and one expert revision cycle. | Genuine IDs/feedback/rationale, imported draft, reviewed diff, activation and unchanged history. |
 
-Automated and synthetic-data checks establish implementation behavior. They do
-not complete real-use, content-review, or release acceptance. Phase requirements
-below remain the acceptance checklist; dated test runs belong in task records.
+### 9.2 W4 Real-Use Gate
 
-### Delivery Status For 0.3.0 And Remaining Work
+W4 begins only after the user authorizes the personal-data transition in Section
+13.3. Required actions must have complete text and valid images, be explicitly
+enabled, and belong to a fully confirmed active plan; applicable local program
+checks must pass. Unreviewed guidance is disclosed and frozen in session evidence.
+The independent gate remains mandatory for formal release even if the user elects
+to start personal observation earlier. No current personal-use readiness is assumed.
 
-Version **0.3.0 delivered W1–W3** and their acceptance-review fixes. Follow-up
-0.3.1/0.4.0 implementation is specified below; both are now tagged releases whose
-implementation passed the 2026-09-13 contract-by-contract acceptance review. The
-next packaging acceptance gate is **8-B2**, using the identified 0.4.0 candidate
-with separate evidence for the preserved 0.3.1 candidate. Guidance
-content review, explicit user approval, and initial-plan confirmation remain
-separate participant actions. This implementation delivery does not complete
-the first usable release defined in Section 10. An unavailable independent
-Windows environment must not block implementation delivery or be reported as a
-passed acceptance check.
+Use the [guidance review runbook](guidance-review-runbook.md) for review and W4
+templates. Record binary identity, plan/guidance versions, real session IDs and
+excluded simulated IDs. Keep original exports intact even when they include
+earlier simulated history; personal evidence stays in the data root.
 
-| Work item | Status and dependency | Reviewable result |
-| --- | --- | --- |
-| W1 — Exercise-edit correctness | Complete; 0.3.0 | One transactional save, honest new-draft state, and working alias/body-area edits. |
-| W2 — Readable guidance editing and review | Complete; 0.3.0 | Complete Chinese guidance forms/views with explicit revision selection and approval; original untouched text and usable small-window controls. |
-| W3 — Exercise-specific content and existing-root delivery | Implementation complete; 0.3.0; actual content review remains pending | All 14 launch guides, including the initial plan's 11, are available as drafts; existing users can explicitly receive selected drafts. |
-| Local personal go-live | A/B complete; 0.6.0 Phase C local checks in progress | Separate program/data directories; plan guidance approved and plan activated; candidate-specific self-check and backup/restore evidence, distinct from 8-B2. |
-| 8-B2 — Packaged acceptance | P0 release gate; run the identified current candidate when an independent environment is available | Candidate-specific independent-runtime, upgrade, recovery, and display evidence. |
-| W4 — Real use and expert revision | After packaged acceptance and guidance/plan confirmation | Multiple real sessions plus one evidence-based plan-revision cycle. |
+Three sessions are a verification sample, not a frequency or dose prescription.
+Unanswered feedback remains unknown. Complete a genuine evidence export →
+external expert rationale → imported draft → reviewed diff → explicitly
+activated revision, preserving prior history. Templates, simulated sessions and
+local software checks cannot close this gate or establish full content review.
 
-#### Completed Preparation: Acceptance And Review Materials
+### 9.3 Independent Windows Gate (8-B2)
 
-Executable acceptance materials and external review inputs have been prepared
-using the 0.3.0 candidate. An independent Windows environment
-is currently unavailable; actual external review and user approval are also
-pending. Preparation alone does not require a version bump, a new application
-interface, or a schema migration.
+Complete this gate before broader distribution, adding users or formal release
+acceptance. The [packaged acceptance runbook](packaged-acceptance-runbook.md)
+owns the current candidate's scenarios and evidence forms; superseded 0.6.x
+procedures are versioned archive material, not current upgrade instructions.
+Reuse the build tooling, manifests and synthetic fixtures, refreshing transfer
+inputs when the gate starts.
 
-| Remaining work | Work that can proceed now | Completion evidence |
-| --- | --- | --- |
-| Packaged acceptance preparation | The 0.3.0 materials are prepared; refresh candidate files, baselines and forms for each follow-up build. | An operator can execute the ten scenarios without reading application source. |
-| Guidance and plan review preparation | All 14 seed drafts and the complete initial plan are exported with review request, checklist and validated example; actual review is pending. | Complete, version-identified materials; no invented review facts or personal training records. |
-| 8-B2 independent Windows acceptance | Keep environment-dependent scenarios not run; execute when the environment is available and turn failures into reproducible repair tasks. | Candidate-specific passing evidence for runtime independence, upgrade, recovery, and desktop checks. |
-| W4 real-use revision cycle | Prepare the observation procedure; begin after technical acceptance, guidance approval, and full plan confirmation. | At least three real sessions as the initial verification sample, next-day feedback workflow, and one justified revision cycle. |
+Required coverage:
 
-The [packaged acceptance runbook](packaged-acceptance-runbook.md) owns technical
-sample preparation and execution. The [guidance review runbook](guidance-review-runbook.md)
-owns review inputs, return requirements, and applying actual responses. Guidance
-content and proposed doses remain owned by
-[initial-exercises-and-plan.md](initial-exercises-and-plan.md) and the seed.
-Generated packages, synthetic roots, candidate hashes, and dated verification
-results stay in local task artifacts; personal evidence stays in the user's
-data root. The three root task records track only the current development task.
+- Independent Windows x64 VM or machine without Python, Conda, source checkout
+  or access to the build environment; a new build-machine account is insufficient.
+- Ordinary non-administrator first launch, create/open/switch, invalid or
+  occupied roots, cancellation and restart; Chinese and space-containing paths.
+- Supported-window upgrades from actual previous-version programs using isolated
+  representative roots. Preserve unopened originals; compare logical records,
+  historical snapshots and resource hashes, allowing only declared migrations.
+  Same-version relocation is not upgrade evidence.
+- Packaged online whole-root backup and normal-flow reopening, paused-session
+  resume, history/feedback/export agreement, source isolation and failed destinations.
+- Real-desktop 100%, 125% and 150% scaling, including 1366×768 and 1920×1080
+  where available: startup/switch dialogs, guidance, long Chinese text and many
+  actual-set rows; core training controls remain outside scrolling.
 
-Review all 14 launch guides, prioritizing the initial plan's 11 references.
-Content review and acceptance-environment preparation can proceed concurrently.
-The user explicitly approves the required guidance and separately confirms the
-entire plan. Once 8-B2 also passes, conduct W4. Record unanswered feedback as
-unknown; the session sample is a software-verification starting point, not a
-training frequency or dose prescription. Complete the actual evidence export,
-external rationale, imported draft, reviewed diff, and explicit activation
-cycle before closing that gate.
+Identify each candidate by its original manifest, hashes and source snapshot.
+Keep previous results historical when a candidate changes and rerun affected
+checks. Offscreen tests and startup smoke checks support acceptance but cannot
+replace independent runtime or desktop evidence; unavailable scenarios stay
+`not run`.
+
+### 9.4 Verification And Record Ownership
 
 Prioritize reproduced data/history errors, workflow blockers, then redundant
-operations and unclear messages. Each repair needs reproduction steps,
-expected behavior, and a focused acceptance case. Identify any changed candidate
-and rerun affected packaged checks; retain earlier results as historical.
-
-W1–W3 are implementation work; completion does not assert an external expert
-review, user approval, or real training. Those events require their actual
-participants and evidence. If a candidate changes during this work, identify
-the new build and rerun affected packaged scenarios before release. Assign
-subsequent application versions when their delivered scope is known.
-
-#### Follow-Up Releases: 0.3.1 Corrections And 0.4.0 Review Workflow
-
-Status (2026-09-13): both delivered as tagged releases (v0.3.1, v0.4.0) with
-source identity, manifest, regression results, and packaged evidence preserved
-per candidate. Their implementations passed a contract-by-contract acceptance
-review against the requirements below (full suite, Ruff, source review).
-Runtime-independent acceptance and actual content review remain open gates;
-neither is implied by an implementation version.
-
-0.3.1 implements prescription display and feedback/history window corrections;
-its candidate and source snapshot are preserved separately. The acceptance
-contracts are:
-
-- Show each set's order, value, unit, per-side flag and original note in plan
-  details/activation, training and history. Free doses without a numeric value
-  display their explanation. Numeric doses must not hide their accompanying note.
-- Training/history use frozen action and set prescription notes, phase and rest.
-  Markdown session exports include these existing snapshots alongside the same
-  JSON facts. Rendering does not update storage or infer missing actual doses.
-- Open next-day feedback as a separate window bounded by the available screen;
-  scroll its content while keeping submission state and action fixed. History
-  details scroll independently of the export action. Unknown responses and audited
-  note correction retain their existing meaning.
-
-0.4.0 implements explicit plan revision and review targets:
-
-- Select one plan revision. Default to the active revision, or the newest draft
-  if no active revision exists; import/clone selects the newly created revision.
-  Editing, guidance review, diff and activation target that displayed revision.
-  Published revisions are read-only and can be cloned; a stale target is rejected
-  and refreshed without performing the action on a different revision.
-- Show the original import rationale, source references and managed original
-  file for the selected imported revision. Subsequent draft editing does not
-  rewrite that original evidence. Importing still creates only a draft.
-- Record the external review occurrence separately from approval. The occurrence
-  input starts empty and accepts a calendar date or a timezone-aware datetime,
-  retaining the supplied precision. An application use case validates the review
-  and explicit confirmation, then generates approval time from an injectable clock
-  and performs transactional approval/activation. Changing guidance selection
-  clears the current input and confirmation; saved evidence remains read-only.
-- Existing review times remain unchanged; earlier UI versions may have stored the
-  submission time. Never infer or backfill their actual external occurrence.
-
-The plan repository exposes a read-only import lookup by plan/revision and an
-optional expected-revision argument for activation. The latter compares the
-displayed draft in the same write transaction, rejecting changed content.
-Existing repository callers remain compatible. ExerciseService's confirmation
-use case owns approval time through Clock; lower-level review APIs remain usable.
-
-0.4.1 implements first-launch data-root selection corrections found during the
-local personal go-live:
-
-- Data-root metadata failures report fixed, translatable messages. They never
-  interpolate a filename or a full path into user-visible text, so a Chinese
-  interface cannot fall back to raw English. Selecting an empty directory in open
-  mode states that the directory is empty and points at the create flow.
-- First launch prefills a documents-folder default data root and preselects
-  create for a nonexistent or empty path, open for a path that already holds a
-  marker file. An occupied path is not prefilled. The suggestion is a suggestion
-  only: confirmation is still explicit, nothing is created or opened without it,
-  and switching data roots later prefills nothing.
-- The suggestion checks that single path through a read-only data-layer helper.
-  It never scans directories for candidate roots and never opens a database, so
-  no migration can run before the user confirms.
-
-0.5.0 implements review-workflow and bundled-catalog corrections found during real
-personal use:
-
-- One actual external review can be approved onto several explicitly checked
-  guidance revisions in a single transaction. The shared facts are that review's
-  source, occurrence, note and optional answer file; each approval remains a
-  separate explicit user act, nothing is checked by default, and the selected row
-  shows its full guidance and its difference from the active revision.
-- Approval optionally attaches the external answer file. The application copies it
-  into `reviews/` inside the data root and records the relative path, SHA-256 and
-  original filename beside the review, so evidence travels with backups and
-  complete-root copies instead of depending on a hand-written path. A failed write
-  removes the copy; earlier reviews without these fields stay valid and display as
-  having no stored answer file.
-- Bundled catalog entries that have no local exercise can be imported as new
-  exercises, with their category, equipment, aliases and body areas plus one
-  unreviewed guidance draft. Import stays explicit per entry, re-checks name and
-  alias conflicts inside the write transaction, is idempotent through
-  `bundled_exercise_key`, and never rewrites a user-edited exercise. Bundled
-  content still cannot supply approval or activation facts.
-
-0.5.1 keeps the review occurrence a user-stated fact while removing the typing:
-
-- The occurrence field still starts empty and is never auto-filled, so an
-  untouched form cannot assert when an external review happened. Buttons fill
-  today's date, the current timezone-aware local time, or the value used in the
-  previous approval of this program run; each click is the user's explicit choice
-  and the filled value stays editable.
-- The remembered value comes only from an approval that actually succeeded, which
-  keeps one review's occurrence consistent across separate approvals. A failed
-  approval remembers nothing.
-
-All five releases reuse database schema 13, evidence v1 and plan v1. Exercise/plan
-content and dose proposals do not change. Add focused regressions before each
-fix, run the full suite and lint, build and preserve each candidate separately.
-Test v0.2.2 copied-root migration as well as adjacent-version opening, backup and
-restore. Actual independent-desktop checks must identify the tested candidate.
-
-#### 0.6.0 Native Workflow Refinement
-
-- A consistent light content palette with dark navigation, teal primary actions,
-  blue secondary actions and muted disabled states covers pages and dialogs.
-  Home focuses on starting/resuming and next-day feedback; technical data paths
-  remain available in settings. Exercise tools use separate rows; history has
-  one row per session and a detail pane.
-- Plan editing and training behavior follow Sections 4.1–4.3 above. Save/cancel
-  for actual doses and pause/abort/finish remain outside the scroll area.
-- Schema 14 adds only `session_result_retraction`; no old rows are backfilled.
-  Existing plan/exercise facts and terminal histories remain unchanged.
-  Evidence v1 gains an additive `result_retractions` list with prior facts.
-- Package and runtime version constants both identify 0.6.0. The runtime
-  constant previously lagged packaging at 0.4.0. Existing evidence exports
-  record the database schema rather than the application version; retain those
-  files verbatim and use installation manifests to establish binary identity.
-- Preserve a complete schema-13 backup before upgrading. Rolling back to
-  0.5.1 requires that backup in a separate data root; the old binary cannot open
-  the upgraded schema-14 root.
-
-#### Phase C Local Self-Check (0.6.0)
-
-Status (2026-09-14): the drill passed on the build machine against isolated
-copies of the real data root. It covered v13 to v14 migration keeping every
-existing row, cross-process pause and resume, all four results including extra
-and partial sets, audited retraction, finish and abort, a simulated next-day
-answer left unknown, JSON and Markdown agreement, an unchanged original session,
-and online backup plus restore producing equal history. Windows-platform
-rendering at DPR 2.25 and 1707×960 logical pixels covered home, plan, training,
-and actual-dose entry; offscreen Qt lacks Chinese glyphs on this machine and
-cannot support a visual claim.
-
-The installed program directory and the user data root stay separate, and the
-schema-13 backup was verified logically equal to the live database before any
-upgrade. The real data root remains on schema 13 until the user explicitly
-approves upgrading it. This self-check is local personal go-live evidence only:
-the exercised session is simulated, so it satisfies neither 8-B2 nor W4.
-
-#### 1. Prepare The Acceptance Candidate (8-B1)
-
-Status (2026-09-10): complete on the build machine. This status covers the
-repeatable toolchain, manifest, synthetic fixture, local regressions, and a
-packaged startup smoke check; it does not claim any 8-B2 independent-machine
-or real-desktop result.
-
-Reuse `packaging/build.ps1`, the pinned toolchain, the build manifest, and
-`packaging/prepare-acceptance-data.ps1`. The existing
-[packaged-acceptance runbook](packaged-acceptance-runbook.md) owns execution
-steps and its ten-row evidence table. Keep fixture data and its synthetic
-approval metadata isolated from production seed content. Further build-tool
-changes should address a reproduced acceptance failure or a changed candidate
-requirement.
-
-#### 2. Execute Packaged Acceptance (8-B2)
-
-Status (2026-09-13): transfer preflight was rerun for the preserved 0.2.2,
-0.3.1, and 0.4.0 programs. All 630 manifest entries, the upgrade/adjacent
-original-copy pairs, and the refreshed 689-file transfer archive passed local
-integrity and archive round-trip checks. The refreshed package adds the
-runbook-required candidate verification record without changing any program
-candidate. No independent Windows environment or real-desktop evidence was
-available, so all ten 8-B2 scenarios remain not run. The sole current user has
-explicitly deferred this gate: local build-machine operation is sufficient for
-current personal use. The deferral does not mark 8-B2 as passed, but it does
-remove it as a blocker for ordinary local use and continued non-release work.
-Execute it before broader distribution, adding users, or claiming formal release
-acceptance.
-
-- Run the complete program directory in an independent Windows x64 environment
-  with no Python, Conda, source checkout, or access to the build environment.
-  A clean VM or separate machine is suitable; a new account on the build
-  machine alone is insufficient evidence of runtime independence.
-- Exercise first launch, new-root creation, reopening, invalid/occupied-root
-  errors, cancellation, and restart. Include Chinese and space-containing
-  program/data paths and ordinary non-administrator operation.
-- On an isolated representative root, replace only application files with the
-  candidate. For the migration gate, generate the sample from this repository's
-  v0.2.2 source and open/close it with the corresponding previous-version build
-  before capturing the baseline. Preserve an original never opened by the candidate,
-  and upgrade a separate copy. Record both versions;
-  same-version relocation is not cross-version upgrade evidence. Close the
-  application before taking baselines. Compare logical records and historical
-  snapshots after launch, and resource-file hashes; allow only declared schema
-  migrations, without rewriting prior facts.
-- Also test adjacent-version opening: use the exact preserved 0.3.1 source and
-  executable to prepare a schema-13 baseline for 0.4.0. The separate 0.3.1
-  candidate uses a 0.3.0 baseline. Preserve originals and compare copies as above.
-- Through the packaged UI, back up the complete root while open, close the
-  application, open the backup copy through the normal flow, resume the paused
-  session, inspect history/feedback, and export evidence again. Verify source
-  isolation and readable rejection of an invalid or occupied destination.
-- On a real desktop, check 100%, 125%, and 150% scaling at recorded screen
-  resolutions, including 1366x768 and 1920x1080 where available. Cover startup
-  errors, root switching, long Chinese text, and many actual-set rows; pause,
-  abort, and finish must remain accessible without scrolling the content.
-
-Exit: record candidate/environment identity and evidence for every scenario;
-reproduce and fix blocking failures, then rerun affected checks. Offscreen
-tests and process-survival smoke checks are supporting evidence only. If the
-independent environment or desktop checks are unavailable, leave those rows
-not run and Phase 8 acceptance pending.
-
-#### 3. Complete Guidance And Confirm The Initial Plan (Phases 2–3)
-
-##### W1. Make Exercise Editing Atomic And Preserve Review Meaning
-
-Status: implemented and reviewed for 0.3.0. The pre-W1 editor committed
-metadata separately from the guidance revision, copied prior approval facts
-into new drafts, and omitted editable aliases and primary areas. The following
-requirements and acceptance cases remain regression contracts.
-
-- Add one exercise-edit application use case covering metadata, aliases,
-  editable body-area assignments, and a new guidance draft in one transaction.
-  Detect duplicate names/aliases and invalid input before committing; a failed
-  later write rolls back the complete user action.
-- Save the fields the editor offers. Editing primary areas must preserve
-  secondary-area assignments that the user has not edited. Existing session
-  names, body-area participation, prescriptions, and guidance references remain
-  frozen; reopening a renamed seeded exercise must not duplicate or replace it.
-- Enforce fresh-draft review state in the application/domain path for both
-  creation and editing, including a copied active or approved guide. Do not
-  inherit reviewer, review date, or user-approval facts as approval of the new
-  text. Keep the prior revision and active pointer until explicit approval.
-- Audit other draft-creation callers so the same invariant applies to future
-  bundled updates. Preserve free-text content verbatim.
-
-Primary scope: `application/exercise_service.py`, `domain/exercises.py`,
-`data/exercise_repositories.py`, `ui/exercise_editor.py`, and focused exercise/UI
-tests; inspect seeding only as needed for rename/reopen behavior. Keep SQL in
-repositories and write orchestration in the application layer.
-
-Acceptance: injected failure leaves no metadata, alias, area, or revision
-changes after reopening; valid edits persist every editable field; duplicate
-aliases cause a full rollback; editing an approved guide creates an unapproved
-draft; old approval records, active pointers, and historical exports retain
-their meaning. Cover both new and existing exercises with temporary roots.
-
-##### W2. Make The Complete Guidance Readable And Reviewable
-
-Status: implemented and reviewed for 0.3.0. Acceptance fixes preserve untouched
-line separators, keep step numbering consistent after structural edits, carry
-the displayed revision into editing, prevent long revision identities from
-forcing horizontal scrolling, and keep detail-window actions reachable.
-
-- Replace the normal workflow's raw guidance JSON/dictionary display with
-  labeled Chinese fields and ordered lists. Cover every guidance requirement
-  in `docs/initial-exercises-and-plan.md`, including intended sensations,
-  compensations, regressions/progressions, equipment, applicability, cautions,
-  and explicit image availability.
-- Show the current active revision separately from drafts. Let the user select
-  the revision being edited/reviewed, read its full content and changes, and see
-  the actual review source and state. Do not silently review a different
-  revision from the one displayed.
-- Reuse the existing approval transaction and explicit checkbox. Saving a
-  draft, cancelling review, or merely installing content never approves it.
-  User-authored text must survive form loading and saving without rewriting.
-- Check long Chinese content and small-window layouts, with readable errors
-  and reachable save/cancel/approval controls.
-
-Primary scope: exercise detail/editor/review UI and shared Chinese labels;
-reuse application services from W1. A reusable guidance view/form is justified
-by these three consumers; a general UI framework is outside this slice.
-
-Acceptance: all required content is accessible without reading JSON; revision
-identity and draft/active states are unambiguous; cancellation makes no writes;
-activation requires deliberate approval; form round trips preserve verbatim
-text. Add focused Qt checks and include changed dialogs in 8-B2 desktop checks.
-
-##### W3. Deliver Exercise-Specific Drafts To New And Existing Roots
-
-Status: implementation reviewed for 0.3.0. All 14 bundled guides remain
-unreviewed drafts until actual external review and explicit user approval.
-
-- Write exercise-specific guidance owned by
-  `docs/initial-exercises-and-plan.md` and the seed catalog. Prepare the initial
-  proposal's 11 referenced exercises first; complete the other three launch
-  exercises before release. Required-field validation checks structure, while
-  actual external review checks content. Missing images may remain explicit.
-- Separate custom-exercise draft defaults from bundled launch content. A new
-  root receives the new content as drafts, with no invented review or approval.
-  Neither generic defaults nor proposed doses become user facts.
-- Provide an explicit local action to preview available bundled guidance and
-  create selected new drafts for existing exercises. Reuse the current revision
-  and review model; startup seeding must not overwrite existing guidance, user
-  edits, active pointers, or plans.
-- Track a stable bundled content identity/version and enough provenance to
-  avoid duplicate drafts on repeat acceptance or restart. Existing roots may
-  lack that identity: make ambiguous or renamed matches explicit instead of
-  guessing from a mutable name, overwriting edits, or creating duplicates.
-  Add a schema migration only if persisted identity requires one; migrations
-  remain append-only and must not fabricate historical provenance.
-- Allow skipping or cancelling an update with no writes. Accepting selected
-  drafts is one transaction; a failure must not leave a partial batch. Record
-  actual external review evidence and obtain explicit user approval through W2.
-  Confirm the complete initial plan separately before activation.
-
-Primary scope: the authoritative initial-content document, `data/seed/`, the
-exercise application/repository boundary, and a small update-preview UI using
-W2. This is delivery of application-owned local content, not an application
-auto-updater or an external-provider integration.
-
-Acceptance: a new root has 14 exercise-specific drafts; a pre-update temporary
-root can receive selected new versions without losing custom text or approvals;
-repeating the update creates no duplicates; ambiguous matches and cancellations
-do not modify data; injected failure rolls back the batch. Paused/completed
-session snapshots and prior exports remain interpretable after update, reopen,
-and backup/restore. Real review and plan confirmation are recorded separately
-from synthetic test approvals.
-
-Exit: all launch guidance meets the documented content/review requirements,
-and the user has a deliberately confirmed usable plan. Missing images may
-remain explicit; adding image assets or more exercises is not a prerequisite.
-
-#### 4. Validate Real Use And Close The Release Gates (Phase 7)
-
-This is W4. It requires real training and external expert participation;
-automated tests or synthetic fixtures cannot complete it.
-
-- After technical acceptance and guidance/plan confirmation, use the packaged
-  application for at least three real sessions as the initial verification
-  sample and cover the next-day feedback workflow, leaving unanswered facts
-  unknown. Record friction
-  such as unnecessary clicks, unclear save states, or inaccessible controls;
-  keep personal training evidence in the user's data root, outside Git.
-- Complete one genuine evidence-export -> external expert rationale -> imported
-  draft -> reviewed diff -> explicitly activated revision cycle, and verify
-  that earlier history remains readable and unchanged.
-- Address reproducible workflow defects, rerun the relevant regressions and
-  packaged scenarios, then update the release-gate evidence and choose the
-  version number appropriate to the delivered change.
-
-Exit: the Phase 7 criteria and Section 10 release definition are supported by
-actual evidence. No installer, automatic updater, dashboard, embedded AI,
-cloud/mobile access, or speculative refactor is included in this sequence.
-
-#### Verification And Completion For Each Work Item
-
-- Begin W1 with regression cases for the reproduced failures, then implement
-  the smallest complete save operation. W2 and W3 follow as separately
-  reviewable changes with the acceptance cases stated above.
-- Use PowerShell 7, the repository interpreter, temporary roots/locators, and
-  an injectable clock where needed. Run focused tests during implementation;
-  before delivering a code change run the full pytest suite, Ruff for `src`
-  and `tests`, and `git diff --check`. Include packaging tests when its fixtures
-  or tooling change. Test results belong in `progress.md`, not release claims.
-- Attach packaged evidence to the exact candidate manifest and environment.
-  Use a real previous-version build for cross-version upgrade evidence. When a
-  candidate changes, retain earlier evidence as historical and rerun affected
-  checks; mark unavailable scenarios not run.
-- Review the three root task records for stale/duplicate entries at completion.
-  Keep personal training data outside Git; record only the minimum nonpersonal
-  acceptance summary needed to assess the release gates.
-
-### Phase 0: Repository And Contracts
-
-- establish the independent repository and package layout;
-- select Python, PySide6, packaging, formatting, and test tooling versions;
-- write the new schema and migration runner;
-- define controlled enums and state-transition rules;
-- add temporary-database tests for schema and session invariants.
-
-Acceptance:
-
-- the project installs without the old repository;
-- a synthetic data root can be created and reopened;
-- tests prove the old database path is never consulted.
-
-### Phase 1: Data Root And Application Skeleton
-
-- implement first-launch data-root selection;
-- create and validate `app_config.json` and SQLite;
-- implement the main window and navigation;
-- implement backup creation and safe shutdown.
-
-Acceptance:
-
-- the empty application starts, closes, and restarts using the selected root;
-- invalid or occupied directories produce readable errors;
-- application files and user data remain separate.
-
-### Phase 2: Exercise Catalog And Guidance
-
-- seed the approved first exercise set;
-- implement list, search, detail, add, edit, activate, and deactivate;
-- implement comprehensive versioned guidance and image placeholders;
-- treat `Standard glute bridge` as an alias of `Glute bridge`.
-
-Acceptance:
-
-- every seeded exercise has complete text guidance or an explicit incomplete
-  status;
-- missing images do not hide stop criteria or text guidance;
-- catalog edits do not modify historical snapshots.
-
-### Phase 3: Versioned Plans
-
-- implement plans, immutable revisions, days, actions, and per-set doses;
-- support equal and unequal set prescriptions;
-- implement plan maintenance and readable revision diffs;
-- seed the initial proposal after explicit dose review.
-
-Acceptance:
-
-- the UI represents `2 x 15`, `12/10/10/8`, per-side doses, timed holds, and
-  breaths without relying only on free text;
-- activating a revision preserves all earlier revisions.
-
-### Phase 4: Training Execution
-
-- implement start, resume, action selection, and fixed session controls;
-- implement exceeded, completed, partial, and not-completed action results;
-- require actual dose only where needed;
-- implement transactional finish and abort flows;
-- implement the 02:00 unfinished-session labeling rule.
-
-Acceptance:
-
-- normal completion requires one action per exercise and no long form;
-- core controls never require scrolling;
-- pause survives process restart;
-- an unfinished prior-day session is never presented as today's session;
-- unknown subjective facts remain unknown.
-
-### Phase 5: Next-Day Feedback And History
-
-- derive prompts from performed primary training-area snapshots;
-- implement four-state area feedback and one optional note;
-- implement session and action history;
-- allow narrowly scoped note correction with an audit record.
-
-Acceptance:
-
-- only relevant main areas are shown;
-- unanswered values are not defaulted;
-- old sessions remain readable after exercise and plan edits.
-
-### Phase 6: External AI Handoff
-
-- define versioned JSON schema and Markdown rendering;
-- export guidance, plans, actual execution, original notes, and next-day data;
-- validate external plan input;
-- show plan diffs and require confirmation before activation.
-
-Acceptance:
-
-- exports clearly identify provenance and unknown values;
-- a round trip creates a new plan revision without changing the old one;
-- malformed or partial imports cannot leave half-written plans.
-
-### Phase 7: Real-Use Refinement
-
-- use the application over multiple sessions;
-- measure unnecessary clicks and unclear states;
-- revise workflow before adding features;
-- let an external AI expert review exported evidence and the initial plan;
-- remove controls that real use shows are unnecessary.
-
-Acceptance:
-
-- the training workflow remains usable without developer intervention;
-- actual feedback can support an explainable plan revision.
-
-### Phase 8: Windows Packaging
-
-- produce a directory-based Windows build;
-- use `icon/TrainingFeedback.ico` as the packaged Windows executable icon;
-- verify operation without a development environment;
-- verify upgrades against an existing copied user data root;
-- document backup and recovery.
-
-Acceptance:
-
-- the packaged application runs independently;
-- upgrading application files does not modify user data;
-- backup restore is tested before release.
+operations and unclear messages. Each repair needs reproduction steps, expected
+behavior and a focused acceptance case. Use PowerShell 7, the repository
+interpreter, temporary roots/locators and injectable clocks. Select meaningful
+affected tests within the stage budget below; run Ruff for `src` and `tests`,
+and `git diff --check` before implementation delivery. Include packaging checks
+when payloads or fixtures change.
+
+#### Regression Budgets
+
+| Verification stage | Maximum parameter-expanded pytest cases |
+| --- | ---: |
+| Small development step (`dev`) | 30 |
+| Patch release, x.y.z → x.y.(z+1) (`patch`) | 50 |
+| Minor release, x.y.z → x.(y+1).0 (`minor`) | 100 |
+| Major release, x.y.z → (x+1).0.0 (`major`) | 300 |
+
+These are ceilings, not targets. Keep the resident suite at or below 300 cases.
+Small edits use the affected cases, often fewer than ten. Patch/minor release
+profiles cover core workflows plus stage-specific integration; add the actual
+release's affected cases within the same budget. Major releases use the full
+resident suite. Release budgets are inclusive, not added to each lower tier;
+earlier development checks are historical, not a reason to rerun every case
+during release verification.
+
+`pyproject.toml` defines small, nested baseline profiles. Explicit pytest paths,
+node IDs, `-k`, or `-m` replace that baseline selection for focused work; the cap
+still applies. Every execution supplies a stable `--test-scope` task/release ID.
+The pytest budget plugin checks expanded cases before execution and reserves
+their union across commands in `.tmp/test-budgets/`. Repeated cases consume no
+additional slots, but passing checks should not be repeated without new changes,
+failures or unresolved concerns. Interrupted runs keep their reservations.
+Collection-only commands neither execute tests nor reserve slots; use
+`--test-tier major --collect-only` to inspect the entire resident suite.
+
+Do not silently truncate a selection, bypass the cap by splitting commands or
+changing a scope, or disguise independent cases as loops inside one test. If a
+selection exceeds its budget, review duplicate/low-value coverage and choose
+representative independent risks. Prefer transactional rollback, frozen history,
+verbatim text, backup/reopen and upgrade preservation over repeated field/label
+checks. UI tests should cover coherent user workflows. Add regression cases for
+new behavior or reproduced defects only when existing cases cannot cover the risk.
+Normal lint, inventory and packaging integrity checks are not pytest cases;
+do not move regression scenarios into ad-hoc scripts to evade the budget.
+
+Product/content requirements stay in this document and the seed specification;
+execution procedures stay in the runbooks. Candidate hashes, generated fixtures
+and dated checks stay in local task artifacts. Keep only the active task in the
+three root records; archive completed work by application version under
+`.planning/archive/<version>/`. Full documents, contracts, evidence and archives
+obey the same three-version retention window in Section 13; moving material into
+an archive does not exempt it from expiry.
 
 ## 10. First Usable Release Definition
 
@@ -1094,7 +713,7 @@ The first usable release is complete when a user can:
 - run the packaged Windows application without Streamlit or the old project.
 
 The release also requires reviewed exercise-specific seed guidance and the
-Phase 7 real-use and Phase 8 packaging/recovery acceptance above. A package
+W4 real-use and 8-B2 packaging/recovery acceptance in Section 9. A package
 version number alone does not establish release readiness.
 
 ## 11. Deferred Decisions
@@ -1103,9 +722,574 @@ The following remain intentionally open until implementation evidence or real
 use resolves them:
 
 - the final prescribed dose for the initial plan;
-- additional exercise images and later exercise batches.
+- later exercise batches. Illustration availability is a mandatory 0.7.0
+  enablement condition under Section 12.4; missing illustrations are no longer
+  deferred for actions offered as usable in that release.
 
-Clipboard import, provider-specific adapters, advanced trend analysis,
-installers, and automatic updates are optional later scope, not unresolved
+Clipboard import, provider-specific adapters, advanced trend analysis, and
+automatic updates are optional later scope, not unresolved
 first-version requirements. The current application-owned JSON/file contract
 is defined in Section 4.6.
+
+<a id="12-070-development-contract-planned"></a>
+
+## 12. Current Catalog And Group Contract
+
+This is the current 0.7.0 product contract, not a completed-task log. The desktop
+uses `LibraryContext` with schema 22. Source delivery is recorded in the
+[version archive](archive/0.7.0/development.md); open acceptance is in Section 9.
+Section 13 narrows supported upgrades and governs future schema/version changes.
+
+The release delivers an application-owned bundled catalog, exercise families
+and variants, continuous plan action groups, mandatory illustration checks,
+and reviewed exercise removal. The upgrade must preserve user work while
+leaving one current runtime model. Native Windows/PySide6, local-only use,
+verbatim user text, transactional actions and frozen training history remain
+the product and engineering boundaries.
+
+### 12.1 Catalog Ownership And Stable Identity
+
+**Bundled content travels with the application.** Ship a read-only
+`catalog/catalog.sqlite3`, `catalog/catalog-manifest.json`, and `catalog/images/`
+under the program's resource directory. The resource resolver must work both
+from source and in the installed directory payload, independently of the
+working directory. The build manifest covers every catalog file; the catalog
+manifest identifies its format/version, content versions and asset hashes.
+Never write user state, SQLite journals or overlays into the program directory.
+
+The selected user root owns plans, execution, feedback, reviews and original
+answers, custom exercises, user content overrides, enablement/selection/removal
+decisions, imports, exports and immutable evidence snapshots. New custom images
+live under `custom-exercise-images/`; retained plan/session assets live under
+`snapshot-assets/`. These are user-owned evidence, not another editable copy of
+the bundled library. Creating a new root must not seed the full bundled catalog
+into the user database. Switching roots changes user facts while the installed
+bundled library remains the same.
+
+Use namespaced stable references: `bundled` plus the existing
+`bundled_exercise_key`, or `custom` plus an application-owned stable custom ID.
+Persist content identity/version and hash alongside a reference. Database-local
+integer IDs may remain internal keys but are not cross-root/catalog identities.
+Names and aliases are display and lookup aids, never identity migration keys.
+Reject ambiguous lookups; reject an imported key/name conflict instead of
+choosing a different movement. IDs are never reused after removal.
+
+Read-only bundled content and user state are combined by an application service.
+The user may copy a bundled action to a custom action or create a local content
+override with explicit provenance. Neither edits the package. A copy gets a new
+identity, no review evidence and no enablement; an override gets a new content
+revision and must pass the same current eligibility rules. A package update
+must not overwrite custom text, overrides or user decisions. Bundled metadata
+cannot assert a personal review, approval, activation or performed dose.
+
+The unified library shows source, family, variant, selected content identity,
+image readiness, effective review and enablement, plus removal state where
+applicable. Search/filter must expose incomplete drafts as well as usable
+actions. Show program catalog version in library details/settings, with the
+selected user root remaining a separate setting.
+
+Minimum new-model persistence responsibilities (final SQL names may vary):
+
+| Store | Entities / responsibility |
+| --- | --- |
+| Read-only program catalog | Exercise identities, aliases, body areas, families, versioned guidance, image manifest and publisher withdrawal metadata. |
+| User SQLite | Namespaced exercise references, per-root selection/enablement, custom/override revisions, review events, removal requests/decisions and migration provenance. |
+| User SQLite | Plan items/groups/members/sets, immutable content snapshots and asset references, execution occurrences and actual sets, result batch/retraction identity and controller position. |
+| User managed files | Custom images, hash-addressed snapshot assets, original review/import files, portable exports and recovery snapshots. |
+
+Foreign keys join local reference/snapshot rows within the user database;
+catalog references are validated by key/version/hash at the application boundary.
+All state changes for one user action commit in that one writable database.
+Store asset bytes before making them visible through committed references, with
+staging/journal cleanup for failures. Asset retention follows all plan, session,
+review and selected-override references, not just the latest library selection.
+
+### 12.2 Exercise Families And Variants
+
+A family is a browsing/planning relationship, not a trainable prescription or
+an alias. Each movement variant keeps an independent stable key, complete
+guidance, illustrations, body areas and counting convention. Basic glute bridge
+remains a trainable member as well as the base of the bridge family. Membership
+does not imply difficulty, progression, interchangeability or inherited review.
+
+Conceptual catalog fields are `family_key`, `variant_role` (`base`, `variant`,
+`standalone`), `variant_order`, an optional `parent_exercise_key`, and
+`starting_position_class`. A family has its own stable key, display name and
+description. In 0.7.0 an action has at most one primary family; optional parent
+links remain within that family and cannot self-reference or form a cycle.
+Standalone actions need no artificial family. Family metadata is versioned;
+moving/renaming a member does not merge its history or change pinned plans.
+
+Controlled starting-position classes are `supine`, `prone`, `side_lying`, `quadruped`,
+`seated`, `kneeling`, `standing`, `mixed`, and `unknown`. Keep the full starting
+position verbatim beside the classification. Equal classes support a convenient
+filter, not an automatic assertion that hand placement, equipment or support
+points match. Missing classification remains unknown until actually supplied.
+
+The content document owns the initial 36-action mapping, bridge naming, the
+basic bridge's three-second top hold, and the existing static-bridge definition.
+Changing those instructions creates a new content version. Do not turn a
+family restructure into a new user dose or a silent rewrite of an old guide.
+
+Library UI supports family expansion, individual variants, starting-position
+filters and a base/variant comparison. Copying to a custom action and changing
+family membership are explicit operations; shared content is not silently
+inherited by child movements.
+
+### 12.3 Plan Action Groups And Dose Semantics
+
+The new logical structure is day → ordered items (single action or action
+group) → ordered member actions → per-round dose sets. Preserve standalone
+action behavior. A group has a stable plan-item identity, display name, phase,
+order, positive integer `round_count`, finite non-negative
+`rest_between_rounds`, side sequence, transition instruction and original note.
+Every member has its own stable item identity, order, exercise reference,
+per-round sets and `rest_after_member`. A group requires at least two members;
+there is no nested group. All members share the group's phase. The same exercise
+may appear more than once, so exercise ID is not a plan-item identity.
+
+The execution rule is fixed and unambiguous: perform the first member's listed
+sets, then the next member's sets; repeat that ordered sequence for the stated
+number of rounds. The sets are **per round**, not totals for the whole group.
+Standalone sets keep their previous meaning. Members may use different units;
+all sets within one member use the same unit and per-side convention. Rep counts and seconds are never
+added into one meaningless group total. A group with `A: 1 rep → B: 1 rep`,
+repeated N times, prescribes N A reps and N B reps for each indicated side.
+All numbers in UI examples are format demonstrations, not a default dose.
+
+For unilateral groups explicitly choose and preview side sequencing:
+
+- `member_each_side`: each member completes its prescribed left/right work
+  before moving to the next member; applicable mixed-side groups can use this.
+- `same_side_then_switch`: complete the member sequence on the selected first
+  side, then mirror it on the other side within each round.
+- `all_rounds_then_switch`: complete all rounds on the selected first side,
+  then all rounds on the other side.
+
+The last two require compatible per-side members and an explicit first side;
+otherwise use member-by-member execution or split the group. Store explicit
+side labels for asymmetric actual work; `per_side=true` must not invent work
+on the unperformed side. Display the expanded order before activation.
+
+Keep member-internal set rest, between-member rest, side-switch rest and
+between-round rest distinct. Zero means no prescribed rest, not an unknown
+value. At a boundary apply only its designated rest, not two accumulated rest
+fields; the final member transitions to the side/round boundary and the final
+round has no implied extra round rest. Undefined transition duration is not
+recorded as measured time. Group-level exit rest, if prescribed, is explicit.
+
+The same-position example uses **直腿后踢 → 消防栓**, both quadruped under the
+current content definitions. **俯卧直腿抬腿 → 消防栓** requires a prone-to-quadruped
+transition; never present it as identical starting position. The editor lists
+class/support differences and requires a transition description for mixed or
+unknown positions before activation; it does not claim to assess movement safety.
+
+Plan editing must support creating plans/days, adding/removing/reordering single
+actions and groups, moving members, rounds, side order, per-round doses and rest.
+Removing the penultimate group member must explicitly dissolve the group or
+cancel, not leave an invalid one-member group. Invalid input stays on screen.
+One save commits all children and ordering or nothing. Activated revisions are
+immutable and are cloned to edit. Diffs use stable item identities plus readable
+day/group/member paths, and include membership, ordering, side sequence, rounds,
+rest, dose, notes and pinned content changes.
+
+### 12.4 Illustration, Review And Enablement
+
+**No usable illustration means an unreviewed draft, ineligible for enablement.**
+At least one illustration is required for the selected content revision, with
+all assets declared required by that revision available. Text remains readable
+even when an image fails. Validate a managed relative reference, containment,
+file existence, supported decoding, nonzero dimensions and SHA-256. An absolute
+or escaping path, remote link, placeholder, corrupt file or `status: missing`
+does not pass. Image resolution/decoding belongs outside the pure domain layer;
+domain eligibility consumes its explicit validation result. A successful file
+check is not expert review of anatomical or technical correctness.
+
+Keep four distinguishable facts: text completeness, image readiness, actual
+external review evidence for that exact content/image set, and user's enablement.
+Review evidence binds a content hash and the reviewed image-set hashes. A new
+or edited text/image version starts unreviewed. The reviewer must inspect support
+points, moving side, direction, sequence and agreement between illustration and
+text; a picture's mere presence never produces approval.
+
+| Selected revision | Select for use / enable | Plan activation / new-session start |
+| --- | --- | --- |
+| Incomplete text or no valid required illustration | Block; show draft and exact reason | Block and name affected items |
+| Complete text and valid images, no external review | Allowed only through the explicit normal actions | Allow when enabled, disclose unreviewed content |
+| Complete text/images and matching real review evidence | Allowed through the same actions | Allow when enabled |
+| Removed/archived for future use | Block | Block for new sessions |
+
+This is the accepted illustration gate with the retained distinction between
+external review and enablement. It is not permission to bypass the image gate.
+Review never enables automatically; enabling never manufactures review. Selecting
+a revision cannot evade validation through an already-enabled action. Check the
+same eligibility rule in services for selection, enablement, plan activation and
+starting a new session, including imports and batch operations, not only buttons.
+
+For an edited draft, the previous selected revision remains selected until an
+explicit change. If a selected image disappears or is corrupted, effective
+eligibility and effective review immediately fail; do not erase the original
+review event or rewrite historical review snapshots. Repairing the exact hashed
+asset restores file validity, not a new approval. Different bytes require a new
+unreviewed content revision. Old review evidence lacking image coverage remains
+historical evidence and cannot be inferred to certify a new image set.
+
+Check images at build/catalog validation and again before the relevant runtime
+actions. A missing optional illustration is visible; it must not be relabelled
+as checked. Withdrawing current review uses an appended event instead of erasing
+evidence used by history. A current unreviewed version with valid text/images
+remains governed by the table above. Batch actions revalidate exact targets and
+commit all selected changes or roll back all of them.
+
+### 12.5 Training, Snapshots And History
+
+At plan activation pin each member's content revision, name, guidance, body areas,
+family/variant identity, image hashes and required assets. Retain a deduplicated
+immutable snapshot in the user root; it is evidence for that plan, not a second
+live catalog. Review evidence remains separately time-stamped. Later bundled
+updates become visible in the library automatically but adopting changed content
+for an activated plan requires a new draft and the normal plan confirmation.
+Unchanged content needs no reconfirmation after upgrade.
+
+At session creation freeze the full prescription, guidance/asset reference and
+review/eligibility facts observed then. Expand group rounds and side order into
+uniquely positioned execution occurrences with group, round, member and side
+snapshots. Do not rely on the old unique `(session, day, plan_action_order)` key
+for several rounds of the same member. Freeze group name, total rounds,
+transition/rest semantics and original notes. Later catalog deletion, renaming
+or program replacement cannot make session interpretation depend on live files.
+
+Each occurrence supports the existing four outcomes, actual work for partial or
+exceeded results, and verbatim notes. To keep one-rep combinations practical,
+offer an explicit “complete this round as prescribed” batch operation for its
+unrecorded members. Show exactly what that command confirms, commit it atomically,
+and reject stale/repeated requests. It never overwrites recorded exceptions or
+marks a later round completed. Individual outcomes remain available. Retracting
+a batch result archives the prior member facts transactionally before resetting
+them; terminal sessions remain immutable.
+
+For `all_rounds_then_switch`, the batch target is the displayed side and round,
+not the opposite-side occurrences that will be performed later. For a round
+containing both sides, the preview explicitly includes both before confirmation.
+Persist the batch membership so retraction never clears an unrelated individual
+result. UI navigation cannot change the target while a save is in flight.
+
+SessionController owns position/round/side and unfinished state. Navigation is
+not evidence of performance; only saved results count. Pause/restart resumes the
+last saved position and unfinished work, without inferring unsaved reps. Show
+group name, round, current side, current/next member and boundary-specific rest;
+pause/abort/finish controls stay outside scrolling. Finish requires an outcome
+for every occurrence. Next-day feedback is deduplicated from actually performed
+member snapshots, never from all catalog-family members or unanswered work.
+
+Already open/paused sessions remain finishable from their original snapshots
+after upgrade or removal. This is a current-model execution rule for frozen work,
+not an old-settings switch. New sessions recheck removals, enabled state and
+asset readiness against the pinned prescription. Unanswered older facts stay
+unknown; never synthesize historical image validity, side counts or review times.
+
+### 12.6 Reviewed Removal And Restoration
+
+Removal is a reviewed lifecycle operation with retention of referenced evidence.
+A user removal of a bundled action records a root-local decision; it cannot edit
+the read-only package or claim to change the publisher's catalog. Publisher-wide
+withdrawal is delivered in a later bundled manifest. Custom actions are archived
+in the user's root. Both disappear from new-plan selection once removal applies.
+
+A request stores source/key, exact content hash, original reason, request time
+and reference impact (draft/active plans, groups, unfinished/terminal sessions,
+reviews, dependent variants and exports). Append decisions and their source,
+actual occurrence, explicit confirmation time and note. The lifecycle is
+`requested → under_review → approved → applied`, with `rejected` and `cancelled`
+exits; a separate approved restoration event can restore future availability.
+Request, content identity, decision and application are auditable, not a single
+unexplained deleted Boolean. A content change requires renewed review. Applying
+an approval rechecks references in the transaction; if impacts changed since
+preview, refresh the impact before applying.
+
+One person may explicitly request and confirm removal; no account system or
+multi-role approval infrastructure is introduced. Do not invent an external
+reviewer. Approval/application may share one transaction when that is the
+explicit user action. Batch removal must show every target and roll back as a
+whole on failure. Show rejected/cancelled outcomes without hiding the action.
+
+Applied removal disables future use and adds a minimal stable-key tombstone;
+it does not physically delete referenced guidance/images, mutate plan revisions,
+rewrite exports or recursively remove family members. Affected plans remain
+viewable; new sessions are blocked until a newly confirmed plan replaces the
+action. Open/paused work uses the rule in Section 12.5. Proposed substitutes are
+suggestions requiring explicit plan editing. Parent/family links must remain
+resolvable or be explicitly reassigned without deleting the variants.
+
+The tombstone contains identity and disposition metadata, not a trainable legacy
+library or compatibility entry point. History reads its own snapshots. Restore
+requires a new explicit decision and current image/content validation; it does
+not restore enablement, plans or invalid review evidence automatically. No
+unreviewed physical purge is included in 0.7.0.
+
+### 12.7 Seamless In-Place Upgrade; No Old-Settings Entry Point
+
+For a root inside Section 13's support window, “seamless” means normal installer
+replacement and normal launch, retaining the
+locator, selected root, meaningful settings and user work. The installer owns
+only application files. On first launch the application automatically prepares
+and converts the explicitly selected TrainingFeedback root; it never scans other
+directories or the old Exercises@home database. Do not introduce a migration
+wizard, manual catalog import/mapping step, old/new settings selector, legacy
+library tab, compatibility flag, reset requirement for supported roots or user-facing
+rollback mode. Roots older than the window follow Section 13.2's explicit
+reinstall/new-root requirement. Routine progress is allowed; actionable errors
+must not be hidden. The lower-bound enforcement is implemented (070-R2,
+2026-09-21): below-window roots are refused read-only before any write.
+
+Implementation sequence:
+
+1. Validate package/catalog manifests and the root marker/schema; acquire an
+   exclusive migration lock and check access and free space before writes.
+2. Automatically create and verify a pre-upgrade recovery snapshot using SQLite
+   online backup plus copies of marker/configuration and all managed resource
+   bytes, verified against a resource manifest. Use a versioned recovery location
+   under `backups/` without recursively copying earlier backups into themselves.
+   No destination-selection step is required. Failure stops the upgrade before
+   business-data conversion. This recovery snapshot has its own internal format;
+   it is not silently advertised as the ordinary complete-root backup.
+3. Stage new managed assets and prepare deterministic stable references. Map
+   existing bundled keys directly; a missing or unresolvable key becomes a
+   preserved custom identity with origin metadata, not a guessed name match or
+   a third `legacy` runtime branch. Preserve conflicts as distinct identities.
+   Keep user overrides, original text, local illustrations and review attachments.
+4. Materialize every referenced plan/session fact from its actual stored
+   revision before detaching old catalog tables. Preserve schema-16 local IDs
+   where externally referenced; map internal references consistently. Historical
+   facts not recorded by the old schema remain explicitly unknown. A current
+   name/image is not proof it applied at an earlier date. Mark migrated plan
+   bindings as migration-time pins rather than fabricated activation snapshots.
+5. Convert all persisted plans, actions, settings and registrations into the
+   new model. Old ungrouped actions remain single items; never auto-group an
+   existing plan or change its dose. Preserve previously valid intent, but
+   invalidate effective enablement where required images are missing, retaining
+   the former setting only as migration evidence. Active plan status is not
+   rewritten to pretend confirmation of a replacement prescription.
+6. In append-only schema migrations, commit new references, snapshots and format
+   markers after validation. Remove obsolete live catalog duplicates/settings
+   once their user content and evidence are accounted for. Never destructively
+   clear an unknown user field: preserve its original value as read-only
+    provenance rather than as a fallback runtime setting. Schema numbers and
+    application versions are assigned together under Section 13.1.
+7. Publish staged immutable assets and complete a recoverable journal protocol
+   before exposing the root for normal use. File publication and SQLite commit
+   cannot be treated as one filesystem transaction: test failure before/after
+   each boundary and restart deterministically to finish or restore the prior
+   complete root. Do not expose a half-converted root or delete the sole image
+   copy. Clean old resource locations/staging only after committed references
+   and hashes have been verified.
+8. Subsequent starts use only current repositories, settings and asset resolvers;
+   a completed conversion is idempotent and does not repeat seeding, copying,
+   confirmation or image association. Remove old bundled-acceptance controls,
+   obsolete review/plan controls and dual-read/dual-write fallback paths.
+
+Migration code may read supported-window persisted formats once. There is no permanent
+old-format execution or import mode after success. Historical exports, original
+imports and backups remain immutable evidence, not alternative live settings.
+Recovery from an interrupted upgrade is internal fault recovery; an unreadable
+future schema is rejected unchanged. Whole-root backup/open remains the normal
+current product feature. An old application must refuse an upgraded root.
+
+Catalog updates require no “accept bundled drafts” action. User customizations
+and pinned prescriptions are protected by ownership and snapshots rather than
+by retaining the old delivery interface. Normal actions to review changed
+guidance or activate a revised plan are still required: seamless upgrade cannot
+invent illustrations, approval or user training facts. If a migrated active plan
+contains an ineligible action, show the exact content issue in its ordinary
+detail view and block only new starts, while keeping history and paused work
+available. This is the new rule, with no switch to restore the missing-image
+exemption. A complete, unchanged, eligible plan requires no new approval.
+
+### 12.8 External Handoff Contract
+
+Use `training_feedback.plan` version 2 for all new imports and
+`training_feedback.evidence` version 2 for new exports; define their version
+constants independently. Only the current plan-import contract is accepted in
+0.7.0. A newly supplied v1 file gets a clear current-format error and the current
+schema, not a compatibility converter or version selector. Plans already stored
+in the root are converted internally under Section 12.7. Their original imported
+files and original exports are not rewritten or re-imported.
+
+V2 carries namespaced action keys, exact content references, family/variant
+identity, ordered standalone/group items, rounds, side order, per-round sets,
+all rest boundaries and source rationale. Imports create drafts only and cannot
+create approval, enablement, deletion decisions or plan activation. Schema and
+domain validation enforce identical invariants and reject unknown identities
+without silent substitutions. An identity for removed content resolves to
+“removed”, not to a new similarly named exercise.
+
+Evidence JSON and Markdown show the same frozen plan/group/occurrence facts,
+actual work, review state at execution, unknown legacy facts, verbatim notes and
+audited retractions. Record application version, catalog version, database schema
+and content hashes separately. Group totals are derived displays, not additional
+performed work. Relevant removal events and snapshot provenance are labelled as
+catalog/user-management facts rather than user physical feedback.
+
+References alone do not let an external reviewer inspect a local image. Export
+the needed illustration files as an adjacent portable asset set with relative
+paths and hashes (deduplicated by content), or include them in the explicit
+review package. Mark unavailable historical assets honestly. Never depend on an
+absolute installation path. Backup/copy/restore includes custom content, reviews
+and retained snapshot assets; it does not require a previous installed catalog
+to render recorded history.
+
+### 12.9 Remaining Delivery And Verification
+
+Section 9.1 is the single active work list. Completed A–G milestones and the
+local part of H are in the [0.7.0 delivery archive](archive/0.7.0/development.md),
+not additional pending development plans. The [contract annex](contracts/0.7.0-contracts.md)
+owns detailed current serialization/mapping. Changes to backup, root switching,
+fixtures, resources and current imports must be covered in their implementing task.
+
+Required verification covers:
+
+- Supported baselines generated/opened by actual 0.6.0/schema-14 and
+  0.6.1/schema-16 programs, using
+  isolated synthetic data with renamed/missing-key actions,
+  custom text, overrides, images, review attachments, active/draft plans,
+  terminal and paused sessions, next-day feedback, retractions and original files.
+  Preserve an untouched baseline and compare logical facts/resource hashes.
+- Reject out-of-window development roots before writes, with the reinstall/new-root
+  instruction; preserve future-schema rejection and fresh initialization coverage.
+- Missing image vs corrupt image vs changed hash, no-image drafts with prior
+  review evidence, enabled-but-ineligible state, bundled and custom images,
+  renamed families, repeated exercises in groups, asymmetric sides and mixed units.
+- Failure at backup, staging, SQL conversion, asset publication and cleanup;
+  disk/access errors, stale previews, competing opens, repeat startup and
+  root switching. No partial successful upgrade or fabricated approval.
+- Catalog withdrawal after plan activation; new-start blocking; resumed frozen
+  work; history/export/backup restore with a newer catalog lacking that movement.
+- UI inventory and source review proving removal of manual bundled acceptance,
+  old-settings/legacy mode controls, old-format import selectors and fallback
+  runtime branches. Read-only provenance and recovery artifacts are labelled
+  as evidence, not selectable settings.
+
+Use PowerShell 7 and temporary roots/locators. Run meaningful affected tests
+within Section 9.4's stage budget (each 070 work item is development, the 0.7.0
+release is minor), Ruff and `git diff --check` for implementation delivery.
+Run packaging checks when the payload/fixtures change. The packaged
+runbook must identify the 0.7.0 candidate and actual target schema, including
+ordinary-user in-place installation, auto-conversion, backup/reopen, uninstall
+data isolation, Chinese/space-containing paths and 100/125/150% real-desktop
+scaling. Existing independent-environment requirements still apply.
+
+### 12.10 Release Exit And Documentation Ownership
+
+0.7.0 is ready only when all 070 work items pass their acceptance, the current
+image/content inventory is explicit, and the initial usable plan's referenced
+actions have actual bundled illustrations and satisfy the new rules. All 36
+catalog entries must retain their identity and classified readiness; items
+without finished illustrations remain visible drafts and cannot be advertised
+as usable. Source prompts, filename mappings and synthetic images are not
+delivered artwork or real expert review. Actual content review and first-usable
+release evidence remain subject to Section 10; do not reinterpret the retained
+unreviewed-with-valid-images option as completed review coverage.
+
+No supported-upgrade success claim may rely on a reset root, manual re-import,
+compatibility settings, changed historic doses or a previous candidate's acceptance.
+Verify clean first use, supported upgrades and unchanged rejection of expired roots.
+Record application/catalog/schema identities and unresolved gates for the exact build.
+Independent 8-B2 remains pending. The user's future decision to begin personal
+observation does not establish technical acceptance of the candidate.
+
+This document owns product/architecture/migration contracts. The content
+document owns family membership, aliases, technique and proposed doses. The
+guidance review runbook owns the version-specific review procedure, and the
+packaged acceptance runbook owns candidate-specific execution evidence. Update
+all four as implementation is delivered; keep completed procedures in their
+version archives and never offer them as selectable runtime behavior. Root task
+records capture development work and verification rather than duplicating these specifications.
+
+## 13. Version Retention And Development Data Policy
+
+Decision accepted: 2026-09-20; documented: 2026-09-21. The project remains in
+development. This policy supersedes unlimited historical-document retention and
+unbounded migration-chain support. Runtime enforcement was implemented as
+070-R2 on 2026-09-21 (schema-14 lower bound, pre-write refusal); workspace
+artifact rotation is DEV-CLEAN, not completed by documenting the policy.
+
+### 13.1 Application Versions And Schema Changes
+
+- Keep the current application version plus its two immediate predecessors.
+  Count distinct version numbers, including patch versions, not GitHub commits.
+  Several commits with the same version consume one slot. Record the actual
+  commit/source snapshot/build identity for each retained version.
+- The current window is **0.7.0 / 0.6.1 / 0.6.0**. Their database baselines are
+  **22 / 16 / 14** respectively. A subsequent 0.7.1 rotates out 0.6.0; if it changes
+  the database, its next schema is 23. This is an example, not a performed bump.
+- Every subsequent database schema revision must bump the application version
+  at least by one patch in the same change. Do not append several schema revisions
+  while continuing to call the application 0.7.0. A minor/major bump may accompany
+  a schema change; an application-only fix may keep the existing schema.
+- Existing intermediate schemas 15 and 17–21 retain their historic numbers; do
+  not fabricate released application versions for them. Required internal steps
+  may remain while a supported endpoint depends on them, but are not additional
+  independent supported releases. Decide intermediate-root handling explicitly
+  in the version/schema mapping; never equate a numeric range with release support.
+- Maintain application version, database schema, catalog/content version and
+  external wire-contract version separately. Changing a wire schema requires an
+  application bump too, but need not change the database schema without a storage
+  change. Retaining an old contract as evidence does not enable its import.
+
+### 13.2 Retention And Supported Database Upgrades
+
+Complete development plans, task records, acceptance evidence, schema documents,
+contract snapshots, synthetic baselines and runtime migration entry support share
+the three-application-version window. Current specifications keep valid rules and
+open work; completed work goes under `docs/archive/<version>/` or local
+`.planning/archive/<version>/`. Archiving is not permanent retention.
+
+At rotation, inventory references, merge still-valid rules into current documents,
+then remove the expired version's full records and exclusive fixtures/helpers.
+Keep only schema definitions and migration steps needed to create the current
+database or upgrade a retained version. Consolidate new-database initialization
+without rewriting already-applied migration semantics in the supported window.
+Git/GitHub commit history stays intact; do not create an unbounded second archive.
+
+Supported older roots receive normal automatic recovery/conversion with frozen
+facts preserved. Roots older than the support window must be detected read-only
+and refused before migration or other writes, with an actionable message such as:
+
+> 此开发数据版本已超出支持范围，请重新安装当前版本并新建数据目录。
+> 原数据目录已保留，不会自动删除或重置。
+
+Reinstalling program files does not recreate the independent root. The user must
+explicitly choose a new empty directory; installation/uninstallation never deletes
+the old root or locator. Do not auto-import the unsupported database or offer a
+legacy runtime mode. Unsupported future roots also remain unchanged. New roots
+must load the complete current bundled catalog without relying on any older root.
+
+Retention is for development artifacts and compatibility code, not permission to
+purge personal data, original answers/exports or historical evidence within a
+retained root. Active test-budget ledgers must not be reset during cleanup.
+Unclassified local files require inventory before disposal.
+
+### 13.3 Development Content And Personal-Data Transition
+
+All development additions/revisions to exercises, guidance, aliases, families,
+classification and intended bundled illustrations belong in application-owned
+source content and the packaged catalog. They must satisfy the latest version's
+format, identity, content and image rules. A useful change saved only in a local
+development root is not delivered: deliberately reconcile it into owned source
+before retiring that root. Never scan personal roots or publish personal assets
+as an automatic part of this reconciliation.
+
+A clean install plus new root must show the latest full built-in library without
+old-database migration or manual import. Missing-image items remain visible drafts
+and cannot be described as ready to train. Package updates do not invent personal
+reviews, activation, results or feedback. Simulated approvals/training stay synthetic.
+
+The user explicitly decides when development is ready to become personal use.
+Until that decision, do not designate a development root as the personal baseline
+or automatically transfer its facts. At the transition, identify the exact program/
+catalog/schema, establish a deliberate personal root, select which actual content
+is to become personal data, and confirm the complete plan. The concrete transfer
+scope and mechanism are deferred to that decision; existing custom/override
+features do not authorize a bulk copy of development records. Preserve real
+original facts if any are deliberately retained, and exclude synthetic facts from
+personal review, training and W4 evidence. Revisit long-term support policy then.

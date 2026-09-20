@@ -14,6 +14,11 @@ dependency.
 - Preserve user-entered text verbatim and never turn defaults into user facts.
 - Freeze plan and exercise facts needed to interpret completed sessions; later
   catalog edits must not rewrite history.
+- The project is in development: new/revised exercises, guidance and intended
+  illustrations belong in owned source and the built-in catalog under current
+  rules. Reconcile deliberate development content before retiring old roots.
+  The user explicitly authorizes the later personal-data transition; never promote
+  synthetic approvals/training to personal facts.
 
 ## Engineering Boundaries
 
@@ -26,21 +31,62 @@ dependency.
 - Use PowerShell 7 for project commands on Windows.
 - Use `apply_patch` for manual file edits.
 
+## Version And Retention Rules
+
+- Follow `docs/development-plan.md` section 13. Retain complete development
+  documents, schema/contract baselines and migration entry support for the current
+  application version plus two predecessors. Same-version commits use one slot.
+- Current window: 0.7.0/schema22, 0.6.1/schema16, 0.6.0/schema14. Every subsequent
+  schema revision requires at least an application patch bump in the same change;
+  do not append more schemas under 0.7.0. Existing intermediate numbers are historical.
+- Preserve applied migrations while supported endpoints need them; prune expired
+  entry paths together with fixtures and consolidate fresh initialization without
+  breaking retained upgrades. Three-version enforcement is implemented (070-R2,
+  2026-09-21): roots below schema14 are refused read-only before writes, with
+  reinstall/new-empty-root guidance; retained endpoints upgrade via the normal
+  migration chain.
+- Expired development roots must be rejected before writes, with reinstall/new-empty-
+  root guidance. Preserve old data; program reinstall alone does not reset a root.
+- Archive completed material by application version, then remove expired complete
+  records at rotation. Archives are subject to the same window; Git history stays.
+
+## Test Budgets
+
+- Follow the verification policy in `docs/development-plan.md` section 9.4.
+- Hard caps on parameter-expanded pytest cases: development step 30, patch
+  release 50, minor release 100, major release 300. The resident suite is at most 300.
+- Use `--test-tier dev|patch|minor|major` and a stable `--test-scope TASK-ID`.
+  All commands for one step/release share that scope; their unique cases count
+  together. Never split commands, reset ledgers, or change scopes/tiers to evade a cap.
+- For a small change, explicitly select affected test nodes/files or `-k` cases.
+  Bare pytest selects the small dev smoke profile, not a full regression.
+- `--collect-only` inventories cases without running tests or consuming budget.
+  Parameter combinations count separately. Do not hide cases with skip/collection
+  exclusions or move independent scenarios into loops to lower the count.
+- Add a test only for a meaningful new risk or reproduced bug; first check existing
+  coverage. Remove redundant coverage when adding cases near the resident cap.
+- After relevant tests pass, stop. Following a fix, rerun only failed/affected
+  cases; do not automatically append a full-suite run.
+
 ## Project Layout
 
 - `domain/` — pure rules and value objects (no Qt, no SQL).
-- `application/` — use-case services (`TrainingApplicationService`,
-  `ExerciseService`) coordinating domain rules and repositories; write
-  operations open their transaction here or inside one repository method.
-- `data/` — repositories per table family (`exercise_repositories`,
-  `plan_repositories`, `session_repositories`, `feedback_repositories`),
-  `migrations.py` (append-only versioned migrations), `database.py`
-  (connection + `transaction()` boundary), `data_root.py`, `locator.py`,
-  `backup.py`, `handoff.py` (export/import facade incl. Markdown rendering),
-  `seed/` (initial catalog and plan proposal).
+- `application/` — use-case services (`LibraryWorkflowService`,
+  `GroupPlanService`, `GroupSessionService`, `LibraryLifecycleService`)
+  coordinating domain rules and repositories; write operations open their
+  transaction here or inside one repository method.
+- `data/` — repositories per table family (`library_repository`,
+  `catalog_repository`, `group_plan_repository`, `group_session_repository`,
+  `library_lifecycle_repository`, `conversion_repository`), `migrations.py`
+  (versioned migrations retained for supported endpoints), `database.py` (connection +
+  `transaction()` boundary), `data_root.py`, `locator.py`, `backup.py`,
+  `upgrade_recovery.py` + `catalog_conversion.py` (one-time schema-16 root
+  conversion), `group_plan_handoff.py` / `group_session_handoff.py` (v2
+  export/import incl. Markdown rendering), `seed/` (bundled catalog source for
+  the catalog builder).
 - `ui/` — PySide6 pages and dialogs; Chinese display labels live in
   `ui/labels.py` (including `make_unit_combo`); no SQL, no business rules.
-- Entry chain: `main.py` → `bootstrap.py` → `app.py` (`ApplicationContext`,
+- Entry chain: `main.py` → `bootstrap.py` → `app.py` (`LibraryContext`,
   `DataRootSwitcher`) → `ui/main_window.py`.
 
 ## Documentation
@@ -50,6 +96,8 @@ dependency.
 - `docs/initial-exercises-and-plan.md` is the authoritative seed catalog and
   initial-plan proposal until real use or an external AI expert revises it.
 - Avoid duplicating those specifications in the README or source comments.
+- `docs/release-readiness-0.7.0.md` records the current review, ordered closeout and
+  workspace cleanup tasks. `docs/archive/README.md` indexes retained version history.
 
 ## Development Records
 
@@ -69,7 +117,8 @@ dependency.
 - The three root files represent the current task, not an unbounded project
   history.
 - When a new task starts, completed task records must be summarized or moved to
-  `.planning/archive/` before new content is added.
+  `.planning/archive/<application-version>/` before new content is added. Apply
+  the same three-version window; do not accumulate an unlimited second archive.
 - `task_plan.md` must contain only the active task plan, current decisions,
   current risks, and relevant errors. It must not accumulate completed task
   plans.

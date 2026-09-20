@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import json
+import sqlite3
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from . import migrations
 from .database import Database
-from .migrations import FutureSchemaError
+from .migrations import OLDEST_SUPPORTED_SCHEMA_VERSION, FutureSchemaError
+from .root_lock import RootBusyError
 
 APPLICATION_NAME = "TrainingFeedback"
 DATA_FORMAT_VERSION = 1
@@ -16,7 +20,7 @@ CONFIG_VERSION = 1
 MARKER_FILENAME = "training_feedback.marker.json"
 CONFIG_FILENAME = "app_config.json"
 DATABASE_FILENAME = "training_feedback.sqlite3"
-# exercise-images 为动作指导图片预留；当前版本尚无代码读写该目录。
+# exercise-images 保存动作指导引用的受管图片；数据库仅保存相对数据根的引用。
 MANAGED_DIRECTORIES = ("backups", "exercise-images", "exports", "imports")
 
 
@@ -34,6 +38,10 @@ class InvalidDataRootError(DataRootError):
 
 class UnsupportedDataFormatError(DataRootError):
     pass
+
+
+class ExpiredDataRootError(DataRootError):
+    """Section 13.2: the root predates the retention window; refuse before writes."""
 
 
 class DataRootAccessError(DataRootError):
@@ -163,8 +171,8 @@ def create_new(root_path: Path) -> DataRoot:
         raise DataRootAccessError("Cannot create the data root.") from exc
 
 
-def open_existing(root_path: Path) -> DataRoot:
-    """Validate and open an existing application-owned data root."""
+def inspect_existing(root_path: Path) -> DataRoot:
+    """Validate without migrating or creating files; usable before a recovery snapshot."""
     root = Path(root_path)
     if not root.is_dir():
         raise InvalidDataRootError("The selected path is not a directory.")
@@ -182,12 +190,43 @@ def open_existing(root_path: Path) -> DataRoot:
     if not database_path.is_file():
         raise InvalidDataRootError("The data root does not contain its database.")
     try:
-        with Database(database_path):
+        uri = database_path.resolve().as_uri() + "?mode=ro"
+        with closing(sqlite3.connect(uri, uri=True)) as connection:
+            version = connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0]
+            if type(version) is not int or version < 1:
+                raise sqlite3.DatabaseError("Invalid schema version.")
+            if version > migrations.LATEST_SCHEMA_VERSION:
+                raise UnsupportedDataFormatError(
+                    "The database requires a newer version of TrainingFeedback."
+                )
+            if version < OLDEST_SUPPORTED_SCHEMA_VERSION:
+                raise ExpiredDataRootError(
+                    "This development data version is outside the support window. "
+                    "Reinstall the current application version and create a new data "
+                    "directory; the original data directory is preserved and will not "
+                    "be deleted or reset."
+                )
+            if connection.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                raise sqlite3.DatabaseError("Invalid database integrity.")
+            if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
+                raise sqlite3.DatabaseError("Invalid database references.")
+    except sqlite3.Error as exc:
+        raise InvalidDataRootError("The TrainingFeedback database is invalid.") from exc
+    return DataRoot(root, database_path)
+
+
+def open_existing(root_path: Path) -> DataRoot:
+    """Validate and open an existing application-owned data root."""
+    root = inspect_existing(root_path)
+    try:
+        with Database(root.database_path):
             pass
     except FutureSchemaError as exc:
         raise UnsupportedDataFormatError(
             "The database requires a newer version of TrainingFeedback."
         ) from exc
+    except RootBusyError as exc:
+        raise DataRootAccessError(str(exc)) from exc
     except Exception as exc:
         raise InvalidDataRootError("The TrainingFeedback database is invalid.") from exc
-    return DataRoot(root, database_path)
+    return root

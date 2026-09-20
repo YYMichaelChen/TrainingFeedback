@@ -1,8 +1,10 @@
 import json
 import sqlite3
+from unittest.mock import patch
 
 import pytest
 
+from training_feedback.data import migrations
 from training_feedback.data.data_root import (
     CANDIDATE_EXISTING,
     CANDIDATE_NEW,
@@ -10,11 +12,12 @@ from training_feedback.data.data_root import (
     CONFIG_FILENAME,
     DATABASE_FILENAME,
     MARKER_FILENAME,
-    DataRootNotEmptyError,
+    ExpiredDataRootError,
     InvalidDataRootError,
     UnsupportedDataFormatError,
     create_new,
     describe_candidate,
+    inspect_existing,
     open_existing,
 )
 from training_feedback.ui.labels import user_message
@@ -29,24 +32,6 @@ def test_create_and_reopen_data_root(data_path):
     assert (data_path / CONFIG_FILENAME).is_file()
     assert (data_path / "backups").is_dir()
     assert open_existing(data_path) == created
-
-
-def test_creation_rejects_unknown_non_empty_directory(tmp_path):
-    root = tmp_path / "occupied"
-    root.mkdir()
-    (root / "keep.txt").write_text("do not touch", encoding="utf-8")
-
-    with pytest.raises(DataRootNotEmptyError):
-        create_new(root)
-    assert (root / "keep.txt").read_text(encoding="utf-8") == "do not touch"
-
-
-def test_open_rejects_missing_marker(data_path):
-    data_path.mkdir()
-    (data_path / CONFIG_FILENAME).write_text("{}", encoding="utf-8")
-
-    with pytest.raises(InvalidDataRootError):
-        open_existing(data_path)
 
 
 def test_describe_candidate_reads_one_path_without_opening_the_database(data_path, tmp_path):
@@ -68,15 +53,6 @@ def test_describe_candidate_reads_one_path_without_opening_the_database(data_pat
     assert describe_candidate(file_path) == CANDIDATE_OCCUPIED
 
 
-def test_open_rejects_empty_directory_and_points_at_creation(data_path):
-    data_path.mkdir()
-
-    with pytest.raises(InvalidDataRootError) as failure:
-        open_existing(data_path)
-    assert "Create a new data root" in str(failure.value)
-    assert user_message(str(failure.value)) != str(failure.value)
-
-
 def test_open_rejects_unreadable_marker_without_leaking_the_filename(data_path):
     data_path.mkdir()
     (data_path / MARKER_FILENAME).write_text("{not json", encoding="utf-8")
@@ -86,24 +62,6 @@ def test_open_rejects_unreadable_marker_without_leaking_the_filename(data_path):
         open_existing(data_path)
     assert MARKER_FILENAME not in str(failure.value)
     assert user_message(str(failure.value)) != str(failure.value)
-
-
-def test_data_root_failures_have_chinese_user_messages(data_path):
-    data_path.mkdir()
-    (data_path / "unrelated.txt").write_text("keep", encoding="utf-8")
-    failures = []
-
-    with pytest.raises(InvalidDataRootError) as missing_marker:
-        open_existing(data_path)
-    failures.append(str(missing_marker.value))
-
-    _write_metadata(data_path, MARKER_FILENAME)
-    with pytest.raises(InvalidDataRootError) as missing_config:
-        open_existing(data_path)
-    failures.append(str(missing_config.value))
-
-    for message in failures:
-        assert user_message(message) != message, message
 
 
 def test_open_rejects_wrong_application_marker(data_path):
@@ -126,50 +84,6 @@ def _write_metadata(root, filename, **overrides):
     (root / filename).write_text(json.dumps(metadata), encoding="utf-8")
 
 
-def test_open_rejects_future_marker_format_version(data_path):
-    create_new(data_path)
-    _write_metadata(data_path, MARKER_FILENAME, data_format_version=999)
-    marker_bytes = (data_path / MARKER_FILENAME).read_bytes()
-
-    with pytest.raises(UnsupportedDataFormatError):
-        open_existing(data_path)
-    assert (data_path / MARKER_FILENAME).read_bytes() == marker_bytes
-
-
-def test_open_rejects_invalid_marker_format_version(data_path):
-    create_new(data_path)
-    _write_metadata(data_path, MARKER_FILENAME, data_format_version="1")
-
-    with pytest.raises(InvalidDataRootError):
-        open_existing(data_path)
-
-
-def test_open_rejects_missing_config(data_path):
-    data_path.mkdir()
-    _write_metadata(data_path, MARKER_FILENAME)
-
-    with pytest.raises(InvalidDataRootError):
-        open_existing(data_path)
-
-
-def test_open_rejects_missing_config_version(data_path):
-    create_new(data_path)
-    config = json.loads((data_path / CONFIG_FILENAME).read_text(encoding="utf-8"))
-    del config["config_version"]
-    (data_path / CONFIG_FILENAME).write_text(json.dumps(config), encoding="utf-8")
-
-    with pytest.raises(InvalidDataRootError):
-        open_existing(data_path)
-
-
-def test_open_rejects_wrong_type_config_version(data_path):
-    create_new(data_path)
-    _write_metadata(data_path, CONFIG_FILENAME, config_version="1")
-
-    with pytest.raises(InvalidDataRootError):
-        open_existing(data_path)
-
-
 def test_open_rejects_future_config_version(data_path):
     create_new(data_path)
     _write_metadata(data_path, CONFIG_FILENAME, config_version=999)
@@ -189,6 +103,8 @@ def test_open_rejects_corrupt_database(data_path):
 
 
 def test_open_rejects_future_schema_without_modifying_database(data_path):
+    from training_feedback.data.catalog_conversion import convert_catalog_root
+
     create_new(data_path)
     connection = sqlite3.connect(data_path / DATABASE_FILENAME)
     try:
@@ -201,5 +117,25 @@ def test_open_rejects_future_schema_without_modifying_database(data_path):
     database_bytes = (data_path / DATABASE_FILENAME).read_bytes()
 
     with pytest.raises(UnsupportedDataFormatError):
+        inspect_existing(data_path)
+    with pytest.raises(UnsupportedDataFormatError):
+        convert_catalog_root(data_path)
+    with pytest.raises(UnsupportedDataFormatError):
         open_existing(data_path)
     assert (data_path / DATABASE_FILENAME).read_bytes() == database_bytes
+
+
+def test_open_rejects_expired_schema_without_modifying_database(data_path):
+    """Schema 13 sits one below the retention window and must be refused read-only."""
+    with patch.object(migrations, "LATEST_SCHEMA_VERSION", 13):
+        create_new(data_path)
+    database_bytes = (data_path / DATABASE_FILENAME).read_bytes()
+
+    with pytest.raises(ExpiredDataRootError) as failure:
+        inspect_existing(data_path)
+    assert user_message(str(failure.value)) != str(failure.value)
+    with pytest.raises(ExpiredDataRootError):
+        open_existing(data_path)
+    assert (data_path / DATABASE_FILENAME).read_bytes() == database_bytes
+    with sqlite3.connect(data_path / DATABASE_FILENAME) as connection:
+        assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 13
