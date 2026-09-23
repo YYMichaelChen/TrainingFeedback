@@ -123,6 +123,11 @@ foreach ($required in $requiredBuildArtifacts) {
         throw "Build artifact missing: $required"
     }
 }
+$foreignIcu = Get-ChildItem -LiteralPath (Join-Path $outputDir '_internal') -File |
+    Where-Object { $_.Name -eq 'icuuc.dll' -or $_.Name -match '^icudt\d+\.dll$' }
+if ($foreignIcu) {
+    throw "Build output contains ICU that must resolve from supported Windows: $($foreignIcu.FullName -join ', ')"
+}
 $catalogDir = Join-Path $outputDir '_internal/training_feedback/catalog'
 & $python (Join-Path $PSScriptRoot 'build_catalog.py') --verify $catalogDir
 if ($LASTEXITCODE -ne 0) {
