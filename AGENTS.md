@@ -20,6 +20,18 @@ dependency.
   The user explicitly authorizes the later personal-data transition; never promote
   synthetic approvals/training to personal facts.
 
+## Local And Public Release Boundaries
+
+- Follow `docs/development-plan.md` Sections 9–10 (user decision 2026-09-23).
+- Local release requires content closeout, repaired/budgeted regression, complete
+  reproducible source and a verified installer with local installed checks.
+- 070-H3 / 8-B2 independent Windows acceptance and public-distribution requirements
+  are deferred until the user explicitly requests a public release. Do not make
+  them local-release blockers or mark deferred checks as passed.
+- W4 and external content review are separate unfinished follow-ups, not local
+  release gates. Local release does not establish a personal-data transition,
+  expert approval, plan activation or genuine training facts.
+
 ## Engineering Boundaries
 
 - Keep UI, domain workflow, and SQLite access in separate layers.

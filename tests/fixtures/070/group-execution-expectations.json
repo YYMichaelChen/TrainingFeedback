@@ -1,0 +1,21 @@
+{
+  "notice": "Synthetic contract expectations: [round, member item_id, side, rest_after_seconds]. No performed work.",
+  "same_side_then_switch": [
+    [1, "example.kick", "left", 2], [1, "example.hydrant", "left", 3],
+    [1, "example.kick", "right", 2], [1, "example.hydrant", "right", 7],
+    [2, "example.kick", "left", 2], [2, "example.hydrant", "left", 3],
+    [2, "example.kick", "right", 2], [2, "example.hydrant", "right", 11]
+  ],
+  "member_each_side": [
+    [1, "example.kick", "left", 3], [1, "example.kick", "right", 2],
+    [1, "example.hydrant", "left", 3], [1, "example.hydrant", "right", 7],
+    [2, "example.kick", "left", 3], [2, "example.kick", "right", 2],
+    [2, "example.hydrant", "left", 3], [2, "example.hydrant", "right", 11]
+  ],
+  "all_rounds_then_switch": [
+    [1, "example.kick", "left", 2], [1, "example.hydrant", "left", 7],
+    [2, "example.kick", "left", 2], [2, "example.hydrant", "left", 3],
+    [1, "example.kick", "right", 2], [1, "example.hydrant", "right", 7],
+    [2, "example.kick", "right", 2], [2, "example.hydrant", "right", 11]
+  ]
+}

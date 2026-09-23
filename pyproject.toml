@@ -4,11 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "training-feedback"
-version = "0.6.0"
+version = "0.7.0"
 description = "Local-first personal training desktop application"
 requires-python = ">=3.12"
 dependencies = [
     "PySide6>=6.7,<7",
+    "jsonschema>=4.23,<5",
 ]
 
 [project.optional-dependencies]
@@ -24,11 +25,72 @@ training-feedback = "training_feedback.main:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-training_feedback = ["ui/*.svg"]
+training_feedback = ["ui/*.svg", "catalog/*.sqlite3", "catalog/*.json", "catalog/images/*", "contracts/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+regression_dev = [
+    "test_create_and_reopen_data_root",
+    "test_transaction_commits_and_rolls_back",
+    "test_main_window_navigation_and_chinese_labels",
+    "test_activation_freezes_prescription_and_assets_and_cloning_preserves_lineage",
+    "test_finish_requires_all_results_and_terminal_results_are_immutable",
+    "test_backup_preserves_execution_batches_retractions_and_resume",
+    "test_program_catalog_is_reproducible_readonly_and_cwd_independent",
+    "test_normalized_save_reopen_and_unequal_group_doses_remain_verbatim",
+    "test_review_binding_edit_withdraw_and_original_answer_survive",
+    "test_batch_targets_both_sides_unrecorded_members_and_retracts_only_its_facts",
+    "test_batch_remove_preserves_all_evidence_and_records_verbatim",
+    "test_actual_entry_is_blank_side_locked_invalid_preserved_and_cancel_safe",
+]
+regression_patch = [
+    "test_open_rejects_future_schema_without_modifying_database",
+    "test_switch_round_trip_keeps_datasets_separate",
+    "test_open_from_locator_converts_unconverted_root_and_is_idempotent",
+    "test_switch_converts_unconverted_target_root",
+    "test_import_registration_failure_cleans_file_and_rows",
+    "test_ui_editor_cancel_and_verbatim_save_do_not_change_selection",
+    "test_activation_failure_on_second_pin_rolls_back_everything",
+    "test_batch_failure_rolls_back_reviews_selection_and_attachment",
+    "test_batch_failure_rolls_back_results_membership_and_version",
+    "test_pause_restart_keeps_position_and_frozen_work_after_catalog_replacement",
+    "test_feedback_uses_performed_snapshots_and_preserves_unanswered",
+    "test_export_after_catalog_replacement_is_portable_and_lossless",
+    "test_backup_preserves_execution_batches_retractions_and_resume",
+    "test_batch_application_rolls_back_all_state_events_and_assets",
+    "test_restore_validates_images_does_not_enable_or_reactivate_plan",
+    "test_hub_resume_and_frozen_history_feedback_do_not_infer_answers",
+]
+regression_minor = [
+    "test_schema16_fixture_preserves_full_facts_on_copy_and_reopen",
+    "test_out_of_window_root_refused_before_any_write",
+    "test_oldest_retained_schema14_root_converts_unknown_facts",
+    "test_schema17_only_adds_storage_preserving_schema16_business_facts",
+    "test_migration_is_append_only_and_lifecycle_journal_immutable",
+    "test_fixture_root_covers_packaged_acceptance_scenarios",
+    "test_start_freezes_everything_and_requires_fresh_disclosure",
+    "test_overrides_custom_copy_and_catalog_upgrade_keep_originals",
+    "test_partial_finish_and_individual_retraction_keep_original_before_image",
+    "test_ui_save_stays_at_current_and_repeated_click_does_not_spill",
+    "test_invalid_selected_image_blocks_every_entry_without_erasing_review",
+    "test_failure_after_asset_publication_rolls_back_and_recovers",
+    "test_retained_rows_immutable_and_identity_hash_conflicts_rollback",
+    "test_family_cycles_rejected_without_overwriting_existing_versions",
+    "test_v2_file_import_retains_original_and_does_not_activate",
+    "test_export_is_portable_and_json_markdown_agree_after_catalog_replacement",
+    "test_ui_group_plan_creation_edit_cancel_and_confirmation",
+    "test_zero_free_dose_and_original_note_rendering_are_not_defaults",
+    "test_expansion_matches_frozen_contract",
+    "test_individual_outcomes_preserve_zero_unknown_and_verbatim",
+    "test_stale_navigation_and_second_writer_reject_round_and_results",
+    "test_finish_requires_all_results_and_terminal_results_are_immutable",
+    "test_open_session_blocks_root_switch_and_paused_root_stays_isolated",
+    "test_publisher_observation_root_reopen_retains_frozen_history",
+    "test_removed_entry_blocked_from_all_new_use_while_frozen_work_finishes",
+    "test_decision_flow_requires_source_time_and_explicit_confirmation",
+    "test_restore_picker_invalidates_previous_confirmation",
+]
 
 [tool.ruff]
 line-length = 100

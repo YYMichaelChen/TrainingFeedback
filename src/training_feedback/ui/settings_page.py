@@ -1,4 +1,4 @@
-"""设置页：数据目录信息、切换数据目录、打开目录、手动备份、导出全部训练证据。"""
+"""设置页：数据目录信息、切换数据目录、打开目录、手动备份。"""
 
 from pathlib import Path
 from typing import Callable
@@ -14,19 +14,17 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..app import ApplicationContext
 from ..data.backup import BackupError, create_backup
 from ..data.data_root import DataRootError
-from ..data.handoff import HandoffError, HandoffService
 from .data_root_dialog import DataRootDialog
 from .labels import user_message
 
 
 class SettingsPage(QWidget):
-    """设置页：数据目录、备份与证据导出。"""
+    """设置页：数据目录与备份。"""
     def __init__(
         self,
-        context: ApplicationContext,
+        context,
         backup_picker: Callable[[], str] | None = None,
         switch_request: Callable[[Path, bool], bool] | None = None,
         parent=None,
@@ -50,9 +48,6 @@ class SettingsPage(QWidget):
         backup_button = QPushButton("立即创建备份")
         backup_button.clicked.connect(self._create_backup)
         layout.addWidget(backup_button)
-        self.export_button = QPushButton("导出全部训练证据")
-        self.export_button.clicked.connect(self._export_evidence)
-        layout.addWidget(self.export_button)
         layout.addStretch()
 
     def _has_other_windows(self) -> bool:
@@ -107,17 +102,3 @@ class SettingsPage(QWidget):
             QMessageBox.information(
                 self, "备份完成", "完整的数据目录已成功备份。"
             )
-
-    def _export_evidence(self) -> None:
-        try:
-            json_path, markdown_path = HandoffService(
-                self.context.database.connection, self.context.data_root.path
-            ).export()
-        except (HandoffError, OSError) as exc:
-            QMessageBox.warning(self, "导出失败", user_message(str(exc)))
-            return
-        QMessageBox.information(
-            self,
-            "导出完成",
-            f"已生成 JSON 和 Markdown 证据：\n{json_path.name}\n{markdown_path.name}",
-        )

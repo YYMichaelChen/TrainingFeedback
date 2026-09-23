@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TrainingFeedback plan v2 — 070-A contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "schema_version", "rationale", "plan"],
+  "properties": {
+    "schema": {"const": "training_feedback.plan"},
+    "schema_version": {"type": "integer", "const": 2},
+    "rationale": {"$ref": "#/$defs/nonblank"},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "session_id": {"type": ["integer", "null"], "minimum": 1},
+        "export_id": {"type": ["integer", "null"], "minimum": 1}
+      }
+    },
+    "plan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "purpose", "days"],
+      "properties": {
+        "name": {"$ref": "#/$defs/nonblank"},
+        "target_plan_name": {"type": ["string", "null"]},
+        "purpose": {"type": "string"},
+        "days": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/day"}}
+      }
+    }
+  },
+  "$defs": {
+    "nonblank": {"type": "string", "pattern": "\\S"},
+    "key": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$", "not": {"pattern": "[\\r\\n]"}},
+    "order": {"type": "integer", "minimum": 1},
+    "seconds": {"type": "number", "minimum": 0},
+    "side": {"enum": ["left", "right", null]},
+    "phase": {"enum": ["preparation", "main", "cooldown"]},
+    "reference": {
+      "type": "object", "additionalProperties": false, "required": ["source", "key"],
+      "properties": {
+        "source": {"enum": ["bundled", "custom"]},
+        "key": {"$ref": "#/$defs/key"}
+      }
+    },
+    "content": {
+      "type": "object", "additionalProperties": false, "required": ["id", "version", "sha256"],
+      "properties": {
+        "id": {"$ref": "#/$defs/key"},
+        "version": {"type": "integer", "minimum": 1},
+        "sha256": {"type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "classification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["family_key", "variant_role", "variant_order", "parent_exercise_key", "starting_position_class"],
+      "properties": {
+        "family_key": {"oneOf": [{"$ref": "#/$defs/key"}, {"type": "null"}]},
+        "variant_role": {"enum": ["base", "variant", "standalone"]},
+        "variant_order": {"$ref": "#/$defs/order"},
+        "parent_exercise_key": {"oneOf": [{"$ref": "#/$defs/reference"}, {"type": "null"}]},
+        "starting_position_class": {
+          "enum": ["supine", "prone", "side_lying", "quadruped", "seated", "kneeling", "standing", "mixed", "unknown"]
+        }
+      },
+      "allOf": [{
+        "if": {"properties": {"variant_role": {"const": "standalone"}}},
+        "then": {"properties": {"family_key": {"type": "null"}, "parent_exercise_key": {"type": "null"}}},
+        "else": {"properties": {"family_key": {"$ref": "#/$defs/key"}}}
+      }]
+    },
+    "set": {
+      "type": "object", "additionalProperties": false,
+      "required": ["order", "value", "unit", "per_side", "note", "rest_after_set_seconds"],
+      "properties": {
+        "order": {"$ref": "#/$defs/order"},
+        "value": {"type": ["number", "null"], "minimum": 0},
+        "unit": {"enum": ["reps", "seconds", "minutes", "breaths", "free"]},
+        "per_side": {"type": "boolean"},
+        "note": {"type": "string"},
+        "rest_after_set_seconds": {"$ref": "#/$defs/seconds"}
+      },
+      "allOf": [{
+        "if": {"properties": {"value": {"type": "null"}}},
+        "then": {"properties": {"unit": {"const": "free"}, "note": {"$ref": "#/$defs/nonblank"}}}
+      }]
+    },
+    "member": {
+      "type": "object", "additionalProperties": false,
+      "required": ["item_id", "order", "exercise", "exercise_name", "content", "classification", "sets", "rest_after_member_seconds", "note"],
+      "properties": {
+        "item_id": {"$ref": "#/$defs/key"},
+        "order": {"$ref": "#/$defs/order"},
+        "exercise": {"$ref": "#/$defs/reference"},
+        "exercise_name": {"$ref": "#/$defs/nonblank"},
+        "content": {"$ref": "#/$defs/content"},
+        "classification": {"$ref": "#/$defs/classification"},
+        "sets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/set"}},
+        "rest_after_member_seconds": {"$ref": "#/$defs/seconds"},
+        "note": {"type": "string"}
+      }
+    },
+    "action": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "item_id", "order", "phase", "exercise", "exercise_name", "content", "classification", "sets", "first_side", "rest_between_sides_seconds", "rest_after_action_seconds", "note"],
+      "properties": {
+        "kind": {"const": "action"},
+        "item_id": {"$ref": "#/$defs/key"},
+        "order": {"$ref": "#/$defs/order"},
+        "phase": {"$ref": "#/$defs/phase"},
+        "exercise": {"$ref": "#/$defs/reference"},
+        "exercise_name": {"$ref": "#/$defs/nonblank"},
+        "content": {"$ref": "#/$defs/content"},
+        "classification": {"$ref": "#/$defs/classification"},
+        "sets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/set"}},
+        "first_side": {"$ref": "#/$defs/side"},
+        "rest_between_sides_seconds": {"$ref": "#/$defs/seconds"},
+        "rest_after_action_seconds": {"$ref": "#/$defs/seconds"},
+        "note": {"type": "string"}
+      }
+    },
+    "group": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "item_id", "order", "name", "phase", "round_count", "side_sequence", "first_side", "transition", "rest_between_sides_seconds", "rest_between_rounds_seconds", "rest_after_group_seconds", "members", "note"],
+      "properties": {
+        "kind": {"const": "group"},
+        "item_id": {"$ref": "#/$defs/key"},
+        "order": {"$ref": "#/$defs/order"},
+        "name": {"$ref": "#/$defs/nonblank"},
+        "phase": {"$ref": "#/$defs/phase"},
+        "round_count": {"type": "integer", "minimum": 1},
+        "side_sequence": {"enum": ["member_each_side", "same_side_then_switch", "all_rounds_then_switch"]},
+        "first_side": {"$ref": "#/$defs/side"},
+        "transition": {"type": "string"},
+        "rest_between_sides_seconds": {"$ref": "#/$defs/seconds"},
+        "rest_between_rounds_seconds": {"$ref": "#/$defs/seconds"},
+        "rest_after_group_seconds": {"$ref": "#/$defs/seconds"},
+        "members": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/member"}},
+        "note": {"type": "string"}
+      },
+      "allOf": [{
+        "if": {"properties": {"side_sequence": {"enum": ["same_side_then_switch", "all_rounds_then_switch"]}}},
+        "then": {"properties": {
+          "first_side": {"enum": ["left", "right"]},
+          "members": {"items": {"properties": {"sets": {"items": {"properties": {"per_side": {"const": true}}}}}}}
+        }}
+      }]
+    },
+    "day": {
+      "type": "object", "additionalProperties": false, "required": ["order", "name", "items"],
+      "properties": {
+        "order": {"$ref": "#/$defs/order"},
+        "name": {"$ref": "#/$defs/nonblank"},
+        "items": {
+          "type": "array", "minItems": 1,
+          "items": {"oneOf": [{"$ref": "#/$defs/action"}, {"$ref": "#/$defs/group"}]}
+        }
+      }
+    }
+  }
+}

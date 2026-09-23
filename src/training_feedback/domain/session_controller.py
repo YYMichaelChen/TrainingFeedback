@@ -2,119 +2,85 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date
 
-from .clock import Clock
-from .enums import AbortReason, ExerciseResult, SessionStatus
-from .models import ActualSet, SessionActionResult
-from .training import is_active_session
+class GroupSessionController:
+    """Own displayed occurrence and unfinished state through optimistic service commands."""
 
+    def __init__(self, service):
+        self.service = service
+        self.session = None
 
-@dataclass
-class SessionController:
-    sessions: object
-    plans: object
-    exercises: object
-    clock: Clock
-    session: dict | None = None
-
-    def start(self, plan_id: int, day_order: int | None = None) -> dict:
-        plan = self.plans.get_plan(plan_id)
-        if plan is None:
-            raise ValueError("Plan was not found.")
-        revision_id = plan.get("active_revision_id")
-        if revision_id is None:
-            raise ValueError("An active plan revision is required to start training.")
-        revision = self.plans.get_revision(plan_id, revision_id)
-        session_id = self.sessions.create_from_plan(
-            revision, self.exercises, self.clock.today(), self.clock.now(), day_order
-        )
-        self.session = self.sessions.get(session_id)
+    def start(self, revision_id, day_order, *, expected_preview, user_confirmed):
+        self.session = self.service.start(revision_id, day_order,
+                                          expected_preview=expected_preview,
+                                          user_confirmed=user_confirmed)
         return self.session
 
-    def resume(self, session_id: int | None = None) -> dict:
-        session = (
-            self.sessions.get(session_id)
-            if session_id is not None
-            else self.sessions.get_active()
-        )
-        if session is None:
+    def resume(self, identifier=None):
+        saved = self.service.active() if identifier is None else self.service.get(identifier)
+        if saved is None:
             raise ValueError("No open or paused session was found.")
-        if not is_active_session(session["status"]):
-            raise ValueError("Only open or paused sessions can be resumed.")
-        if session["status"] == SessionStatus.PAUSED:
-            self.sessions.resume(session["id"], self.clock.now())
-            session = self.sessions.get(session["id"])
-        self.session = session
-        return session
+        self.session = self.service.resume(saved["id"], expected_version=saved["version"])
+        return self.session
 
-    def first_unfinished_index(self) -> int:
-        """第一个未记录结果的动作下标；全部完成时返回最后一项（供 UI 定位展示）。"""
-        if self.session is None:
-            raise RuntimeError("No session is loaded.")
-        return next(
-            (
-                index
-                for index, action in enumerate(self.session["actions"])
-                if action["result"] is None
-            ),
-            len(self.session["actions"]) - 1,
-        )
+    def reload(self):
+        self.session = self.service.get(self.session["id"])
+        return self.session
 
     @property
-    def training_date(self) -> date:
-        if self.session is None:
-            raise RuntimeError("No session is loaded.")
-        return date.fromisoformat(self.session["training_date"])
+    def current(self):
+        return self.session["occurrences"][self.session["position"]]
 
-    def record_result(
-        self,
-        action_id: int,
-        result: ExerciseResult,
-        actual_values: tuple[float | None, ...] = (),
-        note: str = "",
-        actual_sets: tuple[ActualSet, ...] = (),
-    ) -> dict:
-        if self.session is None:
-            raise RuntimeError("No session is loaded.")
-        self.sessions.record_action_result(
-            self.session["id"],
-            action_id,
-            SessionActionResult(result, actual_values, note, actual_sets),
-            self.clock.now(),
-        )
-        self.session = self.sessions.get(self.session["id"])
+    @property
+    def next_occurrence(self):
+        position = self.session["position"] + 1
+        rows = self.session["occurrences"]
+        return rows[position] if position < len(rows) else None
+
+    @property
+    def unfinished(self):
+        return [row for row in self.session["occurrences"] if row["result"] is None]
+
+    def _command(self, method, *args, **kwargs):
+        self.session = method(self.session["id"], *args,
+                              expected_version=self.session["version"], **kwargs)
         return self.session
 
-    def retract_result(self, action_id: int) -> dict:
-        if self.session is None:
-            raise RuntimeError("No session is loaded.")
-        self.sessions.retract_action_result(self.session["id"], action_id, self.clock.now())
-        self.session = self.sessions.get(self.session["id"])
+    def navigate(self, position):
+        return self._command(self.service.navigate, position)
+
+    def next_unfinished(self):
+        rows = self.unfinished
+        if rows:
+            following = next((row for row in rows if row["position"] > self.session["position"]),
+                             rows[0])
+            return self.navigate(following["position"])
         return self.session
 
-    def pause(self) -> dict:
-        return self._change_status(SessionStatus.PAUSED)
+    def record(self, result, *, actual=(), note=""):
+        return self._command(self.service.record, self.current["id"], result,
+                             actual=actual, note=note)
 
-    def abort(self, reason: AbortReason, note: str = "") -> dict:
-        return self._change_status(SessionStatus.ABORTED, reason, note)
+    def preview_round(self):
+        return self.service.preview_round(self.session["id"])
 
-    def finish(self) -> dict:
-        if self.session is None:
-            raise RuntimeError("No session is loaded.")
-        self.sessions.finish(self.session["id"], self.clock.now())
-        self.session = self.sessions.get(self.session["id"])
+    def complete_round(self, preview, *, user_confirmed):
+        self.session = self.service.complete_round(self.session["id"],
+                                                   expected_preview=preview["token"],
+                                                   user_confirmed=user_confirmed)
         return self.session
 
-    def _change_status(
-        self,
-        status: SessionStatus,
-        reason: AbortReason | None = None,
-        note: str | None = None,
-    ) -> dict:
-        if self.session is None:
-            raise RuntimeError("No session is loaded.")
-        self.sessions.change_status(self.session["id"], status, self.clock.now(), reason, note)
-        self.session = self.sessions.get(self.session["id"])
-        return self.session
+    def retract(self, *, user_confirmed):
+        row = self.current
+        target = {"batch_id": row["batch_id"]} if row["batch_id"] is not None else {
+            "occurrence_id": row["id"]}
+        return self._command(self.service.retract, user_confirmed=user_confirmed, **target)
+
+    def pause(self):
+        return self._command(self.service.pause)
+
+    def abort(self, reason, note, *, user_confirmed):
+        return self._command(self.service.abort, reason, note, user_confirmed=user_confirmed)
+
+    def finish(self, *, user_confirmed):
+        return self._command(self.service.finish, user_confirmed=user_confirmed)

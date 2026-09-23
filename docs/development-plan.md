@@ -1,16 +1,16 @@
 # TrainingFeedback Development Plan
 
-Status: development stage; 0.7.0 / schema 22 local candidate; 070-A–G complete;
-070-H and release acceptance open; three-version policy implementation pending\
-Last updated: 2026-09-21
+Status: development stage; 0.7.0 / schema22; A–G, R1/R2 and 36 illustrations delivered;
+four local-release closeout tasks open; public-release acceptance deferred\
+Last updated: 2026-09-23
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
 seed content and proposed doses. Use these entry points:
 
 - [Product rules and current baseline](#1-product-goal): Sections 1–8.
-- [Open delivery work](#9-open-delivery-work): review, W4 and packaging gates.
-- [First usable release](#10-first-usable-release-definition): completion criteria.
+- [Open delivery work](#9-open-delivery-work): local release tasks and separate follow-ups.
+- [First usable release](#10-first-usable-release-definition): local completion and public-release boundaries.
 - [Current catalog/group contract](#12-current-catalog-and-group-contract):
   ownership, eligibility, execution, removal and supported-root conversion.
 - [Version and development-data policy](#13-version-retention-and-development-data-policy):
@@ -565,27 +565,48 @@ cover 01:59, 02:00, and 02:01.
 
 ### 9.1 Current Baseline
 
-Current source and local directory candidate are **0.7.0 / schema 22**.
-070-A–G implementation is complete; detailed deliveries live in the
-[0.7.0 history](history/0.7.0/development.md). 070-H remains open. The catalog is
-`070-baseline-1`: 36 unreviewed entries, no actual bundled illustrations, and a
-13-action initial-plan proposal. This is development, not a personal-data launch.
-The user decides when that transition occurs; old local approvals and simulations
-do not establish approval of the current catalog or a personal baseline.
+Current working source is **0.7.0 / schema22**, with plan/evidence v2.
+070-A–G, frozen-baseline repair R1 and version-window implementation R2 are complete;
+dated evidence lives in the [0.7.0 history](history/0.7.0/development.md).
+The current catalog is `070-illustrated-2`: 36 unreviewed entries with 36 technically
+valid bundled illustrations. Four video-informed guidance changes and the 36 images
+were delivered on 2026-09-22; the two bridge revisions were delivered on 2026-09-23.
+The 13-action initial plan remains a proposal.
 
-The [dated release review](release-readiness-0.7.0.md) records candidate evidence
-and the cleanup sequence. Required open work:
+The directory candidate in `dist/` is the older 2026-09-20 build; the available
+installer is still 0.6.1. Neither is evidence that current source content has been
+packaged. The current `070-illustrated-2` source catalog has not yet been packaged.
 
-| ID | Next action | Completion evidence |
+**Release decision, 2026-09-23:** local release requires only the four active tasks
+below. Independent Windows acceptance (070-H3/8-B2) and public-distribution
+requirements become gates only when the user explicitly requests a public release.
+W4 and external content review remain separate follow-ups and do not block local
+release. Deferred/not-run work is not passed work. Local publication does not
+authorize a personal-data transition, create review facts or activate a plan.
+
+This is the single active product work list; the [release execution plan](release-readiness-0.7.0.md)
+owns dependency order, scopes, commands, deliverables and acceptance evidence.
+
+| ID / status | Next action | Completion evidence |
 | --- | --- | --- |
-| 070-R1 — Reproducible source | Track the frozen synthetic DB explicitly and protect fixture bytes from Git newline filters; capture the complete source state. | Clean-checkout fixture/hash validation and a reproducible candidate identity. |
-| 070-R2 — Version support window | Enforce Section 13: accepted version/schema map, too-old rejection, current fresh initialization and only necessary migration paths. Replace out-of-window positive fixtures with rejection coverage. | Fresh create; 0.6.0/schema14 and 0.6.1/schema16 supported upgrades; too-old/future roots unchanged; restart/failure preservation. **Implemented 2026-09-21**: schema-14 lower-bound guard at `inspect_existing`/`apply_migrations`, Section 13.2 refusal message, schema 1/9/13 rejection and schema14 conversion coverage (dev scope 070-R2, 27/27). Candidate-level re-verification remains with 070-H2. |
-| 070-H1 — Built-in content | Deliver revised bridge definitions/aliases and real illustrations, prioritizing the initial 13 references; rebuild the catalog and classify all 36 entries. | Current content/image version/hash inventory; usable actions satisfy Section 12.4; actual review remains separately evidenced. |
-| 070-H2 — Candidate and installer | Commit the reviewed source, run the minor release selection, build the installer with the pinned toolchain and retain manifests. | Candidate-specific regression, payload hashes and actual installation evidence. Inno Setup is present; installer execution is pending. |
-| 070-H3 — Independent Windows | Execute the packaged runbook on an independent ordinary-user Windows machine/VM. | Passing supported upgrades, recovery, backup/reopen, uninstall isolation and 100/125/150% desktop checks. All 12 scenario rows currently not run. |
-| DEV-CLEAN — Workspace retention | Apply the three-version inventory after preserving development content and required evidence; remove redundant generated files and expired material. | Version/file/hash inventory, no missing supported fixtures/evidence, reduced workspace and reviewed Git changes. |
-| PERSONAL — User-directed transition | Await explicit user readiness, then establish a personal root/content baseline and confirm a complete plan. | User decision, deliberate content transfer and explicit plan activation; no synthetic facts promoted to personal evidence. |
-| W4 — Real-use refinement | After PERSONAL and applicable checks, record at least three real sessions, feedback and one expert revision cycle. | Genuine IDs/feedback/rationale, imported draft, reviewed diff, activation and unchanged history. |
+| 070-H1-CONTENT — complete, 2026-09-23 | Added the bridge three-second hold and two aliases; advanced only the two affected entries to v4 and rebuilt catalog070-illustrated-2. | Dev scope 3/30 passed; alias identity/search, unchanged other 34 entries and all image bytes, preserved history, 36-image integrity and reproducible catalog verified. |
+| 070-H2-TESTS — complete, 2026-09-23 | Repaired the minor selection and separated frozen historical validation from current catalog verification; retired the obsolete generator. | Default collection succeeds; dev 5/30 and release minor 77/100 unique cases passed; frozen inputs stayed unchanged and target static checks passed. |
+| 070-H2-SOURCE — complete, 2026-09-24 | Reviewed all current additions/deletions, completed documentation cleanup, preserved the old candidate and committed the complete source. | Clean 218-file archive imported all 67 modules, preserved 14 frozen files, verified 36 image pairs and reproduced all 38 catalog files byte-for-byte; no local/user data entered source. |
+| 070-H2-PACKAGE — pending | Build directory and Setup with the pinned toolchain; verify hashes and installed behavior on this machine using isolated data. | Complete payload/installer manifests and passing local packaged checks for that exact build. |
+
+Separate follow-ups:
+
+| ID / status | Trigger and required evidence |
+| --- | --- |
+| 070-H3 / 8-B2 — deferred, not run | Explicit user request for public release; independent Windows, actual retained-binary upgrades, recovery/backup/uninstall and full scaling matrix. All 12 public scenarios remain not run. |
+| CONTENT-REVIEW — not completed | A separately requested real review of exact content/image versions, with original answers and actual source/time. Valid images alone are not review. |
+| PERSONAL — user-directed | Explicit transition decision, deliberate personal root/content baseline and complete plan confirmation; no synthetic facts promoted. |
+| W4 — not completed | After PERSONAL and applicable local checks, at least three real sessions, feedback and a genuine expert revision cycle with unchanged history. |
+
+R1/R2 are completed prerequisites, not new implementation tasks. Candidate-source
+supported-upgrade and refusal regression completed in 070-H2-TESTS; actual old-binary
+packaged acceptance is deferred with H3. Three-version retention is ongoing policy;
+the 2026-09-21 cleanup and 070-H2-SOURCE evidence housekeeping are completed history.
 
 ### 9.2 W4 Real-Use Gate
 
@@ -593,8 +614,9 @@ W4 begins only after the user authorizes the personal-data transition in Section
 13.3. Required actions must have complete text and valid images, be explicitly
 enabled, and belong to a fully confirmed active plan; applicable local program
 checks must pass. Unreviewed guidance is disclosed and frozen in session evidence.
-The independent gate remains mandatory for formal release even if the user elects
-to start personal observation earlier. No current personal-use readiness is assumed.
+W4 and external content review are independent follow-ups, not local-release gates
+(decision 2026-09-23). H3 is deferred until an explicit public-release request;
+starting personal observation does not pass H3. No personal-use readiness is assumed.
 
 Use the [guidance review runbook](guidance-review-runbook.md) for review and W4
 templates. Record binary identity, plan/guidance versions, real session IDs and
@@ -609,14 +631,14 @@ local software checks cannot close this gate or establish full content review.
 
 ### 9.3 Independent Windows Gate (8-B2)
 
-Complete this gate before broader distribution, adding users or formal release
-acceptance. The [packaged acceptance runbook](packaged-acceptance-runbook.md)
-owns the current candidate's scenarios and evidence forms; superseded 0.6.x
-procedures are versioned archive material, not current upgrade instructions.
-Reuse the build tooling, manifests and synthetic fixtures, refreshing transfer
-inputs when the gate starts.
+**Deferred / not run; not a local-release blocker.** Re-enable this gate only when
+the user explicitly requests a public release, then complete it before public
+publication. Local packaging or installation does not trigger it automatically.
+The [packaged acceptance runbook](packaged-acceptance-runbook.md) retains the public
+scenarios and evidence forms. Superseded 0.6.x procedures are historical material.
+Refresh candidate identities, retained binaries and transfer fixtures when enabled.
 
-Required coverage:
+Required public-release coverage:
 
 - Independent Windows x64 VM or machine without Python, Conda, source checkout
   or access to the build environment; a new build-machine account is insufficient.
@@ -695,7 +717,8 @@ an archive does not exempt it from expiry.
 
 ## 10. First Usable Release Definition
 
-The first usable release is complete when a user can:
+For the current development stage, the first usable **local release** must support
+these capabilities, demonstrated with isolated synthetic inputs where appropriate:
 
 - choose a data directory;
 - back up the complete data root and switch to another valid root;
@@ -712,9 +735,16 @@ The first usable release is complete when a user can:
 - confirm a revised plan without losing the previous plan;
 - run the packaged Windows application without Streamlit or the old project.
 
-The release also requires reviewed exercise-specific seed guidance and the
-W4 real-use and 8-B2 packaging/recovery acceptance in Section 9. A package
-version number alone does not establish release readiness.
+Local-release completion requires the four tasks in Section 9.1, including valid
+bundled images, final-source regression, reproducible source and installed local
+checks. The current plan remains a proposal; unreviewed guidance is disclosed and
+all existing selection/activation rules remain in force.
+
+External content review and W4 remain separate unfinished follow-ups. Neither blocks
+local release. Independent 8-B2 and public-distribution requirements apply only after
+the user's explicit public-release request. A local-release result must identify the
+exact build and these evidence limits; it does not claim public acceptance, expert
+approval or a personal-data launch.
 
 ## 11. Deferred Decisions
 
@@ -1146,9 +1176,11 @@ not additional pending development plans. The [contract annex](contracts/0.7.0-c
 owns detailed current serialization/mapping. Changes to backup, root switching,
 fixtures, resources and current imports must be covered in their implementing task.
 
-Required verification covers:
+Verification is split by the release boundary in Section 9.1. Local regression
+covers the retained synthetic fixtures and the risks below. Actual old-binary
+baselines and independent desktop execution belong to deferred H3.
 
-- Supported baselines generated/opened by actual 0.6.0/schema-14 and
+- For public H3: supported baselines generated/opened by actual 0.6.0/schema-14 and
   0.6.1/schema-16 programs, using
   isolated synthetic data with renamed/missing-key actions,
   custom text, overrides, images, review attachments, active/draft plans,
@@ -1172,30 +1204,31 @@ Required verification covers:
 Use PowerShell 7 and temporary roots/locators. Run meaningful affected tests
 within Section 9.4's stage budget (each 070 work item is development, the 0.7.0
 release is minor), Ruff and `git diff --check` for implementation delivery.
-Run packaging checks when the payload/fixtures change. The packaged
-runbook must identify the 0.7.0 candidate and actual target schema, including
-ordinary-user in-place installation, auto-conversion, backup/reopen, uninstall
-data isolation, Chinese/space-containing paths and 100/125/150% real-desktop
-scaling. Existing independent-environment requirements still apply.
+Run packaging checks when the payload/fixtures change. The packaged runbook must
+identify the candidate/schema/catalog and distinguish required local installed
+checks from deferred public H3. Local checks cover clean launch/cancellation,
+Chinese/space paths, current catalog/images/aliases, restart and a representative
+group/pause/resume workflow with isolated data. Actual retained-binary upgrades,
+independent backup/recovery/uninstall acceptance and the full 100/125/150% matrix
+become required only for an explicitly requested public release.
 
 ### 12.10 Release Exit And Documentation Ownership
 
-0.7.0 is ready only when all 070 work items pass their acceptance, the current
-image/content inventory is explicit, and the initial usable plan's referenced
-actions have actual bundled illustrations and satisfy the new rules. All 36
-catalog entries must retain their identity and classified readiness; items
-without finished illustrations remain visible drafts and cannot be advertised
-as usable. Source prompts, filename mappings and synthetic images are not
-delivered artwork or real expert review. Actual content review and first-usable
-release evidence remain subject to Section 10; do not reinterpret the retained
-unreviewed-with-valid-images option as completed review coverage.
+0.7.0 local release is ready when the four ordered tasks in Section 9.1 pass their
+acceptance. The current content/image inventory must be explicit: all 36 entries
+retain stable identities and truthful readiness, and usable actions meet Section
+12.4. The 36 delivered illustrations and completed bridge revisions do not establish
+expert review. 070-H1-CONTENT is complete; tests, source freeze and packaging remain.
+
+Keep local-release, external-review, personal-use and W4 results distinct.
+Independent 8-B2 is deferred/not run and is activated only by an explicit public
+release request. It is not a prerequisite for local packaging or local release.
 
 No supported-upgrade success claim may rely on a reset root, manual re-import,
-compatibility settings, changed historic doses or a previous candidate's acceptance.
-Verify clean first use, supported upgrades and unchanged rejection of expired roots.
-Record application/catalog/schema identities and unresolved gates for the exact build.
-Independent 8-B2 remains pending. The user's future decision to begin personal
-observation does not establish technical acceptance of the candidate.
+compatibility settings, changed historical doses or an earlier build's acceptance.
+Source regression covers supported synthetic upgrades and unchanged rejection of
+expired/future roots. Local installed checks and later public acceptance record
+their own actual scope and candidate identity.
 
 This document owns product/architecture/migration contracts. The content
 document owns family membership, aliases, technique and proposed doses. The

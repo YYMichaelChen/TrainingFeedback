@@ -5,6 +5,8 @@ import pytest
 from PySide6.QtCore import QEvent
 from PySide6.QtWidgets import QApplication
 
+pytest_plugins = ["budget_plugin"]
+
 
 @pytest.fixture(scope="session")
 def qt_app():

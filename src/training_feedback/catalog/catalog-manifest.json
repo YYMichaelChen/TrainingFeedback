@@ -1,0 +1,410 @@
+{
+  "application": "TrainingFeedback",
+  "format_version": 1,
+  "catalog_version": "070-illustrated-2",
+  "contents": [
+    {
+      "key": "launch.glute-bridge",
+      "id": "training-feedback.launch.glute-bridge.zh-CN",
+      "version": 4,
+      "sha256": "93e75191886da45e85b945047faf73c24ee4fbbacea8ed1ce46805a2d5cdb3e7"
+    },
+    {
+      "key": "launch.clamshell",
+      "id": "training-feedback.launch.clamshell.zh-CN",
+      "version": 3,
+      "sha256": "6c23dc273c94d62fd9f260af5efac770a52e33292a9f35db78e7265a7d562e6c"
+    },
+    {
+      "key": "launch.chair-squat",
+      "id": "training-feedback.launch.chair-squat.zh-CN",
+      "version": 3,
+      "sha256": "4a31004053a659bceb3a5c5cae55e1d6ee32412d7d52b08ce3ec006a2f916ee9"
+    },
+    {
+      "key": "launch.dead-bug",
+      "id": "training-feedback.launch.dead-bug.zh-CN",
+      "version": 3,
+      "sha256": "f0ff327f0d89a35d03509f7b2b4ce95207d72d44a1ad77cafe58919b6b8270b6"
+    },
+    {
+      "key": "launch.butterfly-glute-bridge",
+      "id": "training-feedback.launch.butterfly-glute-bridge.zh-CN",
+      "version": 4,
+      "sha256": "8966e044ddc9193a665db84d97ac570d3c25e4ed980478df493e966dce68fac3"
+    },
+    {
+      "key": "main.supine-straight-leg-open-close",
+      "id": "training-feedback.main.supine-straight-leg-open-close.zh-CN",
+      "version": 3,
+      "sha256": "b9a7e91198ec406e0131338f73802528f9afae8f4733ba97646b48b80701272a"
+    },
+    {
+      "key": "main.crunch-leg-extension",
+      "id": "training-feedback.main.crunch-leg-extension.zh-CN",
+      "version": 3,
+      "sha256": "314b980ed0527010881ca97c1ff01846f2ebc822594ccffaa5fb4b994f858942"
+    },
+    {
+      "key": "main.crunch-leg-extension-bicycle",
+      "id": "training-feedback.main.crunch-leg-extension-bicycle.zh-CN",
+      "version": 3,
+      "sha256": "8c7e0abcfededf8e837ca233aa31608cd1a970ee490e07a5dbcdb40b730847d4"
+    },
+    {
+      "key": "main.crunch-leg-extension-lateral",
+      "id": "training-feedback.main.crunch-leg-extension-lateral.zh-CN",
+      "version": 3,
+      "sha256": "e397bca8c3e2b77331e3270de00013244783087de526a6d59930063424846aff"
+    },
+    {
+      "key": "main.crunch-leg-extension-combination",
+      "id": "training-feedback.main.crunch-leg-extension-combination.zh-CN",
+      "version": 3,
+      "sha256": "5d48b47c22193105d4c73d70e8b59fc5349e7f7e1e1a686b9666d27485a9c719"
+    },
+    {
+      "key": "main.glute-bridge-leg-open-close",
+      "id": "training-feedback.main.glute-bridge-leg-open-close.zh-CN",
+      "version": 3,
+      "sha256": "0a2b09a5ecf0a928b4cb5c550dbb5ff0a4c80adb727cbc02a0e54d5563dfdd40"
+    },
+    {
+      "key": "launch.kneeling-hip-thrust",
+      "id": "training-feedback.launch.kneeling-hip-thrust.zh-CN",
+      "version": 3,
+      "sha256": "62b1fc7592cf7ba240e26e6df15941367c979253183620dab584751b6113f098"
+    },
+    {
+      "key": "launch.static-glute-bridge",
+      "id": "training-feedback.launch.static-glute-bridge.zh-CN",
+      "version": 3,
+      "sha256": "61dc4679321c201fcc4dd2741b79cb469b5c867ee2addec545078475eca62dd7"
+    },
+    {
+      "key": "launch.supine-360-diaphragmatic-breathing",
+      "id": "training-feedback.launch.supine-360-diaphragmatic-breathing.zh-CN",
+      "version": 3,
+      "sha256": "00acf462cacf7a2fe541c9a6080291dff92749ea0792ca7d55b1da14359f1caf"
+    },
+    {
+      "key": "launch.small-cat-cow",
+      "id": "training-feedback.launch.small-cat-cow.zh-CN",
+      "version": 3,
+      "sha256": "a9f1a32d5dd98c6f41706004013f66f8133f9d5fcebf744d65e7e5575f08ffef"
+    },
+    {
+      "key": "launch.seated-90-90-hip-switch",
+      "id": "training-feedback.launch.seated-90-90-hip-switch.zh-CN",
+      "version": 4,
+      "sha256": "daeca71750650f41d4dc3e8278d171b29d7ecd872641072ad7b75d35aef2cdc0"
+    },
+    {
+      "key": "launch.butterfly-stretch",
+      "id": "training-feedback.launch.butterfly-stretch.zh-CN",
+      "version": 2,
+      "sha256": "a899415518426a6869fa5162f26009f337f4e5dd64da88c099e37474a2e8722c"
+    },
+    {
+      "key": "launch.supine-figure-four-stretch",
+      "id": "training-feedback.launch.supine-figure-four-stretch.zh-CN",
+      "version": 4,
+      "sha256": "048e2af2178a160155be7dab35c3d1118ef60c7a7558ae38865b63ef4f85f18a"
+    },
+    {
+      "key": "launch.half-kneeling-hip-flexor-stretch",
+      "id": "training-feedback.launch.half-kneeling-hip-flexor-stretch.zh-CN",
+      "version": 3,
+      "sha256": "31a133089fddd32da8fa7160e2791c7c80ba530c523015e64bc5cfbb596dc65e"
+    },
+    {
+      "key": "launch.standing-forward-fold",
+      "id": "training-feedback.launch.standing-forward-fold.zh-CN",
+      "version": 5,
+      "sha256": "3a5a41d6ca91e648fe4fc7ba5a48dc9547c44c32029e4ff68ff7187a47af5a76"
+    },
+    {
+      "key": "support.wall-calf-stretch",
+      "id": "training-feedback.support.wall-calf-stretch.zh-CN",
+      "version": 3,
+      "sha256": "7a4b5a1a6ab73e673708c9d74537e7528f9ee19e65a51b490614ad595169554b"
+    },
+    {
+      "key": "support.supine-single-knee-to-chest",
+      "id": "training-feedback.support.supine-single-knee-to-chest.zh-CN",
+      "version": 4,
+      "sha256": "691dc8ab0a44f4dbfdba2605d5fa558a3d038d0adf8c5eef756b8fbf73fdf717"
+    },
+    {
+      "key": "main.wall-supported-calf-raise",
+      "id": "training-feedback.main.wall-supported-calf-raise.zh-CN",
+      "version": 2,
+      "sha256": "ac83ed7d053a7e595e16d8f824e36fcc100de5e680730de4267b9f25a442ad8a"
+    },
+    {
+      "key": "main.bird-dog",
+      "id": "training-feedback.main.bird-dog.zh-CN",
+      "version": 2,
+      "sha256": "3d7de23244a8fc49a3eec37bbe63c6e5c15db0b1d583b61596766667bb6c1620"
+    },
+    {
+      "key": "main.kneeling-straight-arm-lean",
+      "id": "training-feedback.main.kneeling-straight-arm-lean.zh-CN",
+      "version": 3,
+      "sha256": "dae5191a020b062d2d449e8302772f380d162807ef7ba6b7e096bd154b9db385"
+    },
+    {
+      "key": "support.seated-upper-back-stretch",
+      "id": "training-feedback.support.seated-upper-back-stretch.zh-CN",
+      "version": 3,
+      "sha256": "17b83074db05765051dcbdcfea343c39e8cfc84da0ec7e71e346433d70450e79"
+    },
+    {
+      "key": "main.glute-bridge-single-leg-kick",
+      "id": "training-feedback.main.glute-bridge-single-leg-kick.zh-CN",
+      "version": 2,
+      "sha256": "50c98634cf3eb2c1829d92c6fcbfafcbb66a21dc993b5244dd7e3895dcd5d05e"
+    },
+    {
+      "key": "main.single-leg-glute-bridge",
+      "id": "training-feedback.main.single-leg-glute-bridge.zh-CN",
+      "version": 2,
+      "sha256": "95d5e6db61b66ff76053a66cf7a597d81fbe725ce77b705fcf21f8e9fd765934"
+    },
+    {
+      "key": "main.quadruped-straight-leg-kickback",
+      "id": "training-feedback.main.quadruped-straight-leg-kickback.zh-CN",
+      "version": 4,
+      "sha256": "5b47853278807183bda8491cc1ef70db695d8ec1f6051938013e4d43658986c3"
+    },
+    {
+      "key": "main.donkey-kick",
+      "id": "training-feedback.main.donkey-kick.zh-CN",
+      "version": 2,
+      "sha256": "5ac60fb41b82b4621d06a7a17e6f6c1bd1bb57267dc1792b33459012501a5b91"
+    },
+    {
+      "key": "main.donkey-kick-pulse",
+      "id": "training-feedback.main.donkey-kick-pulse.zh-CN",
+      "version": 3,
+      "sha256": "5fe4ef721d9e5b544627f33501a732f1e8331610719dfca80930e3ea69b5eb84"
+    },
+    {
+      "key": "main.diagonal-donkey-kick",
+      "id": "training-feedback.main.diagonal-donkey-kick.zh-CN",
+      "version": 2,
+      "sha256": "9bf58a0bbeef3029ea51a4ed5d3a7fb06a3d6695b1df9de91e212b4ceaff2116"
+    },
+    {
+      "key": "main.fire-hydrant",
+      "id": "training-feedback.main.fire-hydrant.zh-CN",
+      "version": 2,
+      "sha256": "24d6b7d8b184ff5e610b17ea0b6ccfb016635917a4143a150c61807f6732fd57"
+    },
+    {
+      "key": "main.prone-straight-leg-raise",
+      "id": "training-feedback.main.prone-straight-leg-raise.zh-CN",
+      "version": 3,
+      "sha256": "e845397de8e577a5f693c6977487a8ea83a25bcf3de753e2a845f9bb3bc7b5e3"
+    },
+    {
+      "key": "main.prone-bent-knee-leg-raise",
+      "id": "training-feedback.main.prone-bent-knee-leg-raise.zh-CN",
+      "version": 3,
+      "sha256": "670008a55794b9a6c6324623994da845f06c3edc9eab3713c1af81d4b39ed640"
+    },
+    {
+      "key": "main.prone-double-bent-knee-leg-raise",
+      "id": "training-feedback.main.prone-double-bent-knee-leg-raise.zh-CN",
+      "version": 2,
+      "sha256": "379e115a6b1a2f85c8edaf8e6cb802142a70cd91022b9a96c0a6476b85c5f6b6"
+    }
+  ],
+  "files": [
+    {
+      "path": "catalog.sqlite3",
+      "bytes": 172032,
+      "sha256": "a551721131cd1b78050049b664bd943d5db044dbb9097ebd233df4dc904df3eb"
+    },
+    {
+      "path": "images/01-glute-bridge.png",
+      "bytes": 1432314,
+      "sha256": "129b7bb055cbc6e87f01f1ed1518bf1bae6ebbe6325912a19bccabdd4792e976"
+    },
+    {
+      "path": "images/02-clamshell.png",
+      "bytes": 1501084,
+      "sha256": "376bf8142c8e81253bdb2d5eebeb338dfaa0932367c63e424cab6136b013f62e"
+    },
+    {
+      "path": "images/03-chair-squat.png",
+      "bytes": 1335802,
+      "sha256": "461b4bbbf3369a4e4c08d4471275f4319371360500b96a13bd767ebd4a0dc065"
+    },
+    {
+      "path": "images/04-dead-bug.png",
+      "bytes": 1264522,
+      "sha256": "2d5971e1b36568ea627b5015fa8fbf6e94979cd22dc14a3faddd954e40ca2bc7"
+    },
+    {
+      "path": "images/05-frog-bridge.png",
+      "bytes": 1481488,
+      "sha256": "0415359bde758dd1e50506102d30ce5b631fecb88561435224fb0b0e62a63808"
+    },
+    {
+      "path": "images/06-kneeling-hip-thrust.png",
+      "bytes": 1334817,
+      "sha256": "2556c2ce1ff92e26ab85a087091187be3f46a54779f1c0d673e679ef7da8fce6"
+    },
+    {
+      "path": "images/07-isometric-glute-bridge.png",
+      "bytes": 1428327,
+      "sha256": "05882e1b638400e2ddce4a4da7f9b89a50a0fea8d0e056c3397c712de8c192ae"
+    },
+    {
+      "path": "images/08-supine-360-breathing.png",
+      "bytes": 1731646,
+      "sha256": "57548cd9630159cd47d8ca44ce917d55015c13640cb3dad35601f8b647f82e68"
+    },
+    {
+      "path": "images/09-small-cat-cow.png",
+      "bytes": 1161957,
+      "sha256": "c9eb6d427a54203b0f7a1f58d0d41540bccafb3d3eecd60b4ab8af4e58b3e164"
+    },
+    {
+      "path": "images/10-seated-90-90-switch.png",
+      "bytes": 1478911,
+      "sha256": "d901ff75f3aff5ceaf6b67b86002da62effd895dff8bb5f898e0899074b6e8be"
+    },
+    {
+      "path": "images/11-butterfly-stretch.png",
+      "bytes": 1355789,
+      "sha256": "22b2c1308fe946f1b4ac4cb4240ba9a41dc58c46abc3602cb6c69e4988c95c5a"
+    },
+    {
+      "path": "images/12-supine-figure-four-stretch.png",
+      "bytes": 1429602,
+      "sha256": "bf57805645eec93547229c7fa8e54901bb7571db7786c80c06548bc42861ca50"
+    },
+    {
+      "path": "images/13-half-kneeling-hip-flexor-stretch.png",
+      "bytes": 1498383,
+      "sha256": "22b04cc536114d92aa874997cebd644bfc2bac37eef76a6c91efae1ad7eeeee6"
+    },
+    {
+      "path": "images/14-standing-forward-fold.png",
+      "bytes": 1699616,
+      "sha256": "47c1ea3c8bf155c53f9b63feb0f0d5cace0f84076ed4e7a8649bd3c996b0587b"
+    },
+    {
+      "path": "images/15-wall-calf-stretch.png",
+      "bytes": 1622103,
+      "sha256": "9b26831776bc793db595feff1b112a884fc547a239a7cb588b97da5d5be2457a"
+    },
+    {
+      "path": "images/16-supine-single-knee-to-chest.png",
+      "bytes": 1733162,
+      "sha256": "023779ac3aec107b8149554c70d7643a14d90679195dc208a4c8a98e18d9f1db"
+    },
+    {
+      "path": "images/17-wall-supported-calf-raise.png",
+      "bytes": 1585756,
+      "sha256": "71f54da85a2ce4f86710f19a3a286a71239ada6b77351ef8bb53b9e42a64f452"
+    },
+    {
+      "path": "images/18-bird-dog.png",
+      "bytes": 1145826,
+      "sha256": "7cbeabadd17861799007574e666f10f0347ed50686a224579d61a6ac77c90473"
+    },
+    {
+      "path": "images/19-kneeling-rock-back-push-up.png",
+      "bytes": 1381933,
+      "sha256": "80d2de023a72c2caf7de8f34f589e4a7cee3dbcf409949bf07bca1e2d85a79d5"
+    },
+    {
+      "path": "images/20-kneeling-arms-forward-stretch.png",
+      "bytes": 1157618,
+      "sha256": "e3ae3806088d44414d836db257585600fd7e2e613079f56f0bfb21e39fb2b746"
+    },
+    {
+      "path": "images/21-supine-straight-leg-open-close.png",
+      "bytes": 1061459,
+      "sha256": "f7e8c070be012b91f21823347109a49d68ef2165b27d354d7e0acb6d5ce5ee8b"
+    },
+    {
+      "path": "images/22-seated-supported-leg-extension.png",
+      "bytes": 1227430,
+      "sha256": "e029fbf61a0dbe24e581d49fb670ef76248605c40d9ed7d0e67b1b6229bb10ad"
+    },
+    {
+      "path": "images/23-seated-supported-bicycle.png",
+      "bytes": 1422102,
+      "sha256": "8111020f103146dab960506d92e5d9c400fee31ad3b3234e4befd5cc2f9fc6f4"
+    },
+    {
+      "path": "images/24-seated-supported-lateral-extension.png",
+      "bytes": 1390227,
+      "sha256": "9fc4dd651b1706b83338c65e3c7f4c8f9623d30368d522e50f9214012ff60aaf"
+    },
+    {
+      "path": "images/25-seated-supported-combination-extension.png",
+      "bytes": 1469141,
+      "sha256": "a323a38e75ae1389d452931b1c395c85049e6cda774a5ca54360e3451b64c2e1"
+    },
+    {
+      "path": "images/26-glute-bridge-leg-open-close.png",
+      "bytes": 1327916,
+      "sha256": "69fb42977ec6a8ae931ef11a6c9e021d9de104b844eb441a107c97d79bf2e50e"
+    },
+    {
+      "path": "images/27-glute-bridge-single-leg-kick.png",
+      "bytes": 1564831,
+      "sha256": "65ca14879c88607cb328cea6932e5a03bf7c947156a0c9769109efdc6dddfc0b"
+    },
+    {
+      "path": "images/28-single-leg-glute-bridge.png",
+      "bytes": 1314410,
+      "sha256": "13bb776a05adcabfe98f11c2eea809d280abdcc4d312e424ffcfc017a78e0abe"
+    },
+    {
+      "path": "images/29-quadruped-straight-leg-kickback.png",
+      "bytes": 1228415,
+      "sha256": "863d8d5f0d9001ae893cda58fbf17d35c8daa34d262fde4044017be977ad7159"
+    },
+    {
+      "path": "images/30-donkey-kick.png",
+      "bytes": 1171654,
+      "sha256": "48db1a9b4cf9d4df09dbcd581d3baf3d8c4c8e972970ecdff1a14b5ea5b0fdac"
+    },
+    {
+      "path": "images/31-donkey-kick-pulse.png",
+      "bytes": 1189895,
+      "sha256": "58d1f2a8de60dfa66718a041dba4544a5c5136753fbf44ec2395dd34542c789f"
+    },
+    {
+      "path": "images/32-diagonal-donkey-kick.png",
+      "bytes": 1426814,
+      "sha256": "ea2ac8637439b7738382f43b019d0f1ab4fd6e98de68b6a6efbe0374e3855421"
+    },
+    {
+      "path": "images/33-fire-hydrant.png",
+      "bytes": 1149926,
+      "sha256": "072e1e36ff76691b3361298bdda5d95eeb9adb298c5296b2acc189cf43e26f52"
+    },
+    {
+      "path": "images/34-prone-straight-leg-raise.png",
+      "bytes": 1459145,
+      "sha256": "d70984edddf06436b08857914bbf2802047c0530e1e114680efc08eb141a819f"
+    },
+    {
+      "path": "images/35-prone-bent-knee-leg-raise.png",
+      "bytes": 1378892,
+      "sha256": "d93d824a4390b0c1f63c75fb67492674e3d59f4451827aefa7812c46eb193a65"
+    },
+    {
+      "path": "images/36-prone-double-bent-knee-leg-raise.png",
+      "bytes": 1356496,
+      "sha256": "fa86ddfba4fdb7f1bec3fd1895d110aa5a9a030cb21e0566700d972c10d5adbc"
+    }
+  ]
+}

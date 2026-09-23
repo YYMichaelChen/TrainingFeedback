@@ -1,7 +1,7 @@
 # Initial Exercises And Plan Proposal
 
 Status: approved catalog scope; bundled guidance remains unreviewed and plan remains draft\
-Last updated: 2026-09-21
+Last updated: 2026-09-23
 
 This document defines the first catalog candidates and the initial plan used to
 develop and validate the application. It is not a medical assessment and its
@@ -12,11 +12,14 @@ and release requirements. This document owns seed names, body areas, and propose
 doses; it does not certify that bundled guidance has passed expert review.
 
 **Current development content:** Section 10 defines the current family mapping,
-movement clarifications and outstanding illustration/content deliverables. Sections
+movement clarifications and the two completed bridge-content revisions. Sections
 1–9 retain the still-valid catalog definitions and proposed doses carried forward
 into 0.7.0. The [current product rules](development-plan.md#12-current-catalog-and-group-contract)
-govern use. Catalog/workflow implementation is delivered; revised bridge content
-and actual illustrations remain pending, so this is not a ready personal plan.
+govern use. Catalog/workflow implementation and all 36 owned illustrations are
+delivered in current source (`070-illustrated-2`; images 2026-09-22, bridge revisions
+2026-09-23). Images are technically valid and unreviewed; the plan remains a
+proposal. External review and W4 are independent follow-ups, not local
+release blockers, under the user's 2026-09-23 decision.
 
 Under [development-data policy](development-plan.md#133-development-content-and-personal-data-transition),
 every intended development addition/revision to actions, guidance, aliases, families
@@ -29,7 +32,7 @@ Synthetic reviews/training are not part of that personal baseline.
 
 ## 1. Canonical Naming
 
-`臀桥` is the canonical exercise. `常规臀桥` is an alias of the same object.
+`臀桥` is the canonical exercise. `常规臀桥` and `基础臀桥` are aliases of the same object.
 They must not produce duplicate catalog entries, split history, or separate AI
 statistics.
 
@@ -43,11 +46,11 @@ and ten bridge, quadruped, and prone hip exercises were added in two batches.
 
 | Canonical name | Aliases | Role | Primary next-day areas | Secondary guidance areas | Initial dose unit |
 | --- | --- | --- | --- | --- | --- |
-| 臀桥 | 常规臀桥 | Glute strength | 臀部 | 大腿后侧、核心 | reps |
+| 臀桥 | 常规臀桥、基础臀桥 | Glute strength | 臀部 | 大腿后侧、核心 | reps |
 | 蚌式开合 |  | Hip-abduction strength | 臀部 | 髋部、核心 | reps per side |
 | 椅子深蹲 |  | Squat pattern | 大腿前侧、臀部 | 核心 | reps |
 | 死虫式 |  | Anterior core control | 核心 | 髋部 | reps per side |
-| 蝴蝶臀桥 |  | Glute bridge variation | 臀部 | 大腿内侧、核心 | reps |
+| 蝴蝶臀桥 | 蛙式臀桥 | Glute bridge variation | 臀部 | 大腿内侧、核心 | reps |
 | 跪姿臀冲 |  | Hip-extension strength | 臀部、核心 | 大腿前侧 | reps |
 | 静态臀桥 |  | Isometric hip extension with arm raises and breathing | 臀部、核心 | 大腿后侧 | seconds |
 | 扶墙提踵 | 提踵、双脚提踵 | Bilateral calf strength | 小腿 | 踝部 | reps |
@@ -108,26 +111,26 @@ usable release:
 The old project may be consulted manually, but the completed guidance belongs
 to this repository's own seed data and must not be loaded from the old runtime.
 
-Current implementation: `data/seed/catalog.py` owns exercise-specific bundled
-guidance for all 36 catalog exercises. Standing forward fold is v3, the five
-previously revised items remain v2/v3 as recorded below, and the 20-action audit
-update adds v2/v3 content revisions; the remaining items are v1. Each has a stable bundled exercise key and content
-identity/version, blank review facts,
-and an explicit missing-image state. New roots receive these drafts directly;
-existing roots receive selected drafts only through the local preview and
-acceptance action. Required-field validation still does not constitute content
-review. Record external review evidence and user confirmation only when they
-occur; review and selection as the in-use version are separate. Bundled metadata
-must never represent an expert review,
-user approval, or confirmed exercise dose.
+Current implementation: `data/seed/catalog.py` owns the guidance for all 36
+exercises. `data/seed/images.py` explicitly maps the 36 owned source PNGs, and
+`070-illustrated-2` contains one required, technically valid 1254×1254 image per
+entry. The 2026-09-22 image integration advanced every content version by one:
+current versions span v2–v5; standing forward fold is v5, single-knee-to-chest v4,
+straight-leg kickback v4, and donkey-kick pulse/prone straight-leg raise/prone
+bent-knee raise v3. Both bridge entries in Section 10.1 are currently v4.
 
-User-supplied illustration files are not bundled catalog facts. When the expected
-files exist in a selected data root, the application may explicitly associate
-them by stable exercise key, deriving new local unreviewed revisions from the
-current in-use guidance while preserving all earlier revisions.
-The sixteen fourth- and fifth-batch exercises currently have no supplied
-illustrations; their guidance retains the explicit missing-image state. The existing image mapping
-continues to reference the 20 supplied files.
+Stable keys and content IDs persist; content versions and hashes distinguish
+revisions. New roots browse the packaged catalog without copying seed rows.
+Installing an updated program makes the current catalog available in existing
+roots; there is no manual bundled-draft acceptance workflow. Selected content,
+activation pins and completed-session facts retain their recorded meaning.
+Review, selecting a use version, enabling an action and activating a plan remain
+separate explicit operations.
+
+All entries remain externally unreviewed. Technical checks and packaging create
+no expert approval or actual dose. User-root assets and local changes remain local
+unless deliberately reconciled into owned development source. The frozen 070-A
+missing-image inventory records the earlier baseline, not today's asset state.
 
 ## 4. Initial Plan Proposal
 
@@ -187,13 +190,13 @@ Guidance adds the following interpretation and counting conventions:
 | --- | --- | --- |
 | 臀桥单侧踢腿 | Keep bridge height while one leg extends forward/upward, its knee slightly above the supporting knee, then bends and returns. Arms remain by the sides; keep the pelvis level. | One extension and return is 1 rep for the **moving** leg. |
 | 单腿臀桥 | Keep one near-straight leg raised about 60° **to the floor** as a comfortable reference. The planted leg raises and lowers the pelvis, with the free foot remaining off the floor. | One pelvic lift and return is 1 rep for the **supporting** leg. |
-| 直腿后踢 | From quadruped, extend one leg backward with a soft knee, lift only within neutral lumbar control, then lower and bring the knee under the hip. | One extension/lift and return is 1 rep for the moving leg. |
+| 直腿后踢 | From quadruped, extend one leg backward with a soft knee and touch its toes behind the body. Lift the near-straight leg until the heel is visibly above the glute while the pelvis and lumbar curve stay controlled, then lower to the same rear toe-touch position. Bring the knee under the hip only after finishing that side. | One rear toe-touch → lift → return to the same toe-touch position is 1 rep for the moving leg. |
 | 驴踢 | Keep the moving knee bent about 90° while lifting the thigh backward/upward, then return the knee under the hip. | One full lift and return is 1 rep for the moving leg. |
-| 驴踢脉冲 | Enter a controlled donkey-kick high position, lower slightly, then perform small raises/lowers just below that upper boundary. The knee stays suspended and bent about 90°. | Each small raise and lower is 1 pulse/rep for the moving leg. Initial entry and final return do not add reps. |
+| 驴踢脉冲 | Enter a controlled donkey-kick pulse position with the thigh near horizontal and the knee about level with the hip. Raise the bent leg a small distance until the thigh slopes rearward/upward and the knee is above the hip, then return to the near-horizontal position. The knee stays suspended and bent about 90°. | Each small raise and return is 1 pulse/rep for the moving leg. Initial entry and final return do not add reps. |
 | 斜向驴踢 | Right leg stays softly bent, crosses behind the left lower leg to its outer side, extends toward the right rear/upward direction, then returns along the same path. Left is mirrored; keep the pelvis facing down. | One cross-side start → own-side extension → cross-side return is 1 rep for the moving leg. |
 | 消防栓 | Keep the knee bent about 90° and raise the thigh to the side, then return under the hip. Do not rotate the pelvis to gain height. | One lateral raise and return is 1 rep for the moving leg. |
-| 俯卧直腿抬腿 | Lie prone with legs slightly apart, head supported, knees softly extended; raise one thigh a small distance and lower it while the pelvis stays on the mat. | One thigh lift and return is 1 rep for the moving leg. |
-| 俯卧屈腿抬腿 | Lie prone, thighs slightly apart, knees bent about 90°; raise one thigh while the other stays down, then lower with the knee angle maintained. | One thigh lift and return is 1 rep for the moving leg, not a lower-leg curl. |
+| 俯卧直腿抬腿 | Lie prone with legs slightly apart, head supported and knees softly extended. Raise one near-straight leg from the hip toward an illustrated 30–45° leg-axis angle while the pelvis and lower abdomen stay supported; this angle is a visual reference rather than a minimum every person must reach. | One whole-leg lift and return is 1 rep for the moving leg. |
+| 俯卧屈腿抬腿 | Lie prone with the thighs parallel and about hip-width, knees bent about 90° and feet in neutral ankle alignment. Raise one thigh clearly above the mat while the other thigh and knee stay down; the moving lower leg and foot rotate with the thigh as one unit. The illustrated unilateral lift is higher than the bilateral low-range variation. | One thigh lift and return is 1 rep for the moving leg, not a lower-leg curl. |
 | 俯卧双腿屈腿抬腿 | Same prone bent-knee setup, but lift/lower both thighs simultaneously through a small range. Keep the lower abdomen and front pelvis supported; avoid lumbar extension to gain height. | One simultaneous lift and return is **1 total rep**, `per_side=false`. |
 
 All unilateral entries use `reps`, `per_side=true`; N per side means N left
@@ -443,22 +446,87 @@ actual external review and user approval:
 - `直腿后踢` v2: clarified the sequence of sliding/extending the moving leg,
   then lifting it from the hip while the support points remain stable.
 
-These revisions preserve each stable exercise key and append a new bundled draft
-on an existing data root through the explicit acceptance flow. Existing guidance,
-selected use versions, plans, sessions and feedback remain unchanged until the
-user explicitly accepts or selects the new draft. No dose or plan membership is
-created by this audit.
+These are dated 2026-09-17 audit outcomes; their version numbers describe that
+revision stage before later guidance and image changes. Stable keys and recorded
+historical content remain preserved. The former bundled-draft acceptance flow has
+retired; current catalog updates and explicit selection follow Section 3.
+No dose or plan membership was created by this audit.
 
-The audit also checked the other 16 catalog entries and found no text change
-needed in this pass; their current guidance, versions and explicit missing-image
-states remain as recorded. This structural/content audit is not expert review.
+The audit also checked the other 16 entries and found no text change needed in
+that pass. Its missing-image state was historical and was superseded by the
+2026-09-22 illustration delivery. This audit is not expert review.
 Sources checked 2026-09-17: Cleveland Clinic and SOS Physiotherapy 90/90 guidance,
 Hinge Health and related physical-therapy hip-flexor guidance, plus the ACE,
 Physitrack and Rehab Hero references in section 5.
 
+### 9.1 2026-09-21 Catalog Technique And Safety Follow-up
+
+The 16 fourth- and fifth-batch additions were rechecked against their confirmed
+movement definitions and available technique references. Their support points,
+movement paths, side conventions, counting, breathing, lumbar/pelvic control,
+stop criteria and regressions remain internally consistent; no text or content
+version change was required. In particular, the bilateral prone bent-knee lift
+remains identified as the user's requested variation rather than as an exact
+exercise reviewed by a cited source.
+
+Two existing supporting exercises received action-specific bone-health cautions:
+
+- `站立体前屈` v4: people with diagnosed osteoporosis, previous vertebral
+  compression fracture or high fragility-fracture risk should not independently
+  use deep or end-range spinal flexion and should obtain an individually adapted
+  movement from a medical or physical-therapy professional.
+- `仰卧单膝抱胸` v3: adds the same population-specific boundary and directs the
+  person to an individually selected alternative rather than deeper knee-to-chest
+  pulling.
+
+These cautions are based on the [Mayo Clinic osteoporosis exercise guidance](https://www.mayoclinic.org/diseases-conditions/osteoporosis/in-depth/osteoporosis/art-20044989),
+the [Mayo Clinic basic-stretch guide](https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/stretching/art-20546848),
+the [Royal Osteoporosis Society exercise guidance](https://theros.org.uk/information-and-support/exercise/how-to-exercise-safely-for-bones/),
+and the [Bone Health & Osteoporosis Foundation spine guidance](https://www.bonehealthandosteoporosis.org/patients/treatment/exercisesafe-movement/protecting-your-spine/).
+They do not label any user as having osteoporosis and do not create a dose,
+review fact or user approval.
+
+### 9.2 2026-09-22 Prompt/Guidance Reconciliation
+
+The user confirmed that the current illustration prompts reflect movement details
+checked against real instructional videos and are the current source for four
+movement refinements. The bundled drafts now match those prompts without creating
+expert-review evidence or a personal prescription:
+
+- `直腿后踢` v3 uses a rear toe-touch start and return for every repetition. The
+  moving knee remains off the mat during repetitions; it returns under the hip only
+  after that side is complete. The controlled high position places the heel visibly
+  above the glute without lumbar extension or pelvic rotation.
+- `驴踢脉冲` v2 defines the pulse between a near-horizontal thigh/knee-at-hip start
+  and a small rear-upward lift with the knee above the hip. The knee stays bent about
+  90 degrees and suspended throughout each pulse.
+- `俯卧直腿抬腿` v2 uses an illustrated 30–45-degree leg-axis reference while the
+  pelvis and lower abdomen stay supported. That reference is not a minimum range for
+  every person; lumbar/pelvic control remains the limiting boundary.
+- `俯卧屈腿抬腿` v2 makes the unilateral thigh lift visibly higher than the bilateral
+  low-range variation, keeps the other thigh and knee supported, and moves the lower
+  leg and neutral foot with the thigh rather than changing the knee or ankle angle.
+
+Stable exercise keys and content IDs are unchanged. Existing selected revisions,
+plans, sessions and feedback retain their original content versions and facts.
+
+### 9.3 2026-09-22 Bundled Illustration Association
+
+One application-owned PNG is now associated with every one of the 36 bundled
+entries. The mapping uses canonical exercise identity rather than catalog list order;
+the default catalog build reads the source bytes, records each SHA-256 in the content
+envelope, copies the assets under `catalog/images/`, and covers them in the catalog
+manifest. All 36 files decode as 1254×1254 PNGs in the application image pipeline.
+
+Adding the required image set changes every content envelope, so each current bundled
+content version increases by one. This preserves older selected revisions and frozen
+session/plan facts rather than attaching new image bytes to an existing version.
+Technical availability does not create external expert review, user approval, a
+training result or a personal prescription.
+
 ## 10. 0.7.0 Catalog Content Plan
 
-Status: current definitions and open content deliverables. Completed software stages
+Status: 36 illustrations and both bridge-content revisions delivered. Completed software stages
 are in the [0.7.0 history](history/0.7.0/development.md); original guidance/review facts
 retain their meaning. The bundled library and its illustrations ship with the
 program. Users see a catalog update
@@ -467,16 +535,17 @@ The development plan owns automatic conversion, history retention and eligibilit
 
 ### 10.1 Canonical Names And Movement Definitions
 
-- Keep `臀桥` and `launch.glute-bridge` as the canonical identity. Add `基础臀桥`
-  as a lookup/display alias alongside `常规臀桥`, not another movement. Its next
-  content revision specifies lift → hold at the top for **3 seconds** → lower;
+- Keep `臀桥` and `launch.glute-bridge` as the canonical identity. `基础臀桥`
+  is a lookup/display alias alongside `常规臀桥`, not another movement. Its v4
+  content specifies lift → hold at the top for **3 seconds** → lower;
   that full cycle is one rep, repeated as prescribed. The three seconds describe
   within-rep technique, not a three-second set, new set count or user actual dose.
-  Preserve the existing v2 guidance for old references and snapshots.
+  Preserve earlier v2/v3 facts and pins. The current illustrated entry is v4.
 - Keep `蝴蝶臀桥` and its stable key. The user's `蛙式臀桥` refers to this existing
-  soles-together, knees-open bridge definition; add it as an alias after the
+  soles-together, knees-open bridge definition; it is the v4 alias after the
   normal collision check. Do not add a duplicate frog-bridge action or split its
-  history. If later content describes a genuinely different movement, give that
+  history.
+  If later content describes a genuinely different movement, give that
   movement its own definition/key rather than silently reusing this alias.
 - `静态臀桥` remains the current defined bridge-height hold with arm raising and
   breathing; arms-at-sides holding remains its documented regression. Do not
@@ -525,18 +594,18 @@ The checked [070-A source inventory](contracts/baseline/catalog-070-baseline.jso
 records every stable key, original name/alias, content identity/hash, classification
 and explicit missing-image/unreviewed state. `data/seed/families.py` owns the
 executable mapping consumed by the program catalog build. Baseline hashes describe
-the annex's content envelope, not already-stored historical hashes. The new bridge
-technique and aliases in Section 10.1 remain target-content work, not changes to v2.
+the historical annex's content envelope, not current content or stored history.
+The bridge technique and aliases in Section 10.1 are delivered in
+`070-illustrated-2`; earlier content identities and the frozen baseline remain historical.
 
-`src/training_feedback/catalog/` now contains a reproducible SQLite payload and
-manifest for these 36 source entries. All images are still marked missing; the
-empty image inventory is deliberate. A filename mapping, source baseline hash or
-successful package build does not change content readiness.
+`src/training_feedback/catalog/` contains the current reproducible SQLite payload,
+36 PNGs and their manifest. Each entry has a required/available image reference and
+content/image hashes. This establishes technical asset readiness, not review.
 
 Family/position filters and base/variant comparison use this mapping. Copies and
 overrides have their own unreviewed content; relationships cannot merge identities
-or imply shared review. Current missing-image entries remain readable drafts until
-their own illustrations pass the image gate.
+or imply shared review. Any future missing/invalid-image content remains a readable
+draft under the image gate.
 
 ### 10.3 Continuous-Group Examples
 
@@ -568,31 +637,33 @@ it cannot supply missing artwork, review or a substitute movement.
 
 ### 10.4 Illustration And Content Delivery Inventory
 
-The current source marks all 36 guides as missing images. The existing mapping
-names 20 user-supplied files; it does not mean those files are packaged resources.
-The other sixteen additions have no supplied illustration under the recorded
-baseline. Prompt text and filenames do not count as artwork or reviewed images.
+Delivered in current source: all 36 entries and 36 owned 1254×1254 PNGs on
+2026-09-22, followed by the two bridge revisions in `070-illustrated-2` on
+2026-09-23. The manifest covers SQLite plus all 36 images. Each
+content envelope records its image path, SHA-256, required flag and availability.
+The source inventory contains exactly numbered assets 01–36; the corrected sixth
+filename is `06-kneeling-hip-thrust.png`.
 
-Prepare a nonpersonal current release inventory keyed by all 36 stable exercise keys;
-retain the frozen 070-A inventory separately as supported-version evidence:
-canonical name/aliases, family/order, position, content version/hash, image asset
-path/hash, technical decoding check, content-image review evidence and readiness.
-Obtain actual illustration bytes as deliberate content work, check their usable
-source/permission for bundling, and include the selected files in the catalog
-manifest. Do not scan a user's root or automatically publish personal assets.
-Image filenames may be normalized in the package while retaining source metadata;
-old user-file references must be preserved by the internal migration mapping.
+The user chose direct association without another per-image content acceptance
+round. Keep the technical decoding/path/hash checks; do not reintroduce that review
+as a local-release gate or claim external review happened. All 36 entries remain
+externally unreviewed. The four video-informed guidance revisions are preserved
+in the [dated delivery history](history/0.7.0/development.md).
 
-Prioritize the 13 initial-plan references, then the other 23 actions. Each usable
-action needs an illustration depicting its exact defined support, moving side
-and direction; use multiple panels/images when a single view cannot convey the
-sequence. Review the bridge hold/arm motion, stationary-heel knee opening,
-diagonal donkey kick and supporting-side single-leg bridge definitions explicitly.
-Do not copy one base-action image to every variant as a substitute for that check.
+Current inventory evidence is keyed by stable exercise identity: canonical
+name/aliases, family/order, position, content ID/version/hash and image path/hash.
+Use source content plus `catalog-manifest.json` and actual image bytes for current
+verification. Retain `contracts/baseline/catalog-070-baseline.json` unchanged as
+the earlier missing-image/unreviewed baseline; do not regenerate it from current
+source or rewrite its hashes to make the two inventories equal.
 
-Missing/undecodable/mismatched required assets keep the action a draft under
-the development plan's image gate. Real expert review remains evidence-based:
-valid files alone cannot approve text or technique. All entries remain visible
-with truthful readiness; release evidence must say which are usable, which are
-still drafts and which versions actually received review. No new training or
-approval fact is generated by catalog packaging or automatic upgrade.
+070-H1-CONTENT advanced only the two Section 10.1 bridge entries from v3 to v4,
+retained the other 34 entries and all image bytes, and built `070-illustrated-2`.
+Alias identity/search, reproducibility, resource hashes and retained local content
+were verified under dev scope `070-H1-CONTENT` (3/30 unique cases).
+The 13 initial-plan references remain a proposal and acquire no confirmed dose.
+
+Missing/undecodable/mismatched required assets continue to block new use under the
+image gate. Technical readiness, review, enablement, plan confirmation and actual
+training remain separate facts. New packaging neither creates approval nor
+converts synthetic development records into personal evidence.

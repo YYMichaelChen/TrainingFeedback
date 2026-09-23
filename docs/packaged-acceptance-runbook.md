@@ -1,19 +1,28 @@
 # Packaged Acceptance Runbook — 0.7.0
 
-Updated: 2026-09-21. Status: local directory candidate exists; formal installer
-and independent acceptance **not run**. Product scope and supported versions live
+Updated: 2026-09-24. Status: current-source local installer/checks **pending**;
+public independent acceptance **deferred / not run**. Product scope and supported versions live
 in [development-plan.md](development-plan.md), §§7–9, 12–13. The
 [release review](release-readiness-0.7.0.md) records findings and execution order.
 Historical procedures are in the [version history](history/README.md).
+
+Per the user's 2026-09-23 decision, Section 1 is the current local-release procedure.
+Sections 2–5 retain public-release preparation and independent acceptance, enabled
+only by an explicit public-release request. They do not block local release.
+External content review and W4 remain separate unfinished follow-ups.
 
 All changing/destructive checks use isolated synthetic roots. Development content
 belongs in the built-in catalog; these fixtures do not establish personal facts.
 
 ## 1. Candidate And Installer Preparation — Build Machine
 
-1. Close 070-R1/R2 and content prerequisites from the active plan. Record application,
-   database schema, catalog and wire-contract versions separately. Capture the exact
-   source commit/snapshot; dirty-source manifests require a matching source snapshot.
+### 1.1 Build And Payload Verification
+
+1. R1/R2, 070-H1-CONTENT, 070-H2-TESTS and 070-H2-SOURCE are complete prerequisites.
+   The previous directory candidate and its evidence are preserved before replacing
+   `dist/`. Build from the exact complete source revision recorded by H2-SOURCE and
+   require the payload manifest to report that revision with `source_dirty=false`.
+   Record application, schema, catalog and wire-contract identities separately.
 2. With the pinned toolchain, build the complete PyInstaller directory plus installer:
 
    ```powershell
@@ -29,8 +38,8 @@ belongs in the built-in catalog; these fixtures do not establish personal facts.
    entry. A filename or prompt is not an asset. Include v2 contracts and sqlite3.dll.
 4. Record build time, version, source revision/dirty flag, source snapshot identity,
    architecture, Python/PySide6/PyInstaller versions, installer/manifest/executable
-   hashes and Authenticode status. Unsigned builds may support development testing;
-   the existing broad-distribution signing requirement still applies.
+   hashes and Authenticode status. Unsigned local builds disclose that status;
+   signing remains a public-distribution requirement after the explicit public trigger.
 5. Verify the installed executable and complete payload. Program replacement must
    not touch locator/root files; first application launch may perform the declared
    supported migration. Validate these as separate boundaries.
@@ -39,7 +48,61 @@ Directory-only builds are supporting checks, not installer/upgrade acceptance.
 Archive a changed candidate separately and rerun affected checks; never relabel an
 older candidate's evidence. Retain artifacts within the three-version window.
 
+### 1.2 Local Installed Checks
+
+**Status: pending; no new candidate has passed these rows.** Use this machine and
+isolated synthetic roots/locator. A separate machine or full resolution/scaling
+matrix is not required for local release. Do not use a real root for failure or
+synthetic training checks. Record the actual ordinary-user/account context.
+
+Install the newly identified Setup, then resolve the installed executable before
+isolating LOCALAPPDATA. Disable the installer's automatic post-install launch so
+the first checked launch cannot read the ordinary locator. The installer owns the
+program directory only; capture program and closed test-root/locator baselines
+before replacing a program. Compare data bytes before launching the new application,
+since an application launch can perform its declared supported conversion.
+
+Example isolated launch after installation; choose the actual evidence base and
+resolve a custom installed path when applicable:
+
+```powershell
+$localAcceptanceBase = Join-Path (Get-Location) '.tmp/local-package-070'
+$installedProgram = Join-Path $env:LOCALAPPDATA 'Programs/TrainingFeedback/TrainingFeedback.exe'
+$previousLocalAppData = $env:LOCALAPPDATA
+try {
+    $env:LOCALAPPDATA = Join-Path $localAcceptanceBase 'operator-localappdata'
+    & $installedProgram
+} finally {
+    $env:LOCALAPPDATA = $previousLocalAppData
+}
+```
+
+Keep the same isolated profile for restart checks and fresh named profiles for
+independent inputs. Close the app before copying roots. Record evidence under the
+candidate-specific release directory and include the actual scratch paths used.
+
+| ID | Operation and expected result | Status |
+| --- | --- | --- |
+| LOCAL-01 | Install the candidate; compare installed files to the complete payload manifest, including unexpected files. Program replacement leaves the closed isolated locator/root bytes unchanged before application launch. | pending |
+| LOCAL-02 | Launch with a fresh isolated profile and cancel root selection. No data root or locator is created, and program files remain unchanged. | pending |
+| LOCAL-03 | Create an empty Chinese/space-containing root. All 36 current catalog entries/images are available without old roots or imports; no review, activation or training facts are invented. | pending |
+| LOCAL-04 | Browse the two revised bridge entries. 基础臀桥 and 蛙式臀桥 find the existing identities; guidance shows the three-second bridge hold. Catalog/content versions and images match the candidate manifest. | pending |
+| LOCAL-05 | Close/restart normally with the same isolated profile. The selected test root and saved state reopen without duplicate conversion or stray program-directory data. | pending |
+| LOCAL-06 | In a clearly synthetic root, explicitly enable required valid content, save/activate a representative action-group plan, enter a result, pause, restart and resume. Exact position, saved result and frozen content survive; blank actuals are not defaults. | pending |
+
+Each row records candidate/installer identity, Windows/account context, program and
+data paths, input baseline, operations, expected/actual result, evidence path/hash
+and pass/fail/pending. Retain failures before repair. Use actual UI interaction;
+offscreen survival alone does not establish interactive behavior.
+
+Local exit: the four active tasks are closed and LOCAL-01–06 pass for the exact
+candidate, with manifests and disclosed evidence limits. Public H3, actual old-binary
+upgrade baselines, external review and W4 remain outside this exit. Changed binaries
+get separate identities and rerun affected package checks.
+
 ## 2. Isolated Input And Transfer Preparation
+
+**Public release only; deferred until the user's explicit request.**
 
 - Prepare a clean first-launch profile and new empty Chinese/space-containing root
   path; cancellation must create nothing. Keep program and data paths separate.
@@ -51,7 +114,8 @@ older candidate's evidence. Retain artifacts within the three-version window.
 
   Use a new/empty base. Its generated locator contains an absolute build-machine
   path; do not reuse it after transfer. The frozen source fixture is not evidence
-  of actual old-binary use. 070-R1 must make its DB and byte hashes reproducible.
+  of actual old-binary use. R1 completed DB tracking and byte-preserving checkout
+  validation on 2026-09-21; recheck transferred inputs for the selected candidate.
 - Prepare actual **0.6.0/schema14** and **0.6.1/schema16** baselines with matching
   retained binaries. Open/close normally before capturing logical facts, original
   text, unknown fields, resource hashes and original database hash. Preserve closed
@@ -77,6 +141,9 @@ Record returned closed-copy comparisons there without changing the independent
 machine's runtime environment. Original baselines must remain byte-identical.
 
 ## 3. Independent Environment And Launch
+
+**Public release only; deferred / not run.** The clean-machine requirements in
+this section do not apply to Section 1.2's local checks.
 
 Use Windows x64 on a clean VM or separate machine, ordinary non-administrator
 account, with no Python, Conda, source checkout or access to the build environment.
@@ -105,6 +172,8 @@ program on the sole upgraded copy; rollback checks use preserved old roots.
 
 ## 4. Evidence Form And Display Matrix
 
+**Public release matrix; deferred / not run.** Local evidence uses Section 1.2.
+
 Record date/operator, Windows edition/build/x64, VM/machine identity, absence of
 development dependencies, ordinary-user status, program/data paths, exact candidate
 and catalog/schema identities, source provenance, installer/executable/manifest
@@ -117,12 +186,12 @@ of a window does not prove interactive behavior.
 
 | Resolution | Scaling | Result | Checked windows / reachable controls / evidence |
 | --- | --- | --- | --- |
-| 1366×768 | 100% | not run | |
-| 1366×768 | 125% | not run | |
-| 1366×768 | 150% | not run | |
-| 1920×1080 | 100% | not run | |
-| 1920×1080 | 125% | not run | |
-| 1920×1080 | 150% | not run | |
+| 1366×768 | 100% | deferred / not run | |
+| 1366×768 | 125% | deferred / not run | |
+| 1366×768 | 150% | deferred / not run | |
+| 1920×1080 | 100% | deferred / not run | |
+| 1920×1080 | 125% | deferred / not run | |
+| 1920×1080 | 150% | deferred / not run | |
 
 Check startup/errors/root selection, families, full guidance/image/review forms,
 group/member editors, long Chinese content, removal impact, feedback/history and
@@ -131,42 +200,45 @@ Record actual alternatives where a resolution is unavailable; required scaling
 coverage remains open until evidenced. Execute invalid-input retention, cancelled
 save/retraction, stale preview and explicit confirmation, not just visual inspection.
 
-## 5. Current Candidate Acceptance
+## 5. Public Release Acceptance — Deferred
 
 ### 5.1 Preparation Status
 
-The 0.7.0 directory candidate has 257 verified files, schema22 runtime, v2 contracts
-and catalog070-baseline-1 (36 entries, zero illustrations). Its dirty source is based
-on `072c931`. Local offscreen schema16 conversion/restart/first-launch checks passed
-7/7; see `.tmp/070-h-package/verification.json` and `rehearsal-result.json`.
-These checks are not repeated here as independent results. The
-[delivery history](history/0.7.0/development.md) records completed A–G and local H.
+Public acceptance is deferred until an explicit public-release request. All rows
+below remain not run; completion of local checks does not change their status.
 
-Before formal execution: finish reproducible frozen inputs, three-version runtime
-support, actual current content/images, release regression, installer and actual
-retained-binary baselines. The Inno compiler is present; no 0.7.0 installer result
-has yet been recorded. Refresh transfer inputs for the final candidate.
+The existing directory is the older 2026-09-20 candidate, with dated local rehearsal
+only; see [delivery history](history/0.7.0/development.md#070-h--completed-local-preparation-only-2026-09-20).
+Current source has catalog070-illustrated-2 and 36 images; the new installer is
+still planned. The Inno compiler exists.
+
+When H3 is enabled, choose the exact completed candidate, refresh manifests and
+transfer inputs, and prepare actual retained-binary schema14/schema16 baselines.
+Locate the matching old binary/manifest before using or deleting its evidence.
+Document any missing original; a new tag rebuild has a different identity.
+R1/R2 and the 36-image delivery are completed work, not open implementation tasks.
 
 ### 5.2 Independent Candidate Scenarios
 
 | ID | Operation | Required result | Status |
 | --- | --- | --- | --- |
-| 070-01 | Install; cancel first launch; create Chinese/space root as ordinary user; try invalid/occupied paths. | Current built-in catalog works without old data/import or full seed copy; no program writes or partial roots; cancel creates nothing. | not run |
-| 070-02 | Install over retained 0.6.1/schema16 and oldest retained 0.6.0/schema14; start with their selected roots. | Program replacement preserves data; launch separately snapshots/converts automatically, preserving locator/settings/facts with no re-import or compatibility selector. | not run |
-| 070-03 | Compare converted facts; restart twice, restart Windows and switch roots. | Verbatim originals and unknowns preserved; no duplicate conversion/assets or repeated approval of unchanged eligible plans; isolation and paused position survive. | not run |
-| 070-04 | Open interrupted roots; exercise disk/access/backup failures; try expired and future roots. | Recover a consistent supported root; actionable errors, retained recovery copy. Unsupported roots unchanged; expired development root explains reinstall plus explicit new directory. | not run |
-| 070-05 | Exercise text/image gate through library/review/plan/start. | Missing/corrupt/escaping/mismatched images block use; unreviewed valid images invent no approval; original review survives invalidation. | not run |
-| 070-06 | Browse families; edit/activate A→B groups, rounds/sides and repeated members. | Distinct identities/units, exact side/rest/transition order, immutable pins, stale/invalid input rejected without loss. | not run |
-| 070-07 | Individual/round results; partial work, retraction/cancel, pause/restart, abort/finish. | Correct member/round/side position; atomic batches; no duplicate/defaulted facts; terminal guards and history/export agreement. | not run |
-| 070-08 | Request/review/approve/reject/cancel/restore removal and publisher withdrawal. | Root-local decisions, no evidence/variant cascade loss, new use blocked, frozen unfinished/history usable; restoration not automatic enablement. | not run |
-| 070-09 | Export portable evidence/images; import v2; try new v1 file. | JSON/Markdown/current schema and hashes agree; original file preserved; draft only; v1 clearly rejected with current-format guidance. | not run |
-| 070-10 | Online backup with paused work/reviews/retractions; try bad destinations; reopen with newer catalog and resume/re-export. | Complete custom/review/snapshot assets survive; source isolated, errors leave no misleading partial backup; old installed catalog unnecessary. | not run |
-| 070-11 | Inspect settings/library/import; upgrade/uninstall/reinstall program. | No old-settings/export-all/bundled-acceptance controls; locator/root untouched by installer/uninstaller; new root reads latest built-ins. | not run |
-| 070-12 | Execute real-desktop scaling/small-window/long-content matrix. | Readable family/group/image/removal/training states; fixed save/cancel/session controls accessible. | not run |
+| 070-01 | Install; cancel first launch; create Chinese/space root as ordinary user; try invalid/occupied paths. | Current built-in catalog works without old data/import or full seed copy; no program writes or partial roots; cancel creates nothing. | deferred / not run |
+| 070-02 | Install over retained 0.6.1/schema16 and oldest retained 0.6.0/schema14; start with their selected roots. | Program replacement preserves data; launch separately snapshots/converts automatically, preserving locator/settings/facts with no re-import or compatibility selector. | deferred / not run |
+| 070-03 | Compare converted facts; restart twice, restart Windows and switch roots. | Verbatim originals and unknowns preserved; no duplicate conversion/assets or repeated approval of unchanged eligible plans; isolation and paused position survive. | deferred / not run |
+| 070-04 | Open interrupted roots; exercise disk/access/backup failures; try expired and future roots. | Recover a consistent supported root; actionable errors, retained recovery copy. Unsupported roots unchanged; expired development root explains reinstall plus explicit new directory. | deferred / not run |
+| 070-05 | Exercise text/image gate through library/review/plan/start. | Missing/corrupt/escaping/mismatched images block use; unreviewed valid images invent no approval; original review survives invalidation. | deferred / not run |
+| 070-06 | Browse families; edit/activate A→B groups, rounds/sides and repeated members. | Distinct identities/units, exact side/rest/transition order, immutable pins, stale/invalid input rejected without loss. | deferred / not run |
+| 070-07 | Individual/round results; partial work, retraction/cancel, pause/restart, abort/finish. | Correct member/round/side position; atomic batches; no duplicate/defaulted facts; terminal guards and history/export agreement. | deferred / not run |
+| 070-08 | Request/review/approve/reject/cancel/restore removal and publisher withdrawal. | Root-local decisions, no evidence/variant cascade loss, new use blocked, frozen unfinished/history usable; restoration not automatic enablement. | deferred / not run |
+| 070-09 | Export portable evidence/images; import v2; try new v1 file. | JSON/Markdown/current schema and hashes agree; original file preserved; draft only; v1 clearly rejected with current-format guidance. | deferred / not run |
+| 070-10 | Online backup with paused work/reviews/retractions; try bad destinations; reopen with newer catalog and resume/re-export. | Complete custom/review/snapshot assets survive; source isolated, errors leave no misleading partial backup; old installed catalog unnecessary. | deferred / not run |
+| 070-11 | Inspect settings/library/import; upgrade/uninstall/reinstall program. | No old-settings/export-all/bundled-acceptance controls; locator/root untouched by installer/uninstaller; new root reads latest built-ins. | deferred / not run |
+| 070-12 | Execute real-desktop scaling/small-window/long-content matrix. | Readable family/group/image/removal/training states; fixed save/cancel/session controls accessible. | deferred / not run |
 
-### 5.3 Exit
+### 5.3 Public Exit
 
-Every required row needs candidate-specific passing evidence. A missing-image
+This exit applies only after the explicit public-release trigger. Every required
+public row needs candidate-specific passing evidence. A missing-image
 supported plan remains viewable with exact remediation; frozen paused sessions
 remain usable. No supported-upgrade pass may rely on resetting a root. Deliberate
 new-root handling is the declared behavior only for expired development versions.

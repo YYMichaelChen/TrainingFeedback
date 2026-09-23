@@ -1,9 +1,7 @@
 from datetime import datetime, timezone
 
-import pytest
-
 from training_feedback.domain.enums import SessionStatus
-from training_feedback.domain.training import has_previous_day_label, transition_status
+from training_feedback.domain.training import has_previous_day_label
 
 
 class FixedClock:
@@ -12,18 +10,6 @@ class FixedClock:
 
     def now(self):
         return self.current
-
-
-@pytest.mark.parametrize("target", list(SessionStatus))
-def test_open_can_transition_to_any_defined_status(target):
-    transition_status(SessionStatus.OPEN, target)
-
-
-def test_terminal_sessions_cannot_be_reopened():
-    with pytest.raises(ValueError):
-        transition_status(SessionStatus.COMPLETED, SessionStatus.OPEN)
-    with pytest.raises(ValueError):
-        transition_status(SessionStatus.ABORTED, SessionStatus.PAUSED)
 
 
 def test_previous_day_label_uses_two_am_boundary():

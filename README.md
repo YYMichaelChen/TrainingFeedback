@@ -114,9 +114,18 @@ pwsh -File packaging/prepare-acceptance-data.ps1 D:\TF-Acceptance
 ```
 
 See [docs/packaged-acceptance-runbook.md](docs/packaged-acceptance-runbook.md).
-The 0.7.0 directory build is a development candidate; content and independent
-installer/upgrade/desktop acceptance remain open. See the
-[release review and cleanup plan](docs/release-readiness-0.7.0.md).
+The current source includes 36 illustrated entries; the existing directory build
+is still the older 2026-09-20 candidate and the installer is 0.6.1. The next local
+release follows the four-task
+[local release closeout plan](docs/release-readiness-0.7.0.md). Content, final
+regression and complete source identity are closed; the remaining gate is a new
+verified installer with local installed checks.
+
+Per the 2026-09-23 decision, independent Windows acceptance is deferred until an
+explicit public-release request. W4 and external content review are separate
+unfinished follow-ups; none blocks local release. See the
+[release boundaries](docs/development-plan.md#9-open-delivery-work) and
+[local installed checklist](docs/packaged-acceptance-runbook.md#12-local-installed-checks).
 
 ## Documentation
 

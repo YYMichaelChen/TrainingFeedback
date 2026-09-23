@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from training_feedback.app import ApplicationContext, DataRootSwitcher
+from training_feedback.app import DataRootSwitcher, LibraryContext
 from training_feedback.bootstrap import choose_data_root, open_from_locator
 from training_feedback.data.data_root import DataRootError
 from training_feedback.data.locator import Locator, default_locator_path
@@ -20,7 +20,11 @@ def main() -> int:
     application = QApplication(sys.argv)
     apply_theme(application)
     locator = Locator(default_locator_path())
-    context = open_from_locator(locator)
+
+    def report_error(error: DataRootError) -> None:
+        QMessageBox.warning(None, "无法打开数据目录", user_message(str(error)))
+
+    context = open_from_locator(locator, report_error)
     if context is None:
 
         def choose() -> tuple[Path, bool] | None:
@@ -30,15 +34,12 @@ def main() -> int:
                 return None
             return dialog.selected_path(), dialog.creates_new_root()
 
-        def report_error(error: DataRootError) -> None:
-            QMessageBox.warning(None, "无法打开数据目录", user_message(str(error)))
-
         context = choose_data_root(locator, choose, report_error)
     if context is None:
         return 0
     switcher = DataRootSwitcher(context, locator)
 
-    def build_window(ctx: ApplicationContext) -> MainWindow:
+    def build_window(ctx: LibraryContext) -> MainWindow:
         return MainWindow(ctx, request_switch)
 
     def request_switch(path, create) -> bool:

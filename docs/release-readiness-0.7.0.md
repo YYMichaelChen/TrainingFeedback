@@ -1,107 +1,217 @@
-# 0.7.0 Release Review And Workspace Plan
+# 0.7.0 Local Release Closeout Plan
 
-Reviewed: 2026-09-20; decisions consolidated: 2026-09-21.
-**Verdict: local development candidate verified; formal release not accepted.**
-Authority: [development plan](development-plan.md), especially §§9, 12–13.
-This file records evidence and execution tasks; it does not duplicate product rules.
-It belongs to the 0.7.0 retention slot; after closeout it stays in the tracked
-`docs/history/0.7.0/` until the version rotates out of the window, then it moves
-to the untracked local `docs/archive/` holding area.
+Updated: 2026-09-24. **070-H1-CONTENT, 070-H2-TESTS and 070-H2-SOURCE are complete;
+only the local package task remains.** Product authority is [development-plan.md](development-plan.md),
+especially Sections 9–10 and 12–13. This document owns execution details.
+
+The user's 2026-09-23 decision makes content closeout, tests, source provenance and
+local packaged checks the local-release gates. Independent Windows acceptance
+070-H3/8-B2 is deferred until an explicit public-release request. External content
+review and W4 are separate unfinished follow-ups, not local-release blockers.
+Deferred work is not passed work; local release creates no personal approval,
+plan activation or personal-data transition.
 
 ## 1. Observed Baseline
 
-| Area | Observation / evidence |
-| --- | --- |
-| Application / schema | Source and directory manifest: 0.7.0; converted development root: schema22. |
-| Source identity | HEAD `072c931` / tag `v0.6.0`; candidate is dirty-source. Review found 39 modified, 41 deleted, 77 untracked files and nothing staged. These counts precede this documentation task. |
-| Directory candidate | `dist/TrainingFeedback/`, 257 files; actual count, sizes and all SHA-256 values match the adjacent manifest. |
-| Catalog | Source and payload verify as 070-baseline-1, 36 entries, zero illustration files. |
-| Local rehearsal | `.tmp/070-h-package/verification.json` and `rehearsal-result.json`: 7/7 checks for schema16 → 22, one conversion, original registrations available, integrity/FKs, retained recovery snapshot, idempotent restart and empty-profile startup. Offscreen/build-machine only. |
-| Installer | Only 0.6.1 Setup.exe and matching manifest currently in `dist/installer/`; original installer hash verified. No 0.7.0 installer result. |
-| Tooling correction | `C:\Users\41315\AppData\Local\Programs\Inno Setup 6\ISCC.exe` exists. Earlier “Inno Setup unavailable” records were inaccurate; actual 0.7.0 compilation remains pending. |
-| Static checks | `ruff check --no-cache src tests packaging`, `git diff --check`, AST parsing of 95 Python files passed. |
-| Test inventory | Resident 184; minor baseline 61; recovery/conversion files 16, with two overlapping baseline cases: proposed release union 75/100. Collection only, not passing regression evidence. |
-| Independent acceptance | 070-01–070-12 all not run. W4 and real content review not established by synthetic checks. |
+These observations identify current source separately from existing binaries.
+The detailed old review, test counts and completed cleanup are in
+[0.7.0 delivery history](history/0.7.0/development.md).
 
-Exact binary/manifest hashes stay with the original candidate evidence. Preserve
-the complete directory and adjacent manifest together; `.tmp/070-h-package/`
-alone is not a complete copy of the candidate.
+| Area | State as of 2026-09-24 |
+| --- | --- |
+| Application / schema / contracts | Working source 0.7.0 / schema22; plan and evidence v2. No schema change is planned. |
+| Source identity | Complete reviewed 0.7.0 source commit; clean Git archive contains all 218 tracked files and reproduces the catalog byte-for-byte. The exact revision and archive hash are recorded in the SOURCE task evidence and handoff. |
+| Completed R1 | `2bbd179`, 2026-09-21: frozen synthetic DB tracked, byte-preserving Git attributes, 14/14 files verified through clone and ZIP archive. |
+| Completed R2 | `a274b70`, 2026-09-21: three-version support and pre-write refusal below schema14; focused dev verification 27/27. |
+| Current source catalog | `070-illustrated-2`: 36 entries, 36 required 1254×1254 PNGs, content and file hashes. Illustrations delivered 2026-09-22 and two bridge revisions delivered 2026-09-23; externally unreviewed. |
+| Content closeout | 070-H1-CONTENT complete: both bridge entries are v4, with the three-second hold and agreed aliases. Other 34 entries and all image bytes are unchanged. |
+| Existing directory candidate | 2026-09-20 build in `dist/TrainingFeedback/` and its adjacent manifest; older catalog/content and candidate-specific local rehearsal only. |
+| Existing installer | 0.6.1 Setup and manifest in `dist/installer/`; no 0.7.0 installer result. Inno Setup exists. |
+| Test selection | Resident collection 188. Default selection succeeds with 12 dev cases. Minor 63 plus recovery/conversion 18, overlap 4, actual union 77/100; all selected release cases pass. |
+| Historical/current contract check | Frozen inventory and v1 schema bytes are checked directly; current source, manifest, files and SQLite content are checked separately. The obsolete missing-image generator is retired. |
+| Deferred / independent follow-ups | H3 scenarios not run; W4 and external content review not completed. None blocks local release. |
+
+The synthetic schema16 fixture was frozen from the prior working-tree runtime,
+not produced by an identified old packaged executable. Keep this provenance.
+The entire previous candidate, adjacent manifest and associated rehearsal results
+are preserved under the candidate-specific local release evidence directory;
+rehearsal JSON alone is not a complete candidate.
 
 ## 2. Ordered Delivery Tasks
 
-### 070-R1 — Reproducible baseline (first)
+Order: content implementation → test repair and final-source regression → complete
+source commit / clean-checkout verification → package and local installed checks.
+Source review may proceed earlier, but its final identity must include all fixes.
+If source changes after regression, rerun only affected cases in the same release
+scope, record the final identity, then rebuild and repeat affected package checks.
 
-- Add a precise `.gitignore` exception for the synthetic
-  `docs/contracts/baseline/schema16-root/training_feedback.sqlite3`, then include
-  it in reviewed source. It is currently ignored by `*.sqlite3`; both migration
-  fixtures and `prepare_acceptance_data.py` require it.
-- Protect frozen root bytes with path-specific Git attributes (for example `-text`
-  for that root). Current `core.autocrlf=true` and absent `.gitattributes` allow
-  clean filters to alter CRLF exports/imports/answers; mixed LF/CRLF files also
-  risk checkout changes. Do not regenerate hashes to conceal changed originals.
-- Verify all frozen files and resource hashes after a clean checkout/archive.
-  Preserve the synthetic baseline's provenance; it was not produced by the actual
-  preserved 0.6.1 packaged executable.
-- Review all new/deleted modules and create a reproducible source commit/snapshot.
-  The removed old runtime is intentional G3 work, not a reason to restore HEAD files.
+### 070-H1-CONTENT — Two remaining content revisions
 
-### 070-R2 — Three-version runtime support
+**Status:** complete 2026-09-23. Input: owned source `070-illustrated-1`, content
+rules in [initial-exercises-and-plan.md §10.1](initial-exercises-and-plan.md#101-canonical-names-and-movement-definitions).
+Development scope: `070-H1-CONTENT`, tier dev, maximum 30 unique expanded cases.
 
-Status: implemented 2026-09-21 (dev tests 27/27 under scope 070-R2); candidate-level
-re-verification stays with 070-H2/H3.
+Implementation:
 
-- Implement the application/schema support mapping and pre-write lower-bound guard
-  in root inspection/startup/switching/conversion. Current endpoints: 0.6.0/14,
-  0.6.1/16 and 0.7.0/22. Enumerate historical intermediate handling explicitly.
-- Retire out-of-window upgrade entry paths, exclusive schemas/fixtures/helpers,
-  and consolidate current fresh initialization. Keep dependency steps needed by
-  retained endpoints; do not simply delete migrations 1–13 and break fresh create.
-- Replace schema1/9 positive-upgrade coverage with too-old rejection where appropriate;
-  add meaningful oldest-retained schema14 coverage and retain schema16 recovery.
-- Verify refusal does not alter files/locator, supported conversion preserves facts,
-  fresh roots use the bundled catalog, and the reinstall/new-empty-root instruction
-  is clear. If this work changes schema22, bump application/schema together.
+- Keep `launch.glute-bridge` / 臀桥 and 常规臀桥; add 基础臀桥 as an alias.
+  Specify lift → hold at the top for three seconds → controlled lowering; the
+  complete cycle is one rep. Do not turn the hold into a set duration or actual dose.
+- Keep `launch.butterfly-glute-bridge` / 蝴蝶臀桥; add 蛙式臀桥 after the existing
+  normalized-name collision check. Do not create a duplicate movement.
+- Advance each affected illustrated entry from v3 to v4, accounting for the existing
+  image-version increment. Preserve the other 34 entries and all 36 image bytes.
+- Set the next catalog identity to `070-illustrated-2`; rebuild with the project
+  `.venv/python.exe` in an empty staging directory and verify before replacing the
+  in-tree payload. Keep application 0.7.0/schema22 and current v2 wire contracts.
+- Preserve frozen baseline bytes, retained old content, selected versions,
+  activation pins and session history. No review or plan activation is fabricated.
 
-### 070-H1 — Complete built-in development content
+Outputs: updated owned content and current payload/manifest; version/hash inventory;
+focused results; synchronized current-content documentation.
 
-- Reconcile intentional development additions/changes into the owned source catalog
-  before any old development root is discarded. Track key, content version/hash,
-  image source/path/hash and review/readiness; do not automatically harvest user data.
-- Deliver the planned bridge three-second hold and aliases as new content versions;
-  retain old facts/pins. Obtain actual illustrations for at least the initial plan's
-  13 references, then continue the remaining entries with explicit readiness.
-- Ensure catalog build input includes the real assets reproducibly. Current default
-  source build represents missing images; copying files beside an unchanged manifest
-  is not delivery. Preserve the frozen 070-A inventory as baseline evidence while
-  creating the new current inventory and updating affected catalog checks.
-- Verify a new root can browse the complete latest built-in library without old
-  roots/imports. Valid assets do not fabricate review or activate a plan.
+Acceptance: both aliases find the existing identity; new guidance expresses the
+three-second hold without dose changes; all 36 images decode/hash correctly;
+catalog reconstruction is deterministic; old references and snapshots remain
+readable. Reuse catalog reproducibility, library search and retained-history tests.
+Do not add another per-image content-acceptance round.
 
-### 070-H2/H3 — Candidate, installation and acceptance
+Result: current source/payload is `070-illustrated-2`; only the two bridge entries
+advanced from v3 to v4. `launch.glute-bridge` is
+`93e75191886da45e85b945047faf73c24ee4fbbacea8ed1ce46805a2d5cdb3e7` and
+`launch.butterfly-glute-bridge` is
+`8966e044ddc9193a665db84d97ac570d3c25e4ed980478df493e966dce68fac3`.
+The other 34 manifest entries and all 36 image hashes match the prior payload;
+the frozen baseline hash remains `d3555e076d4a553996d2a0917c53fa224632778a369d9e70c821981efd629521`.
+The rebuilt SQLite/manifest hashes are respectively
+`a551721131cd1b78050049b664bd943d5db044dbb9097ebd233df4dc904df3eb`
+and `7de2db1d617e3c6243294079680886bf21ff3e6a31a3d971d7104ea597107489`.
+Dev scope `070-H1-CONTENT` passed all 3 unique affected cases within the 30-case
+budget. No review, plan activation or training fact was created.
 
-- Run the budgeted minor selection on final source; build a separately identified
-  candidate/installer and retain source provenance and complete manifests.
-- Use the existing Inno compiler explicitly if discovery is inconclusive:
+### 070-H2-TESTS — Selection repair and final regression
+
+**Status:** complete 2026-09-23. Final H1 content was included in regression.
+Development fixes use `--test-tier dev --test-scope 070-H2-TESTS`, maximum 30.
+Release execution uses only `--test-tier minor --test-scope release-0.7.0`, maximum
+100 unique expanded cases across every command.
+
+Implementation:
+
+- In the minor profile, replace removed
+  `test_earlier_schema_chain_keeps_pre_snapshot_facts_unknown` with existing
+  `test_out_of_window_root_refused_before_any_write` and
+  `test_oldest_retained_schema14_root_converts_unknown_facts`.
+- Update `test_catalog_inventory_covers_all_source_identities_and_freezes_v1`:
+  validate the frozen historical inventory directly; validate today's catalog
+  against today's source and manifest. Compare stable identities where relevant,
+  not current guidance/image hashes against old missing-image values.
+- Retire `packaging/prepare_contract_baseline.py` and its executable test dependency
+  after this adjustment. Its original generation command stays dated historical
+  evidence. Preserve the frozen inventory, v1 schema, schema16 DB and preservation
+  fixtures while supported endpoints require them.
+- Inventory other assumptions exposed by the 36-image change and repair reproduced
+  failures with focused cases; do not hide scenarios, rewrite frozen hashes, or
+  restore retired runtime modules to make tests pass.
+- Recollect after implementation. The 63 + 18 − 4 = 77 selection estimate is based
+  on the current 188 cases and only the named profile replacement; final changes
+  may alter it. Record the actual union before release execution.
+
+Outputs: valid profiles and historical/current inventory checks; documented final
+selection and shared budget ledger; focused and release results; static checks.
+
+Acceptance: default collection succeeds without stale entries; frozen bytes stay
+unchanged; required selected scenarios pass within budget; no unresolved reproduced
+failures affecting release. Relevant tests passing ends verification unless further
+changes or unresolved concerns justify additional affected checks.
+
+Result: the resident inventory remains 188; default collection succeeds and selects
+12 dev cases. The corrected minor profile selects 63 cases. The conversion/recovery
+files select 18, overlap the profile by 4, and produce an actual 77/100 unique-case
+union in the shared `release-0.7.0` ledger. The 63-case profile and all 18 added
+scenarios passed. Dev scope `070-H2-TESTS` used 5/30 unique cases for the repaired
+contract check and support-window selection. Target Ruff passed. The frozen catalog
+inventory, v1 schema, schema16 metadata/database and preservation fixtures retained
+their pre-task hashes. No public H3 acceptance, review, activation, personal-data
+transition or training fact was created.
+
+### 070-H2-SOURCE — Complete, reproducible source identity
+
+**Status:** complete 2026-09-24.
+
+- Reviewed all runtime, v2 contract, owned image, catalog, fixture, packaging,
+  documentation and intentional-deletion changes. The complete source commit has
+  218 tracked files; its post-commit worktree was clean.
+- The source boundary contains 72 owned PNG paths (36 seed plus 36 payload copies)
+  and the read-only catalog SQLite. No user data, budget ledger, local acceptance
+  root, planning record or `dist/` artifact was staged.
+- Preserved the verified 2026-09-20 directory candidate, adjacent manifest and all
+  41 associated evidence files at
+  `.tmp/releases/0.7.0/20260920-142327-072c931-dirty/`. Its 257 payload files and
+  evidence copies have zero path, size or hash differences.
+- Generated and extracted a clean Git ZIP from the complete source identity. All
+  67 package modules imported; the 14 frozen baseline files were unchanged; all
+  36 image pairs were identical 1254×1254 PNGs; Markdown links and three-version
+  inventory were complete.
+- Rebuilt the catalog with the pinned project interpreter outside the source tree.
+  All 38 output files matched the committed payload byte-for-byte. Target Ruff,
+  compileall, PowerShell parsing, catalog verification and diff checks passed.
+
+No source defect was found after the final regression, so no additional pytest case
+or release-budget use was needed. The exact revision and final ZIP SHA-256 are kept
+with the task handoff; H2-PACKAGE must build from that revision and confirm the
+payload manifest reports the same clean source identity.
+
+### 070-H2-PACKAGE — Installer and local installed checks
+
+**Status:** pending. Depends on all three preceding tasks.
+
+- Use project Python 3.12, PySide6 6.11.2 and the pins in
+  `packaging/requirements-build.txt`; the last verified interpreter was 3.12.14,
+  PyInstaller 6.22.2 and hooks 2026.7. Do not silently change the runtime.
+- Build the full PyInstaller directory and Inno Setup installer:
 
   ```powershell
   pwsh -File packaging/build.ps1 -Installer -ISCC 'C:\Users\41315\AppData\Local\Programs\Inno Setup 6\ISCC.exe'
   ```
 
-- Prepare isolated baselines opened/closed by actual retained old binaries, including
-  schema14 and schema16. Complete install/upgrade/uninstall isolation, interrupted
-  recovery, backup/reopen, grouped workflow and scaling evidence on independent Windows.
-- Locate the exact retained 0.6.0 binary/manifest before deleting historical packages.
-  If it is unavailable, document the gap and build a separately identified previous
-  candidate from known source; never claim a tag rebuild equals a missing dirty build.
-- Fill the [current runbook](packaged-acceptance-runbook.md) from observed results.
-  Keep unavailable rows not run; a rebuilt candidate has its own evidence identity.
-- PERSONAL/W4 begins only after the user's explicit transition decision. Content
-  review and first-usable-release evidence follow development-plan §§9–10.
+- Retain `dist/TrainingFeedback/`, `dist/TrainingFeedback.build-manifest.json`,
+  `dist/installer/TrainingFeedback-0.7.0-Setup.exe` and its installer manifest.
+  Verify counts, paths, sizes and SHA-256 including unexpected files.
+- Verify application/schema/catalog/contract identities, 36 images, Qt resources,
+  sqlite3.dll and absence of user DB/locator files in the payload.
+- Execute [local installed acceptance](packaged-acceptance-runbook.md#12-local-installed-checks)
+  using isolated roots/locator: install and payload comparison, first-launch cancel,
+  Chinese/space root creation, current library/images/aliases, restart and a
+  representative group/pause/resume workflow.
+- Record installed program path, candidate and installer hashes, source identity,
+  environment, signature status, actual operations/results and evidence locations.
+  Local unsigned status is disclosed; signing is a public-distribution follow-up.
+- Preserve old candidate results with the old candidate. Any rebuilt candidate gets
+  its own identity and affected package checks; source changes return to H2-TESTS
+  and H2-SOURCE as required.
+
+Outputs: complete directory, Setup, both manifests, local evidence and local-release
+status. Default evidence organization is `.tmp/releases/0.7.0/<candidate-id>/`,
+where candidate-id includes build timestamp and source revision.
+
+Acceptance: preceding tasks closed; all required local rows pass for this exact
+candidate; program/data boundaries remain intact. H3's independent machine,
+actual old-binary upgrade inputs and full scaling matrix do not block this exit.
 
 ## 3. Verification Plan
 
-Use one release scope/tier for all release pytest execution; collect again if the
-implementation changes selection. Current proposed commands (not executed here):
+Future commands below are **not executed by the 2026-09-23 documentation task**.
+First repair both known test issues; then recollect the corrected baseline and
+additional recovery/conversion files:
+
+```powershell
+.venv\python.exe -m pytest --test-tier minor --collect-only -q
+.venv\python.exe -m pytest tests/test_070_upgrade_recovery.py tests/test_070_conversion.py --test-tier minor --collect-only -q
+```
+
+Deduplicate node IDs and include any additional affected cases in the same release
+union. Collection neither reserves budget nor establishes passing behavior.
+Release commands, after final source and selection review:
 
 ```powershell
 .venv\python.exe -m pytest --test-tier minor --test-scope release-0.7.0 --basetemp .tmp/pytest-release-0.7.0
@@ -110,69 +220,50 @@ implementation changes selection. Current proposed commands (not executed here):
 git diff --check
 ```
 
-The current union is 75/100, not 61+16 independent slots. If the actual release
-version changes, name its scope before the first execution; never rename/reset an
-active scope to evade its budget. Development fixes have their own genuine task
-scope and ≤30 cap. After affected tests pass, stop; packaging and independent checks
-are separate required evidence, not disguised pytest cases.
+Never rename scopes, reset ledgers or split selections to evade the cap. If an
+application version changes, choose the genuine release scope before its first
+execution and preserve prior ledgers. Subsequent fixes rerun failed/affected cases,
+not automatic full-suite passes. Packaging checks are separate artifact evidence,
+not a substitute location for hidden regression scenarios.
 
 ## 4. Workspace Cleanup Plan
 
-The version window is **0.7.0 / 0.6.1 / 0.6.0**. Complete development documents and
-schema support obey that window, not an indefinite archive. Active requirements
-are merged forward; the user-data transition has not been authorized.
+The retained window is **0.7.0 / 0.6.1 / 0.6.0**. The completed 2026-09-21 cleanup,
+old space estimates and removed directories are recorded in
+[history](history/0.7.0/development.md#workspace-cleanup-completed-2026-09-21);
+they are not a fresh deletion queue.
 
-### A. Inventory and preserve before deleting
+Current document cleanup:
 
-1. Confirm useful development content is in owned current source, including actual
-   assets; identify any uncommitted-only source/fixtures before staging or cleanup.
-2. Inventory retained-version candidate manifests, program/installer files, source
-   snapshots, results, screenshots, fixture dependencies and test-budget ledgers.
-   Bind each to application version plus exact commit/build, not just a directory name.
-3. Keep one verified copy of each required retained candidate and its evidence;
-   remove duplicate ZIP/extracted copies after hash/restore verification. Organize
-   local evidence under `.tmp/releases/<version>/` and task summaries under
-   `.planning/archive/<version>/`; update references in the same action.
-4. Review unclassified local artifacts before disposal. Personal roots, original
-   answers/exports and real backups are not build garbage. Do not touch `user_data/`
-   or real roots as part of this workspace cleanup.
+- Keep current requirements in authoritative documents and completed evidence in
+  `docs/history/<version>/`; merge duplicate status descriptions rather than
+  creating another independent specification.
+- The retired single-file image-prompt entry is superseded by
+  [the batch index](image_prompts/README.md). Keep both complete batch files and
+  remove obsolete current links; do not delete current prompt content.
+- Archive the completed 2026-09-22 root task records as a concise 0.7.0 summary.
+  Maintain root record soft limits of 150/250/200 lines.
+- Keep historical missing-image facts and hashes dated and immutable. Preserve
+  retained contracts, fixtures, manuals and the deferred public runbook.
+- This documentation task deletes no runtime code, generators, images, packages,
+  user roots or test-budget ledgers. Code retirement is future H2-TESTS work.
 
-### B. Rebuildable files
+Before any later artifact cleanup, preserve useful owned source and a verified
+complete copy of every required retained candidate/evidence dependency. Keep
+`.tmp/test-budgets/`, real backups, original answers/exports and personal roots.
+Record exact retained/deleted locations and recovered space only after the action.
 
-| Target | Review size | Action |
-| --- | --- | --- |
-| `.tmp/pytest*` | 134 directories, ~3.44 GiB | After test processes exit, preserve any required reproducer/evidence and remove disposable roots. Keep `.tmp/test-budgets/`. |
-| `.planning/tmp/` | ~216 MiB | Preserve relevant retained-version evidence, then remove old test roots/screenshots not needed. |
-| `build/`, caches, `__pycache__/` | build ~11 MiB, plus caches | Remove after processes finish; toolchain can rebuild them. |
-| `.tmp/070-[b-f]-package/` | ~0.60 GiB | These are 0.7.0 intermediate candidates, not five application versions. Keep necessary evidence and avoid duplicate full payloads. |
-| `.tmp/development-updates-20260912`, `.tmp/release-readiness-20260912` | ~1.74 GiB total | Mostly out-of-window deliveries; inventory untracked provenance/content, then remove expired complete packages and duplicates. |
+## 5. Deferred Public Release And Separate Follow-ups
 
-`.tmp` totals ~5.85 GiB. The first rebuildable group can recover ~3.66 GiB before
-candidate deduplication. These are planning estimates from the review, not deletion
-results. Retain `.venv` (~0.82 GiB) for the verified build toolchain.
+**070-H3 / 8-B2: deferred, not run.** The sole reactivation trigger is an explicit
+user request for public release. Then refresh the [public runbook](packaged-acceptance-runbook.md#5-public-release-acceptance--deferred)
+and candidate evidence, locate identified 0.6.0/schema14 and 0.6.1/schema16 binaries,
+and execute independent installation/upgrade/recovery/backup/uninstall and scaling
+scenarios. A rebuilt old tag is not proof of a missing original dirty binary.
+Keep public signing/distribution requirements for that stage.
 
-### C. Rotate documents, schemas and source together
-
-- Completed plan material is indexed under the tracked `docs/history/<version>/`
-  for the three versions; expired versions move to the untracked local
-  `docs/archive/` holding area.
-  Historical local `.planning/archive/` and `.tmp/` material was classified and trimmed
-  on 2026-09-21 (pre-0.6.0 records removed; in-window records kept; see §4.B results).
-- Retire old-version-exclusive contracts, schemas, fixtures and migration entry paths
-  together with 070-R2, after dependency checks. The current synthetic schema16
-  baseline remains necessary even though it is an older schema. Migration-code
-  retirement is complete with 070-R2; contract/fixture rotation finished with the
-  2026-09-21 archive trim.
-- Stage only reviewed source/docs/assets; check clean-checkout reproducibility and
-  retain a known source identity before making the next formal candidate.
-- Final inventory records retained versions, evidence locations, removed items and
-  recovered space.
-
-**Executed 2026-09-21:** `.tmp` went 5.90 GiB → ~4 MiB (136 pytest roots 3,571 MiB;
-development-updates-20260912 1,324 MiB; release-readiness-20260912 456 MiB;
-070-[b-f] payloads ~619 MiB with `070-e/f` verification.json preserved under
-`.tmp/releases/0.7.0/`; 27 stale loose scripts/logs) and `.planning` was trimmed by
-50 pre-0.6.0 archive entries. Kept: `test-budgets/`, `070-h-package/`,
-`070-e-visual/`, `070-f-visual/`, `catalog-070-b-regenerated/`,
-`three-exercises-20260915/`, `releases/`, and all in-window archive records.
-Migration-code window enforcement was implemented separately by 070-R2.
+External content review and W4 remain unfinished independent follow-ups under the
+[guidance runbook](guidance-review-runbook.md). They do not block local release.
+Personal-data transition requires its own explicit user decision; synthetic
+approvals/training never become personal facts. Revisit public readiness against
+the exact candidate when that stage is requested.

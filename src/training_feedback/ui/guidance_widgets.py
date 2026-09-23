@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from copy import deepcopy
 from html import escape
+from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QImageReader
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -22,8 +24,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..data.exercise_images import resolve_exercise_image_path
+from ..domain.exercises import is_reviewed
 from .labels import (
-    GUIDANCE_STATUS_LABELS,
     IMAGE_STATUS_LABELS,
     REVIEWER_TYPE_LABELS,
     label,
@@ -61,7 +64,6 @@ CONTENT_FIELDS = (
     ("images", "图片"),
 )
 
-REVIEWABLE_STATUSES = {"draft", "pending_review", "rejected"}
 _SOURCE_ROLE = int(Qt.ItemDataRole.UserRole)
 _SOURCE_TEXT_ROLE = _SOURCE_ROLE + 1
 
@@ -101,7 +103,7 @@ def _steps_html(steps: Any) -> str:
     return "".join(rows)
 
 
-def _images_html(images: Any) -> str:
+def _images_html(images: Any, data_root: Path | None = None) -> str:
     if not isinstance(images, list) or not images:
         return "<div style='color:#666'>未说明图片状态</div>"
     rows = []
@@ -119,15 +121,30 @@ def _images_html(images: Any) -> str:
             details.append(str(image["caption"]))
         if image.get("path"):
             details.append(str(image["path"]))
-        rows.append(f"<div>{index}. {_text_html(' · '.join(details))}</div>")
+        image_path = (
+            resolve_exercise_image_path(data_root, image.get("path"))
+            if data_root is not None and status == "available"
+            else None
+        )
+        if image_path is not None and QImageReader(str(image_path)).canRead():
+            source = escape(image_path.as_uri(), quote=True)
+            alternate = escape(str(image.get("caption") or "动作示意图"), quote=True)
+            rows.append(
+                f"<div>{index}. {_text_html(' · '.join(details))}<br>"
+                f'<img src="{source}" alt="{alternate}" width="520"></div>'
+            )
+        else:
+            if status == "available" and data_root is not None:
+                details.append("图片文件不可用")
+            rows.append(f"<div>{index}. {_text_html(' · '.join(details))}</div>")
     return "".join(rows)
 
 
-def _field_value_html(field: str, value: Any) -> str:
+def _field_value_html(field: str, value: Any, data_root: Path | None = None) -> str:
     if field == "steps":
         return _steps_html(value)
     if field == "images":
-        return _images_html(value)
+        return _images_html(value, data_root)
     if field in dict(LIST_FIELDS):
         return _ordered_html(value)
     return _text_html(value)
@@ -148,7 +165,10 @@ def _review_answer_html(review: dict[str, Any]) -> str:
     return _text_html("；".join(parts))
 
 
-def render_guidance_html(guidance: dict[str, Any] | None) -> str:
+def render_guidance_html(
+    guidance: dict[str, Any] | None, *, data_root: Path | None = None,
+    include_review: bool = True,
+) -> str:
     """Render every supported guidance field without exposing raw JSON syntax."""
     if not guidance:
         return "<p>暂无动作指导版本。</p>"
@@ -156,17 +176,18 @@ def render_guidance_html(guidance: dict[str, Any] | None) -> str:
     for field, field_label in CONTENT_FIELDS:
         sections.append(
             f"<h3>{escape(field_label)}</h3>"
-            f"<div>{_field_value_html(field, guidance.get(field))}</div>"
+            f"<div>{_field_value_html(field, guidance.get(field), data_root)}</div>"
         )
+    if not include_review:
+        return "".join(sections)
     review = guidance.get("review", {})
     if not isinstance(review, dict):
         review = {}
-    status = label(GUIDANCE_STATUS_LABELS, review.get("status", "draft"))
     reviewer = label(REVIEWER_TYPE_LABELS, review.get("reviewer_type"))
     sections.extend(
         [
             "<h3>复核记录</h3>",
-            f"<div><b>审核状态：</b>{_text_html(status)}</div>",
+            f"<div><b>审核状态：</b>{_text_html(review_state_text(guidance))}</div>",
             f"<div><b>审核人类型：</b>{_text_html(reviewer, '未记录')}</div>",
             f"<div><b>审核来源：</b>{_text_html(review.get('review_source'), '未记录')}</div>",
             f"<div><b>审核备注：</b>{_text_html(review.get('review_note'), '未记录')}</div>",
@@ -183,14 +204,25 @@ def render_guidance_html(guidance: dict[str, Any] | None) -> str:
 class GuidanceView(QTextBrowser):
     """完整、只读且带中文标签的动作指导视图。"""
 
-    def __init__(self, guidance: dict[str, Any] | None = None, parent=None):
+    def __init__(
+        self,
+        guidance: dict[str, Any] | None = None,
+        parent=None,
+        *,
+        data_root: Path | None = None,
+        include_review: bool = True,
+    ):
         super().__init__(parent)
+        self.data_root = Path(data_root) if data_root is not None else None
+        self.include_review = include_review
         self.setOpenExternalLinks(False)
         self.setMinimumHeight(240)
         self.set_guidance(guidance)
 
     def set_guidance(self, guidance: dict[str, Any] | None) -> None:
-        self.setHtml(render_guidance_html(guidance))
+        self.setHtml(render_guidance_html(
+            guidance, data_root=self.data_root, include_review=self.include_review,
+        ))
 
 
 class GuidanceListEditor(QWidget):
@@ -518,7 +550,7 @@ class GuidanceRevisionCombo(QComboBox):
         self,
         exercise: dict[str, Any] | None = None,
         *,
-        allowed_statuses: set[str] | None = None,
+        unreviewed_only: bool = False,
         selected_revision_id: int | None = None,
         parent=None,
     ):
@@ -528,25 +560,25 @@ class GuidanceRevisionCombo(QComboBox):
         self.currentTextChanged.connect(self.setToolTip)
         self._revisions: dict[int, dict[str, Any]] = {}
         if exercise is not None:
-            self.set_revisions(exercise, allowed_statuses, selected_revision_id)
+            self.set_revisions(exercise, unreviewed_only, selected_revision_id)
 
     def set_revisions(
         self,
         exercise: dict[str, Any],
-        allowed_statuses: set[str] | None = None,
+        unreviewed_only: bool = False,
         selected_revision_id: int | None = None,
     ) -> None:
         self.clear()
         self._revisions = {}
-        active_id = exercise.get("active_guidance_revision_id")
+        in_use_id = exercise.get("active_guidance_revision_id")
         for revision in exercise.get("guidance", []):
-            review = revision.get("guidance", {}).get("review", {})
-            status = review.get("status", "draft") if isinstance(review, dict) else "draft"
-            if allowed_statuses is not None and status not in allowed_statuses:
+            guidance = revision.get("guidance", {})
+            reviewed = is_reviewed(guidance)
+            if unreviewed_only and reviewed:
                 continue
-            marker = "当前启用" if revision.get("id") == active_id else label(
-                GUIDANCE_STATUS_LABELS, status
-            )
+            marker = "已审核" if reviewed else "未审核"
+            if revision.get("id") == in_use_id:
+                marker = f"使用中 · {marker}"
             revision_id = revision["id"]
             self._revisions[revision_id] = revision
             created_at = revision.get("created_at", "时间未记录")
@@ -572,52 +604,58 @@ class GuidanceRevisionCombo(QComboBox):
         return self._revisions.get(self.currentData())
 
 
-def active_revision(exercise: dict[str, Any]) -> dict[str, Any] | None:
-    active_id = exercise.get("active_guidance_revision_id")
+def review_state_text(guidance: dict[str, Any] | None) -> str:
+    """审核状态只有两种：已审核（有完整审核证据）或未审核。"""
+    return "已审核" if is_reviewed(guidance or {}) else "未审核"
+
+
+def revision_in_use(exercise: dict[str, Any]) -> dict[str, Any] | None:
+    in_use_id = exercise.get("active_guidance_revision_id")
     return next(
-        (revision for revision in exercise.get("guidance", []) if revision.get("id") == active_id),
+        (revision for revision in exercise.get("guidance", []) if revision.get("id") == in_use_id),
         None,
     )
 
 
-def active_revision_text(exercise: dict[str, Any]) -> str:
-    revision = active_revision(exercise)
+def revision_in_use_text(exercise: dict[str, Any]) -> str:
+    revision = revision_in_use(exercise)
     if revision is None:
-        return "当前启用指导：无"
-    return f"当前启用指导：版本 {revision.get('revision_number', '?')}"
+        return "当前使用版本：无"
+    return (
+        f"当前使用版本：版本 {revision.get('revision_number', '?')}"
+        f"（{review_state_text(revision.get('guidance'))}）"
+    )
 
 
-def draft_revisions_text(exercise: dict[str, Any]) -> str:
-    descriptions = []
-    for revision in exercise.get("guidance", []):
-        status = revision.get("guidance", {}).get("review", {}).get("status", "draft")
-        if status in REVIEWABLE_STATUSES:
-            descriptions.append(
-                f"版本 {revision.get('revision_number', '?')}（"
-                f"{label(GUIDANCE_STATUS_LABELS, status)}）"
-            )
-    return "可复核草稿：" + ("、".join(descriptions) if descriptions else "无")
+def unreviewed_revisions_text(exercise: dict[str, Any]) -> str:
+    descriptions = [
+        f"版本 {revision.get('revision_number', '?')}"
+        for revision in exercise.get("guidance", [])
+        if not is_reviewed(revision.get("guidance", {}))
+    ]
+    return "未审核版本：" + ("、".join(descriptions) if descriptions else "无")
 
 
 def revision_review_text(revision: dict[str, Any] | None) -> str:
     if revision is None:
         return "所选版本复核记录：尚未形成持久化版本"
-    review = revision.get("guidance", {}).get("review", {})
+    guidance = revision.get("guidance", {})
+    review = guidance.get("review", {})
     if not isinstance(review, dict):
         review = {}
     values = (
-        f"状态：{label(GUIDANCE_STATUS_LABELS, review.get('status', 'draft'))}",
+        f"状态：{review_state_text(guidance)}",
         f"审核人类型：{label(REVIEWER_TYPE_LABELS, review.get('reviewer_type'))}",
         f"来源：{review.get('review_source') or '未记录'}",
         f"备注：{review.get('review_note') or '未记录'}",
         f"记录的审核时间：{review.get('reviewed_at') or '未记录'}",
-        f"用户批准时间：{review.get('user_approved_at') or '未批准'}",
+        f"用户确认时间：{review.get('user_approved_at') or '未确认'}",
     )
     return "所选版本复核记录：" + "；".join(values)
 
 
 class GuidanceChangesView(QTextBrowser):
-    """显示所选版本相对当前 active 版本的内容变更。"""
+    """显示所选版本相对当前使用版本的内容变更。"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -632,10 +670,10 @@ class GuidanceChangesView(QTextBrowser):
             self.setHtml("<p>请选择一个指导版本。</p>")
             return
         if current is None:
-            self.setHtml("<p>当前没有启用的指导版本；所选版本将作为首个候选版本。</p>")
+            self.setHtml("<p>这个动作还没有使用版本；所选版本可以直接设为使用版本。</p>")
             return
         if current.get("id") == selected.get("id"):
-            self.setHtml("<p>当前显示的是已启用版本。</p>")
+            self.setHtml("<p>当前显示的就是使用版本。</p>")
             return
         before = current.get("guidance", {})
         after = selected.get("guidance", {})

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
 from .migrations import apply_migrations
+from .root_lock import RootLease, require_no_pending_upgrade
 
 
 class Database:
@@ -15,9 +17,12 @@ class Database:
     def __init__(self, path: Path):
         self.path = Path(path)
         self.connection: sqlite3.Connection | None = None
+        self._lease = None
 
     def __enter__(self) -> sqlite3.Connection:
         try:
+            self._lease = RootLease(self.path.parent).__enter__()
+            require_no_pending_upgrade(self.path.parent)
             self.connection = sqlite3.connect(self.path)
             self.connection.row_factory = sqlite3.Row
             self.connection.execute("PRAGMA foreign_keys = ON")
@@ -45,9 +50,27 @@ class Database:
             yield self.connection
 
     def close(self) -> None:
-        if self.connection is not None:
-            self.connection.close()
-            self.connection = None
+        try:
+            if self.connection is not None:
+                self.connection.close()
+                self.connection = None
+        finally:
+            if self._lease is not None:
+                self._lease.close()
+                self._lease = None
+
+
+def purge_tables(connection: sqlite3.Connection, tables: Sequence[str]) -> dict[str, int]:
+    """按给定顺序清空表并返回每张表删除的行数。
+
+    表名只接受调用方写死的字面量（仓储自己声明删除顺序），不接受外部输入。
+    先统计再删除，避免依赖 SQLite 截断优化下的 rowcount。
+    """
+    counts: dict[str, int] = {}
+    for table in tables:
+        counts[table] = connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        connection.execute(f"DELETE FROM {table}")
+    return counts
 
 
 @contextmanager

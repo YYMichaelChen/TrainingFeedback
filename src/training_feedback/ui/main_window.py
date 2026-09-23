@@ -11,17 +11,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..app import ApplicationContext
-from .exercise_library_page import ExerciseLibraryPage
-from .history_page import HistoryPage
-from .home_page import HomePage
-from .plan_page import PlanPage
+from ..app import LibraryContext
 from .settings_page import SettingsPage
 
 
 class MainWindow(QMainWindow):
     """主窗口：导航切换页面，页面按约定可提供 refresh() 用于进入时刷新。"""
-    def __init__(self, context: ApplicationContext, switch_request=None, parent=None):
+    def __init__(self, context: LibraryContext, switch_request=None, parent=None):
         super().__init__(parent)
         self.setWindowTitle("训练反馈")
         self.resize(1100, 740)
@@ -49,12 +45,10 @@ class MainWindow(QMainWindow):
         sidebar_layout.addWidget(footer)
         self.pages = QStackedWidget()
         self.pages.setContentsMargins(24, 20, 24, 20)
-        home = HomePage(context, self)
         entries = [
-            ("首页", home),
-            ("动作库", ExerciseLibraryPage(context, self)),
-            ("训练计划", PlanPage(context, self)),
-            ("训练历史", HistoryPage(context, self)),
+            ("训练", context.create_session_page(self)),
+            ("动作库", context.create_library_page(self)),
+            ("训练计划", context.create_plan_page(self)),
             ("设置", SettingsPage(context, switch_request=switch_request, parent=self)),
         ]
         for name, page in entries:

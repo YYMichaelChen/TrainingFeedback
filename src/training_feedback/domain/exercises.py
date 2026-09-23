@@ -1,24 +1,19 @@
-"""动作指导内容的纯校验规则与审核状态判定（不访问数据库）。"""
+"""动作指导内容的纯校验规则与审核事实判定（不访问数据库）。
+
+一个指导版本"已审核"当且仅当它带有完整的审核证据（审核人类型、外部来源、
+审核发生时间、用户确认时间）。当前模型的选用/启用由 library_state 表达，
+历史旧模型的快照字段只作为转换证据保留。
+"""
 
 from __future__ import annotations
 
-import json
 import re
 import unicodedata
-from copy import deepcopy
 from dataclasses import dataclass
 from datetime import date, datetime
-from enum import StrEnum
 from typing import Any
 
-
-class GuidanceStatus(StrEnum):
-    DRAFT = "draft"
-    PENDING_REVIEW = "pending_review"
-    REJECTED = "rejected"
-    APPROVED = "approved"
-    ACTIVE = "active"
-
+REVIEW_EVIDENCE_FIELDS = ("reviewer_type", "review_source", "reviewed_at", "user_approved_at")
 
 REQUIRED_SCALARS = (
     "purpose",
@@ -49,53 +44,14 @@ def normalize_name(value: str) -> str:
     return unicodedata.normalize("NFKC", value.strip()).casefold()
 
 
-def fresh_guidance_draft(value: dict[str, Any]) -> dict[str, Any]:
-    """Copy guidance content while removing review facts that belong to an older revision."""
-    if not isinstance(value, dict):
-        raise ValueError("Guidance must be an object.")
-    draft = deepcopy(value)
-    draft["review"] = {
-        "status": GuidanceStatus.DRAFT.value,
+def blank_review() -> dict[str, Any]:
+    """未审核版本的审核块：没有任何审核证据，也不携带旧版本的受管原件引用。"""
+    return {
         "reviewer_type": None,
         "review_source": None,
         "review_note": "",
         "reviewed_at": None,
         "user_approved_at": None,
-    }
-    return draft
-
-
-def custom_guidance_draft(_name: str) -> dict[str, Any]:
-    """Return neutral editable defaults for a user-created exercise.
-
-    These placeholders deliberately do not reuse application-owned launch content and
-    do not claim that a purpose, technique, review, or approval is already known.
-    """
-    return {
-        "purpose": "",
-        "primary_body_areas": [],
-        "secondary_body_areas": [],
-        "starting_position": "",
-        "steps": [],
-        "breathing": "",
-        "tempo_or_pacing": "",
-        "intended_sensations": [],
-        "common_compensations": [],
-        "stop_criteria": [],
-        "regressions": [],
-        "progressions": [],
-        "equipment": [],
-        "applicability": "",
-        "cautions": "",
-        "images": [{"path": None, "caption": "暂无图片", "status": "missing"}],
-        "review": {
-            "status": GuidanceStatus.DRAFT.value,
-            "reviewer_type": None,
-            "review_source": None,
-            "review_note": "",
-            "reviewed_at": None,
-            "user_approved_at": None,
-        },
     }
 
 
@@ -152,55 +108,12 @@ def validate_guidance(
     return GuidanceValidation(not errors, tuple(errors))
 
 
-def guidance_to_json(value: dict[str, Any], *, require_complete: bool = False) -> str:
-    validation = validate_guidance(value)
-    if require_complete and not validation.complete:
-        raise ValueError("; ".join(validation.errors))
-    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
-
-
-def review_status(value: dict[str, Any]) -> GuidanceStatus:
-    try:
-        return GuidanceStatus(value.get("review", {}).get("status", GuidanceStatus.DRAFT))
-    except (AttributeError, ValueError, TypeError) as exc:
-        raise ValueError("Invalid guidance review status.") from exc
-
-
-def can_activate_guidance(value: dict[str, Any]) -> bool:
-    validation = validate_guidance(value)
-    review = value.get("review", {})
-    return (
-        validation.complete
-        and review_status(value)
-        in (
-            GuidanceStatus.APPROVED,
-            GuidanceStatus.ACTIVE,
-        )
-        and has_review_metadata(review)
-    )
-
-
-def has_review_metadata(review: Any) -> bool:
-    return isinstance(review, dict) and all(
-        review.get(field)
-        for field in ("reviewer_type", "review_source", "reviewed_at", "user_approved_at")
-    )
-
-
-def require_review_metadata(review: dict[str, Any]) -> None:
-    reviewer_type = review.get("reviewer_type")
-    review_source = review.get("review_source")
-    if (
-        not isinstance(reviewer_type, str)
-        or not reviewer_type.strip()
-        or not isinstance(review_source, str)
-        or not review_source.strip()
-    ):
-        raise ValueError("Reviewer type and source are required.")
-    if not review.get("user_approved_at"):
-        raise ValueError("Explicit user approval is required.")
-    if not review.get("reviewed_at"):
-        raise ValueError("Review time is required.")
+def is_reviewed(value: dict[str, Any]) -> bool:
+    """已审核 = 这一版带有完整的外部审核证据与用户确认时间。与是否被采用无关。"""
+    if not isinstance(value, dict):
+        return False
+    review = value.get("review")
+    return isinstance(review, dict) and all(review.get(field) for field in REVIEW_EVIDENCE_FIELDS)
 
 
 def require_review_occurrence(value: str) -> None:

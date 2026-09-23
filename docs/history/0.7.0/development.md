@@ -132,7 +132,8 @@ Destination facts, source archives and resource hashes are validated.
 Earlier schema 1/9 fixtures and populated schema21 → 22 were historical test
 coverage. The new three-application-version policy supersedes unlimited earlier
 entry support; removing those entry paths and replacing old positive fixtures is
-070-R2, still pending. Unknown historical facts must continue to remain unknown.
+070-R2 (pending at this milestone; completed on 2026-09-21, recorded below).
+Unknown historical facts must continue to remain unknown.
 
 ### G3
 
@@ -144,8 +145,8 @@ old pages/controllers and dual-runtime fallbacks are removed. Windows-native pat
 separators resolve for original registrations without modifying recorded strings.
 The schema-16 fixture was frozen from the pre-retirement working-tree runtime;
 helpers copy/verify it instead of depending on deleted modules. The review later
-found the DB ignored by Git and newline protection absent: 070-R1 must fix those
-delivery gaps before calling the baseline reproducible from a clean checkout.
+found the DB ignored by Git and newline protection absent. Those dated delivery
+gaps were resolved by R1 on 2026-09-21, recorded below.
 
 G3's 29 unique dev-scope tests passed; resident collection was reduced to 184,
 and Ruff passed. No complete current release regression is inferred from it.
@@ -162,5 +163,169 @@ local checks passed. Evidence: `.tmp/070-h-package/`; complete candidate: `dist/
 
 No 0.7.0 installer or independent scenario was executed. The claimed missing Inno
 Setup was corrected: its compiler exists in the current user's standard directory.
-Actual artwork, content review, supported actual-binary upgrades, installer and
-independent desktop evidence remain open. A version bump is not release acceptance.
+At that 2026-09-20 milestone, actual artwork, content review, supported actual-binary
+upgrades, installer and independent desktop evidence remained open. Subsequent
+source delivery and the 2026-09-23 gate decision are recorded below; they do not
+alter this old binary's evidence.
+
+## Release Review Snapshot — 2026-09-20
+
+The review was consolidated on 2026-09-21. Source for that candidate was dirty
+`072c931` / tag `v0.6.0`; the then-observed status was 39 modified, 41 deleted,
+77 untracked, nothing staged. These are historical counts, not the current tree.
+
+All 257 files in `dist/TrainingFeedback/` matched the adjacent manifest by path,
+count, size and SHA-256. Exact hashes remain with the candidate. The installer
+inventory contained only 0.6.1 Setup and its matching manifest, whose original
+hash was verified. A complete candidate requires both directory and manifest;
+`.tmp/070-h-package/` alone holds supporting evidence, not the entire payload.
+
+At this review, Ruff for src/tests/packaging, diff whitespace checks and AST parsing
+of 95 Python files passed. Resident inventory was 184; minor selection 61 plus
+recovery/conversion 16 with overlap 2 gave proposed union 75/100. These were selection
+counts, not passing release regression. Later changes supersede the counts.
+
+No independent 070-01–070-12 scenario had run. The compiler existed at
+`C:\Users\41315\AppData\Local\Programs\Inno Setup 6\ISCC.exe`; the earlier
+“Inno Setup unavailable” diagnosis was incorrect. Compilation was still pending.
+
+## R1 And R2 Completed — 2026-09-21
+
+- R1 commit `2bbd179`: track the synthetic schema16 DB and protect the entire
+  frozen baseline from newline conversion with path-specific Git attributes.
+  Fourteen files survived both clean clone and ZIP archive byte-for-byte.
+  Focused recovery/conversion tests passed 16/16 under dev scope 070-R1.
+  Windows tar extraction had a Chinese-path tooling limitation; ZIP was used.
+- R2 commit `a274b70`: enforce the application/schema window 0.7.0/22, 0.6.1/16,
+  0.6.0/14; refuse expired roots before writes with reinstall/new-directory guidance.
+  Fresh initialization and retained upgrade dependencies remain available.
+  Rejection cases cover schema1/9/13, and schema14 has positive conversion coverage.
+  Dev scope 070-R2 passed 27/27. The then-existing package was not rebuilt.
+- R1's synthetic fixture provenance remains the prior working-tree runtime,
+  not an actual preserved old packaged executable. Later public acceptance must
+  establish old-binary evidence separately.
+
+Detailed local task records remain under `.planning/archive/0.7.0/`.
+Complete current source identity and candidate-level regression remain later tasks.
+
+## Workspace Cleanup Completed 2026-09-21
+
+The review estimates before cleanup were: pytest roots ~3.44 GiB, planning scratch
+~216 MiB, build ~11 MiB, 070-b–f intermediate payloads ~0.60 GiB and the two expired
+September12 delivery trees ~1.74 GiB; `.tmp` was estimated ~5.85 GiB and the verified
+toolchain `.venv` ~0.82 GiB was to be retained. These are dated estimates.
+
+Executed inventory recorded `.tmp` shrinking from 5.90 GiB to ~4 MiB:
+136 pytest roots 3,571 MiB; development-updates-20260912 1,324 MiB;
+release-readiness-20260912 456 MiB; 070-b–f payloads ~619 MiB; and 27 stale loose
+scripts/logs. Planning records were trimmed by 50 pre-0.6.0 entries.
+The two cleanup-task summaries reported ~6.3 GiB total recovery across their scopes.
+
+Preserved 070-e/f verification files moved to
+`.tmp/releases/0.7.0/070-e-package/` and `070-f-package/`.
+Kept `test-budgets/`, `070-h-package/`, 070-e/f visual evidence,
+`catalog-070-b-regenerated/`, `three-exercises-20260915/`, `releases/`,
+the verified environment, dist and all in-window records.
+User roots, original answers/exports and real backups were not cleanup targets.
+The subsequent tracked history layout was committed as `cafe5b1`.
+
+These removals are completed history, not a current deletion queue. Later builds
+and tests may increase local disk usage again.
+
+## Guidance And Illustrations Delivered — 2026-09-22
+
+The user confirmed video-informed definitions for entries 29/31/34/35. Guidance
+and the authoritative content document were synchronized with new content versions.
+All 36 owned source PNGs were explicitly mapped, with the sixth duplicate extension
+corrected. Image integration advanced each content version once; final catalog
+`070-illustrated-1` contains 36 entries and 36 required 1254×1254 PNGs.
+Manifest hashes cover SQLite and all images. Current versions span v2–v5;
+entry 29 is v4, entries 31/34/35 are v3. Both remaining bridge targets are v3.
+
+Qt decoding/dimensions/reference/hash checks passed 36/36. The catalog reproducibility
+test passed 1/1 under dev scope `GUIDANCE-SYNC-20260922`; target Ruff and whitespace
+checks passed. Deterministic SQLite bytes require the pinned project runtime.
+The user chose direct image association without another per-image content review.
+No external expert review, plan approval or training facts were created.
+
+The old `070-baseline-1` evidence was retained unchanged. No new program/installer
+was built. Local summary:
+`.planning/archive/0.7.0/2026-09-22-guidance-and-illustrations-summary.md`.
+
+## Local Release Policy 2026-09-23
+
+The user explicitly limited local-release blockers to four tasks: remaining content,
+test repair/final regression, complete reproducible source, and new package/local
+installed verification. Independent Windows H3/8-B2 is deferred until the user
+explicitly requests public release. External content review and W4 remain separate
+unfinished follow-ups, not local blockers; deferred work is not passed work.
+
+Read-only planning found 188 resident cases, a stale minor-profile function and an
+old missing-image generator invoked by the contract test. Replacing the stale
+function with existing rejection/schema14 cases yields estimated minor 63 plus 18
+recovery/conversion cases with 4 overlaps: 77/100. This is selection analysis,
+not a new passing regression result. Current source remains `070-illustrated-1`;
+target `070-illustrated-2`, tests, source freeze and installation are pending.
+
+The documentation-only follow-up updates current plans/manuals and archives dated
+status. It does not modify product code, configuration, databases, images or
+packaging scripts, run product tests/builds, or publish/commit the application.
+
+## 070-H1-CONTENT Completed — 2026-09-23
+
+The regular bridge gained the `基础臀桥` alias and an explicit lift, three-second
+top hold and controlled lowering cycle. `蛙式臀桥` became an alias of the existing
+butterfly bridge identity. Only those two entries advanced from v3 to v4; stable
+keys/content IDs, the other 34 entries, all 36 image bytes, schema22 and v2 wire
+contracts stayed unchanged. The current source catalog is `070-illustrated-2`.
+
+The catalog was built and verified first in a new empty staging directory, then
+copied into the source tree. SQLite and manifest SHA-256 values are
+`a551721131cd1b78050049b664bd943d5db044dbb9097ebd233df4dc904df3eb`
+and `7de2db1d617e3c6243294079680886bf21ff3e6a31a3d971d7104ea597107489`.
+The frozen baseline remained byte-identical. Dev scope `070-H1-CONTENT` used
+3/30 unique cases and passed catalog reproducibility/image integrity, alias search
+identity, and retained local-content behavior. No review, activation, personal
+data transition or training fact was created. H2 tests/source/package work remains.
+
+## 070-H2-TESTS Completed — 2026-09-23
+
+The minor profile's removed schema-chain node was replaced by the three expanded
+out-of-window refusal cases and the oldest retained schema14 conversion case. The
+historical catalog inventory test now freezes its inventory and v1 schema bytes
+directly while validating current source, manifest, payload bytes and SQLite content
+separately. `packaging/prepare_contract_baseline.py` and its executable test
+dependency were retired; the dated historical command and every frozen fixture were
+preserved.
+
+Default collection succeeded with 188 resident cases and a 12-case dev selection.
+Dev scope `070-H2-TESTS` passed 5/30 unique affected cases. Final-source minor
+regression used the shared `release-0.7.0` ledger: the 63-case profile and 18
+conversion/recovery cases overlapped by 4, producing 77/100 unique cases; both runs
+passed. Target Ruff passed, and frozen inventory/schema16 hashes stayed unchanged.
+H2 source identity and packaging remain; public H3, external review, W4 and the
+personal-data transition were not performed.
+
+## 070-H2-SOURCE Completed — 2026-09-24
+
+Reviewed and committed the complete 0.7.0 candidate: new runtime layers, v2 contracts,
+36 seed and 36 payload illustrations, reproducible catalog, retained fixtures,
+packaging inputs, documentation and intentional G3 deletions. The commit contains
+218 tracked files; its post-commit worktree was clean and excluded planning files,
+budget ledgers, `dist/`, `.tmp/`, local acceptance roots and user data.
+
+Before any later build can replace `dist/`, the complete 2026-09-20 directory
+candidate, adjacent manifest and 41 associated rehearsal files were copied to
+`.tmp/releases/0.7.0/20260920-142327-072c931-dirty/`. All 257 manifest payload paths,
+sizes and hashes matched, and the copied evidence had zero differences. The old
+manifest remains explicitly bound to dirty source revision `072c931`; it is not
+current release evidence.
+
+A clean Git ZIP of the complete source identity contained the same 218 files. From
+the extracted archive, all 67 package modules imported, all 14 frozen baseline files
+remained unchanged, 36 seed/payload image pairs were byte-identical 1254×1254 PNGs,
+and rebuilding the catalog reproduced all 38 files byte-for-byte. Ruff, compileall,
+PowerShell parsing, relative-link, layering and diff checks passed. No source defect
+was found after the 77/100 minor regression, so no additional release-budget cases
+ran. Packaging and local installed checks remain; public H3, external review, W4 and
+the personal-data transition were not performed.
