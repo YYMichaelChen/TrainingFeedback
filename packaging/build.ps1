@@ -111,7 +111,14 @@ finally {
 }
 
 $exe = Join-Path $outputDir 'TrainingFeedback.exe'
-foreach ($required in @($exe, (Join-Path $outputDir '_internal' 'sqlite3.dll'))) {
+$requiredBuildArtifacts = @($exe, (Join-Path $outputDir '_internal' 'sqlite3.dll'))
+$condaFfi = Join-Path $pythonBasePrefix 'Library\bin\ffi.dll'
+if (Test-Path -LiteralPath $condaFfi -PathType Leaf) {
+    # Conda's _ctypes.pyd imports this unversioned name. PyInstaller can warn and
+    # omit it even when Library/bin is on the isolated discovery path.
+    $requiredBuildArtifacts += Join-Path $outputDir '_internal' 'ffi.dll'
+}
+foreach ($required in $requiredBuildArtifacts) {
     if (-not (Test-Path -LiteralPath $required)) {
         throw "Build artifact missing: $required"
     }

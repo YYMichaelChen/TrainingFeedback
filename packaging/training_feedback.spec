@@ -31,6 +31,18 @@ def find_sqlite_dll() -> Path:
         f"supported build layouts provide it (base prefix: {sys.base_prefix})"
     )
 
+
+def conda_runtime_dll(name: str) -> Path | None:
+    """Return a Conda runtime DLL that PyInstaller may fail to resolve.
+
+    Python.org environments either bundle the equivalent dependency beside the
+    extension module or let PyInstaller resolve it normally. Conda exposes the
+    unversioned import name from Library/bin, so collect that exact filename when
+    this supported layout is selected.
+    """
+    candidate = Path(sys.base_prefix) / "Library" / "bin" / name
+    return candidate if candidate.is_file() else None
+
 a = Analysis(
     [str(project_root / "src" / "training_feedback" / "main.py")],
     pathex=[str(project_root / "src")],
@@ -49,6 +61,9 @@ a = Analysis(
 )
 if not any(destination.lower() == "sqlite3.dll" for destination, *_ in a.binaries):
     a.binaries.append(("sqlite3.dll", str(find_sqlite_dll()), "BINARY"))
+ffi_dll = conda_runtime_dll("ffi.dll")
+if ffi_dll and not any(destination.lower() == "ffi.dll" for destination, *_ in a.binaries):
+    a.binaries.append(("ffi.dll", str(ffi_dll), "BINARY"))
 pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
