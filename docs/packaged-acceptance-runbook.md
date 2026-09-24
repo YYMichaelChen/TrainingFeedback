@@ -50,7 +50,9 @@ older candidate's evidence. Retain artifacts within the three-version window.
 
 ### 1.2 Local Installed Checks
 
-**Status: passed for candidate `20260924-010017-736223e`.** Use this machine and
+**Status: full LOCAL-01—06 pass for candidate `20260924-010017-736223e`;
+image-only rebuild `20260924-142756-b88feba` passed affected LOCAL-01, 02, 03 and
+05.** Use this machine and
 isolated synthetic roots/locator. A separate machine or full resolution/scaling
 matrix is not required for local release. Do not use a real root for failure or
 synthetic training checks. Record the actual ordinary-user/account context.
@@ -106,6 +108,15 @@ the installed executable and Setup SHA-256 values are `dc7f24dde919fd6ac48576492
 and `4fdf7f835d8fe1a63b180db72282bd6f3ff0bbb6595f9b27830c96f7c34de889`.
 Both are unsigned. Candidate-specific evidence is under
 `.tmp/releases/0.7.0/20260924-010017-736223e/`; `LOCAL-ACCEPTANCE.md` is the index.
+
+The `070-illustrated-3` caption rebuild from clean `b88feba` is now installed.
+Its payload manifest, EXE and Setup SHA-256 values are respectively
+`cedabf4c787d9c79edae51ac0c456e7a8eca2bb8f3fa5c9f29964647c73991cf`,
+`d203a9dea1bdb6bf5409f2c9fa4a69bb2b23860c6c5f45dc840b00cab0b9391f`
+and `d19eddceccb1bf8bdd3bf1d21466c3eb792477c508f6220ce1ea68452178279d`.
+Affected checks LOCAL-01/02/03/05 passed in an isolated synthetic environment;
+LOCAL-04/06 were not repeated for this image-only change. Evidence is under
+`.tmp/releases/0.7.0/20260924-142756-b88feba/`; `LOCAL-ACCEPTANCE.md` is the index.
 
 ## 2. Isolated Input And Transfer Preparation
 
@@ -214,8 +225,9 @@ save/retraction, stale preview and explicit confirmation, not just visual inspec
 Public acceptance is deferred until an explicit public-release request. All rows
 below remain not run; completion of local checks does not change their status.
 
-The completed local candidate is `20260924-010017-736223e`, with catalog
-`070-illustrated-2`, 36 images and a 0.7.0 Setup. The older 2026-09-20 candidate
+The latest local candidate is `20260924-142756-b88feba`, with catalog
+`070-illustrated-3`, 36 images and a 0.7.0 Setup. The previous fully exercised
+candidate `20260924-010017-736223e` and the older 2026-09-20 candidate
 remains dated history; see
 [delivery history](history/0.7.0/development.md#070-h--completed-local-preparation-only-2026-09-20).
 

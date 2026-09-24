@@ -20,15 +20,16 @@ The detailed old review, test counts and completed cleanup are in
 | Area | State as of 2026-09-24 |
 | --- | --- |
 | Application / schema / contracts | Working source 0.7.0 / schema22; plan and evidence v2. No schema change is planned. |
-| Released candidate source identity | Complete reviewed 0.7.0 source commit; clean Git archive contains all 218 tracked files and reproduces its catalog byte-for-byte. The exact revision and archive hash are recorded in the SOURCE task evidence and handoff. |
+| Current candidate source identity | Clean `b88feba66cdd60891cc169568187420183590913`; complete 218-file Git ZIP SHA-256 `39ae52ba...0c5a5`, including the corrected catalog/image. |
 | Completed R1 | `2bbd179`, 2026-09-21: frozen synthetic DB tracked, byte-preserving Git attributes, 14/14 files verified through clone and ZIP archive. |
 | Completed R2 | `a274b70`, 2026-09-21: three-version support and pre-write refusal below schema14; focused dev verification 27/27. |
 | Current source catalog | `070-illustrated-3`: 36 entries, 36 required 1254×1254 PNGs, content and file hashes. One image caption was corrected 2026-09-24; externally unreviewed. |
 | Content closeout at 070-H1 | Both bridge entries reached v4, with the three-second hold and agreed aliases. At that task's completion the other 34 entries and all image bytes were unchanged. |
-| Current directory candidate | 2026-09-24 293-file build from clean `736223e`; payload manifest `e72dfdb7...9aa9`, EXE `dc7f24dd...e7e`, catalog `070-illustrated-2`. |
-| Candidate/source relationship | The verified installed 0.7.0 candidate predates the caption correction. Current source catalog `070-illustrated-3` has not been rebuilt into an installer or checked as an installed release. |
-| Current installer | 0.7.0 Setup `4fdf7f83...e889`, built with Inno Setup 6.7.3; Setup and EXE are unsigned, as disclosed for local release. |
-| Test selection | Resident collection 188. Default selection succeeds with 12 dev cases. Minor 63 plus recovery/conversion 18, overlap 4, actual union 77/100; all selected release cases pass. |
+| Current directory candidate | 2026-09-24 293-file build from clean `b88feba`; payload manifest `cedabf4c...91cf`, EXE `d203a9de...391f`, catalog `070-illustrated-3`. |
+| Current installer | 0.7.0 Setup `d19eddce...279d`, built with Inno Setup 6.7.3; Setup and EXE are unsigned, as disclosed for local release. |
+| Current installed checks | The corrected candidate passed affected LOCAL-01, 02, 03 and 05 with an isolated synthetic root and actual UI. LOCAL-04/06 were not repeated because bridge and session code/content did not change; their complete results belong to the prior `736223e` candidate. |
+| Previous complete candidate | `20260924-010017-736223e`, catalog `070-illustrated-2`, Setup `4fdf7f83...e889`, full LOCAL-01—06 pass; separately preserved. |
+| Test selection | The pre-caption 0.7.0 source passed the 77/100 minor-release union. The image-only change passed the affected catalog reproducibility case under dev scope `070-CONTENT-CAPTION` (1/30); the full release suite was not repeated. |
 | Historical/current contract check | Frozen inventory and v1 schema bytes are checked directly; current source, manifest, files and SQLite content are checked separately. The obsolete missing-image generator is retired. |
 | Deferred / independent follow-ups | H3 scenarios not run; W4 and external content review not completed. None blocks local release. |
 
@@ -37,6 +38,13 @@ not produced by an identified old packaged executable. Keep this provenance.
 The entire previous candidate, adjacent manifest and associated rehearsal results
 are preserved under the candidate-specific local release evidence directory;
 rehearsal JSON alone is not a complete candidate.
+
+The caption correction was repackaged as
+`.tmp/releases/0.7.0/20260924-142756-b88feba/`. The complete candidate, source ZIP,
+Setup log, affected local results (`LOCAL-ACCEPTANCE.md`)
+and exact hashes are retained there. Source and installed catalog matched for all
+38 files; the installed UI showed the corrected image caption and no review or
+training facts were created.
 
 ## 2. Ordered Delivery Tasks
 

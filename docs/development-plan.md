@@ -575,11 +575,14 @@ on 2026-09-23. On 2026-09-24, one prone bilateral leg-raise image caption was co
 to match the unchanged written guidance and total-repetition count.
 The 13-action initial plan remains a proposal.
 
-The current directory candidate and 0.7.0 Setup were built on 2026-09-24 from clean
-source revision `736223e`; the 293-file payload includes catalog `070-illustrated-2`.
-LOCAL-01—06 passed against the installed candidate with isolated synthetic data.
-That verified installed candidate predates the caption correction; the new source
-catalog has not been packaged or checked as an installed release.
+The current directory candidate and 0.7.0 Setup were rebuilt on 2026-09-24 from
+clean source revision `b88feba`; the 293-file payload includes catalog
+`070-illustrated-3`. The installed candidate passed affected local checks LOCAL-01,
+02, 03 and 05 with isolated synthetic data. The previous `736223e` / catalog
+`070-illustrated-2` candidate and its complete LOCAL-01—06 results remain preserved;
+bridge-search and group-session scenarios 04/06 were not repeated for this image-only
+rebuild. [Candidate-specific evidence](release-readiness-0.7.0.md) records identities
+and limits.
 
 **Release decision, 2026-09-23:** local release requires only the four active tasks
 below. Independent Windows acceptance (070-H3/8-B2) and public-distribution
