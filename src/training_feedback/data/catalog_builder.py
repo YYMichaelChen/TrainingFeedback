@@ -17,7 +17,7 @@ from .seed.families import FAMILIES, catalog_classification
 from .seed.images import bundled_image_assets
 
 CATALOG_FORMAT_VERSION = 1
-CATALOG_VERSION = "070-illustrated-2"
+CATALOG_VERSION = "070-illustrated-3"
 
 
 def source_content() -> list[dict]:

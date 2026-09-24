@@ -1,7 +1,7 @@
 # Initial Exercises And Plan Proposal
 
 Status: approved catalog scope; bundled guidance remains unreviewed and plan remains draft\
-Last updated: 2026-09-23
+Last updated: 2026-09-24
 
 This document defines the first catalog candidates and the initial plan used to
 develop and validate the application. It is not a medical assessment and its
@@ -16,9 +16,9 @@ movement clarifications and the two completed bridge-content revisions. Sections
 1–9 retain the still-valid catalog definitions and proposed doses carried forward
 into 0.7.0. The [current product rules](development-plan.md#12-current-catalog-and-group-contract)
 govern use. Catalog/workflow implementation and all 36 owned illustrations are
-delivered in current source (`070-illustrated-2`; images 2026-09-22, bridge revisions
-2026-09-23). Images are technically valid and unreviewed; the plan remains a
-proposal. External review and W4 are independent follow-ups, not local
+delivered in current source (`070-illustrated-3`; images 2026-09-22, bridge revisions
+2026-09-23, one image-caption correction 2026-09-24). Images are technically valid and
+externally unreviewed; the plan remains a proposal. External review and W4 are independent follow-ups, not local
 release blockers, under the user's 2026-09-23 decision.
 
 Under [development-data policy](development-plan.md#133-development-content-and-personal-data-transition),
@@ -113,7 +113,7 @@ to this repository's own seed data and must not be loaded from the old runtime.
 
 Current implementation: `data/seed/catalog.py` owns the guidance for all 36
 exercises. `data/seed/images.py` explicitly maps the 36 owned source PNGs, and
-`070-illustrated-2` contains one required, technically valid 1254×1254 image per
+`070-illustrated-3` contains one required, technically valid 1254×1254 image per
 entry. The 2026-09-22 image integration advanced every content version by one:
 current versions span v2–v5; standing forward fold is v5, single-knee-to-chest v4,
 straight-leg kickback v4, and donkey-kick pulse/prone straight-leg raise/prone
@@ -596,7 +596,7 @@ and explicit missing-image/unreviewed state. `data/seed/families.py` owns the
 executable mapping consumed by the program catalog build. Baseline hashes describe
 the historical annex's content envelope, not current content or stored history.
 The bridge technique and aliases in Section 10.1 are delivered in
-`070-illustrated-2`; earlier content identities and the frozen baseline remain historical.
+`070-illustrated-3`; earlier content identities and the frozen baseline remain historical.
 
 `src/training_feedback/catalog/` contains the current reproducible SQLite payload,
 36 PNGs and their manifest. Each entry has a required/available image reference and
@@ -662,6 +662,13 @@ retained the other 34 entries and all image bytes, and built `070-illustrated-2`
 Alias identity/search, reproducibility, resource hashes and retained local content
 were verified under dev scope `070-H1-CONTENT` (3/30 unique cases).
 The 13 initial-plan references remain a proposal and acquire no confirmed dose.
+
+On 2026-09-24 the user clarified that illustrations serve as references and written
+guidance governs movement details. The final caption in the image for
+`main.prone-double-bent-knee-leg-raise` now reads “双腿同步，按总次数记录” instead of
+the contradictory instruction to switch sides. This is the only content change in
+`070-illustrated-3`: that entry advances from v2 to v3, and the other 35 content
+hashes remain unchanged. The written guidance and initial plan were not revised.
 
 Missing/undecodable/mismatched required assets continue to block new use under the
 image gate. Technical readiness, review, enablement, plan confirmation and actual

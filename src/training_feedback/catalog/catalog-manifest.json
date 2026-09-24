@@ -1,7 +1,7 @@
 {
   "application": "TrainingFeedback",
   "format_version": 1,
-  "catalog_version": "070-illustrated-2",
+  "catalog_version": "070-illustrated-3",
   "contents": [
     {
       "key": "launch.glute-bridge",
@@ -216,15 +216,15 @@
     {
       "key": "main.prone-double-bent-knee-leg-raise",
       "id": "training-feedback.main.prone-double-bent-knee-leg-raise.zh-CN",
-      "version": 2,
-      "sha256": "379e115a6b1a2f85c8edaf8e6cb802142a70cd91022b9a96c0a6476b85c5f6b6"
+      "version": 3,
+      "sha256": "93b53c4af40c0216cce43b07beaef80339f3fd2a162ad111add04a95fa5a3dc1"
     }
   ],
   "files": [
     {
       "path": "catalog.sqlite3",
       "bytes": 172032,
-      "sha256": "a551721131cd1b78050049b664bd943d5db044dbb9097ebd233df4dc904df3eb"
+      "sha256": "a4d34eaeadf5ca9d0a183be02e17f7395eecb8d2b0118fa69a3a65ff16b2359e"
     },
     {
       "path": "images/01-glute-bridge.png",
@@ -403,8 +403,8 @@
     },
     {
       "path": "images/36-prone-double-bent-knee-leg-raise.png",
-      "bytes": 1356496,
-      "sha256": "fa86ddfba4fdb7f1bec3fd1895d110aa5a9a030cb21e0566700d972c10d5adbc"
+      "bytes": 1837783,
+      "sha256": "97dc7ff1b8785b7fa323006a447d37fc145e335101a3bea60f1cc02352e23f31"
     }
   ]
 }

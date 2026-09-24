@@ -1772,6 +1772,7 @@ _BUNDLED_CATALOG = (
             applicability="适合已能控制俯卧单侧屈腿抬腿，且能在双侧发力时保持腰盆稳定的人。",
             cautions="双腿同时抬起更易出现腰部代偿；若只能靠挺腰离垫，使用单侧或不离地版本。",
         ),
+        content_version=2,
     ),
 )
 

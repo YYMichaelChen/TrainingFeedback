@@ -568,14 +568,18 @@ cover 01:59, 02:00, and 02:01.
 Current working source is **0.7.0 / schema22**, with plan/evidence v2.
 070-A–G, frozen-baseline repair R1 and version-window implementation R2 are complete;
 dated evidence lives in the [0.7.0 history](history/0.7.0/development.md).
-The current catalog is `070-illustrated-2`: 36 unreviewed entries with 36 technically
-valid bundled illustrations. Four video-informed guidance changes and the 36 images
-were delivered on 2026-09-22; the two bridge revisions were delivered on 2026-09-23.
+The current source catalog is `070-illustrated-3`: 36 externally unreviewed entries
+with 36 technically valid bundled illustrations. Four video-informed guidance changes
+and the 36 images were delivered on 2026-09-22; the two bridge revisions were delivered
+on 2026-09-23. On 2026-09-24, one prone bilateral leg-raise image caption was corrected
+to match the unchanged written guidance and total-repetition count.
 The 13-action initial plan remains a proposal.
 
 The current directory candidate and 0.7.0 Setup were built on 2026-09-24 from clean
 source revision `736223e`; the 293-file payload includes catalog `070-illustrated-2`.
 LOCAL-01—06 passed against the installed candidate with isolated synthetic data.
+That verified installed candidate predates the caption correction; the new source
+catalog has not been packaged or checked as an installed release.
 
 **Release decision, 2026-09-23:** local release requires only the four active tasks
 below. Independent Windows acceptance (070-H3/8-B2) and public-distribution

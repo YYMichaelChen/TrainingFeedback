@@ -56,7 +56,7 @@ def test_program_catalog_is_reproducible_readonly_and_cwd_independent(tmp_path, 
     monkeypatch.chdir(unrelated)
     with CatalogRepository() as source, CatalogRepository(built) as copied:
         assert source.list() == copied.list()
-        assert copied.version == "070-illustrated-2"
+        assert copied.version == "070-illustrated-3"
         assert len(copied.list()) == 36
         assert len(list((built / "images").glob("*.png"))) == 36
         bridge = copied.get("launch.glute-bridge")

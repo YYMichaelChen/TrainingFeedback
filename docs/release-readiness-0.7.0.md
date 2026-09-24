@@ -20,12 +20,13 @@ The detailed old review, test counts and completed cleanup are in
 | Area | State as of 2026-09-24 |
 | --- | --- |
 | Application / schema / contracts | Working source 0.7.0 / schema22; plan and evidence v2. No schema change is planned. |
-| Source identity | Complete reviewed 0.7.0 source commit; clean Git archive contains all 218 tracked files and reproduces the catalog byte-for-byte. The exact revision and archive hash are recorded in the SOURCE task evidence and handoff. |
+| Released candidate source identity | Complete reviewed 0.7.0 source commit; clean Git archive contains all 218 tracked files and reproduces its catalog byte-for-byte. The exact revision and archive hash are recorded in the SOURCE task evidence and handoff. |
 | Completed R1 | `2bbd179`, 2026-09-21: frozen synthetic DB tracked, byte-preserving Git attributes, 14/14 files verified through clone and ZIP archive. |
 | Completed R2 | `a274b70`, 2026-09-21: three-version support and pre-write refusal below schema14; focused dev verification 27/27. |
-| Current source catalog | `070-illustrated-2`: 36 entries, 36 required 1254×1254 PNGs, content and file hashes. Illustrations delivered 2026-09-22 and two bridge revisions delivered 2026-09-23; externally unreviewed. |
-| Content closeout | 070-H1-CONTENT complete: both bridge entries are v4, with the three-second hold and agreed aliases. Other 34 entries and all image bytes are unchanged. |
+| Current source catalog | `070-illustrated-3`: 36 entries, 36 required 1254×1254 PNGs, content and file hashes. One image caption was corrected 2026-09-24; externally unreviewed. |
+| Content closeout at 070-H1 | Both bridge entries reached v4, with the three-second hold and agreed aliases. At that task's completion the other 34 entries and all image bytes were unchanged. |
 | Current directory candidate | 2026-09-24 293-file build from clean `736223e`; payload manifest `e72dfdb7...9aa9`, EXE `dc7f24dd...e7e`, catalog `070-illustrated-2`. |
+| Candidate/source relationship | The verified installed 0.7.0 candidate predates the caption correction. Current source catalog `070-illustrated-3` has not been rebuilt into an installer or checked as an installed release. |
 | Current installer | 0.7.0 Setup `4fdf7f83...e889`, built with Inno Setup 6.7.3; Setup and EXE are unsigned, as disclosed for local release. |
 | Test selection | Resident collection 188. Default selection succeeds with 12 dev cases. Minor 63 plus recovery/conversion 18, overlap 4, actual union 77/100; all selected release cases pass. |
 | Historical/current contract check | Frozen inventory and v1 schema bytes are checked directly; current source, manifest, files and SQLite content are checked separately. The obsolete missing-image generator is retired. |
@@ -75,7 +76,7 @@ catalog reconstruction is deterministic; old references and snapshots remain
 readable. Reuse catalog reproducibility, library search and retained-history tests.
 Do not add another per-image content-acceptance round.
 
-Result: current source/payload is `070-illustrated-2`; only the two bridge entries
+Result at 070-H1 completion: source/payload was `070-illustrated-2`; only the two bridge entries
 advanced from v3 to v4. `launch.glute-bridge` is
 `93e75191886da45e85b945047faf73c24ee4fbbacea8ed1ce46805a2d5cdb3e7` and
 `launch.butterfly-glute-bridge` is
