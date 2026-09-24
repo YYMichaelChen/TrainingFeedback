@@ -1,15 +1,15 @@
 # TrainingFeedback Development Plan
 
-Status: development stage; 0.7.0 / schema22; A–G, R1/R2 and 36 illustrations delivered;
-four local-release closeout tasks open; public-release acceptance deferred\
-Last updated: 2026-09-23
+Status: development stage; 0.7.0 / schema22; local-release closeout complete;
+public-release acceptance deferred; external review and W4 remain follow-ups.
+Last updated: 2026-09-24
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
 seed content and proposed doses. Use these entry points:
 
 - [Product rules and current baseline](#1-product-goal): Sections 1–8.
-- [Open delivery work](#9-open-delivery-work): local release tasks and separate follow-ups.
+- [Delivery status and open work](#9-open-delivery-work): completed local release tasks and separate follow-ups.
 - [First usable release](#10-first-usable-release-definition): local completion and public-release boundaries.
 - [Current catalog/group contract](#12-current-catalog-and-group-contract):
   ownership, eligibility, execution, removal and supported-root conversion.
@@ -490,7 +490,7 @@ database import, and automatic directory scanning.
 configuration. Opening validates the marker and configuration before accessing
 the database. Future schemas and development schemas outside the three-version
 support mapping must be rejected unchanged. Section 13.2 defines the latter
-policy; enforcing the lower bound is still open work in Section 9.1.
+policy; schema-14 lower-bound enforcement was completed in 070-R2.
 
 A backup copies the complete data root, including marker, configuration, images,
 exports, and imports, to an explicitly selected empty destination outside the
