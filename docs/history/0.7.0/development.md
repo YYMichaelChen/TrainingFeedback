@@ -329,3 +329,31 @@ PowerShell parsing, relative-link, layering and diff checks passed. No source de
 was found after the 77/100 minor regression, so no additional release-budget cases
 ran. Packaging and local installed checks remain; public H3, external review, W4 and
 the personal-data transition were not performed.
+
+## 070-H2-PACKAGE Completed — 2026-09-24
+
+Built the final 0.7.0 directory payload and Setup from clean source revision
+`736223e8b5258a914b106f04da90efd98ab215f7`. An earlier rebuilt candidate exposed a
+real installed startup failure: PyInstaller had collected incompatible ICU and other
+DLLs from a Codex Poppler runtime. The final spec rejects external binary provenance,
+uses interpreter-owned alternatives where required and leaves Qt to use compatible
+Windows system ICU. Isolated Qt Core/Gui/Widgets loading and the real installed UI passed.
+
+The final manifest contains 293 files and matches the installed program path-for-path,
+size-for-size and hash-for-hash; only the two Inno uninstaller files are additional.
+The payload includes all 36 illustrations, catalog `070-illustrated-2`, schema22/v2
+resources, ffi and sqlite DLLs, with no user database or locator. Payload manifest,
+EXE and Setup SHA-256 values are `e72dfdb7...9aa9`, `dc7f24dd...e7e` and
+`4fdf7f83...e889`. EXE and Setup are unsigned, which is disclosed for local release.
+
+Installed LOCAL-01—06 passed through actual UI interaction with isolated profiles and
+the synthetic Chinese/space root `中文 空格 根 070`. The alias checks resolved
+`基础臀桥` and `蛙式臀桥` to the existing v4 identities. A synthetic two-member group
+session stored a user-entered partial result of 4 reps, paused at member 2, restarted,
+and resumed at the exact position with member 2 still unrecorded rather than zero;
+frozen guidance/image and the unreviewed status remained intact. Evidence is indexed
+under `.tmp/releases/0.7.0/20260924-010017-736223e/LOCAL-ACCEPTANCE.md`.
+
+The local-release gate is therefore satisfied. Public H3/8-B2, actual old-binary
+installed upgrades, signing/scaling, external content review, W4 and the personal-data
+transition remain deferred or unfinished and were not marked passed.

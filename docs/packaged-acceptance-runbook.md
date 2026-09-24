@@ -1,6 +1,6 @@
 # Packaged Acceptance Runbook — 0.7.0
 
-Updated: 2026-09-24. Status: current-source local installer/checks **pending**;
+Updated: 2026-09-24. Status: current-source local installer/checks **passed**;
 public independent acceptance **deferred / not run**. Product scope and supported versions live
 in [development-plan.md](development-plan.md), §§7–9, 12–13. The
 [release review](release-readiness-0.7.0.md) records findings and execution order.
@@ -29,8 +29,8 @@ belongs in the built-in catalog; these fixtures do not establish personal facts.
    pwsh -File packaging/build.ps1 -Installer -ISCC 'C:\Users\41315\AppData\Local\Programs\Inno Setup 6\ISCC.exe'
    ```
 
-   The inspected compiler exists; actual compilation is still required. Substitute
-   the verified compiler path on another build machine. Output:
+   The completed local candidate used this compiler and the pinned toolchain.
+   Substitute the verified compiler path on another build machine. Output:
    `dist/TrainingFeedback/`, its adjacent manifest, and
    `dist/installer/TrainingFeedback-<version>-Setup.exe` plus installer manifest.
 3. Verify all payload paths, counts, sizes and hashes, including unexpected files.
@@ -50,7 +50,7 @@ older candidate's evidence. Retain artifacts within the three-version window.
 
 ### 1.2 Local Installed Checks
 
-**Status: pending; no new candidate has passed these rows.** Use this machine and
+**Status: passed for candidate `20260924-010017-736223e`.** Use this machine and
 isolated synthetic roots/locator. A separate machine or full resolution/scaling
 matrix is not required for local release. Do not use a real root for failure or
 synthetic training checks. Record the actual ordinary-user/account context.
@@ -83,22 +83,29 @@ candidate-specific release directory and include the actual scratch paths used.
 
 | ID | Operation and expected result | Status |
 | --- | --- | --- |
-| LOCAL-01 | Install the candidate; compare installed files to the complete payload manifest, including unexpected files. Program replacement leaves the closed isolated locator/root bytes unchanged before application launch. | pending |
-| LOCAL-02 | Launch with a fresh isolated profile and cancel root selection. No data root or locator is created, and program files remain unchanged. | pending |
-| LOCAL-03 | Create an empty Chinese/space-containing root. All 36 current catalog entries/images are available without old roots or imports; no review, activation or training facts are invented. | pending |
-| LOCAL-04 | Browse the two revised bridge entries. 基础臀桥 and 蛙式臀桥 find the existing identities; guidance shows the three-second bridge hold. Catalog/content versions and images match the candidate manifest. | pending |
-| LOCAL-05 | Close/restart normally with the same isolated profile. The selected test root and saved state reopen without duplicate conversion or stray program-directory data. | pending |
-| LOCAL-06 | In a clearly synthetic root, explicitly enable required valid content, save/activate a representative action-group plan, enter a result, pause, restart and resume. Exact position, saved result and frozen content survive; blank actuals are not defaults. | pending |
+| LOCAL-01 | Install the candidate; compare installed files to the complete payload manifest, including unexpected files. Program replacement leaves the closed isolated locator/root bytes unchanged before application launch. | pass — `local-01-install-verification.json` |
+| LOCAL-02 | Launch with a fresh isolated profile and cancel root selection. No data root or locator is created, and program files remain unchanged. | pass — `local-02-cancel-verification.json` |
+| LOCAL-03 | Create an empty Chinese/space-containing root. All 36 current catalog entries/images are available without old roots or imports; no review, activation or training facts are invented. | pass — `local-03-catalog-verification.json` |
+| LOCAL-04 | Browse the two revised bridge entries. 基础臀桥 and 蛙式臀桥 find the existing identities; guidance shows the three-second bridge hold. Catalog/content versions and images match the candidate manifest. | pass — `local-04-bridge-verification.json` |
+| LOCAL-05 | Close/restart normally with the same isolated profile. The selected test root and saved state reopen without duplicate conversion or stray program-directory data. | pass — `local-05-restart-verification.json` |
+| LOCAL-06 | In a clearly synthetic root, explicitly enable required valid content, save/activate a representative action-group plan, enter a result, pause, restart and resume. Exact position, saved result and frozen content survive; blank actuals are not defaults. | pass — `local-06-session-resume-verification.json` |
 
 Each row records candidate/installer identity, Windows/account context, program and
 data paths, input baseline, operations, expected/actual result, evidence path/hash
 and pass/fail/pending. Retain failures before repair. Use actual UI interaction;
 offscreen survival alone does not establish interactive behavior.
 
-Local exit: the four active tasks are closed and LOCAL-01–06 pass for the exact
+Local exit is satisfied: the four active tasks are closed and LOCAL-01–06 pass for the exact
 candidate, with manifests and disclosed evidence limits. Public H3, actual old-binary
 upgrade baselines, external review and W4 remain outside this exit. Changed binaries
 get separate identities and rerun affected package checks.
+
+The passing candidate is built from clean source revision `736223e8b5258a914b106f04da90efd98ab215f7`.
+Its 293-file payload manifest SHA-256 is `e72dfdb787c08fc39c11a21bba873a819c7024cc561e9f8bd69e9283e8a89aa9`;
+the installed executable and Setup SHA-256 values are `dc7f24dde919fd6ac485764928a180f14b8657339e12c44e7746aadb3c7ece7e`
+and `4fdf7f835d8fe1a63b180db72282bd6f3ff0bbb6595f9b27830c96f7c34de889`.
+Both are unsigned. Candidate-specific evidence is under
+`.tmp/releases/0.7.0/20260924-010017-736223e/`; `LOCAL-ACCEPTANCE.md` is the index.
 
 ## 2. Isolated Input And Transfer Preparation
 
@@ -207,10 +214,10 @@ save/retraction, stale preview and explicit confirmation, not just visual inspec
 Public acceptance is deferred until an explicit public-release request. All rows
 below remain not run; completion of local checks does not change their status.
 
-The existing directory is the older 2026-09-20 candidate, with dated local rehearsal
-only; see [delivery history](history/0.7.0/development.md#070-h--completed-local-preparation-only-2026-09-20).
-Current source has catalog070-illustrated-2 and 36 images; the new installer is
-still planned. The Inno compiler exists.
+The completed local candidate is `20260924-010017-736223e`, with catalog
+`070-illustrated-2`, 36 images and a 0.7.0 Setup. The older 2026-09-20 candidate
+remains dated history; see
+[delivery history](history/0.7.0/development.md#070-h--completed-local-preparation-only-2026-09-20).
 
 When H3 is enabled, choose the exact completed candidate, refresh manifests and
 transfer inputs, and prepare actual retained-binary schema14/schema16 baselines.

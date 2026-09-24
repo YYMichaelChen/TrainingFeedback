@@ -1,7 +1,7 @@
 # 0.7.0 Local Release Closeout Plan
 
-Updated: 2026-09-24. **070-H1-CONTENT, 070-H2-TESTS and 070-H2-SOURCE are complete;
-only the local package task remains.** Product authority is [development-plan.md](development-plan.md),
+Updated: 2026-09-24. **070-H1-CONTENT, 070-H2-TESTS, 070-H2-SOURCE and
+070-H2-PACKAGE are complete; the local-release gate is satisfied.** Product authority is [development-plan.md](development-plan.md),
 especially Sections 9–10 and 12–13. This document owns execution details.
 
 The user's 2026-09-23 decision makes content closeout, tests, source provenance and
@@ -25,8 +25,8 @@ The detailed old review, test counts and completed cleanup are in
 | Completed R2 | `a274b70`, 2026-09-21: three-version support and pre-write refusal below schema14; focused dev verification 27/27. |
 | Current source catalog | `070-illustrated-2`: 36 entries, 36 required 1254×1254 PNGs, content and file hashes. Illustrations delivered 2026-09-22 and two bridge revisions delivered 2026-09-23; externally unreviewed. |
 | Content closeout | 070-H1-CONTENT complete: both bridge entries are v4, with the three-second hold and agreed aliases. Other 34 entries and all image bytes are unchanged. |
-| Existing directory candidate | 2026-09-20 build in `dist/TrainingFeedback/` and its adjacent manifest; older catalog/content and candidate-specific local rehearsal only. |
-| Existing installer | 0.6.1 Setup and manifest in `dist/installer/`; no 0.7.0 installer result. Inno Setup exists. |
+| Current directory candidate | 2026-09-24 293-file build from clean `736223e`; payload manifest `e72dfdb7...9aa9`, EXE `dc7f24dd...e7e`, catalog `070-illustrated-2`. |
+| Current installer | 0.7.0 Setup `4fdf7f83...e889`, built with Inno Setup 6.7.3; Setup and EXE are unsigned, as disclosed for local release. |
 | Test selection | Resident collection 188. Default selection succeeds with 12 dev cases. Minor 63 plus recovery/conversion 18, overlap 4, actual union 77/100; all selected release cases pass. |
 | Historical/current contract check | Frozen inventory and v1 schema bytes are checked directly; current source, manifest, files and SQLite content are checked separately. The obsolete missing-image generator is retired. |
 | Deferred / independent follow-ups | H3 scenarios not run; W4 and external content review not completed. None blocks local release. |
@@ -157,35 +157,36 @@ transition or training fact was created.
   compileall, PowerShell parsing, catalog verification and diff checks passed.
 
 No source defect was found after the final regression, so no additional pytest case
-or release-budget use was needed. The exact revision and final ZIP SHA-256 are kept
-with the task handoff; H2-PACKAGE must build from that revision and confirm the
-payload manifest reports the same clean source identity.
+or release-budget use was needed. H2-PACKAGE subsequently built from that exact
+revision and its payload manifest reports the same clean source identity.
 
 ### 070-H2-PACKAGE — Installer and local installed checks
 
-**Status:** pending. Depends on all three preceding tasks.
+**Status:** complete, 2026-09-24. All three preceding tasks were complete before the final build.
 
 - Use project Python 3.12, PySide6 6.11.2 and the pins in
   `packaging/requirements-build.txt`; the last verified interpreter was 3.12.14,
   PyInstaller 6.22.2 and hooks 2026.7. Do not silently change the runtime.
-- Build the full PyInstaller directory and Inno Setup installer:
+- Built the full PyInstaller directory and Inno Setup installer with the pinned command:
 
   ```powershell
   pwsh -File packaging/build.ps1 -Installer -ISCC 'C:\Users\41315\AppData\Local\Programs\Inno Setup 6\ISCC.exe'
   ```
 
-- Retain `dist/TrainingFeedback/`, `dist/TrainingFeedback.build-manifest.json`,
-  `dist/installer/TrainingFeedback-0.7.0-Setup.exe` and its installer manifest.
-  Verify counts, paths, sizes and SHA-256 including unexpected files.
-- Verify application/schema/catalog/contract identities, 36 images, Qt resources,
-  sqlite3.dll and absence of user DB/locator files in the payload.
-- Execute [local installed acceptance](packaged-acceptance-runbook.md#12-local-installed-checks)
-  using isolated roots/locator: install and payload comparison, first-launch cancel,
-  Chinese/space root creation, current library/images/aliases, restart and a
-  representative group/pause/resume workflow.
-- Record installed program path, candidate and installer hashes, source identity,
-  environment, signature status, actual operations/results and evidence locations.
-  Local unsigned status is disclosed; signing is a public-distribution follow-up.
+- The final manifest binds clean source `736223e8b5258a914b106f04da90efd98ab215f7` and
+  contains 293 files. Every payload path/size/hash matched both the directory candidate
+  and installed program; only the two expected Inno uninstaller files were additional.
+- Application 0.7.0/schema22, catalog `070-illustrated-2`, v2 contract, all 36 images,
+  Qt resources, ffi/sqlite DLLs and isolated Qt loading passed; no user DB/locator was
+  present in the payload and no external Codex-runtime DLL remained.
+- [LOCAL-01—06](packaged-acceptance-runbook.md#12-local-installed-checks) passed with
+  actual installed UI interaction, isolated profiles and a Chinese/space synthetic root.
+  The representative group session preserved position 1, a user-entered partial 4-rep
+  result, a blank—not zero—second actual, frozen v4 guidance/image and unreviewed state.
+- Candidate evidence is indexed by
+  `.tmp/releases/0.7.0/20260924-010017-736223e/LOCAL-ACCEPTANCE.md`. Payload manifest,
+  EXE and Setup hashes are `e72dfdb7...9aa9`, `dc7f24dd...e7e` and `4fdf7f83...e889`.
+  EXE and Setup Authenticode are `NotSigned`; signing remains a public-release follow-up.
 - Preserve old candidate results with the old candidate. Any rebuilt candidate gets
   its own identity and affected package checks; source changes return to H2-TESTS
   and H2-SOURCE as required.
@@ -194,7 +195,7 @@ Outputs: complete directory, Setup, both manifests, local evidence and local-rel
 status. Default evidence organization is `.tmp/releases/0.7.0/<candidate-id>/`,
 where candidate-id includes build timestamp and source revision.
 
-Acceptance: preceding tasks closed; all required local rows pass for this exact
+Acceptance is met: preceding tasks closed; all required local rows pass for this exact
 candidate; program/data boundaries remain intact. H3's independent machine,
 actual old-binary upgrade inputs and full scaling matrix do not block this exit.
 

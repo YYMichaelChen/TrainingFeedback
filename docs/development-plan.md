@@ -20,8 +20,8 @@ seed content and proposed doses. Use these entry points:
   evidence, ordered tasks and acceptance criteria; no implied release approval.
 
 This document contains current requirements and open work. Completed delivery
-details belong in the versioned archive. Policy acceptance does not establish
-implementation or candidate acceptance; Section 9.1 names the remaining gaps.
+details belong in the versioned archive. Policy acceptance alone does not establish
+implementation or candidate acceptance; Section 9.1 records the current status.
 
 ## 1. Product Goal
 
@@ -573,9 +573,9 @@ valid bundled illustrations. Four video-informed guidance changes and the 36 ima
 were delivered on 2026-09-22; the two bridge revisions were delivered on 2026-09-23.
 The 13-action initial plan remains a proposal.
 
-The directory candidate in `dist/` is the older 2026-09-20 build; the available
-installer is still 0.6.1. Neither is evidence that current source content has been
-packaged. The current `070-illustrated-2` source catalog has not yet been packaged.
+The current directory candidate and 0.7.0 Setup were built on 2026-09-24 from clean
+source revision `736223e`; the 293-file payload includes catalog `070-illustrated-2`.
+LOCAL-01—06 passed against the installed candidate with isolated synthetic data.
 
 **Release decision, 2026-09-23:** local release requires only the four active tasks
 below. Independent Windows acceptance (070-H3/8-B2) and public-distribution
@@ -592,7 +592,7 @@ owns dependency order, scopes, commands, deliverables and acceptance evidence.
 | 070-H1-CONTENT — complete, 2026-09-23 | Added the bridge three-second hold and two aliases; advanced only the two affected entries to v4 and rebuilt catalog070-illustrated-2. | Dev scope 3/30 passed; alias identity/search, unchanged other 34 entries and all image bytes, preserved history, 36-image integrity and reproducible catalog verified. |
 | 070-H2-TESTS — complete, 2026-09-23 | Repaired the minor selection and separated frozen historical validation from current catalog verification; retired the obsolete generator. | Default collection succeeds; dev 5/30 and release minor 77/100 unique cases passed; frozen inputs stayed unchanged and target static checks passed. |
 | 070-H2-SOURCE — complete, 2026-09-24 | Reviewed all current additions/deletions, completed documentation cleanup, preserved the old candidate and committed the complete source. | Clean 218-file archive imported all 67 modules, preserved 14 frozen files, verified 36 image pairs and reproduced all 38 catalog files byte-for-byte; no local/user data entered source. |
-| 070-H2-PACKAGE — pending | Build directory and Setup with the pinned toolchain; verify hashes and installed behavior on this machine using isolated data. | Complete payload/installer manifests and passing local packaged checks for that exact build. |
+| 070-H2-PACKAGE — complete, 2026-09-24 | Built the clean `736223e` directory candidate and 0.7.0 Setup, repaired isolated Qt DLL provenance, and executed installed LOCAL-01—06 with isolated synthetic data. | 293/293 payload files and double manifests matched; LOCAL-01—06 passed, including cancel-with-no-root, 36-entry catalog/aliases and exact group-session pause/restart/resume. EXE/Setup unsigned status is disclosed. |
 
 Separate follow-ups:
 
@@ -1218,7 +1218,7 @@ become required only for an explicitly requested public release.
 acceptance. The current content/image inventory must be explicit: all 36 entries
 retain stable identities and truthful readiness, and usable actions meet Section
 12.4. The 36 delivered illustrations and completed bridge revisions do not establish
-expert review. 070-H1-CONTENT is complete; tests, source freeze and packaging remain.
+expert review. All four Section 9.1 local-release tasks are complete.
 
 Keep local-release, external-review, personal-use and W4 results distinct.
 Independent 8-B2 is deferred/not run and is activated only by an explicit public
