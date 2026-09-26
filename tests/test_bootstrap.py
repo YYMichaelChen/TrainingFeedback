@@ -1,9 +1,8 @@
-"""启动选择数据根的取消/失败语义与旧根自动转换：全部使用临时目录与临时 locator。"""
+"""启动选择数据根的取消/失败语义：全部使用临时目录与临时 locator。"""
 
-from unittest.mock import patch
+import sqlite3
 
 import pytest
-from migration_070_fixtures import create_schema16_baseline
 
 from training_feedback.bootstrap import (
     choose_data_root,
@@ -11,10 +10,8 @@ from training_feedback.bootstrap import (
     open_from_locator,
     open_root,
 )
-from training_feedback.data import migrations
 from training_feedback.data.data_root import DataRootAccessError, ExpiredDataRootError, create_new
 from training_feedback.data.locator import Locator
-from training_feedback.data.root_lock import JOURNAL_FILENAME
 
 
 def test_cancel_after_failure_creates_nothing_and_keeps_locator(tmp_path):
@@ -68,8 +65,10 @@ def test_locator_write_failure_is_reported_and_root_remains_openable(tmp_path):
 
 def test_open_root_refuses_out_of_window_root_and_never_records_locator(tmp_path):
     root = tmp_path / "expired"
-    with patch.object(migrations, "LATEST_SCHEMA_VERSION", 9):
-        create_new(root)
+    create_new(root)
+    with sqlite3.connect(root / "training_feedback.sqlite3") as connection:
+        connection.execute("UPDATE schema_migration SET version=21 WHERE version=22")
+    before = (root / "training_feedback.sqlite3").read_bytes()
     locator = Locator(tmp_path / "locator.json")
 
     with pytest.raises(ExpiredDataRootError):
@@ -77,44 +76,23 @@ def test_open_root_refuses_out_of_window_root_and_never_records_locator(tmp_path
 
     assert locator.load() is None
     assert not (tmp_path / "locator.json").exists()
-    assert (root / "training_feedback.sqlite3").exists()
+    assert (root / "training_feedback.sqlite3").read_bytes() == before
 
 
-def test_open_from_locator_converts_unconverted_root_and_is_idempotent(tmp_path):
-    baseline = create_schema16_baseline(tmp_path / "old")
+def test_open_from_locator_reopens_current_root_and_is_idempotent(tmp_path):
     locator = Locator(tmp_path / "locator.json")
-    locator.save(baseline["data_root"])
+    root = tmp_path / "current"
+    context = create_root(root, locator)
+    context.close()
     errors = []
 
     context = open_from_locator(locator, errors.append)
     assert context is not None
     assert errors == []
-    assert [row["status"] for row in context.sessions.history()] == [
-        "paused", "partial", "completed",
-    ]
+    assert context.data_root.path == root
     context.close()
 
     reopened = open_from_locator(locator, errors.append)
     assert reopened is not None
     assert errors == []
     reopened.close()
-
-
-def test_open_from_locator_reports_unrecoverable_journal_and_lets_user_choose(tmp_path):
-    baseline = create_schema16_baseline(tmp_path / "old")
-    root = baseline["data_root"]
-    (root / JOURNAL_FILENAME).write_text('{"format": "bogus"}', encoding="utf-8")
-    locator = Locator(tmp_path / "locator.json")
-    locator.save(root)
-    errors = []
-
-    assert open_from_locator(locator, errors.append) is None
-    assert len(errors) == 1
-    assert "recovery journal" in str(errors[0])
-    # 旧根保持原样，用户可改选其他目录。
-    assert (root / "training_feedback.sqlite3").exists()
-    fresh = tmp_path / "fresh"
-    context = choose_data_root(locator, lambda: (fresh, True), errors.append)
-    assert context is not None
-    context.close()
-    assert locator.load() == fresh

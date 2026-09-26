@@ -2,7 +2,6 @@
 
 import sqlite3
 from copy import deepcopy
-from unittest.mock import patch
 
 import pytest
 from test_070_group_execution import controller
@@ -10,7 +9,6 @@ from test_070_group_plans import DIGEST, PNG, activate, context, enable, payload
 
 from training_feedback.app import LibraryContext
 from training_feedback.application.library_workflow import LibraryTarget
-from training_feedback.data import migrations
 from training_feedback.data.backup import create_backup
 from training_feedback.data.catalog_builder import build_catalog
 from training_feedback.data.database import Database, transaction
@@ -363,14 +361,11 @@ def test_backup_and_other_roots_keep_decisions_isolated(context, payload, tmp_pa
         assert not other.library.eligibility(selected[0]).removed
 
 
-def test_migration_is_append_only_and_lifecycle_journal_immutable(tmp_path, context, payload):
-    path = tmp_path / "schema20.sqlite3"
-    with patch.object(migrations, "LATEST_SCHEMA_VERSION", 20):
-        with Database(path) as connection:
-            connection.execute(
-                "INSERT INTO library_reference VALUES (1,'custom','example','unknown')"
-            )
-            connection.commit()
+def test_schema22_reopen_preserves_rows_and_lifecycle_journal_immutable(tmp_path, context, payload):
+    path = tmp_path / "schema22.sqlite3"
+    with Database(path) as connection:
+        connection.execute("INSERT INTO library_reference VALUES (1,'custom','example','unknown')")
+        connection.commit()
     with Database(path) as connection:
         assert tuple(connection.execute("SELECT * FROM library_reference").fetchone()) == (
             1, "custom", "example", "unknown",

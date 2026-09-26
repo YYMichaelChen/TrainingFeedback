@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "training-feedback"
-version = "0.7.0"
+version = "0.7.2"
 description = "Local-first personal training desktop application"
 requires-python = ">=3.12"
 dependencies = [
@@ -25,7 +25,7 @@ training-feedback = "training_feedback.main:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-training_feedback = ["ui/*.svg", "catalog/*.sqlite3", "catalog/*.json", "catalog/images/*", "contracts/*.json"]
+training_feedback = ["ui/*.svg", "catalog/*.sqlite3", "catalog/*.json", "catalog/images/*", "contracts/*.json", "data/*.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -47,8 +47,8 @@ regression_dev = [
 regression_patch = [
     "test_open_rejects_future_schema_without_modifying_database",
     "test_switch_round_trip_keeps_datasets_separate",
-    "test_open_from_locator_converts_unconverted_root_and_is_idempotent",
-    "test_switch_converts_unconverted_target_root",
+    "test_open_from_locator_reopens_current_root_and_is_idempotent",
+    "test_switch_rejects_expired_target_without_changing_current_root",
     "test_import_registration_failure_cleans_file_and_rows",
     "test_ui_editor_cancel_and_verbatim_save_do_not_change_selection",
     "test_activation_failure_on_second_pin_rolls_back_everything",
@@ -63,12 +63,11 @@ regression_patch = [
     "test_hub_resume_and_frozen_history_feedback_do_not_infer_answers",
 ]
 regression_minor = [
-    "test_schema16_fixture_preserves_full_facts_on_copy_and_reopen",
-    "test_out_of_window_root_refused_before_any_write",
-    "test_oldest_retained_schema14_root_converts_unknown_facts",
-    "test_schema17_only_adds_storage_preserving_schema16_business_facts",
-    "test_migration_is_append_only_and_lifecycle_journal_immutable",
-    "test_fixture_root_covers_packaged_acceptance_scenarios",
+    "test_open_rejects_expired_schema_without_modifying_database",
+    "test_open_root_refuses_out_of_window_root_and_never_records_locator",
+    "test_switch_rejects_expired_target_without_changing_current_root",
+    "test_schema22_reopen_preserves_rows_and_lifecycle_journal_immutable",
+    "test_open_from_locator_reopens_current_root_and_is_idempotent",
     "test_start_freezes_everything_and_requires_fresh_disclosure",
     "test_overrides_custom_copy_and_catalog_upgrade_keep_originals",
     "test_partial_finish_and_individual_retraction_keep_original_before_image",

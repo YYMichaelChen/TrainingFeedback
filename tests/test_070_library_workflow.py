@@ -222,25 +222,53 @@ def test_ui_browses_families_filters_variants_and_keeps_stop_text(qt_app, contex
     page.resize(1100, 740)
     page.show()
     qt_app.processEvents()
-    assert page.tree.topLevelItemCount() == 5  # four families and standalone
-    assert sum(page.tree.topLevelItem(i).childCount()
-               for i in range(page.tree.topLevelItemCount())) == 36
+    assert page.cards.count() == 36
+    assert not page.cards.item(0).icon().isNull()
+    assert page.stack.currentIndex() == 0
+    page.batch_toggle.setChecked(True)
+    page.cards.item(0).setSelected(True)
+    page.cards.item(1).setSelected(True)
+    assert page.batch_review_button.isEnabled()
+    assert page.batch_removal_button.isEnabled()
+    page.cards.itemClicked.emit(page.cards.item(0))
+    assert page.stack.currentIndex() == 0
+    page.batch_toggle.setChecked(False)
+    assert not page.batch_review_button.isEnabled()
     page.position.setCurrentIndex(page.position.findData("prone"))
-    assert sum(page.tree.topLevelItem(i).childCount()
-               for i in range(page.tree.topLevelItemCount())) == 3
+    assert page.cards.count() == 3
     page.search.setText("俯卧屈腿")
-    assert page.tree.topLevelItem(0).childCount() == 1
+    assert page.cards.count() == 1
+    page.cards.itemClicked.emit(page.cards.item(0))
+    assert page.stack.currentIndex() == 1
     assert "停止条件" in page.guidance.toPlainText()
-    assert "所选版本" in page.comparison.toPlainText()
     assert page.images_layout.count() >= 1
     page.position.setCurrentIndex(0)
+    assert page.stack.currentIndex() == 0
     page.search.setText("基础臀桥")
+    page.cards.itemClicked.emit(page.cards.item(0))
     assert page.target.exercise.key == "launch.glute-bridge"
     page.search.setText("蛙式臀桥")
+    page.cards.itemClicked.emit(page.cards.item(0))
     assert page.target.exercise.key == "launch.butterfly-glute-bridge"
     page.search.setText("not found")
+    assert page.cards.count() == 0
     assert page.target is None
     assert not page.actions["select"].isEnabled()
+    page.close()
+
+
+def test_ui_displays_latest_content_without_version_picker(qt_app, context):
+    service, item = context.library, target(context)
+    content = deepcopy(service.target_entry(item)["content"])
+    content["guidance"]["purpose"] = "【合成】最新版本目的"
+    service.save_override(BRIDGE, content, item.content)
+    page = context.create_library_page()
+    assert not hasattr(page, "versions")
+    page.search.setText("基础臀桥")
+    page.cards.itemClicked.emit(page.cards.item(0))
+    assert page.target.content != item.content
+    assert "【合成】最新版本目的" in page.guidance.toPlainText()
+    assert "尚未投入使用" in page.status.text()
     page.close()
 
 

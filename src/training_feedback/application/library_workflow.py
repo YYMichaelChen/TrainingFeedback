@@ -37,6 +37,16 @@ class LibraryWorkflowService(LibraryService):
             raise CatalogError("The displayed content changed.")
         return entry
 
+    def latest_target(self, exercise: ExerciseReference) -> LibraryTarget | None:
+        """最新内容版本的显示目标：本地覆盖版本优先，其次程序内置。"""
+        row = self.get(exercise)
+        if row is None:
+            return None
+        entry = row["local_contents"][-1] if row["local_contents"] else row["bundled"]
+        if entry is None:
+            return None
+        return LibraryTarget(exercise, entry["reference"])
+
     def _read_image(self, entry: dict, image: dict) -> bytes:
         # Validate the stored declaration even when content-addressed bytes are used.
         managed_path(self.data_root, image["path"])
@@ -324,13 +334,15 @@ class LibraryWorkflowService(LibraryService):
                              "name": reference.key, "missing": True})
         return rows
 
-    def browse(self, query: str = "", position: str | None = None) -> list[dict]:
+    def browse(self, query: str = "", position: str | None = None,
+               *, latest: bool = False) -> list[dict]:
         rows = []
         for exercise in self.list():
-            entry = exercise["selected"] or (
+            current = (
                 exercise["local_contents"][-1]
                 if exercise["local_contents"] else exercise["bundled"]
             )
+            entry = current if latest else exercise["selected"] or current
             content = entry["content"]
             if position and content["classification"]["starting_position_class"] != position:
                 continue

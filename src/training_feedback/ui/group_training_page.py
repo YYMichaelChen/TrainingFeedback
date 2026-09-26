@@ -260,9 +260,10 @@ class GroupTrainingPage(QWidget):
         self.selector.blockSignals(False)
         self.title.setText(occurrence_title(row))
         self.status.setText(f"{session['training_date']} · "
-                            f"{SESSION_STATUS_LABELS[session['status']]}"
-                            f" · {len(session['occurrences']) - len(self.controller.unfinished)}"
-                            f"/{len(session['occurrences'])}")
+                            f"{SESSION_STATUS_LABELS[session['status']]} · "
+                            + T["progress"].format(
+                                done=len(session['occurrences']) - len(self.controller.unfinished),
+                                total=len(session['occurrences'])))
         following = self.controller.next_occurrence
         self.next_label.setText(T["next_label"] + occurrence_title(following)
                                 if following else T["no_next"])

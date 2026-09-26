@@ -45,6 +45,7 @@ from ..domain.group_plans import (
 )
 from .labels import (
     DOSE_UNIT_LABELS,
+    EXERCISE_SOURCE_LABELS,
     LIBRARY_REASON_LABELS,
     PLAN_PHASE_LABELS,
     PLAN_STATUS_LABELS,
@@ -122,8 +123,7 @@ class ActionPrescriptionDialog(QDialog):
         for choice in available:
             self.exercise.addItem(
                 f"{choice['exercise_name']} · "
-                f"{POSITION_LABELS[choice['classification']['starting_position_class']]} · "
-                f"{choice['content']['sha256'][:10]}",
+                f"{POSITION_LABELS[choice['classification']['starting_position_class']]}",
                 choice,
             )
         if action:
@@ -424,7 +424,7 @@ class GroupPlanEditor(QDialog):
             form.addRow(T[name], widget)
         layout.addLayout(form)
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels([T["day"], T["version"]])
+        self.tree.setHeaderLabels([T["day"]])
         layout.addWidget(self.tree, 1)
         for names in (
             ("add_day", "rename_day", "add_action", "add_group", "edit_item"),
@@ -448,16 +448,13 @@ class GroupPlanEditor(QDialog):
             self.tree.addTopLevelItem(parent)
             for i, item in enumerate(day["items"]):
                 child = QTreeWidgetItem(
-                    [
-                        f"{item['order']}. {item.get('name', item.get('exercise_name'))}",
-                        item["item_id"],
-                    ]
+                    [f"{item['order']}. {item.get('name', item.get('exercise_name'))}"]
                 )
                 child.setData(0, Qt.ItemDataRole.UserRole, (d, i, None))
                 parent.addChild(child)
                 for m, member in enumerate(item.get("members", [])):
                     leaf = QTreeWidgetItem(
-                        [f"{member['order']}. {member['exercise_name']}", member["item_id"]]
+                        [f"{member['order']}. {member['exercise_name']}"]
                     )
                     leaf.setData(0, Qt.ItemDataRole.UserRole, (d, i, m))
                     child.addChild(leaf)
@@ -583,11 +580,17 @@ class GroupPlanEditor(QDialog):
         self.accept()
 
 
+_SKIP_FIELDS = {"item_id", "group_id", "sha256", "key", "revision_id", "session_id",
+                "content_id", "content"}
+
+
 def render_fields(value, indent=0, field=None):
     prefix = "  " * indent
     if isinstance(value, dict):
         lines = []
         for key, item in value.items():
+            if key in _SKIP_FIELDS:
+                continue
             if isinstance(item, (dict, list, tuple)):
                 lines.append(prefix + T.get(key, key) + "：")
                 lines.append(render_fields(item, indent + 1, key))
@@ -607,13 +610,14 @@ def render_fields(value, indent=0, field=None):
         "unit": DOSE_UNIT_LABELS, "phase": PLAN_PHASE_LABELS,
         "starting_position_class": POSITION_LABELS, "variant_role": VARIANT_LABELS,
         "kind": T, "first_side": T, "side_sequence": T,
+        "source": EXERCISE_SOURCE_LABELS,
     }.get(field, {})
     return str(mapping.get(value, value))
 
 
 def render_changes(changes):
     return "\n\n".join(
-        f"{change['path']} · {change['item_id'] or T['name']}\n"
+        f"{T.get(change['path'], change['path'])}\n"
         f"{T['before']}：\n{render_fields(change['before'], field=change['path'])}\n"
         f"{T['after']}：\n{render_fields(change['after'], field=change['path'])}"
         for change in changes
@@ -629,11 +633,17 @@ def render_plan(plan):
             lines.append(render_fields(item))
             if item["kind"] == "group":
                 lines.append(T["expanded"])
+                member_names = {member["item_id"]: member["exercise_name"]
+                                for member in item.get("members", [])}
                 occurrences = list(islice(group_from_item(item).occurrences(), 301))
                 for occurrence in occurrences[:300]:
+                    rest = occurrence.rest_after_seconds
+                    rest_text = f"{rest:g}" if rest is not None else T["unknown"]
                     lines.append(
-                        f"{T['rounds']} {occurrence.round_number} · {occurrence.member_id} · "
-                        f"{T.get(occurrence.side, T['none'])} · {occurrence.rest_after_seconds}s"
+                        f"{T['rounds']} {occurrence.round_number} · "
+                        f"{member_names.get(occurrence.member_id, T['unknown'])} · "
+                        f"{T.get(occurrence.side, T['none'])} · "
+                        f"{T['rest_seconds'].format(value=rest_text)}"
                     )
                 if len(occurrences) > 300:
                     lines.append(T["preview_truncated"])
@@ -729,8 +739,7 @@ class GroupPlanPage(QWidget):
                 original = json.loads(basis["original_payload"])
                 provenance = (
                     f"\n{T['import_basis']}：{original['rationale']}\n"
-                    f"{T['original_file']}：{basis['source_path']}\n"
-                    f"SHA-256：{basis['sha256']}"
+                    f"{T['original_file']}：{basis['source_path']}"
                 )
             self.detail.setPlainText(
                 render_plan(revision["payload"]["plan"]) + "\n" + revision["rationale"] + provenance
@@ -738,7 +747,7 @@ class GroupPlanPage(QWidget):
                     revision["conversion_registrations"]) if revision["conversion_registrations"]
                    else "")
                 + "\n" + "\n".join(issue["name"] + "：" + "、".join(
-                    LIBRARY_REASON_LABELS[reason] for reason in issue["reasons"])
+                    LIBRARY_REASON_LABELS.get(reason, reason) for reason in issue["reasons"])
                     for issue in self.service.content_issues(revision["id"]))
             )
         else:

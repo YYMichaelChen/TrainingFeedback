@@ -10,16 +10,14 @@ from copy import deepcopy
 
 import pytest
 from image_fixtures import png_bytes
-from migration_070_fixtures import create_schema16_baseline, logical_baseline
 
 from training_feedback.app import LibraryContext
 from training_feedback.data.catalog_builder import build_catalog, source_content
 from training_feedback.data.catalog_repository import CatalogRepository
 from training_feedback.data.catalog_resources import CatalogError, catalog_directory
 from training_feedback.data.data_root import DataRootError
-from training_feedback.data.database import Database, transaction
+from training_feedback.data.database import transaction
 from training_feedback.data.library_images import inspect_images
-from training_feedback.data.library_repository import LibraryRepository
 from training_feedback.data.seed.images import bundled_image_assets
 from training_feedback.domain.catalog import ExerciseReference, content_sha256
 
@@ -246,39 +244,6 @@ def test_retained_rows_immutable_and_identity_hash_conflicts_rollback(
             context.library.resolve(BRIDGE, "另一个动作", entry["reference"])
         with pytest.raises(CatalogError, match="changed"):
             context.library.retain_bundled(BRIDGE, {**entry["reference"], "version": 999})
-
-
-def test_schema17_only_adds_storage_preserving_schema16_business_facts(tmp_path):
-    from training_feedback.data.data_root import inspect_existing
-    from training_feedback.data.upgrade_recovery import UpgradeRecovery
-
-    baseline = create_schema16_baseline(tmp_path / "old")
-    root = baseline["data_root"]
-    original_bytes = (root / "training_feedback.sqlite3").read_bytes()
-    inspect_existing(root)
-    assert (root / "training_feedback.sqlite3").read_bytes() == original_bytes
-
-    def convert(work, _catalog):
-        with Database(work / "training_feedback.sqlite3") as connection:
-            assert LibraryRepository(connection).references() == []
-            assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
-
-    recovery = UpgradeRecovery(root)
-    assert recovery.run("test-schema-chain", convert, lambda work, _: inspect_existing(work))
-    assert not recovery.run("test-schema-chain", convert, lambda work, _: inspect_existing(work))
-    updated = logical_baseline(root)
-    assert {key: value for key, value in updated["resources"].items()
-            if not key.startswith("backups/") and not key.startswith(".training-feedback")} == (
-                baseline["baseline"]["resources"])
-    snapshot = next((root / "backups").glob("upgrade-v1-*/snapshot"))
-    assert logical_baseline(snapshot)["tables"] == baseline["baseline"]["tables"]
-    assert not (snapshot / "backups").exists()
-    assert not (snapshot.parent / "work").exists()
-    for table, rows in baseline["baseline"]["tables"].items():
-        if table != "schema_migration":
-            assert updated["tables"][table] == rows
-    with pytest.raises(DataRootError, match="not completed"):
-        LibraryContext.reopen(root)
 
 
 def test_manifest_path_escape_rejected(illustrated_catalog, tmp_path):

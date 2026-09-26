@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -18,21 +17,22 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
     QLineEdit,
+    QListView,
+    QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
     QSpinBox,
-    QSplitter,
+    QStackedWidget,
     QTabWidget,
-    QTreeWidget,
-    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
 from ..application.library_workflow import LibraryTarget
-from .guidance_widgets import GuidanceChangesView, GuidanceForm, GuidanceView
+from .guidance_widgets import GuidanceForm, GuidanceView
 from .labels import (
     CATEGORY_LABELS,
     EXERCISE_ENABLED_LABELS,
@@ -79,12 +79,36 @@ def show_images(layout, service, target):
             except (ValueError, OSError):
                 label.setText(T["invalid_image"])
         else:
-            label.setText(LIBRARY_REASON_LABELS[check.reason])
+            label.setText(LIBRARY_REASON_LABELS.get(check.reason, check.reason))
         layout.addWidget(label)
         caption = QLabel(entry["content"]["guidance"]["images"][check.index].get("caption", ""))
         caption.setWordWrap(True)
         caption.setTextFormat(Qt.TextFormat.PlainText)
         layout.addWidget(caption)
+
+
+def card_icon(service, target, status):
+    """Make a consistent thumbnail from an actual checked illustration."""
+    canvas = QPixmap(208, 144)
+    canvas.fill(QColor("#e9f2f5"))
+    painter = QPainter(canvas)
+    check = next((item for item in status.image_checks if item.valid), None)
+    if check is not None:
+        try:
+            source = QPixmap()
+            if source.loadFromData(service.checked_image(target, check.index)):
+                scaled = source.scaled(200, 136, Qt.AspectRatioMode.KeepAspectRatio,
+                                       Qt.TransformationMode.SmoothTransformation)
+                painter.drawPixmap((208 - scaled.width()) // 2,
+                                   (144 - scaled.height()) // 2, scaled)
+                painter.end()
+                return QIcon(canvas)
+        except (ValueError, OSError):
+            pass
+    painter.setPen(QColor("#64788a"))
+    painter.drawText(canvas.rect(), Qt.AlignmentFlag.AlignCenter, "暂无可用示意图")
+    painter.end()
+    return QIcon(canvas)
 
 
 class CatalogReviewDialog(QDialog):
@@ -98,9 +122,7 @@ class CatalogReviewDialog(QDialog):
         self.targets_combo = QComboBox()
         for target in self.targets:
             entry = service.target_entry(target)
-            self.targets_combo.addItem(
-                f"{entry['content']['canonical_name']} · {target.content['sha256'][:12]}", target,
-            )
+            self.targets_combo.addItem(entry["content"]["canonical_name"], target)
         layout.addWidget(self.targets_combo)
         tabs = QTabWidget()
         self.view = GuidanceView(include_review=False)
@@ -111,8 +133,6 @@ class CatalogReviewDialog(QDialog):
         image_scroll.setWidgetResizable(True)
         image_scroll.setWidget(self.image_panel)
         tabs.addTab(image_scroll, T["image"])
-        self.changes = GuidanceChangesView()
-        tabs.addTab(self.changes, T["comparison"])
         layout.addWidget(tabs, 1)
         self.targets_combo.currentIndexChanged.connect(self._show_target)
         form = QFormLayout()
@@ -146,12 +166,6 @@ class CatalogReviewDialog(QDialog):
             entry = self.service.target_entry(target)
             self.view.set_guidance(entry["content"]["guidance"])
             show_images(self.image_layout, self.service, target)
-            selected = self.service.get(target.exercise)["selected"]
-            self.changes.set_revisions(
-                {"id": selected["reference"]["id"], "guidance": selected["content"]["guidance"]}
-                if selected else None,
-                {"id": entry["reference"]["id"], "guidance": entry["content"]["guidance"]},
-            )
 
     def _choose_answer(self):
         from pathlib import Path
@@ -271,8 +285,15 @@ class CatalogLibraryPage(QWidget):
         self.target = None
         self.dialog = None
         layout = QVBoxLayout(self)
+        self.stack = QStackedWidget()
+        gallery = QWidget()
+        gallery_layout = QVBoxLayout(gallery)
+        title = QLabel(T["title"])
+        title.setObjectName("pageTitle")
+        gallery_layout.addWidget(title)
         self.version_label = QLabel(f"{T['catalog']}：{service.catalog.version}")
-        layout.addWidget(self.version_label)
+        self.version_label.setObjectName("muted")
+        gallery_layout.addWidget(self.version_label)
         filters = QHBoxLayout()
         self.search = QLineEdit()
         self.search.setPlaceholderText(T["search"])
@@ -285,27 +306,59 @@ class CatalogLibraryPage(QWidget):
         refresh = QPushButton(T["refresh"])
         refresh.clicked.connect(self.refresh)
         filters.addWidget(refresh)
-        layout.addLayout(filters)
-        splitter = QSplitter()
-        self.tree = QTreeWidget()
-        self.tree.setHeaderLabels([T[key] for key in ("name", "source", "position", "readiness",
-                                                     "review", "enabled")])
-        self.tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        splitter.addWidget(self.tree)
+        gallery_layout.addLayout(filters)
+        self.gallery_count = QLabel()
+        self.gallery_count.setObjectName("muted")
+        gallery_layout.addWidget(self.gallery_count)
+        self.cards = QListWidget()
+        self.cards.setViewMode(QListView.ViewMode.IconMode)
+        self.cards.setResizeMode(QListView.ResizeMode.Adjust)
+        self.cards.setMovement(QListView.Movement.Static)
+        self.cards.setFlow(QListView.Flow.LeftToRight)
+        self.cards.setWrapping(True)
+        self.cards.setWordWrap(True)
+        self.cards.setIconSize(QSize(208, 144))
+        self.cards.setGridSize(QSize(236, 226))
+        self.cards.setSpacing(10)
+        self.cards.setStyleSheet(
+            "QListWidget { background: transparent; border: none; }"
+            "QListWidget::item { background: white; border: 1px solid #dce5ef;"
+            " border-radius: 12px; padding: 8px; color: #233249; }"
+            "QListWidget::item:hover { border-color: #0f8175; background: #f5fbf9; }"
+            "QListWidget::item:selected { border: 2px solid #0f8175;"
+            " background: #e8f5f1; color: #115e59; }"
+        )
+        gallery_layout.addWidget(self.cards, 1)
+        batch_row = QHBoxLayout()
+        self.batch_toggle = QCheckBox(T["batch_mode"])
+        batch_row.addWidget(self.batch_toggle)
+        self.batch_review_button = QPushButton(T["batch_review"])
+        self.batch_review_button.clicked.connect(self._batch_review)
+        batch_row.addWidget(self.batch_review_button)
+        if removals is not None:
+            self.batch_removal_button = QPushButton(T["removal"])
+            self.batch_removal_button.clicked.connect(
+                lambda: self._open_removals(self._selected_targets()))
+            batch_row.addWidget(self.batch_removal_button)
+        batch_row.addStretch()
+        gallery_layout.addLayout(batch_row)
+        self.stack.addWidget(gallery)
         detail = QWidget()
         detail_layout = QVBoxLayout(detail)
-        self.versions = QComboBox()
-        self.versions.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
-        self.versions.setMinimumContentsLength(20)
-        detail_layout.addWidget(self.versions)
+        heading = QHBoxLayout()
+        back = QPushButton(T["back_to_gallery"])
+        back.clicked.connect(self._show_gallery)
+        heading.addWidget(back)
+        self.detail_title = QLabel()
+        self.detail_title.setObjectName("sectionTitle")
+        heading.addWidget(self.detail_title, 1)
+        detail_layout.addLayout(heading)
         self.status = QLabel()
         self.status.setWordWrap(True)
         detail_layout.addWidget(self.status)
         self.tabs = QTabWidget()
         self.guidance = GuidanceView(include_review=False)
         self.tabs.addTab(self.guidance, T["details"])
-        self.comparison = GuidanceChangesView()
-        self.tabs.addTab(self.comparison, T["comparison"])
         self.images = QWidget()
         self.images_layout = QVBoxLayout(self.images)
         image_scroll = QScrollArea()
@@ -315,36 +368,78 @@ class CatalogLibraryPage(QWidget):
         self.review_history = QPlainTextEdit()
         self.review_history.setReadOnly(True)
         self.tabs.addTab(self.review_history, T["review_events"])
-        detail_layout.addWidget(self.tabs)
-        splitter.addWidget(detail)
-        layout.addWidget(splitter, 1)
+        detail_layout.addWidget(self.tabs, 1)
         self.actions = {}
         for names in (("select", "enable", "disable", "record_review", "withdraw"),
-                      ("edit", "copy", "image", "batch_review")):
+                      ("edit", "copy", "image")):
             row = QHBoxLayout()
             for name in names:
                 button = QPushButton(T[name])
                 self.actions[name] = button
                 button.clicked.connect(lambda checked=False, action=name: self._action(action))
                 row.addWidget(button)
-            layout.addLayout(row)
-        self.search.textChanged.connect(self.refresh)
+            detail_layout.addLayout(row)
         if removals is not None:
             self.removal_button = QPushButton(T["removal"])
             self.removal_button.clicked.connect(self._open_removals)
-            layout.addWidget(self.removal_button)
-        self.position.currentIndexChanged.connect(self.refresh)
-        self.tree.currentItemChanged.connect(self._choose)
-        self.versions.currentIndexChanged.connect(self._show_version)
+            detail_layout.addWidget(self.removal_button)
+        self.stack.addWidget(detail)
+        layout.addWidget(self.stack, 1)
+        self.search.textChanged.connect(self._filter_changed)
+        self.position.currentIndexChanged.connect(self._filter_changed)
+        self.cards.itemClicked.connect(self._card_clicked)
+        self.cards.itemSelectionChanged.connect(self._update_batch_buttons)
+        self.batch_toggle.toggled.connect(self._toggle_batch_mode)
         self.refresh()
 
-    def _open_removals(self):
+    def _selected_targets(self):
+        return [item.data(Qt.ItemDataRole.UserRole) for item in self.cards.selectedItems()]
+
+    def _update_batch_buttons(self):
+        enabled = self.batch_toggle.isChecked() and bool(self.cards.selectedItems())
+        self.batch_review_button.setEnabled(enabled)
+        if self.removals is not None:
+            self.batch_removal_button.setEnabled(enabled)
+
+    def _toggle_batch_mode(self, enabled):
+        self.cards.clearSelection()
+        self.cards.setSelectionMode(
+            QListWidget.SelectionMode.MultiSelection if enabled
+            else QListWidget.SelectionMode.SingleSelection
+        )
+        self._update_batch_buttons()
+
+    def _filter_changed(self):
+        self._show_gallery()
+        self.refresh()
+
+    def _show_gallery(self):
+        self.stack.setCurrentIndex(0)
+
+    def _card_clicked(self, item):
+        if not self.batch_toggle.isChecked():
+            self._open_detail(item.data(Qt.ItemDataRole.UserRole))
+
+    def _open_detail(self, target):
+        self.target = target
+        self._show_version()
+        self.stack.setCurrentIndex(1)
+
+    def _batch_review(self):
+        targets = self._selected_targets()
+        if not targets:
+            return
+        self.dialog = CatalogReviewDialog(self.service, targets, self)
+        self.dialog.exec()
+        self.refresh()
+
+    def _open_removals(self, targets=None):
         from .library_lifecycle_page import LibraryLifecyclePage
 
-        targets = [item.data(0, Qt.ItemDataRole.UserRole) for item in self.tree.selectedItems()
-                   if item.data(0, Qt.ItemDataRole.UserRole)]
-        if len(targets) == 1 and self.target and targets[0].exercise == self.target.exercise:
-            targets = [self.target]
+        if isinstance(targets, bool) or targets is None:
+            targets = [self.target] if self.target else []
+        if not targets:
+            return
         self.dialog = QDialog(self)
         self.dialog.setWindowTitle(T["removal"])
         self.dialog.resize(1040, 780)
@@ -358,71 +453,41 @@ class CatalogLibraryPage(QWidget):
 
     def refresh(self):
         previous_target = self.target
-        self.tree.clear()
+        detail_open = self.stack.currentIndex() == 1
+        selected = {target.exercise for target in self._selected_targets()}
+        self.cards.clear()
         families = {family["key"]: family["name"] for family in self.service.catalog.families()}
-        parents = {}
-        for row in self.service.browse(self.search.text(), self.position.currentData()):
+        matching = None
+        for row in self.service.browse(self.search.text(), self.position.currentData(),
+                                       latest=True):
             content, status = row["display"]["content"], row["eligibility"]
             family = content["classification"]["family_key"]
-            if family not in parents:
-                parents[family] = QTreeWidgetItem([families.get(family, T["standalone"])])
-                self.tree.addTopLevelItem(parents[family])
-            item = QTreeWidgetItem([
-                content["canonical_name"], T[row["exercise"]["source"]],
-                POSITION_LABELS[content["classification"]["starting_position_class"]],
-                T["removed"] if status.removed else (T["ready"] if status.eligible else T["draft"]),
-                REVIEW_STATE_LABELS[status.reviewed],
-                EXERCISE_ENABLED_LABELS[row["enabled"]],
-            ])
-            item.setData(0, Qt.ItemDataRole.UserRole, row["target"])
-            parents[family].addChild(item)
-        self.tree.expandAll()
-        matching = None
-        for i in range(self.tree.topLevelItemCount()):
-            parent = self.tree.topLevelItem(i)
-            for j in range(parent.childCount()):
-                child = parent.child(j)
-                candidate = child.data(0, Qt.ItemDataRole.UserRole)
-                if previous_target and candidate.exercise == previous_target.exercise:
-                    matching = child
-        if self.tree.topLevelItemCount():
-            self.tree.setCurrentItem(matching or self.tree.topLevelItem(0).child(0))
-            if matching:
-                for index in range(self.versions.count()):
-                    if self.versions.itemData(index) == previous_target:
-                        self.versions.setCurrentIndex(index)
-                        break
+            family_name = families.get(family, T["standalone"])
+            position = POSITION_LABELS[content["classification"]["starting_position_class"]]
+            readiness = T["removed"] if status.removed else (
+                T["ready"] if status.eligible else T["draft"])
+            label = f"{content['canonical_name']}\n{family_name} · {position}\n{readiness}"
+            item = QListWidgetItem(card_icon(self.service, row["target"], status), label)
+            item.setData(Qt.ItemDataRole.UserRole, row["target"])
+            item.setToolTip(f"{content['canonical_name']}\n{family_name} · {position}\n"
+                            f"{readiness} · {REVIEW_STATE_LABELS[status.reviewed]} · "
+                            f"{EXERCISE_ENABLED_LABELS[row['enabled']]}")
+            self.cards.addItem(item)
+            if row["target"].exercise in selected and self.batch_toggle.isChecked():
+                item.setSelected(True)
+            if previous_target and row["target"].exercise == previous_target.exercise:
+                matching = row["target"]
+        self.gallery_count.setText(T["gallery_count"].format(count=self.cards.count()))
+        self.target = matching
+        if detail_open and matching:
+            self._show_version()
         else:
-            self._choose(None)
-
-    def _choose(self, item, previous=None):
-        self.versions.blockSignals(True)
-        self.versions.clear()
-        self.target = item.data(0, Qt.ItemDataRole.UserRole) if item else None
-        if self.target:
-            exercise = self.service.get(self.target.exercise)
-            entries = list(exercise["local_contents"])
-            if exercise["bundled"]:
-                entries.append(exercise["bundled"])
-            seen = set()
-            for entry in entries:
-                identity = entry["reference"]
-                key = tuple(sorted(identity.items()))
-                if key in seen:
-                    continue
-                seen.add(key)
-                self.versions.addItem(
-                    f"{identity['id']} · v{identity['version']} · {identity['sha256'][:12]}",
-                    LibraryTarget(self.target.exercise, identity),
-                )
-            index = next((i for i in range(self.versions.count())
-                          if self.versions.itemData(i) == self.target), 0)
-            self.versions.setCurrentIndex(index)
-        self.versions.blockSignals(False)
-        self._show_version()
+            self._show_gallery()
+            if matching is None:
+                self._show_version()
+        self._update_batch_buttons()
 
     def _show_version(self):
-        self.target = self.versions.currentData()
         for action in self.actions.values():
             action.setEnabled(self.target is not None)
         show_images(self.images_layout, self.service, self.target)
@@ -430,32 +495,33 @@ class CatalogLibraryPage(QWidget):
             self.guidance.set_guidance(None)
             self.status.clear()
             self.review_history.clear()
-            self.comparison.clear()
+            self.detail_title.clear()
             return
         entry = self.service.target_entry(self.target)
         status = self.service.eligibility(self.target)
         exercise = self.service.get(self.target.exercise)
+        self.detail_title.setText(entry["content"]["canonical_name"])
         self.guidance.set_guidance(entry["content"]["guidance"])
         selected = exercise["selected"]
+        if selected is None:
+            state = T["state_none"]
+        elif selected["reference"]["id"] == entry["reference"]["id"]:
+            state = T["state_latest"]
+        else:
+            state = T["state_stale"]
         self.status.setText(
-            f"{T['selected']}：{selected['reference']['sha256'][:12] if selected else T['none']} · "
+            f"{state} · "
             f"{REVIEW_STATE_LABELS[status.reviewed]} · "
             f"{EXERCISE_ENABLED_LABELS[exercise['enabled']]}\n"
-            + "；".join(LIBRARY_REASON_LABELS[reason] for reason in status.reasons)
+            + "；".join(LIBRARY_REASON_LABELS.get(reason, reason) for reason in status.reasons)
         )
-        base, current = self.service.compare_base(self.target)
-        if base:
-            self.comparison.set_revisions(
-                {"id": base["reference"]["id"], "guidance": base["content"]["guidance"]},
-                {"id": current["reference"]["id"], "guidance": current["content"]["guidance"]},
-            )
-        else:
-            self.comparison.setPlainText(T["no_base"])
         events = self.service.review_events(self.target)
         self.review_history.setPlainText("\n\n".join(
             f"{T[event['event_type']]} · {event['confirmed_at']}\n"
             f"{event['review_source']} · {event['reviewed_at'] or T['none']}\n{event['note']}\n"
-            f"{event['attachment'] or T['no_answer']}" for event in events
+            + (f"{T['answer_file']}：{event['attachment']['original_name']}"
+               if event["attachment"] else T["no_answer"])
+            for event in events
         ))
 
     def _confirm(self, text):
@@ -479,12 +545,8 @@ class CatalogLibraryPage(QWidget):
                     self.service.withdraw_review(
                         target, events[-1]["id"], note="", user_confirmed=True,
                     )
-            elif action in {"record_review", "batch_review"}:
-                targets = [target] if action == "record_review" else [
-                    item.data(0, Qt.ItemDataRole.UserRole) for item in self.tree.selectedItems()
-                    if item.data(0, Qt.ItemDataRole.UserRole)
-                ]
-                self.dialog = CatalogReviewDialog(self.service, targets, self)
+            elif action == "record_review":
+                self.dialog = CatalogReviewDialog(self.service, [target], self)
                 self.dialog.exec()
             elif action == "edit":
                 self.dialog = CatalogEditor(self.service, target, self)

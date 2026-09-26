@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable
 
-from .data.data_root import DataRootAccessError, create_new, open_existing
+from .data.data_root import DataRootAccessError, create_new, inspect_existing, open_existing
 from .data.database import Database
 from .data.locator import Locator
 
@@ -62,10 +62,11 @@ class LibraryContext:
 
     @classmethod
     def reopen(cls, path: Path, *, catalog_path: Path | None = None):
-        """打开已转换的根；未转换的根必须先经 data.catalog_conversion 转换。"""
+        """打开当前模型根；过期数据库在只读检查阶段被拒绝。"""
         from .data.catalog_repository import CatalogRepository
         from .data.library_root import require_library_root
 
+        inspect_existing(path)
         require_library_root(path)
         catalog = CatalogRepository(catalog_path)
         try:
@@ -139,11 +140,11 @@ class LibraryContext:
 
 
 class DataRootSwitcher:
-    """数据根切换协调：转换/准备候选 → 构建窗口 → 提交 locator → 替换窗口 → 关闭旧上下文。
+    """数据根切换协调：准备候选 → 构建窗口 → 提交 locator → 替换窗口 → 关闭旧上下文。
 
     任一步失败都保留原窗口、原 locator 和原数据库可用，并关闭候选资源；
     同一路径视为无操作。UI 窗口通过注入的 build_window 工厂创建，
-    本类不依赖 Qt。打开旧格式候选根前先在原目录完成一次性转换。
+    本类不依赖 Qt。过期根在只读检查阶段被拒绝。
     """
 
     def __init__(self, context: LibraryContext, locator: Locator):
@@ -157,13 +158,10 @@ class DataRootSwitcher:
 
     @staticmethod
     def prepare(path: Path, create: bool) -> LibraryContext:
-        """准备候选上下文：新建当前模型根，或就地转换旧根后打开；不写 locator。"""
-        from .data.catalog_conversion import convert_catalog_root
-
+        """准备候选上下文：新建或打开当前模型根；不写 locator。"""
         target = Path(path).resolve()
         if create:
             return LibraryContext.create(target)
-        convert_catalog_root(target)
         return LibraryContext.reopen(target)
 
     def switch(self, path: Path, create: bool, build_window: Callable) -> bool:

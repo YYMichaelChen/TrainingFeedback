@@ -107,19 +107,11 @@ survives upgrades and uninstalls and can be selected again after reinstalling.
 The installer is intentionally not a source-code updater. The release flow is:
 build a new Setup.exe, distribute it, then run it on the user's machine.
 
-Packaged acceptance uses a synthetic fixture and a step-by-step runbook:
-
-```powershell
-pwsh -File packaging/prepare-acceptance-data.ps1 D:\TF-Acceptance
-```
-
-See [docs/packaged-acceptance-runbook.md](docs/packaged-acceptance-runbook.md).
-The current source includes 36 illustrated entries; the existing directory build
-is still the older 2026-09-20 candidate and the installer is 0.6.1. The next local
-release follows the four-task
-[local release closeout plan](docs/release-readiness-0.7.0.md). Content, final
-regression and complete source identity are closed; the remaining gate is a new
-verified installer with local installed checks.
+The 0.7.2 source includes 36 illustrated entries. For local checks, create an
+isolated temporary profile and a new empty data root; see the
+[packaged acceptance runbook](docs/packaged-acceptance-runbook.md). The older
+schema16 preparation helper retired with the 0.6.1 support endpoint. Build
+manifests identify the exact source revision and payload for each candidate.
 
 Per the 2026-09-23 decision, independent Windows acceptance is deferred until an
 explicit public-release request. W4 and external content review are separate

@@ -27,7 +27,8 @@ def test_request_lists_batch_impact_and_preserves_reason_on_stale_save(
     assert dialog.confirmed.isChecked() is False
     dialog.preview_button.click()
     for target in selected:
-        assert target.content["sha256"] in dialog.details.toPlainText()
+        entry = context.removals.library.target_entry(target)
+        assert entry["content"]["canonical_name"] in dialog.details.toPlainText()
     context.plans.create(payload)
     dialog.confirmed.setChecked(True)
     dialog.submit.click()

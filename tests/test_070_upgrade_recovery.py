@@ -1,5 +1,6 @@
 """G1 recovery protocol, independently counted publication failure boundaries."""
 
+import hashlib
 import json
 import sqlite3
 import subprocess
@@ -8,7 +9,6 @@ from contextlib import closing
 from types import SimpleNamespace
 
 import pytest
-from migration_070_fixtures import logical_baseline
 
 from training_feedback.data.data_root import (
     CONFIG_FILENAME,
@@ -52,10 +52,23 @@ def validate(work, _catalog):
 
 
 def facts(root):
-    value = logical_baseline(root)
-    value["resources"] = {key: digest for key, digest in value["resources"].items()
-                          if not key.startswith("backups/") and key != JOURNAL_FILENAME}
-    return value
+    with closing(sqlite3.connect(root / DATABASE_FILENAME)) as db:
+        names = [row[0] for row in db.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        )]
+        tables = {name: sorted(db.execute(f'SELECT * FROM "{name}"').fetchall(), key=repr)
+                  for name in names}
+    resources = {}
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(root).as_posix()
+        if (relative == DATABASE_FILENAME or relative == JOURNAL_FILENAME
+                or relative.startswith("backups/")
+                or relative.endswith(("-wal", "-shm"))):
+            continue
+        resources[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return {"tables": tables, "resources": resources}
 
 
 @pytest.mark.parametrize("phase", ["staged", "database_published", "cleanup"])

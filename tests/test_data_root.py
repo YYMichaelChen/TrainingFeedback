@@ -1,10 +1,8 @@
 import json
 import sqlite3
-from unittest.mock import patch
 
 import pytest
 
-from training_feedback.data import migrations
 from training_feedback.data.data_root import (
     CANDIDATE_EXISTING,
     CANDIDATE_NEW,
@@ -103,8 +101,6 @@ def test_open_rejects_corrupt_database(data_path):
 
 
 def test_open_rejects_future_schema_without_modifying_database(data_path):
-    from training_feedback.data.catalog_conversion import convert_catalog_root
-
     create_new(data_path)
     connection = sqlite3.connect(data_path / DATABASE_FILENAME)
     try:
@@ -119,16 +115,15 @@ def test_open_rejects_future_schema_without_modifying_database(data_path):
     with pytest.raises(UnsupportedDataFormatError):
         inspect_existing(data_path)
     with pytest.raises(UnsupportedDataFormatError):
-        convert_catalog_root(data_path)
-    with pytest.raises(UnsupportedDataFormatError):
         open_existing(data_path)
     assert (data_path / DATABASE_FILENAME).read_bytes() == database_bytes
 
 
 def test_open_rejects_expired_schema_without_modifying_database(data_path):
-    """Schema 13 sits one below the retention window and must be refused read-only."""
-    with patch.object(migrations, "LATEST_SCHEMA_VERSION", 13):
-        create_new(data_path)
+    """Schema 21 sits one below the retention window and is refused read-only."""
+    create_new(data_path)
+    with sqlite3.connect(data_path / DATABASE_FILENAME) as connection:
+        connection.execute("UPDATE schema_migration SET version=21 WHERE version=22")
     database_bytes = (data_path / DATABASE_FILENAME).read_bytes()
 
     with pytest.raises(ExpiredDataRootError) as failure:
@@ -138,4 +133,4 @@ def test_open_rejects_expired_schema_without_modifying_database(data_path):
         open_existing(data_path)
     assert (data_path / DATABASE_FILENAME).read_bytes() == database_bytes
     with sqlite3.connect(data_path / DATABASE_FILENAME) as connection:
-        assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 13
+        assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 21

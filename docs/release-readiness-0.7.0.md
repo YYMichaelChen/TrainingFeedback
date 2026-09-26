@@ -1,5 +1,8 @@
 # 0.7.0 Local Release Closeout Plan
 
+This is the dated 0.7.0 local-release review. The 0.7.2 support window and
+current development decisions are in [development plan §13](development-plan.md#13-version-retention-and-development-data-policy).
+
 Updated: 2026-09-24. **070-H1-CONTENT, 070-H2-TESTS, 070-H2-SOURCE and
 070-H2-PACKAGE are complete; the local-release gate is satisfied.** Product authority is [development-plan.md](development-plan.md),
 especially Sections 9–10 and 12–13. This document owns execution details.

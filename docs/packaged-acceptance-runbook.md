@@ -124,18 +124,11 @@ LOCAL-04/06 were not repeated for this image-only change. Evidence is under
 
 - Prepare a clean first-launch profile and new empty Chinese/space-containing root
   path; cancellation must create nothing. Keep program and data paths separate.
-- The source fixture helper copies the frozen synthetic schema16 baseline:
-
-  ```powershell
-  pwsh -File packaging/prepare-acceptance-data.ps1 D:\TF-Preparation\functional
-  ```
-
-  Use a new/empty base. Its generated locator contains an absolute build-machine
-  path; do not reuse it after transfer. The frozen source fixture is not evidence
-  of actual old-binary use. R1 completed DB tracking and byte-preserving checkout
-  validation on 2026-09-21; recheck transferred inputs for the selected candidate.
-- Prepare actual **0.6.0/schema14** and **0.6.1/schema16** baselines with matching
-  retained binaries. Open/close normally before capturing logical facts, original
+- Prepare isolated synthetic schema22 roots for the current 0.7.2 window. The
+  retired schema16 preparation helper is retained only in Git history. Do not
+  reuse locators across machines or use personal roots for fault injection.
+- For a later public release, identify actual **0.7.0/schema22** and
+  **0.7.1/schema22** binaries when available. Open/close normally before capturing logical facts, original
   text, unknown fields, resource hashes and original database hash. Preserve closed
   originals; create unopened transfer copies and separate local-rehearsal copies.
 - Cover renamed/missing bundled keys, overrides/custom actions, complete/missing/

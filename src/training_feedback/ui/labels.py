@@ -47,7 +47,7 @@ PLAN_PHASE_LABELS = {
 # 动作库的两条独立状态轴：指导是否已审核，动作是否启用。互不决定。
 REVIEW_STATE_LABELS = {True: "已审核", False: "未审核"}
 EXERCISE_ENABLED_LABELS = {True: "启用", False: "未启用"}
-GUIDANCE_IN_USE_LABELS = {True: "有使用版本", False: "无使用版本"}
+EXERCISE_SOURCE_LABELS = {"bundled": "程序内置", "custom": "自定义"}
 
 POSITION_LABELS = {
     "supine": "仰卧", "prone": "俯卧", "side_lying": "侧卧", "quadruped": "四点支撑",
@@ -62,7 +62,7 @@ GROUP_PLAN_TEXT = {
     "action": "独立动作", "group": "动作组", "add_action": "添加动作", "add_group": "添加动作组",
     "add_member": "添加成员", "edit_item": "编辑所选项", "remove": "移除所选项",
     "up": "上移", "down": "下移", "move_day": "移至另一训练日…", "move_member": "移至另一动作组…",
-    "choose": "选择动作与精确内容版本", "phase": "训练阶段", "note": "原始备注",
+    "choose": "选择动作", "phase": "训练阶段", "note": "原始备注",
     "sets": "逐组剂量（动作组内为每轮剂量）", "value": "数值", "unit": "单位",
     "per_side": "每侧", "set_rest": "组间休息秒", "add_set": "添加剂量组",
     "remove_set": "删除剂量组",
@@ -72,18 +72,19 @@ GROUP_PLAN_TEXT = {
     "none": "不适用", "left": "左侧", "right": "右侧",
     "member_each_side": "每个成员分别完成两侧", "same_side_then_switch": "每轮先同侧序列再换侧",
     "all_rounds_then_switch": "先一侧全部轮次再换侧", "save": "保存草稿", "error": "无法完成操作",
-    "preview": "完整计划、差异与执行顺序", "confirm": "确认启用当前精确版本及列出的未审核指导",
-    "unreviewed": "未审核指导", "diff": "版本差异", "new_revision": "新计划或新版本",
+    "preview": "完整计划、差异与执行顺序", "confirm": "确认启用当前计划及列出的未审核指导",
+    "unreviewed": "未审核指导", "diff": "变更明细", "new_revision": "新计划或新版本",
     "dissolve": "移除后只剩一个成员。明确拆散这个动作组？请先将轮数设为 1。",
     "remove_confirm": "确定移除所选计划项？保存后生效。", "exported": "证据已导出到：",
-    "no_plans": "暂无计划", "json_filter": "JSON 文件 (*.json)", "version": "计划版本",
+    "no_plans": "暂无计划", "json_filter": "JSON 文件 (*.json)",
+    "rest_seconds": "休息 {value} 秒",
     "select_destination": "选择目标", "expanded": "执行顺序（每行完成一个成员的全部组）",
     "preview_truncated": "预览仅显示前 300 个执行位置；完整处方及轮数保留。",
     "before": "原值", "after": "新值", "removed": "已移除", "added": "新增",
     "item_id": "条目身份", "kind": "类型", "order": "顺序", "members": "成员",
     "days": "训练日", "items": "计划项", "content": "内容引用", "classification": "动作分类",
-    "exercise": "动作身份", "exercise_name": "动作名称", "source": "来源", "key": "稳定键",
-    "id": "内容标识", "sha256": "SHA-256", "family_key": "动作族", "variant_role": "族内角色",
+    "exercise": "动作身份", "exercise_name": "动作名称", "source": "来源",
+    "id": "编号", "family_key": "动作族", "variant_role": "族内角色",
     "variant_order": "族内顺序", "parent_exercise_key": "父动作",
     "starting_position_class": "起始体位", "target_plan_name": "目标计划", "group_id": "动作组身份",
     "rest_after_set_seconds": "组间休息秒", "rest_after_member_seconds": "成员后休息秒",
@@ -131,6 +132,7 @@ EXECUTION_TEXT = {
     "per_side_aggregate": "每侧汇总（侧序未记录）", "stored_actual": "原记录（未补推）",
     "imported_event": "迁移保留的原操作", "imported_retraction": "迁移保留的撤回原件",
     "imported_note_correction": "迁移保留的备注修正原件",
+    "progress": "已完成 {done}/{total} 项",
 }
 
 
@@ -191,6 +193,23 @@ def occurrence_result_text(row):
     return "\n".join(lines)
 
 
+def imported_original_text(kind, original):
+    """迁移保留事件的原件说明；原始载荷留在数据库，不向用户展示 JSON。"""
+    if kind == "imported_event":
+        event_type = original.get("event_type")
+        text = "原事件：" + EXECUTION_TEXT.get(event_type, event_type or EXECUTION_TEXT["unknown"])
+        extra = "；".join(part for part in (original.get("reason"), original.get("note")) if part)
+        return [text + ("；" + extra if extra else "")]
+    if kind == "imported_retraction":
+        return [f"原撤回：{original.get('retracted_at') or EXECUTION_TEXT['unknown']}；"
+                "原动作记录已作为迁移证据保留"]
+    if kind == "imported_note_correction":
+        old_value = original.get("old_value") or "（空）"
+        new_value = original.get("new_value") or "（空）"
+        return [f"原备注修正：{old_value} → {new_value}"]
+    return ["原记录已作为迁移证据保留"]
+
+
 def session_history_text(session):
     lines = [f"{session['training_date']} · {SESSION_STATUS_LABELS[session['status']]}",
              session["snapshot"]["revision"]["name"],
@@ -204,9 +223,7 @@ def session_history_text(session):
         lines.append(f"{event['occurred_at']} · {EXECUTION_TEXT[event['kind']]}")
         facts = event["facts"]
         if event["kind"].startswith("imported_"):
-            import json
-
-            lines.append(json.dumps(facts["original"], ensure_ascii=False))
+            lines.extend(imported_original_text(event["kind"], facts["original"]))
         if event["kind"] == "aborted":
             lines.extend([ABORT_REASON_LABELS[facts["reason"]], facts["note"]])
         elif event["kind"] == "result_retracted":
@@ -236,30 +253,35 @@ LIBRARY_TEXT = {
     "removed": "已移除／发行方撤回",
     "close": "关闭",
     "title": "动作库", "search": "按名称或别名搜索", "all_positions": "全部起始体位",
+    "gallery_count": "共 {count} 个动作 · 点击卡片查看指导",
+    "back_to_gallery": "← 返回动作库", "batch_mode": "批量选择",
     "standalone": "独立动作", "name": "动作 / 动作族", "source": "来源", "position": "起始体位",
     "readiness": "图片资格", "review": "审核", "enabled": "启用状态", "bundled": "程序内置",
     "custom": "自定义", "ready": "可用", "draft": "草稿", "none": "无",
-    "version": "所选内容版本", "details": "完整指导", "comparison": "与基础动作对照",
-    "no_base": "该动作族没有指定基础动作。", "select": "设为使用版本", "enable": "启用动作",
-    "disable": "停用动作", "edit": "另存覆盖版本…", "copy": "复制为自定义…",
+    "details": "完整指导",
+    "select": "使用当前内容", "enable": "启用动作",
+    "disable": "停用动作", "edit": "编辑动作内容…", "copy": "复制为自定义…",
     "image": "替换为本地示意图…", "record_review": "记录外部审核…",
-    "batch_review": "审核明确选中的版本…", "withdraw": "撤销当前审核",
+    "batch_review": "审核选中的动作…", "withdraw": "撤销当前审核",
     "refresh": "刷新", "confirm_title": "确认操作",
-    "confirm_select": "将当前显示版本设为使用版本？",
+    "confirm_select": "将当前显示的内容投入使用？新训练计划将使用此内容。",
     "confirm_enable": "确认更改动作启用状态？未审核的图文不会因此变成已审核。",
-    "confirm_withdraw": "确认撤销当前版本的审核？原始审核事件和文件会保留。",
+    "confirm_withdraw": "确认撤销当前内容的审核？原始审核事件和文件会保留。",
     "error": "操作未完成", "copy_name": "自定义动作名称", "pick_image": "选择实际示意图",
     "image_filter": "图片 (*.png *.jpg *.jpeg *.webp *.bmp *.gif)",
-    "review_title": "记录精确版本的外部审核", "reviewer": "审核者类型", "review_source": "外部来源",
+    "review_title": "记录外部审核", "reviewer": "审核者类型", "review_source": "外部来源",
     "occurred": "实际审核发生时间", "occurrence_hint": "日期或带时区时间；默认未知",
     "note": "原始备注", "answer": "选择审核答复原件…", "no_answer": "未附原件",
-    "review_confirm": "我确认此次外部审核涵盖列表中每个精确版本的文字及实际图片",
-    "record": "记录审核", "edit_title": "保存新的未审核覆盖版本", "family": "动作族",
+    "answer_file": "答复原件",
+    "review_confirm": "我确认此次外部审核涵盖列表中每个动作的文字及实际图片",
+    "record": "记录审核", "edit_title": "编辑动作内容", "family": "动作族",
     "role": "族内角色", "order": "显示顺序", "parent": "父动作", "aliases": "别名（逐行）",
-    "category": "类别", "equipment": "器械概述", "save": "保存新版本",
+    "category": "类别", "equipment": "器械概述", "save": "保存",
     "membership": "确认所显示的动作族、角色和父动作关系",
     "invalid_image": "图片不可用；文字与停止条件仍可阅读。",
-    "identity": "内容身份", "selected": "使用版本", "catalog": "程序目录版本",
+    "identity": "内容身份", "catalog": "程序目录版本",
+    "state_none": "尚未投入使用", "state_latest": "使用中",
+    "state_stale": "使用中 · 有更新内容未启用",
     "review_events": "审核事件", "approved": "记录审核", "withdrawn": "撤销审核",
 }
 
@@ -276,7 +298,7 @@ REVIEWER_TYPE_LABELS = {
 
 PLAN_STATUS_LABELS = {
     "draft": "草稿",
-    "active": "当前版本",
+    "active": "使用中",
     "superseded": "已被替代",
 }
 
@@ -369,7 +391,7 @@ ERROR_TRANSLATIONS = {
         "外部答复引用的会话或导出不属于当前数据根。",
     "A reused item identity cannot refer to another exercise.":
         "已有条目身份不能改指另一个动作；请新建条目。",
-    "Select an exercise content revision.": "请选择动作及其内容版本。",
+    "Select an exercise content revision.": "请选择动作。",
     "Duplicate JSON keys are not allowed.": "计划 JSON 含重复字段，无法确定其含义。",
     "Group name cannot be empty.": "动作组名称不能为空。",
     "Set the group to one round explicitly before dissolving it.":
@@ -380,12 +402,12 @@ ERROR_TRANSLATIONS = {
     "Keep two members or remove/dissolve the group in the plan tree.":
         "请保留至少两个成员，或在计划树中移除、拆散动作组。",
     "Explicit confirmation is required.": "请明确确认本次操作。",
-    "Select at least one content revision.": "请选择至少一个具体内容版本。",
+    "Select at least one content revision.": "请选择至少一个动作。",
     "The displayed content changed.": "所显示的内容已变化，请刷新后重新核对。",
     "The displayed review changed.": "审核记录已变化，请刷新后重新核对。",
-    "The selected content changed; refresh the target.": "使用版本已变化，请核对当前目标。",
-    "Select one content revision per exercise.": "同一动作只能选定一个使用版本。",
-    "Duplicate review targets are not allowed.": "请勿重复选择同一审核版本。",
+    "The selected content changed; refresh the target.": "使用内容已变化，请核对后重试。",
+    "Select one content revision per exercise.": "同一动作只能选定一个使用内容。",
+    "Duplicate review targets are not allowed.": "请勿重复选择同一审核内容。",
     "Exercise is not enabled.": "该动作尚未启用。",
     "Unknown exercise identity.": "找不到指定的动作身份。",
     "Image is unavailable or invalid.": "图片不可用或校验失败。",
@@ -410,17 +432,17 @@ ERROR_TRANSLATIONS = {
     "The session changed before it could be resumed.": "训练状态已发生变化，请重新打开训练。",
     "The session changed before it could be updated.": "训练状态已发生变化，请刷新后重试。",
     "Guidance revision has already been reviewed.": (
-        "该指导版本已经审核过了；要重新审核请先撤销这一版的审核。"
+        "该指导已经审核过了；要重新审核请先撤销此次审核。"
     ),
     "Guidance recorded in training history cannot return to review.": (
-        "这一版指导已经被训练记录引用，不能撤销审核；需要修改内容请另存新版本。"
+        "该指导已经被训练记录引用，不能撤销审核；需要修改内容请编辑后另存。"
     ),
     "Complete review evidence is required.": "审核证据不完整，无法记录这次审核。",
     "Complete guidance is required before recording a review.": (
         "请先补全动作指导内容，再记录这次审核。"
     ),
     "Guidance content must be complete before it can be used.": (
-        "指导内容不完整，不能设为使用版本。"
+        "指导内容不完整，不能投入使用。"
     ),
     "No open or paused session was found.": "没有找到进行中或已暂停的训练。",
     "Only an open or paused session can record results.": "只有进行中或已暂停的训练才能记录结果。",
@@ -449,9 +471,9 @@ ERROR_TRANSLATIONS = {
     "The canonical name and aliases must be distinct.": "标准名称与别名不能相同。",
     "The canonical name or alias is already in use.": "该标准名称或别名已被其他动作使用。",
     "Exercise was not found.": "没有找到指定的训练动作。",
-    "Select at least one guidance revision to review.": "请至少选择一个要复核的指导版本。",
+    "Select at least one guidance revision to review.": "请至少选择一个要复核的动作。",
     "Select at least one guidance revision to return to review.": (
-        "请至少选择一个要撤销审核的指导版本。"
+        "请至少选择一个要撤销审核的动作。"
     ),
     "Explicit user confirmation is required.": "必须明确确认。",
     "Unknown bundled exercise selection.": "所选内置动作不存在，请重新打开预览。",
@@ -470,8 +492,8 @@ ERROR_TRANSLATIONS = {
     ),
     "Bundled guidance is incomplete.": "内置指导内容不完整，无法接收此草稿。",
     "Step order must be a positive integer.": "动作步骤顺序必须是正整数。",
-    "Guidance revision was not found.": "没有找到指定的动作指导版本。",
-    "No reviewable guidance revision is selected.": "请选择一个可复核的动作指导版本。",
+    "Guidance revision was not found.": "没有找到指定的动作指导。",
+    "No reviewable guidance revision is selected.": "请选择一个可复核的动作。",
     "Reviewer type and source are required.": "审核人类型和来源不能为空。",
     "Explicit user approval is required.": "必须明确批准。",
     "Review time is required.": "审核时间不能为空。",
@@ -562,7 +584,9 @@ LIFECYCLE_TEXT = {
     "batch_targets": "本批全部动作",
     "prior_impact": "此前保存的影响依据",
     "remove": "移除", "restore": "恢复", "new_request": "新建移除／恢复申请",
-    "target": "动作", "content": "内容版本", "disposition": "可用状态",
+    "target": "动作", "disposition": "可用状态",
+    "plan_revision": "计划版本",
+    "catalog_version": "目录版本",
     "reason": "申请原因（原文）", "note": "本次决定备注（原文）",
     "preview": "预览全部影响", "submit": "提交申请", "close": "关闭", "error": "操作未完成",
     "confirm_request": "我已查看全部动作与引用影响，确认提交此申请",
@@ -570,7 +594,7 @@ LIFECYCLE_TEXT = {
     "consequence": "移除后禁止新用，保留计划、图片与历史；未结束训练可继续。恢复须重新启用，"
                    "受影响计划须另行编辑并确认新版本。变体不会连带移除。",
     "plans": "引用计划", "groups": "引用组合与成员", "sessions": "引用训练",
-    "reviews": "指导审核记录", "variants": "依赖变体（含保留版本）", "exports": "已有导出",
+    "reviews": "指导审核记录", "variants": "依赖变体", "exports": "已有导出",
     "draft": "草稿", "active": "活动", "superseded": "已被替代", "open": "进行中",
     "paused": "暂停", "completed": "完成", "partial": "部分完成", "aborted": "已中止",
     "requested": "已申请", "under_review": "审核中", "approved": "已批准",
@@ -660,8 +684,8 @@ ERROR_TRANSLATIONS.update({
 ACTIVATION_REASONS = {
     "was not found": "动作不存在",
     "is not enabled": "动作未启用",
-    "has no guidance in use": "动作没有使用版本",
-    "has incomplete guidance in use": "动作的使用版本内容不完整",
+    "has no guidance in use": "动作尚未投入使用",
+    "has incomplete guidance in use": "动作的使用内容不完整",
 }
 
 
@@ -677,7 +701,7 @@ def user_message(message: str) -> str:
     if message.startswith("Invalid plan v2 at "):
         return "v2 计划格式不完整或字段无效，请核对：" + message[len("Invalid plan v2 at "):]
     if message.startswith("Content is not eligible: "):
-        return "当前版本不可用：" + "；".join(
+        return "当前内容不可用：" + "；".join(
             LIBRARY_REASON_LABELS.get(reason, reason)
             for reason in message.partition(": ")[2].split(", ")
         )

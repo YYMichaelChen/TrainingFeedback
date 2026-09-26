@@ -52,14 +52,14 @@ def test_database_prevents_multiple_active_sessions(tmp_path):
 
 
 def test_below_window_root_is_refused_without_remigration(tmp_path):
-    """Tampering a root below schema 14 must fail closed at the migration entry."""
+    """Tampering a root below schema 22 must fail closed at the migration entry."""
     path = tmp_path / "test.sqlite3"
     with Database(path) as connection:
         connection.execute(
             "INSERT INTO training_plan(name, created_at) VALUES ('legacy', 'now')"
         )
     with sqlite3.connect(path) as connection:
-        connection.execute("DELETE FROM schema_migration WHERE version >= 14")
+        connection.execute("UPDATE schema_migration SET version=21 WHERE version=22")
         connection.commit()
     database_bytes = Path(path).read_bytes()
 

@@ -4,12 +4,16 @@ import sqlite3
 
 import pytest
 from image_fixtures import png_bytes
-from migration_070_fixtures import create_schema16_baseline
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox, QWidget
 
 from training_feedback.app import DataRootSwitcher, LibraryContext
 from training_feedback.data.catalog_builder import build_catalog, source_content
-from training_feedback.data.data_root import DataRootAccessError, DataRootError
+from training_feedback.data.data_root import (
+    DataRootAccessError,
+    DataRootError,
+    ExpiredDataRootError,
+    create_new,
+)
 from training_feedback.data.locator import Locator
 from training_feedback.domain.catalog import content_sha256
 from training_feedback.ui.main_window import MainWindow
@@ -75,18 +79,20 @@ def test_switch_round_trip_keeps_datasets_separate(qt_app, tmp_path):
     switcher.context.close()
 
 
-def test_switch_converts_unconverted_target_root(qt_app, tmp_path):
+def test_switch_rejects_expired_target_without_changing_current_root(qt_app, tmp_path):
     switcher = _started(tmp_path)
-    baseline = create_schema16_baseline(tmp_path / "old")
+    expired = tmp_path / "old"
+    create_new(expired)
+    with sqlite3.connect(expired / "training_feedback.sqlite3") as connection:
+        connection.execute("UPDATE schema_migration SET version=21 WHERE version=22")
+    before = (expired / "training_feedback.sqlite3").read_bytes()
 
-    assert switcher.switch(baseline["data_root"], False, _build) is True
+    with pytest.raises(ExpiredDataRootError):
+        switcher.switch(expired, False, _build)
 
-    assert switcher.context.data_root.path == baseline["data_root"]
-    assert switcher.locator.load() == baseline["data_root"]
-    assert [row["status"] for row in switcher.context.sessions.history()] == [
-        "paused", "partial", "completed",
-    ]
-    assert switcher.context.sessions.active()["status"] == "paused"
+    assert switcher.context.data_root.path == tmp_path / "A"
+    assert switcher.locator.load() == tmp_path / "A"
+    assert (expired / "training_feedback.sqlite3").read_bytes() == before
     switcher.context.close()
 
 

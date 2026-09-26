@@ -3,6 +3,11 @@
 The authoritative budget policy is development-plan.md §9.4. Test databases,
 locators, synthetic images and fixtures always live in temporary directories.
 
+Current 0.7.2 resident inventory is 175 parameter-expanded cases. The retained
+application window is 0.7.0–0.7.2, all at schema22. Expired schema16 fixtures and
+their positive conversion tests rotated out; current tests cover read-only refusal
+of older roots, schema22 reopen, UI behavior and frozen history.
+
 ## Selecting and accounting
 
 - `--test-tier dev` (default): at most 30 cases; explicit affected cases are
@@ -28,7 +33,7 @@ and major profiles successively. Select a new scope only for a genuinely new
 development step or release. Budget metadata is local developer state, not an
 application database or a security boundary.
 
-## Current Release Preparation — 2026-09-23
+## Historical 0.7.0 Release Preparation — 2026-09-23
 
 The resident inventory is 188 expanded cases. 070-H2-TESTS replaced the removed
 minor-profile function with `test_out_of_window_root_refused_before_any_write` and
@@ -130,7 +135,7 @@ Windows-native separator paths, instead of regenerating content with the retired
 generator. Stale `pyproject.toml` profile entries pointing at removed test nodes
 were replaced with equivalent current-model cases in the same risk areas.
 
-## Version-window Follow-up — Completed 2026-09-21
+## Historical Version-window Follow-up — Completed 2026-09-21
 
 The supported window is 0.7.0/schema22, 0.6.1/schema16 and 0.6.0/schema14;
 same-version commits do not add slots. R2 implemented pre-write lower-bound refusal,

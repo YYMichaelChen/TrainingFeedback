@@ -1,4 +1,4 @@
-"""启动协调：定位/选择数据根目录，打开旧格式根之前先完成一次性转换。与 Qt 入口解耦。"""
+"""启动协调：定位/选择当前支持窗口内的数据根目录，与 Qt 入口解耦。"""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Callable
 
 from .app import LibraryContext
-from .data.catalog_conversion import convert_catalog_root
 from .data.data_root import DataRootAccessError, DataRootError
 from .data.locator import Locator
 
@@ -22,8 +21,7 @@ def _record_locator(context: LibraryContext, locator: Locator) -> LibraryContext
 
 
 def open_root(path: Path, locator: Locator) -> LibraryContext:
-    """打开现有数据根：先恢复挂起的升级并完成一次性转换，再以当前模型打开。"""
-    convert_catalog_root(path)
+    """打开现有数据根；过期根在只读检查阶段被拒绝。"""
     return _record_locator(LibraryContext.reopen(path), locator)
 
 

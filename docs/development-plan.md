@@ -393,7 +393,7 @@ belong to the selected root (Section 12.1). All image references are managed,
 portable and validated. Field completeness and technical image validity do not
 establish content quality. Equipment may be empty when none is needed.
 
-Chinese forms show complete guidance, the selected version and differences,
+Chinese forms show complete current guidance,
 preserve original text and unedited secondary body areas, and keep controls
 reachable with long text and small windows.
 
@@ -407,7 +407,7 @@ are never inferred or backfilled.
 
 Bundled updates travel with the application; no manual bundled-draft import is
 required. Development content delivery follows Section 13.3. Superseded review
-and manual-delivery rules are in the [0.6.1 history](history/0.6.1/development.md).
+and manual-delivery rules remain in Git history.
 
 ## 6. Minimum Domain Model
 
@@ -490,7 +490,7 @@ database import, and automatic directory scanning.
 configuration. Opening validates the marker and configuration before accessing
 the database. Future schemas and development schemas outside the three-version
 support mapping must be rejected unchanged. Section 13.2 defines the latter
-policy; schema-14 lower-bound enforcement was completed in 070-R2.
+policy; the current lower bound is schema22 for the retained 0.7.0–0.7.2 window.
 
 A backup copies the complete data root, including marker, configuration, images,
 exports, and imports, to an explicitly selected empty destination outside the
@@ -600,6 +600,9 @@ owns dependency order, scopes, commands, deliverables and acceptance evidence.
 | 070-H2-TESTS — complete, 2026-09-23 | Repaired the minor selection and separated frozen historical validation from current catalog verification; retired the obsolete generator. | Default collection succeeds; dev 5/30 and release minor 77/100 unique cases passed; frozen inputs stayed unchanged and target static checks passed. |
 | 070-H2-SOURCE — complete, 2026-09-24 | Reviewed all current additions/deletions, completed documentation cleanup, preserved the old candidate and committed the complete source. | Clean 218-file archive imported all 67 modules, preserved 14 frozen files, verified 36 image pairs and reproduced all 38 catalog files byte-for-byte; no local/user data entered source. |
 | 070-H2-PACKAGE — complete, 2026-09-24 | Built the clean `736223e` directory candidate and 0.7.0 Setup, repaired isolated Qt DLL provenance, and executed installed LOCAL-01—06 with isolated synthetic data. | 293/293 payload files and double manifests matched; LOCAL-01—06 passed, including cancel-with-no-root, 36-entry catalog/aliases and exact group-session pause/restart/resume. EXE/Setup unsigned status is disclosed. |
+| 071-UI — complete, 2026-09-25 | Frontend cleanup for 0.7.1: removed the library version picker (latest content always shown), removed all SHA-256/internal-ID/stable-key displays, localized remaining enums, and made migrated history events human-readable. Second round hid the exercise-version concept entirely: comparison tab removed, image file paths no longer shown, version-free status/action wording (plan revisions intentionally kept). Data model, freezing and exact-match logic unchanged. | Patch scope 071-UI 35/50 unique cases passed; ruff clean. Intentional behavior change: older content versions can no longer be selected or reviewed from the UI; history, review events and frozen references are preserved. Rebuilt and silently upgraded the installed 0.7.1 twice. |
+| 071-GALLERY — complete, 2026-09-26 | Replaced the exercise library table and persistent split detail with illustration cards. A card opens its guidance, images, review history and actions; filters return to the gallery, and an explicit batch mode retains multi-action selection. Cards search and display current content while the default library browse semantics used elsewhere remain unchanged. | Dev scope 071-GALLERY 3/30 affected cases passed; Ruff and diff checks clean. Isolated 36-image gallery and detail layouts inspected. Rebuilt the 0.7.1 installer and upgraded the local program directory; installation log succeeded and installed EXE matched build SHA-256. |
+| 072-RELEASE — complete, 2026-09-26 | Labeled the combined interface work 0.7.2, rotated the support window to 0.7.2/0.7.1/0.7.0 (all schema22), retired expired schema16 conversion inputs and consolidated fresh schema22 creation. Old roots are refused read-only before model checks. | Patch scope 072-RELEASE 42/50 unique affected cases passed after one targeted repair; 175 resident cases collect, Ruff and diff checks pass. The version tag identifies the source; the local installer manifest records the clean source revision and payload, with installed checks kept as candidate evidence. Public H3 remains deferred. |
 
 Separate follow-ups:
 
@@ -1064,93 +1067,37 @@ requires a new explicit decision and current image/content validation; it does
 not restore enablement, plans or invalid review evidence automatically. No
 unreviewed physical purge is included in 0.7.0.
 
-### 12.7 Seamless In-Place Upgrade; No Old-Settings Entry Point
+### 12.7 Supported Root Opening And Historical Upgrade Evidence
 
-For a root inside Section 13's support window, “seamless” means normal installer
-replacement and normal launch, retaining the
-locator, selected root, meaningful settings and user work. The installer owns
-only application files. On first launch the application automatically prepares
-and converts the explicitly selected TrainingFeedback root; it never scans other
-directories or the old Exercises@home database. Do not introduce a migration
-wizard, manual catalog import/mapping step, old/new settings selector, legacy
-library tab, compatibility flag, reset requirement for supported roots or user-facing
-rollback mode. Roots older than the window follow Section 13.2's explicit
-reinstall/new-root requirement. Routine progress is allowed; actionable errors
-must not be hidden. The lower-bound enforcement is implemented (070-R2,
-2026-09-21): below-window roots are refused read-only before any write.
+An installed update replaces only application files. It retains the locator,
+selected root, meaningful settings, frozen plans and completed history. Opening
+or switching to a schema22 root validates the marker, configuration, schema and
+current library model before use. No directory scanning or old Exercises@home
+database access is allowed.
 
-Implementation sequence:
+The 0.7.0 schema16 catalog conversion was a completed development migration.
+Its old-root runtime entry and synthetic fixture retired when 0.6.1 left the
+three-version window at 0.7.2. The complete conversion design and dated
+evidence remain in the retained 0.7.0 history and Git history. Roots below
+schema22 are rejected read-only with the reinstall/new-empty-root guidance of
+Section 13.2; their files remain intact. Do not offer a migration wizard,
+compatibility setting, legacy library, fallback reader or implicit import for
+an expired root.
 
-1. Validate package/catalog manifests and the root marker/schema; acquire an
-   exclusive migration lock and check access and free space before writes.
-2. Automatically create and verify a pre-upgrade recovery snapshot using SQLite
-   online backup plus copies of marker/configuration and all managed resource
-   bytes, verified against a resource manifest. Use a versioned recovery location
-   under `backups/` without recursively copying earlier backups into themselves.
-   No destination-selection step is required. Failure stops the upgrade before
-   business-data conversion. This recovery snapshot has its own internal format;
-   it is not silently advertised as the ordinary complete-root backup.
-3. Stage new managed assets and prepare deterministic stable references. Map
-   existing bundled keys directly; a missing or unresolvable key becomes a
-   preserved custom identity with origin metadata, not a guessed name match or
-   a third `legacy` runtime branch. Preserve conflicts as distinct identities.
-   Keep user overrides, original text, local illustrations and review attachments.
-4. Materialize every referenced plan/session fact from its actual stored
-   revision before detaching old catalog tables. Preserve schema-16 local IDs
-   where externally referenced; map internal references consistently. Historical
-   facts not recorded by the old schema remain explicitly unknown. A current
-   name/image is not proof it applied at an earlier date. Mark migrated plan
-   bindings as migration-time pins rather than fabricated activation snapshots.
-5. Convert all persisted plans, actions, settings and registrations into the
-   new model. Old ungrouped actions remain single items; never auto-group an
-   existing plan or change its dose. Preserve previously valid intent, but
-   invalidate effective enablement where required images are missing, retaining
-   the former setting only as migration evidence. Active plan status is not
-   rewritten to pretend confirmation of a replacement prescription.
-6. In append-only schema migrations, commit new references, snapshots and format
-   markers after validation. Remove obsolete live catalog duplicates/settings
-   once their user content and evidence are accounted for. Never destructively
-   clear an unknown user field: preserve its original value as read-only
-    provenance rather than as a fallback runtime setting. Schema numbers and
-    application versions are assigned together under Section 13.1.
-7. Publish staged immutable assets and complete a recoverable journal protocol
-   before exposing the root for normal use. File publication and SQLite commit
-   cannot be treated as one filesystem transaction: test failure before/after
-   each boundary and restart deterministically to finish or restore the prior
-   complete root. Do not expose a half-converted root or delete the sole image
-   copy. Clean old resource locations/staging only after committed references
-   and hashes have been verified.
-8. Subsequent starts use only current repositories, settings and asset resolvers;
-   a completed conversion is idempotent and does not repeat seeding, copying,
-   confirmation or image association. Remove old bundled-acceptance controls,
-   obsolete review/plan controls and dual-read/dual-write fallback paths.
-
-Migration code may read supported-window persisted formats once. There is no permanent
-old-format execution or import mode after success. Historical exports, original
-imports and backups remain immutable evidence, not alternative live settings.
-Recovery from an interrupted upgrade is internal fault recovery; an unreadable
-future schema is rejected unchanged. Whole-root backup/open remains the normal
-current product feature. An old application must refuse an upgraded root.
-
-Catalog updates require no “accept bundled drafts” action. User customizations
-and pinned prescriptions are protected by ownership and snapshots rather than
-by retaining the old delivery interface. Normal actions to review changed
-guidance or activate a revised plan are still required: seamless upgrade cannot
-invent illustrations, approval or user training facts. If a migrated active plan
-contains an ineligible action, show the exact content issue in its ordinary
-detail view and block only new starts, while keeping history and paused work
-available. This is the new rule, with no switch to restore the missing-image
-exemption. A complete, unchanged, eligible plan requires no new approval.
+Future in-window schema changes must use a version bump, pre-write validation,
+recoverable snapshots and transactional migrations. They must preserve frozen
+facts without inventing approval, images, physical results or user decisions.
+Normal root backup and restore remain separate user actions.
 
 ### 12.8 External Handoff Contract
 
 Use `training_feedback.plan` version 2 for all new imports and
 `training_feedback.evidence` version 2 for new exports; define their version
 constants independently. Only the current plan-import contract is accepted in
-0.7.0. A newly supplied v1 file gets a clear current-format error and the current
+0.7.2. A newly supplied v1 file gets a clear current-format error and the current
 schema, not a compatibility converter or version selector. Plans already stored
-in the root are converted internally under Section 12.7. Their original imported
-files and original exports are not rewritten or re-imported.
+in a supported root retain their frozen facts. Their original imported files
+and original exports are not rewritten or re-imported.
 
 V2 carries namespaced action keys, exact content references, family/variant
 identity, ordered standalone/group items, rounds, side order, per-round sets,
@@ -1187,8 +1134,8 @@ Verification is split by the release boundary in Section 9.1. Local regression
 covers the retained synthetic fixtures and the risks below. Actual old-binary
 baselines and independent desktop execution belong to deferred H3.
 
-- For public H3: supported baselines generated/opened by actual 0.6.0/schema-14 and
-  0.6.1/schema-16 programs, using
+- For a later public release: supported baselines generated/opened by identified
+  0.7.0/schema22 and 0.7.1/schema22 programs, using
   isolated synthetic data with renamed/missing-key actions,
   custom text, overrides, images, review attachments, active/draft plans,
   terminal and paused sessions, next-day feedback, retractions and original files.
@@ -1250,7 +1197,7 @@ records capture development work and verification rather than duplicating these 
 Decision accepted: 2026-09-20; documented: 2026-09-21. The project remains in
 development. This policy supersedes unlimited historical-document retention and
 unbounded migration-chain support. Runtime enforcement was implemented as
-070-R2 on 2026-09-21 (schema-14 lower bound, pre-write refusal); workspace
+070-R2 on 2026-09-21 (then schema-14 lower bound, pre-write refusal); workspace
 artifact rotation is DEV-CLEAN, not completed by documenting the policy.
 
 ### 13.1 Application Versions And Schema Changes
@@ -1259,9 +1206,10 @@ artifact rotation is DEV-CLEAN, not completed by documenting the policy.
   Count distinct version numbers, including patch versions, not GitHub commits.
   Several commits with the same version consume one slot. Record the actual
   commit/source snapshot/build identity for each retained version.
-- The current window is **0.7.0 / 0.6.1 / 0.6.0**. Their database baselines are
-  **22 / 16 / 14** respectively. A subsequent 0.7.1 rotates out 0.6.0; if it changes
-  the database, its next schema is 23. This is an example, not a performed bump.
+- The current window is **0.7.2 / 0.7.1 / 0.7.0**. All three use database schema
+  **22**. Existing roots below schema22 are outside the window and are refused
+  read-only before migration or other writes. The next schema revision is 23
+  and must accompany an application patch-or-greater bump.
 - Every subsequent database schema revision must bump the application version
   at least by one patch in the same change. Do not append several schema revisions
   while continuing to call the application 0.7.0. A minor/major bump may accompany
@@ -1293,8 +1241,8 @@ database or upgrade a retained version. Consolidate new-database initialization
 without rewriting already-applied migration semantics in the supported window.
 Git/GitHub commit history stays intact; do not create an unbounded second archive.
 
-Supported older roots receive normal automatic recovery/conversion with frozen
-facts preserved. Roots older than the support window must be detected read-only
+Supported schema22 roots reopen without changing frozen facts. A future retained
+upgrade may use normal automatic recovery/conversion. Roots older than the support window must be detected read-only
 and refused before migration or other writes, with an actionable message such as:
 
 > 此开发数据版本已超出支持范围，请重新安装当前版本并新建数据目录。

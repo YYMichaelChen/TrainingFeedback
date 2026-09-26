@@ -1,4 +1,4 @@
-"""可复用的动作指导字段、版本选择与差异展示组件。"""
+"""可复用的动作指导字段展示与编辑组件。"""
 
 from __future__ import annotations
 
@@ -119,8 +119,6 @@ def _images_html(images: Any, data_root: Path | None = None) -> str:
         details = [summary]
         if image.get("caption"):
             details.append(str(image["caption"]))
-        if image.get("path"):
-            details.append(str(image["path"]))
         image_path = (
             resolve_exercise_image_path(data_root, image.get("path"))
             if data_root is not None and status == "available"
@@ -156,12 +154,9 @@ def _review_answer_html(review: dict[str, Any]) -> str:
     if not relative:
         return _text_html(None, "未保存原件")
     original = review.get("review_answer_original_name") or ""
-    digest = (review.get("review_answer_sha256") or "")[:12]
-    parts = [f"数据目录内 {relative}"]
+    parts = ["原件已保存在数据目录"]
     if original:
         parts.append(f"原始文件名 {original}")
-    if digest:
-        parts.append(f"SHA-256 {digest}…")
     return _text_html("；".join(parts))
 
 
@@ -171,7 +166,7 @@ def render_guidance_html(
 ) -> str:
     """Render every supported guidance field without exposing raw JSON syntax."""
     if not guidance:
-        return "<p>暂无动作指导版本。</p>"
+        return "<p>暂无动作指导。</p>"
     sections = []
     for field, field_label in CONTENT_FIELDS:
         sections.append(
@@ -543,150 +538,6 @@ class GuidanceForm(QWidget):
         return result
 
 
-class GuidanceRevisionCombo(QComboBox):
-    """显式选择一个持久化 guidance revision，选项显示版本身份与状态。"""
-
-    def __init__(
-        self,
-        exercise: dict[str, Any] | None = None,
-        *,
-        unreviewed_only: bool = False,
-        selected_revision_id: int | None = None,
-        parent=None,
-    ):
-        super().__init__(parent)
-        self.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
-        self.setMinimumContentsLength(24)
-        self.currentTextChanged.connect(self.setToolTip)
-        self._revisions: dict[int, dict[str, Any]] = {}
-        if exercise is not None:
-            self.set_revisions(exercise, unreviewed_only, selected_revision_id)
-
-    def set_revisions(
-        self,
-        exercise: dict[str, Any],
-        unreviewed_only: bool = False,
-        selected_revision_id: int | None = None,
-    ) -> None:
-        self.clear()
-        self._revisions = {}
-        in_use_id = exercise.get("active_guidance_revision_id")
-        for revision in exercise.get("guidance", []):
-            guidance = revision.get("guidance", {})
-            reviewed = is_reviewed(guidance)
-            if unreviewed_only and reviewed:
-                continue
-            marker = "已审核" if reviewed else "未审核"
-            if revision.get("id") == in_use_id:
-                marker = f"使用中 · {marker}"
-            revision_id = revision["id"]
-            self._revisions[revision_id] = revision
-            created_at = revision.get("created_at", "时间未记录")
-            provenance = ""
-            if revision.get("bundled_content_id") is not None:
-                provenance = (
-                    f" · 内置内容 {revision['bundled_content_id']} "
-                    f"v{revision.get('bundled_content_version', '?')}"
-                )
-            self.addItem(
-                f"版本 {revision.get('revision_number', '?')} · {marker} · "
-                f"{created_at}{provenance}",
-                revision_id,
-            )
-        preferred = selected_revision_id
-        if preferred is None and self.count():
-            preferred = self.itemData(self.count() - 1)
-        index = self.findData(preferred)
-        if index >= 0:
-            self.setCurrentIndex(index)
-
-    def selected_revision(self) -> dict[str, Any] | None:
-        return self._revisions.get(self.currentData())
-
-
 def review_state_text(guidance: dict[str, Any] | None) -> str:
     """审核状态只有两种：已审核（有完整审核证据）或未审核。"""
     return "已审核" if is_reviewed(guidance or {}) else "未审核"
-
-
-def revision_in_use(exercise: dict[str, Any]) -> dict[str, Any] | None:
-    in_use_id = exercise.get("active_guidance_revision_id")
-    return next(
-        (revision for revision in exercise.get("guidance", []) if revision.get("id") == in_use_id),
-        None,
-    )
-
-
-def revision_in_use_text(exercise: dict[str, Any]) -> str:
-    revision = revision_in_use(exercise)
-    if revision is None:
-        return "当前使用版本：无"
-    return (
-        f"当前使用版本：版本 {revision.get('revision_number', '?')}"
-        f"（{review_state_text(revision.get('guidance'))}）"
-    )
-
-
-def unreviewed_revisions_text(exercise: dict[str, Any]) -> str:
-    descriptions = [
-        f"版本 {revision.get('revision_number', '?')}"
-        for revision in exercise.get("guidance", [])
-        if not is_reviewed(revision.get("guidance", {}))
-    ]
-    return "未审核版本：" + ("、".join(descriptions) if descriptions else "无")
-
-
-def revision_review_text(revision: dict[str, Any] | None) -> str:
-    if revision is None:
-        return "所选版本复核记录：尚未形成持久化版本"
-    guidance = revision.get("guidance", {})
-    review = guidance.get("review", {})
-    if not isinstance(review, dict):
-        review = {}
-    values = (
-        f"状态：{review_state_text(guidance)}",
-        f"审核人类型：{label(REVIEWER_TYPE_LABELS, review.get('reviewer_type'))}",
-        f"来源：{review.get('review_source') or '未记录'}",
-        f"备注：{review.get('review_note') or '未记录'}",
-        f"记录的审核时间：{review.get('reviewed_at') or '未记录'}",
-        f"用户确认时间：{review.get('user_approved_at') or '未确认'}",
-    )
-    return "所选版本复核记录：" + "；".join(values)
-
-
-class GuidanceChangesView(QTextBrowser):
-    """显示所选版本相对当前使用版本的内容变更。"""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setMinimumHeight(150)
-
-    def set_revisions(
-        self,
-        current: dict[str, Any] | None,
-        selected: dict[str, Any] | None,
-    ) -> None:
-        if selected is None:
-            self.setHtml("<p>请选择一个指导版本。</p>")
-            return
-        if current is None:
-            self.setHtml("<p>这个动作还没有使用版本；所选版本可以直接设为使用版本。</p>")
-            return
-        if current.get("id") == selected.get("id"):
-            self.setHtml("<p>当前显示的就是使用版本。</p>")
-            return
-        before = current.get("guidance", {})
-        after = selected.get("guidance", {})
-        changes = []
-        for field, field_label in CONTENT_FIELDS:
-            if before.get(field) == after.get(field):
-                continue
-            changes.append(
-                f"<h3>{escape(field_label)}</h3>"
-                f"<div><b>当前版本：</b><br>{_field_value_html(field, before.get(field))}</div>"
-                f"<div><b>所选版本：</b><br>{_field_value_html(field, after.get(field))}</div>"
-            )
-        if not changes:
-            self.setHtml("<p>所选版本与当前启用版本相比没有内容变化。</p>")
-            return
-        self.setHtml("".join(changes))

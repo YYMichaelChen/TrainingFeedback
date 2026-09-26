@@ -23,8 +23,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .labels import EXERCISE_SOURCE_LABELS, user_message
 from .labels import LIFECYCLE_TEXT as T
-from .labels import user_message
 from .review_occurrence import OccurrenceQuickFill
 
 
@@ -33,10 +33,9 @@ def render_impact(preview):
              f"{T['batch_targets']}（{len(preview['targets'])}）："
              + "、".join(target["name"] for target in preview["targets"]), ""]
     for target, impact in zip(preview["targets"], preview["impacts"], strict=True):
-        ref = target["content"]
+        source = target["exercise"]["source"]
         lines.extend([target["name"],
-                      f"{target['exercise']['source']} / {target['exercise']['key']}",
-                      f"{ref['id']} · v{ref['version']}\nSHA-256: {ref['sha256']}"])
+                      f"{T['source']}：{EXERCISE_SOURCE_LABELS.get(source, source)}"])
         removal = target["removal"]
         local = removal["local"]
         lines.append(T["local"] + "：" + (T[local["disposition"]] if local else T["no_decision"]))
@@ -45,25 +44,24 @@ def render_impact(preview):
         lines.append(T["enabled"] if impact["enabled"] else T["disabled"])
         for kind in ("plans", "groups", "sessions", "reviews", "variants", "exports"):
             lines.append(f"{T[kind]}（{len(impact[kind])}）")
-            for row in impact[kind]:
+            for index, row in enumerate(impact[kind], 1):
                 if kind == "plans":
-                    text = (f"#{row['id']} {row['name']} · v{row['revision_number']} · "
-                            + T[row['status']])
+                    text = (f"{index}. {row['name']} · {T['plan_revision']} "
+                            f"v{row['revision_number']} · " + T[row['status']])
                     text += "\n    " + "；".join(
-                        f"{item['day']} / {item['item_id']}" for item in row["items"]
+                        item['day'] for item in row["items"]
                     )
                 elif kind == "groups":
-                    text = (f"#{row['revision_id']} {row['day']} / {row['name']} / "
-                            f"{row['member_id']}")
+                    text = f"{index}. {row['day']} · 动作组「{row['name']}」"
                 elif kind == "sessions":
-                    text = f"#{row['id']} {row['training_date']} · {T[row['status']]}"
+                    text = f"{index}. {row['training_date']} · {T[row['status']]}"
                 elif kind == "reviews":
-                    text = f"#{row['id']} {T[row['event_type']]} · {row['confirmed_at']}"
+                    text = f"{index}. {T[row['event_type']]} · {row['confirmed_at']}"
                 elif kind == "variants":
-                    text = (f"{row['name']} · {row['exercise']['key']} · "
-                            f"{row['content']['sha256'][:12]}")
+                    text = f"{index}. {row['name']}"
                 else:
-                    text = f"#{row['id']} {row['directory']} · {T[row['availability']]}"
+                    text = (f"{index}. {row.get('created_at') or '—'} · "
+                            f"{T[row['availability']]}")
                 lines.append("  - " + text)
         lines.append("")
     return "\n".join(lines)
@@ -83,16 +81,14 @@ class LifecycleRequestDialog(QDialog):
             self.operation.addItem(T[operation], operation)
         content.addWidget(self.operation)
         self.targets = QTreeWidget()
-        self.targets.setHeaderLabels([T["target"], T["content"], T["disposition"]])
+        self.targets.setHeaderLabels([T["target"], T["disposition"]])
         self.targets.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        self.targets.header().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.targets.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         chosen = {target.exercise: target for target in targets}
         for row in service.library.browse():
             target = chosen.get(row["target"].exercise, row["target"])
             entry = service.library.target_entry(target)
             item = QTreeWidgetItem([entry["content"]["canonical_name"],
-                                   entry["reference"]["sha256"][:12],
                                    T["removed"] if row["eligibility"].removed else T["available"]])
             item.setData(0, Qt.ItemDataRole.UserRole, target)
             self.targets.addTopLevelItem(item)
@@ -245,7 +241,7 @@ class LibraryLifecyclePage(QWidget):
         self.requests.clear()
         for request in self.service.requests():
             names = "、".join(target["name"] for target in request["preview"]["targets"])
-            item = QTreeWidgetItem([f"#{request['id']} {T[request['operation']]}",
+            item = QTreeWidgetItem([f"{T[request['operation']]} · {request['requested_at']}",
                                    names, T[request["status"]]])
             item.setToolTip(1, names)
             item.setData(0, Qt.ItemDataRole.UserRole, request)
@@ -256,10 +252,14 @@ class LibraryLifecyclePage(QWidget):
             self.requests.setCurrentItem(self.requests.topLevelItem(0))
         self._choose(self.requests.currentItem())
         self.publisher.setPlainText(T["publisher_note"] + "\n\n" + "\n\n".join(
-            f"{row['stable_key']} · {T[row['disposition']]}\n"
-            f"{row['catalog_version']} · {row['observed_at']}\n"
-            f"SHA-256: {row['manifest_sha256']}" for row in self.service.publisher_events()
+            f"{self._publisher_name(row)} · {T[row['disposition']]}\n"
+            f"{T['catalog_version']}：{row['catalog_version']} · {row['observed_at']}"
+            for row in self.service.publisher_events()
         ))
+
+    def _publisher_name(self, row):
+        entry = self.service.library.catalog.get(row["stable_key"])
+        return entry["content"]["canonical_name"] if entry else row["stable_key"]
 
     def _choose(self, item, previous=None):
         self.request = item.data(0, Qt.ItemDataRole.UserRole) if item else None

@@ -13,9 +13,9 @@ not policy compliance.
 
 | Application version | Database baseline | History | Status |
 | --- | --- | --- | --- |
-| 0.7.0 | 22 | [Development deliveries](0.7.0/development.md), [contract integration history](0.7.0/contract-integration-history.md) | R1/R2 completed 2026-09-21; 36 images delivered 2026-09-22; four local closeout tasks open. Public H3 deferred by 2026-09-23 decision. |
-| 0.6.1 | 16 | [Development and superseded rules](0.6.1/development.md), [guidance procedure](0.6.1/guidance-review-runbook.md) | Prior development baseline, not proof of personal-data readiness. |
-| 0.6.0 | 14 | [Development deliveries](0.6.0/development.md), [packaged procedure](0.6.0/packaged-acceptance-runbook.md) | Oldest retained application version. |
+| 0.7.2 | 22 | [Version update](0.7.2/development.md) | Current source and local installer candidate; public distribution remains deferred. |
+| 0.7.1 | 22 | [Interface development](0.7.1/development.md) | Local development builds from an uncommitted source state; no public release or personal-data transition. |
+| 0.7.0 | 22 | [Development deliveries](0.7.0/development.md), [contract integration history](0.7.0/contract-integration-history.md) | Retained local release; public H3 remains deferred. |
 
 History records explain completed work and dated evidence; they do not override
 current requirements or certify a later build. Multiple schemas already created
@@ -24,6 +24,8 @@ during 0.6.1/0.7.0 are historical exceptions, not a future numbering pattern.
 At the next version bump, rotate the window, merge still-valid requirements into
 current specifications, and move the expired version's complete history
 subdirectory plus its exclusive fixtures/migration support to `docs/archive/`.
+The 0.6.0 and 0.6.1 directories and schema16-only fixture rotated out in 0.7.2;
+their committed bytes remain in Git history.
 Git history is not rewritten. Historical references inside a retained version's
 own evidence do not create another supported version or a requirement to retain
 that older program.
