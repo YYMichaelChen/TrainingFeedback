@@ -15,7 +15,7 @@ not policy compliance.
 
 | Application version | Database baseline | History | Status |
 | --- | --- | --- | --- |
-| 0.7.3 | 22 | [Plan page and local candidate](0.7.3/development.md) | Current source; local candidate acceptance is in progress. |
+| 0.7.3 | 22 | [Plan page and local candidate](0.7.3/development.md) | Current local candidate accepted; public distribution remains deferred. |
 | 0.7.2 | 22 | [Version update](0.7.2/development.md) | Retained local candidate. |
 | 0.7.1 | 22 | [Interface development](0.7.1/development.md) | Retained development version; no public release or personal-data transition. |
 
