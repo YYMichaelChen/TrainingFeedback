@@ -19,7 +19,7 @@ seed content and proposed doses. Use these entry points:
 - [Versioned delivery history](history/README.md): completed work and superseded rules.
 - [Version-independent workflow](development-workflow.md): task, verification,
   release and rotation procedures.
-- [0.7.0 release review](history/0.7.0/release-readiness.md): dated findings and
+- [0.7.0 release review](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/release-readiness.md): dated findings and
   candidate evidence, not current release instructions.
 
 This document contains product requirements and open work. Completed delivery
@@ -583,7 +583,7 @@ cover 01:59, 02:00, and 02:01.
 
 The current application/schema support map is in the [version history index](history/README.md).
 Completed version work, candidate identities and checks are in the matching version
-history; the 0.7.0 [release review](history/0.7.0/release-readiness.md) is dated
+history; the 0.7.0 [release review](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/release-readiness.md) is dated
 evidence. The initial plan remains a proposal, and the bundled guidance has not
 received an external expert review.
 
@@ -712,7 +712,7 @@ is defined in Section 4.6.
 
 This catalog and group contract originated in the 0.7.0 work and remains the
 product rule until deliberately revised. Source delivery is recorded in the
-[version history](history/0.7.0/development.md); Section 9 owns open work and
+[version history](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/development.md); Section 9 owns open work and
 Section 13 governs supported upgrades and future version changes.
 
 The release delivers an application-owned bundled catalog, exercise families
@@ -1092,7 +1092,7 @@ independent-machine checks, each tied to an exact candidate.
 Usable actions meet Section 12.4 and the bundled content/image inventory must
 report truthful readiness. A technically valid illustration does not establish
 expert review. The dated 0.7.0 local-release exit and checks are recorded in its
-[version history](history/0.7.0/release-readiness.md).
+[version history](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/release-readiness.md).
 
 Keep local-release, external-review, personal-use and W4 results distinct.
 Independent 8-B2 is deferred/not run and is activated only by an explicit public

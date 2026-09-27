@@ -11,7 +11,7 @@ actions; an explicit multi-selection mode retains batch review/removal. The
 library gallery shows latest content without changing the default browse
 semantics used by planning and lifecycle operations.
 
-The retained application window is 0.7.2/0.7.1/0.7.0, all at schema22. Existing
+At this version, the retained application window was 0.7.2/0.7.1/0.7.0, all at schema22. Existing
 roots below schema22 are refused read-only before writes. The old schema16
 conversion runtime entry, its exclusive synthetic fixtures and positive old-root
 tests rotated out. Generic recovery and persisted migration provenance remain

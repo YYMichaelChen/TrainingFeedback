@@ -527,7 +527,7 @@ training result or a personal prescription.
 ## 10. 0.7.0 Catalog Content Plan
 
 Status: 36 illustrations and both bridge-content revisions delivered. Completed software stages
-are in the [0.7.0 history](history/0.7.0/development.md); original guidance/review facts
+are in the [0.7.0 history](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/development.md); original guidance/review facts
 retain their meaning. The bundled library and its illustrations ship with the
 program. Users see a catalog update
 after normal installation without the old manual bundled-draft acceptance step.
@@ -648,7 +648,7 @@ The user chose direct association without another per-image content acceptance
 round. Keep the technical decoding/path/hash checks; do not reintroduce that review
 as a local-release gate or claim external review happened. All 36 entries remain
 externally unreviewed. The four video-informed guidance revisions are preserved
-in the [dated delivery history](history/0.7.0/development.md).
+in the [dated delivery history](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/development.md).
 
 Current inventory evidence is keyed by stable exercise identity: canonical
 name/aliases, family/order, position, content ID/version/hash and image path/hash.
