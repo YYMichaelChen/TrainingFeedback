@@ -108,10 +108,12 @@ class LibraryContext:
     def __exit__(self, *_):
         self.close()
 
-    def create_library_page(self, parent=None):
+    def create_library_page(self, parent=None, *, progressive=False):
         from .ui.catalog_library_page import CatalogLibraryPage
 
-        return CatalogLibraryPage(self.library, parent, removals=self.removals)
+        return CatalogLibraryPage(
+            self.library, parent, removals=self.removals, progressive=progressive,
+        )
 
     def create_removal_page(self, parent=None):
         from .ui.library_lifecycle_page import LibraryLifecyclePage

@@ -36,5 +36,5 @@ executions in `.tmp/test-budgets/<scope>.json`. Failed or interrupted cases stay
 reserved; rerunning the same node after repair adds no new slot. An existing
 scope cannot change tier. A `.lock` prevents concurrent execution: confirm a
 crashed process has ended before removing a stale lock, and retain its JSON
-ledger. See the [versioned test-maintenance history](../docs/history/0.7.0/test-maintenance.md)
-for completed coverage exchanges and older release evidence.
+ledger. Completed coverage exchanges and older release evidence remain available
+in Git history.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "training-feedback"
-version = "0.7.3"
+version = "0.7.4"
 description = "Local-first personal training desktop application"
 requires-python = ">=3.12"
 dependencies = [

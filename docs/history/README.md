@@ -15,9 +15,9 @@ not policy compliance.
 
 | Application version | Database baseline | History | Status |
 | --- | --- | --- | --- |
-| 0.7.3 | 22 | [Plan page and local candidate](0.7.3/development.md) | Current local candidate accepted; public distribution remains deferred. |
+| 0.7.4 | 22 | [Performance development](0.7.4/development.md) | Current development source; local candidate acceptance not run. |
+| 0.7.3 | 22 | [Plan page and local candidate](0.7.3/development.md) | Retained local candidate; public distribution remains deferred. |
 | 0.7.2 | 22 | [Version update](0.7.2/development.md) | Retained local candidate. |
-| 0.7.1 | 22 | [Interface development](0.7.1/development.md) | Retained development version; no public release or personal-data transition. |
 
 History records explain completed work and dated evidence; they do not override
 current requirements or certify a later build. Multiple schemas already created
@@ -31,6 +31,9 @@ their committed bytes remain in Git history.
 The complete 0.7.0 history, local planning records and candidate evidence rotated to the ignored
 `docs/archive/0.7.0/` holding area in 0.7.3. The last tracked snapshot is
 [`f2e0700`](https://github.com/YYMichaelChen/TrainingFeedback/tree/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0).
+The 0.7.1 history and local planning records rotated into the ignored
+`docs/archive/0.7.1/` holding area in 0.7.4; Git history retains the tracked
+development record.
 Git history is not rewritten. Historical references inside a retained version's
 own evidence do not create another supported version or a requirement to retain
 that older program.

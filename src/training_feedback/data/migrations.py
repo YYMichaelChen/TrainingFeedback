@@ -9,7 +9,7 @@ from typing import Callable
 
 LATEST_SCHEMA_VERSION = 22
 OLDEST_SUPPORTED_SCHEMA_VERSION = 22
-SUPPORTED_SCHEMA_APPLICATIONS = {22: "0.7.1/0.7.2/0.7.3"}
+SUPPORTED_SCHEMA_APPLICATIONS = {22: "0.7.2/0.7.3/0.7.4"}
 
 # Add a versioned body here when a later application version raises the schema.
 # Existing schema22 roots are never reinitialized or rewritten by a patch update.

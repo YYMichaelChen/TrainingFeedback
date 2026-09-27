@@ -25,6 +25,40 @@ class LibraryTarget:
 
 
 class LibraryWorkflowService(LibraryService):
+    def _display_image_checks(self, entry: dict):
+        """Reuse unchanged image checks for browsing; actions still validate afresh."""
+        images = entry["content"]["guidance"]["images"]
+        signature = []
+        for image in images:
+            try:
+                declaration = managed_path(self.data_root, image["path"])
+                if "assets" in entry:
+                    digest = entry["assets"][image["path"]]
+                    path = managed_path(self.assets.root, digest)
+                else:
+                    path = managed_path(self.catalog.directory, image["path"])
+                actual_hash = None
+                if image["status"] == "available" and not image.get("placeholder"):
+                    actual_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+                signature.append((str(declaration), str(path), image["sha256"],
+                                  image["status"], image["required"],
+                                  image.get("placeholder"), actual_hash))
+            except (OSError, ValueError, KeyError, TypeError):
+                signature.append((image.get("path"), image.get("sha256"), None))
+        key = entry["reference"]["sha256"]
+        signature = tuple(signature)
+        cache = getattr(self, "_display_checks_cache", None)
+        if cache is None:
+            cache = self._display_checks_cache = {}
+        cached = cache.get(key)
+        if cached is not None and cached[0] == signature:
+            return cached[1]
+        checks = inspect_images(images, lambda image: self._read_image(entry, image))
+        if len(cache) >= 128:
+            cache.clear()
+        cache[key] = (signature, checks)
+        return checks
+
     def target_entry(self, target: LibraryTarget) -> dict:
         exercise = self.get(target.exercise)
         if exercise is None:
@@ -84,6 +118,24 @@ class LibraryWorkflowService(LibraryService):
         if not checks[0].valid:
             raise CatalogError("Image is unavailable or invalid.")
         return data
+
+    def display_image(self, target: LibraryTarget, check) -> bytes:
+        """Read bytes for an image validated in the current browse result."""
+        entry = self.target_entry(target)
+        image = entry["content"]["guidance"]["images"][check.index]
+        if not check.valid or check.sha256 != image["sha256"]:
+            raise CatalogError("Image is unavailable or invalid.")
+        return self._read_image(entry, image)
+
+    def display_eligibility(self, target: LibraryTarget):
+        entry = self.target_entry(target)
+        checks = self._display_image_checks(entry)
+        events = self.user.review_events(entry["id"]) if "id" in entry else []
+        return assess_eligibility(
+            entry["content"], entry["reference"]["sha256"], checks,
+            events[-1] if events else None,
+            removed=self.removal_state(target.exercise)["removed"],
+        )
 
     def _require_eligible(self, target: LibraryTarget):
         status = self.eligibility(target)
@@ -335,7 +387,8 @@ class LibraryWorkflowService(LibraryService):
         return rows
 
     def browse(self, query: str = "", position: str | None = None,
-               *, latest: bool = False) -> list[dict]:
+               *, latest: bool = False, for_display: bool = False,
+               defer_checks: bool = False) -> list[dict]:
         rows = []
         for exercise in self.list():
             current = (
@@ -351,8 +404,14 @@ class LibraryWorkflowService(LibraryService):
             ):
                 continue
             target = LibraryTarget(ExerciseReference(**exercise["exercise"]), entry["reference"])
+            if defer_checks:
+                eligibility = None
+            elif for_display:
+                eligibility = self.display_eligibility(target)
+            else:
+                eligibility = self.eligibility(target)
             rows.append({**exercise, "display": entry, "target": target,
-                         "eligibility": self.eligibility(target)})
+                         "eligibility": eligibility})
         return sorted(rows, key=lambda row: (
             row["display"]["content"]["classification"]["family_key"] or "~",
             row["display"]["content"]["classification"]["variant_order"],

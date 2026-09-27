@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from ..domain.enums import AbortReason
 from .guidance_widgets import GuidanceView
+from .illustrations import IllustrationLabel
 from .labels import (
     ABORT_REASON_LABELS,
     RESULT_LABELS,
@@ -87,16 +88,16 @@ def show_frozen_images(layout, service, occurrence):
     while layout.count():
         layout.takeAt(0).widget().deleteLater()
     for index, declaration in enumerate(occurrence["content"]["guidance"]["images"]):
-        image = QLabel()
-        image.setWordWrap(True)
-        image.setTextFormat(Qt.TextFormat.PlainText)
         try:
             pixmap = QPixmap()
             if not pixmap.loadFromData(service.image(occurrence, index)):
                 raise ValueError("Image is unavailable or invalid.")
-            image.setPixmap(pixmap.scaledToWidth(420, Qt.TransformationMode.SmoothTransformation))
+            image = IllustrationLabel(pixmap)
         except (OSError, ValueError, KeyError):
+            image = QLabel()
             image.setText(T["invalid_image"])
+        image.setWordWrap(True)
+        image.setTextFormat(Qt.TextFormat.PlainText)
         layout.addWidget(image)
         caption = QLabel(declaration.get("caption", ""))
         caption.setTextFormat(Qt.TextFormat.PlainText)

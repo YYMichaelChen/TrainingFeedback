@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
 
 from ..application.library_workflow import LibraryTarget
 from .guidance_widgets import GuidanceForm, GuidanceView
+from .illustrations import IllustrationLabel
 from .labels import (
     CATEGORY_LABELS,
     EXERCISE_ENABLED_LABELS,
@@ -67,19 +68,19 @@ def show_images(layout, service, target):
         return
     entry = service.target_entry(target)
     for check in service.eligibility(target).image_checks:
-        label = QLabel()
-        label.setWordWrap(True)
         if check.valid:
             try:
                 pixmap = QPixmap()
-                pixmap.loadFromData(service.checked_image(target, check.index))
-                label.setPixmap(pixmap.scaledToWidth(
-                    420, Qt.TransformationMode.SmoothTransformation,
-                ))
+                if not pixmap.loadFromData(service.display_image(target, check)):
+                    raise ValueError("Image is unavailable or invalid.")
+                label = IllustrationLabel(pixmap)
             except (ValueError, OSError):
+                label = QLabel()
                 label.setText(T["invalid_image"])
         else:
+            label = QLabel()
             label.setText(LIBRARY_REASON_LABELS.get(check.reason, check.reason))
+        label.setWordWrap(True)
         layout.addWidget(label)
         caption = QLabel(entry["content"]["guidance"]["images"][check.index].get("caption", ""))
         caption.setWordWrap(True)
@@ -87,22 +88,27 @@ def show_images(layout, service, target):
         layout.addWidget(caption)
 
 
-def card_icon(service, target, status):
+def card_icon(service, target, status, cache=None):
     """Make a consistent thumbnail from an actual checked illustration."""
+    check = next((item for item in status.image_checks if item.valid), None)
+    if check is not None and cache is not None and check.sha256 in cache:
+        return cache[check.sha256]
     canvas = QPixmap(208, 144)
     canvas.fill(QColor("#e9f2f5"))
     painter = QPainter(canvas)
-    check = next((item for item in status.image_checks if item.valid), None)
     if check is not None:
         try:
             source = QPixmap()
-            if source.loadFromData(service.checked_image(target, check.index)):
+            if source.loadFromData(service.display_image(target, check)):
                 scaled = source.scaled(200, 136, Qt.AspectRatioMode.KeepAspectRatio,
                                        Qt.TransformationMode.SmoothTransformation)
                 painter.drawPixmap((208 - scaled.width()) // 2,
                                    (144 - scaled.height()) // 2, scaled)
                 painter.end()
-                return QIcon(canvas)
+                icon = QIcon(canvas)
+                if cache is not None:
+                    cache[check.sha256] = icon
+                return icon
         except (ValueError, OSError):
             pass
     painter.setPen(QColor("#64788a"))
@@ -278,12 +284,16 @@ class CatalogEditor(QDialog):
 
 
 class CatalogLibraryPage(QWidget):
-    def __init__(self, service, parent=None, *, removals=None):
+    def __init__(self, service, parent=None, *, removals=None, progressive=False):
         super().__init__(parent)
         self.service = service
         self.removals = removals
         self.target = None
         self.dialog = None
+        self._icon_cache = {}
+        self._progressive = progressive
+        self._first_load_complete = False
+        self._load_generation = 0
         layout = QVBoxLayout(self)
         self.stack = QStackedWidget()
         gallery = QWidget()
@@ -451,28 +461,62 @@ class CatalogLibraryPage(QWidget):
         self.dialog.exec()
         self.refresh()
 
+    def _set_card(self, item, row, status):
+        content = row["display"]["content"]
+        family = content["classification"]["family_key"]
+        family_name = self._family_names.get(family, T["standalone"])
+        position = POSITION_LABELS[content["classification"]["starting_position_class"]]
+        readiness = T["checking"] if status is None else (
+            T["removed"] if status.removed else T["ready"] if status.eligible else T["draft"]
+        )
+        item.setText(f"{content['canonical_name']}\n{family_name} · {position}\n{readiness}")
+        item.setData(Qt.ItemDataRole.UserRole, row["target"])
+        if status is None:
+            item.setIcon(QIcon())
+            return
+        item.setIcon(card_icon(self.service, row["target"], status, self._icon_cache))
+        item.setToolTip(f"{content['canonical_name']}\n{family_name} · {position}\n"
+                        f"{readiness} · {REVIEW_STATE_LABELS[status.reviewed]} · "
+                        f"{EXERCISE_ENABLED_LABELS[row['enabled']]}")
+
+    def _load_next_card(self, generation, pending, complete_catalog, index=0):
+        if generation != self._load_generation:
+            return
+        if index == len(pending):
+            self._first_load_complete = complete_catalog
+            return
+        row, item = pending[index]
+        self._set_card(item, row, self.service.display_eligibility(row["target"]))
+        QTimer.singleShot(
+            0, lambda: self._load_next_card(generation, pending, complete_catalog, index + 1),
+        )
+
+    def cancel_loading(self):
+        self._load_generation += 1
+
     def refresh(self):
+        self._load_generation += 1
+        generation = self._load_generation
+        progressive = self._progressive and not self._first_load_complete
         previous_target = self.target
         detail_open = self.stack.currentIndex() == 1
         selected = {target.exercise for target in self._selected_targets()}
         self.cards.clear()
-        families = {family["key"]: family["name"] for family in self.service.catalog.families()}
+        self._family_names = {
+            family["key"]: family["name"] for family in self.service.catalog.families()
+        }
         matching = None
-        for row in self.service.browse(self.search.text(), self.position.currentData(),
-                                       latest=True):
-            content, status = row["display"]["content"], row["eligibility"]
-            family = content["classification"]["family_key"]
-            family_name = families.get(family, T["standalone"])
-            position = POSITION_LABELS[content["classification"]["starting_position_class"]]
-            readiness = T["removed"] if status.removed else (
-                T["ready"] if status.eligible else T["draft"])
-            label = f"{content['canonical_name']}\n{family_name} · {position}\n{readiness}"
-            item = QListWidgetItem(card_icon(self.service, row["target"], status), label)
-            item.setData(Qt.ItemDataRole.UserRole, row["target"])
-            item.setToolTip(f"{content['canonical_name']}\n{family_name} · {position}\n"
-                            f"{readiness} · {REVIEW_STATE_LABELS[status.reviewed]} · "
-                            f"{EXERCISE_ENABLED_LABELS[row['enabled']]}")
+        pending = []
+        rows = self.service.browse(
+            self.search.text(), self.position.currentData(), latest=True,
+            for_display=True, defer_checks=progressive,
+        )
+        for row in rows:
+            item = QListWidgetItem()
+            self._set_card(item, row, row["eligibility"])
             self.cards.addItem(item)
+            if progressive:
+                pending.append((row, item))
             if row["target"].exercise in selected and self.batch_toggle.isChecked():
                 item.setSelected(True)
             if previous_target and row["target"].exercise == previous_target.exercise:
@@ -486,6 +530,11 @@ class CatalogLibraryPage(QWidget):
             if matching is None:
                 self._show_version()
         self._update_batch_buttons()
+        if progressive:
+            complete_catalog = not self.search.text() and self.position.currentData() is None
+            QTimer.singleShot(
+                0, lambda: self._load_next_card(generation, pending, complete_catalog),
+            )
 
     def _show_version(self):
         for action in self.actions.values():

@@ -17,6 +17,7 @@ from training_feedback.data.catalog_resources import CatalogError
 from training_feedback.data.database import transaction
 from training_feedback.domain.catalog import ExerciseReference, content_sha256
 from training_feedback.ui.catalog_library_page import CatalogEditor
+from training_feedback.ui.illustrations import IllustrationLabel
 
 PNG = png_bytes()
 DIGEST = hashlib.sha256(PNG).hexdigest()
@@ -64,10 +65,16 @@ def test_invalid_selected_image_blocks_every_entry_without_erasing_review(contex
     record(service, [item])
     original_events = service.review_events(item)
     path = context.snapshot_assets.root / DIGEST
+    displayed = next(row for row in service.browse(for_display=True)
+                     if row["target"].exercise == BRIDGE)
+    assert displayed["eligibility"].eligible
     if failure == "deleted":
         path.unlink()
     else:
         path.write_bytes(png_bytes(90) if failure == "changed" else b"undecodable")
+    displayed = next(row for row in service.browse(for_display=True)
+                     if row["target"].exercise == BRIDGE)
+    assert not displayed["eligibility"].eligible
     assert not service.eligibility(item).eligible
     assert not service.eligibility(item).reviewed
     for operation in (
@@ -242,6 +249,10 @@ def test_ui_browses_families_filters_variants_and_keeps_stop_text(qt_app, contex
     assert page.stack.currentIndex() == 1
     assert "停止条件" in page.guidance.toPlainText()
     assert page.images_layout.count() >= 1
+    preview = page.images_layout.itemAt(0).widget()
+    assert isinstance(preview, IllustrationLabel)
+    assert preview.source.width() == 2
+    assert preview.pixmap().width() == 2
     page.position.setCurrentIndex(0)
     assert page.stack.currentIndex() == 0
     page.search.setText("基础臀桥")
