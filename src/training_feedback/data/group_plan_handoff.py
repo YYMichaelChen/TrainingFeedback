@@ -1,4 +1,4 @@
-"""Portable v2 plan/evidence files with retained illustration bytes and managed provenance."""
+"""Portable v3 plan/evidence files with retained illustration bytes and managed provenance."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 from .. import __version__
 from ..application.library_workflow import LibraryTarget
 from ..domain.catalog import ExerciseReference
-from ..domain.group_plans import EVIDENCE_SCHEMA_VERSION, plan_actions
+from ..domain.group_plans import EVIDENCE_SCHEMA_VERSION, plan_actions, revision_code_for_change
 from .catalog_resources import managed_path
 from .conversion_repository import ConversionRepository
 from .group_session_handoff import known
@@ -46,18 +46,44 @@ class GroupPlanHandoff:
         payload = _strict_json(text)
         # Validate before managing files; validate again inside the single write action.
         self.service.validate(payload)
-        path = managed_path(self.root, f"imports/plan-v2-{uuid.uuid4().hex}.json")
+        path = managed_path(self.root, f"imports/plan-v3-{uuid.uuid4().hex}.json")
         try:
             with self.service.library._action():
                 payload = self.service.validate(payload)
                 self.service.repository.check_source(payload.get("source", {}))
-                target_name = payload["plan"].get("target_plan_name")
-                plan_id = self.service.repository.find_plan(target_name) if target_name else None
-                if target_name and plan_id is None:
-                    raise ValueError("Target plan was not found.")
-                self.service._lineage(plan_id, payload)
                 now = self.service.library.clock.now().isoformat()
-                identifier = self.service.repository.create(payload, now, plan_id)
+                if payload["intent"] == "upgrade":
+                    plan_id = self.service.repository.find_base_number(
+                        payload["target_base_number"]
+                    )
+                    if plan_id is None:
+                        raise ValueError("Target plan base code was not found.")
+                    active = self.service.repository.active(plan_id)
+                    if active is None:
+                        raise ValueError("The target plan has no active revision to upgrade.")
+                    existing = self.service.repository.upgrade_draft(plan_id, active["id"])
+                    if existing:
+                        raise ValueError(
+                            "An upgrade draft for this plan already exists; open it to continue."
+                        )
+                    self.service._lineage(plan_id, payload)
+                    code, _changes = revision_code_for_change(
+                        active["base_number"], active["plan_code"],
+                        active["payload"]["plan"], payload["plan"],
+                    )
+                    identifier = self.service.repository.create(
+                        payload, now, plan_id, plan_code=code,
+                        change_description=payload.get("change_description", ""),
+                        upgrade_source_revision_id=active["id"],
+                    )
+                else:
+                    self.service._lineage(None, payload)
+                    if self.service.repository.find_plan(payload["plan"]["name"]) is not None:
+                        raise ValueError("A plan with this name already exists.")
+                    identifier = self.service.repository.create(
+                        payload, now,
+                        change_description=payload.get("change_description", ""),
+                    )
                 path.parent.mkdir(parents=True, exist_ok=True)
                 with path.open("xb") as stream:
                     stream.write(raw)
@@ -74,7 +100,7 @@ class GroupPlanHandoff:
             raise
 
     def export(self, revision_id, *, session_service=None, session_id=None):
-        stem = ("session" if session_service else "plan") + "-evidence-v2-" + uuid.uuid4().hex
+        stem = ("session" if session_service else "plan") + "-evidence-v3-" + uuid.uuid4().hex
         destination = managed_path(self.root, f"exports/{stem}")
         staged = managed_path(self.root, f"exports/.{stem}.staging")
         staged.mkdir(parents=True)
@@ -197,11 +223,11 @@ def render_plan_evidence(evidence):
     """Readable hierarchy followed by verbatim JSON facts (no inference or missing-field loss)."""
     revision = evidence["revision"]
     lines = [
-        "# TrainingFeedback " + ("训练" if "session" in evidence else "计划") + "证据 v2",
+            "# TrainingFeedback " + ("训练" if "session" in evidence else "计划") + "证据 v3",
         "",
         revision["name"],
         "",
-        f"版本：{revision['revision_number']} · {revision['status']}",
+        f"计划代码：{revision['plan_code']} · {revision['status']}",
         "",
         "范围：冻结计划与已保存训练事实；未记录结果保留未知。" if "session" in evidence
         else "范围：计划版本；不是实际训练完成记录。",

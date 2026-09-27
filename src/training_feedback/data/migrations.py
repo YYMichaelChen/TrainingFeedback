@@ -1,4 +1,4 @@
-"""Schema22 fresh initialization and retained-version migration boundary."""
+"""Schema23 initialization and the retained-version migration boundary."""
 
 from __future__ import annotations
 
@@ -7,12 +7,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Callable
 
-LATEST_SCHEMA_VERSION = 22
+LATEST_SCHEMA_VERSION = 23
 OLDEST_SUPPORTED_SCHEMA_VERSION = 22
-SUPPORTED_SCHEMA_APPLICATIONS = {22: "0.7.2/0.7.3/0.7.4"}
+SUPPORTED_SCHEMA_APPLICATIONS = {22: "0.7.3/0.7.4", 23: "0.7.5"}
 
-# Add a versioned body here when a later application version raises the schema.
-# Existing schema22 roots are never reinitialized or rewritten by a patch update.
+# Schema22 is handled only by the explicit 0.7.5 reset before normal database use.
 _MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {}
 
 
@@ -22,6 +21,10 @@ class FutureSchemaError(sqlite3.DatabaseError):
 
 class ExpiredSchemaError(sqlite3.DatabaseError):
     """The database predates the retained application window."""
+
+
+class Schema22ResetRequiredError(sqlite3.DatabaseError):
+    """A valid schema22 root must pass through the guarded 0.7.5 reset lifecycle."""
 
 
 def _current_version(connection: sqlite3.Connection) -> int:
@@ -42,7 +45,7 @@ def _current_version(connection: sqlite3.Connection) -> int:
 
 
 def _initialize(connection: sqlite3.Connection) -> None:
-    schema = Path(__file__).with_name("schema22.sql").read_text(encoding="utf-8")
+    schema = Path(__file__).with_name("schema23.sql").read_text(encoding="utf-8")
     try:
         connection.executescript("BEGIN;\n" + schema)
         connection.execute(
@@ -77,6 +80,10 @@ def apply_migrations(connection: sqlite3.Connection) -> None:
         raise FutureSchemaError("Database schema is newer than this application.")
     if 0 < current < OLDEST_SUPPORTED_SCHEMA_VERSION:
         raise ExpiredSchemaError("Database schema is older than the supported window.")
+    if current == 22:
+        raise Schema22ResetRequiredError(
+            "Schema22 roots require the guarded 0.7.5 first-open reset."
+        )
     if current == 0:
         _initialize(connection)
         return

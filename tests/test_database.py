@@ -59,7 +59,7 @@ def test_below_window_root_is_refused_without_remigration(tmp_path):
             "INSERT INTO training_plan(name, created_at) VALUES ('legacy', 'now')"
         )
     with sqlite3.connect(path) as connection:
-        connection.execute("UPDATE schema_migration SET version=21 WHERE version=22")
+        connection.execute("UPDATE schema_migration SET version=21 WHERE version=23")
         connection.commit()
     database_bytes = Path(path).read_bytes()
 

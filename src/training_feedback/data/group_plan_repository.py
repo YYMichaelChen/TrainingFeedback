@@ -1,4 +1,4 @@
-"""V2 normalized day/item/member/set persistence; application owns transactions."""
+"""V3 normalized day/item/member/set persistence; application owns transactions."""
 
 import json
 
@@ -32,9 +32,10 @@ class GroupPlanRepository:
             raise ValueError("Plan revision was not found.")
         revision = dict(row)
         revision["migration"] = json.loads(revision.pop("migration_json") or "null")
+        revision["base_number"] = self.connection.execute(
+            "SELECT base_number FROM group_plan WHERE id=?", (row["plan_id"],)
+        ).fetchone()[0]
         plan = {"name": row["name"], "purpose": row["purpose"], "days": []}
-        if row["target_plan_name"] is not None:
-            plan["target_plan_name"] = row["target_plan_name"]
         for day in self.connection.execute(
             "SELECT * FROM group_plan_day WHERE revision_id=? ORDER BY day_order",
             (identifier,),
@@ -50,8 +51,11 @@ class GroupPlanRepository:
             plan["days"].append({"order": day["day_order"], "name": day["name"], "items": items})
         revision["payload"] = {
             "schema": "training_feedback.plan",
-            "schema_version": 2,
+            "schema_version": 3,
+            "intent": "new",
             "rationale": row["rationale"],
+            "change_description": row["change_description"],
+            "plan_code": row["plan_code"],
             "plan": plan,
         }
         source = json.loads(revision.pop("source_json"))
@@ -102,12 +106,24 @@ class GroupPlanRepository:
             ]
         return item
 
-    def create(self, payload, now, plan_id=None):
+    def create(self, payload, now, plan_id=None, *, base_number=None, plan_code=None,
+               change_description="", upgrade_source_revision_id=None):
         plan = payload["plan"]
         if plan_id is None:
+            if base_number is None:
+                used = {
+                    row[0] for row in self.connection.execute(
+                        "SELECT base_number FROM group_plan"
+                    )
+                }
+                base_number = next(
+                    (number for number in range(1, 1000) if number not in used), None
+                )
+            if type(base_number) is not int or not 1 <= base_number <= 999:
+                raise ValueError("A plan base number must be between 001 and 999.")
             plan_id = self.connection.execute(
-                "INSERT INTO group_plan(name,created_at) VALUES (?, ?)",
-                (plan["name"], now),
+                "INSERT INTO group_plan(base_number,name,created_at) VALUES (?,?,?)",
+                (base_number, plan["name"], now),
             ).lastrowid
         elif (
             self.connection.execute(
@@ -117,18 +133,29 @@ class GroupPlanRepository:
             is None
         ):
             raise ValueError("Target plan was not found.")
+        elif plan_code is None:
+            raise ValueError("A revision code must be assigned for an existing plan.")
         number = self.connection.execute(
             "SELECT COALESCE(MAX(revision_number),0)+1 FROM group_plan_revision WHERE plan_id=?",
             (plan_id,),
         ).fetchone()[0]
+        if plan_code is None:
+            base = self.connection.execute(
+                "SELECT base_number FROM group_plan WHERE id=?", (plan_id,)
+            ).fetchone()[0]
+            plan_code = f"plan-{base:03d}.01.00"
         identifier = self.connection.execute(
             "INSERT INTO group_plan_revision(plan_id,revision_number,status,name,purpose,"
-            "target_plan_name,rationale,source_json,created_at) VALUES (?,?,'draft',?,?,?,?,?,?)",
+            "plan_code,change_description,upgrade_source_revision_id,target_plan_name,"
+            "rationale,source_json,created_at) VALUES (?,?,'draft',?,?,?,?,?,?,?,?,?)",
             (
                 plan_id,
                 number,
                 plan["name"],
                 plan["purpose"],
+                plan_code,
+                change_description,
+                upgrade_source_revision_id,
                 plan.get("target_plan_name"),
                 payload["rationale"],
                 json.dumps(payload.get("source")),
@@ -138,7 +165,8 @@ class GroupPlanRepository:
         self._children(identifier, plan)
         return identifier
 
-    def replace(self, identifier, payload, expected_token):
+    def replace(self, identifier, payload, expected_token, *, plan_code=None,
+                change_description=None):
         current = self.get(identifier)
         if current["status"] != "draft":
             raise ValueError("Only draft revisions can be edited.")
@@ -158,13 +186,15 @@ class GroupPlanRepository:
         plan = payload["plan"]
         self.connection.execute(
             "UPDATE group_plan_revision SET name=?,purpose=?,target_plan_name=?,rationale=?,"
-            "source_json=?,edit_token=edit_token+1 WHERE id=?",
+            "source_json=?,plan_code=?,change_description=?,edit_token=edit_token+1 WHERE id=?",
             (
                 plan["name"],
                 plan["purpose"],
                 plan.get("target_plan_name"),
                 payload["rationale"],
                 json.dumps(payload.get("source")),
+                plan_code or current["plan_code"],
+                current["change_description"] if change_description is None else change_description,
                 identifier,
             ),
         )
@@ -226,6 +256,20 @@ class GroupPlanRepository:
     def find_plan(self, name):
         row = self.connection.execute("SELECT id FROM group_plan WHERE name=?", (name,)).fetchone()
         return row[0] if row else None
+
+    def find_base_number(self, base_number):
+        row = self.connection.execute(
+            "SELECT id FROM group_plan WHERE base_number=?", (base_number,)
+        ).fetchone()
+        return row[0] if row else None
+
+    def upgrade_draft(self, plan_id, source_revision_id):
+        row = self.connection.execute(
+            "SELECT id FROM group_plan_revision WHERE plan_id=? AND status='draft' "
+            "AND upgrade_source_revision_id=? ORDER BY revision_number DESC LIMIT 1",
+            (plan_id, source_revision_id),
+        ).fetchone()
+        return self.get(row[0]) if row else None
 
     def pin(self, revision_id, item_key, content_id, review, now):
         item_id = self.connection.execute(

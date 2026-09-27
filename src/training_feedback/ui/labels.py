@@ -55,19 +55,30 @@ POSITION_LABELS = {
     "unknown": "未分类",
 }
 GROUP_PLAN_TEXT = {
-    "title": "训练计划 · 动作组", "new": "新建计划", "edit": "编辑草稿", "clone": "复制为草稿",
-    "activate": "预览并启用", "import": "导入 v2 计划…", "export": "导出 v2 证据…",
+    "title": "训练计划 · 动作组", "new": "新建计划", "edit": "编辑草稿", "clone": "复制为独立计划",
+    "upgrade": "升级所选计划",
+    "activate": "预览并启用", "import": "导入 v3 计划…", "export": "导出 v3 证据…",
     "name": "计划名称", "purpose": "训练目的", "rationale": "调整说明",
+    "change_description": "变更说明", "base_number": "三位计划编号",
+    "clone_name_prompt": "输入独立计划名称", "clone_base_prompt": "输入未使用的三位编号（001–999）",
+    "upgrade_preview": "以下差异将保存为 {code}。确认后保存草稿。",
+    "draft_preview": "以下更改将以 {code} 保存为草稿。确认后保存。",
     "day": "训练日", "add_day": "添加训练日", "rename_day": "修改训练日名称",
+    "select_detail": "在左侧选择训练日、动作组、动作或成员查看处方。",
+    "day_detail_hint": "直接在左侧编辑训练日名称；用下方操作添加和排列计划项。",
+    "search_exercises": "搜索动作名称或体位",
+    "choose_multiple_exercises": "至少选择一个动作；所选动作会以未完成处方加入计划。",
     "day_hint": "训练日是计划中一次训练的内容，不对应日历日期；先选中训练日，再添加动作。",
     "select_day_first": "请先在列表中选择训练日；若列表为空，请先添加训练日。",
     "action": "独立动作", "group": "动作组", "add_action": "添加动作", "add_group": "添加动作组",
     "add_member": "添加成员", "edit_item": "编辑所选项", "remove": "移除所选项",
+    "member": "成员", "set_order": "组次",
     "up": "上移", "down": "下移", "move_day": "移至另一训练日…", "move_member": "移至另一动作组…",
     "choose": "选择动作", "phase": "训练阶段", "note": "原始备注",
     "sets": "逐组剂量（动作组内为每轮剂量）", "value": "数值", "unit": "单位",
     "per_side": "每侧", "set_rest": "组间休息秒", "add_set": "添加剂量组",
-    "remove_set": "删除剂量组",
+    "remove_set": "删除剂量组", "fill_equal_sets": "按所选组填充相同剂量",
+    "fill_equal_sets_confirm": "这会覆盖其他组的剂量、单位、每侧、休息和备注。继续吗？",
     "member_rest": "成员后休息秒", "side_rest": "换侧休息秒", "round_rest": "轮间休息秒",
     "exit_rest": "退出后休息秒", "first_side": "先做哪一侧", "rounds": "轮数",
     "sequence": "换侧顺序", "transition": "体位 / 支撑转换说明", "group_name": "动作组名称",
@@ -79,7 +90,7 @@ GROUP_PLAN_TEXT = {
     "dissolve": "移除后只剩一个成员。明确拆散这个动作组？请先将轮数设为 1。",
     "remove_confirm": "确定移除所选计划项？保存后生效。", "exported": "证据已导出到：",
     "no_plans": "暂无计划", "json_filter": "JSON 文件 (*.json)",
-    "empty_revision_hint": "暂无计划修订。可新建计划，或导入 v2 计划。",
+    "empty_revision_hint": "暂无计划修订。可新建计划，或导入 v3 计划。",
     "rest_seconds": "休息 {value} 秒",
     "select_destination": "选择目标", "expanded": "执行顺序（每行完成一个成员的全部组）",
     "preview_truncated": "预览仅显示前 300 个执行位置；完整处方及轮数保留。",
@@ -378,8 +389,21 @@ def localize_dialog_buttons(buttons: QDialogButtonBox) -> None:
 
 
 ERROR_TRANSLATIONS = {
-    "Only plan format version 2 is accepted.": "此入口只接受 v2 计划，请使用当前导出附带的格式。",
+    "Only plan format version 3 is accepted.": "此入口只接受 v3 计划，请使用当前导出附带的格式。",
     "The displayed plan revision changed.": "当前草稿已被修改，请重新打开后核对。",
+    "A plan base number must be between 001 and 999.": "计划编号必须是 001 至 999 的整数。",
+    "That plan base number is already in use.": "这个计划编号已经使用，请输入其他编号。",
+    "A plan with this name already exists.": "这个计划名称已经使用，请输入其他名称。",
+    "An unchanged copy cannot be saved as a new upgrade.": (
+        "计划内容没有变化，不能另存为新升级版本。"
+    ),
+    "The active plan changed; reopen the upgrade draft.": (
+        "当前启用计划已改变，请重新打开升级草稿。"
+    ),
+    "Only the latest active revision can be upgraded.": "只能升级当前最新的启用计划。",
+    "An upgrade draft already exists; reopen it to continue.": (
+        "已有该计划的升级草稿，请打开草稿继续编辑。"
+    ),
     "The activation preview changed. Review it again.":
         "预览后计划或审核状态已变化，请重新查看并确认。",
     "Plan item identities must be unique throughout the revision.": "计划内的条目身份不能重复。",
@@ -700,8 +724,8 @@ def _activation_reasons(detail: str) -> str:
 
 
 def user_message(message: str) -> str:
-    if message.startswith("Invalid plan v2 at "):
-        return "v2 计划格式不完整或字段无效，请核对：" + message[len("Invalid plan v2 at "):]
+    if message.startswith("Invalid plan v3 at "):
+        return "v3 计划格式不完整或字段无效，请核对：" + message[len("Invalid plan v3 at "):]
     if message.startswith("Content is not eligible: "):
         return "当前内容不可用：" + "；".join(
             LIBRARY_REASON_LABELS.get(reason, reason)

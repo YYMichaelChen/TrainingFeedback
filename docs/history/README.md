@@ -15,17 +15,17 @@ not policy compliance.
 
 | Application version | Database baseline | History | Status |
 | --- | --- | --- | --- |
-| 0.7.4 | 22 | [Performance development](0.7.4/development.md), [local candidate](0.7.4/local-candidate.md) | Current source; local candidate built, installed acceptance incomplete. |
+| 0.7.5 | 23 | [Plan and reset development](0.7.5/development.md), [local candidate](0.7.5/local-candidate.md) | Source development complete; candidate verification in progress. |
+| 0.7.4 | 22 | [Performance development](0.7.4/development.md), [local candidate](0.7.4/local-candidate.md) | Retained source and schema22 reset baseline; installed acceptance incomplete. |
 | 0.7.3 | 22 | [Plan page and local candidate](0.7.3/development.md) | Retained local candidate; public distribution remains deferred. |
-| 0.7.2 | 22 | [Version update](0.7.2/development.md) | Retained local candidate. |
 
 History records explain completed work and dated evidence; they do not override
 current requirements or certify a later build. Multiple schemas already created
 during 0.6.1/0.7.0 are historical exceptions, not a future numbering pattern.
 
-At the next version bump, rotate the window, merge still-valid requirements into
-current specifications, and move the expired version's complete history
-subdirectory plus its exclusive fixtures/migration support to `docs/archive/`.
+In 0.7.5, rotate the window, merge still-valid requirements into current
+specifications, and move the expired version's complete history subdirectory
+plus its exclusive fixtures/migration support to `docs/archive/`.
 The 0.6.0 and 0.6.1 directories and schema16-only fixture rotated out in 0.7.2;
 their committed bytes remain in Git history.
 The complete 0.7.0 history, local planning records and candidate evidence rotated to the ignored

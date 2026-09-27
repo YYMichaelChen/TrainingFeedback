@@ -311,7 +311,7 @@ def test_export_after_catalog_replacement_is_portable_and_lossless(
         evidence = json.loads((directory / "evidence.json").read_text(encoding="utf-8"))
         assert evidence["provenance"]["scope"] == "training_session"
         assert evidence["session"] == controller.session
-        assert evidence["provenance"]["database_schema_version"] == 22
+        assert evidence["provenance"]["database_schema_version"] == 23
         assert evidence["session"]["snapshot"]["catalog_version"] != "replaced"
         assert len(evidence["assets"]) == 1
         assert (directory / evidence["assets"][0]["path"]).read_bytes() == PNG
@@ -322,8 +322,10 @@ def test_export_after_catalog_replacement_is_portable_and_lossless(
     returned = deepcopy(payload)
     returned["source"] = {"session_id": controller.session["id"],
                           "export_id": evidence["provenance"]["export_id"]}
-    plan_id = controller.session["snapshot"]["revision"]["plan_id"]
-    assert context.plans.create(returned, plan_id=plan_id)
+    revision_snapshot = controller.session["snapshot"]["revision"]
+    assert revision_snapshot["plan_code"] == revision_snapshot["payload"]["plan_code"]
+    returned["plan"]["name"] = "【合成】训练证据另存计划"
+    assert context.plans.create(returned)
 
 
 def test_start_rechecks_missing_retained_images(context, payload):

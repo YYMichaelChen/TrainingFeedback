@@ -1127,10 +1127,10 @@ document owns family membership, aliases, technique and proposed doses.
 Candidate evidence and task records document actual work without duplicating
 these specifications.
 
-### 12.11 Planned 0.7.5 Plan Authoring And Identity
+### 12.11 0.7.5 Plan Authoring And Identity
 
-Decision accepted: 2026-09-28. This is planned behavior after the active 0.7.4
-release closes, not a claim about the 0.7.4 application or candidate.
+Decision accepted: 2026-09-28. This defines 0.7.5 behavior; it is not a claim
+about the 0.7.4 application or candidate.
 
 New-plan entry and editing use one page: a plan/day/item hierarchy beside the
 selected item's fields and per-set table. The new page starts with an unfinished
@@ -1265,9 +1265,9 @@ features do not authorize a bulk copy of development records. Preserve real
 original facts if any are deliberately retained, and exclude synthetic facts from
 personal review, training and W4 evidence. Revisit long-term support policy then.
 
-### 13.4 Planned 0.7.5 One-Time Plan And Training Reset
+### 13.4 0.7.5 One-Time Plan And Training Reset
 
-Decision accepted: 2026-09-28. After 0.7.4 is finished, 0.7.5 first opening
+Decision accepted: 2026-09-28. After 0.7.4 source work closes, 0.7.5 first opening
 any valid schema 22 TrainingFeedback root automatically deletes its existing
 plan and dependent training data without a confirmation prompt or recovery
 backup. Schema 22 roots created by 0.7.2, 0.7.3 and 0.7.4 do not record enough

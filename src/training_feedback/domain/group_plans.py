@@ -1,7 +1,9 @@
-"""V2 plan validation, identity-based diffs and editable document operations."""
+"""V3 plan validation, identity-based diffs and editable document operations."""
 
 from __future__ import annotations
 
+import json
+import re
 from copy import deepcopy
 from math import isfinite
 from uuid import uuid4
@@ -13,18 +15,18 @@ from .catalog import ExerciseReference, require_classification
 from .models import require_non_negative_finite
 from .plans import PlannedSet, ensure_orders
 
-PLAN_IMPORT_SCHEMA_VERSION = 2
-EVIDENCE_SCHEMA_VERSION = 2
+PLAN_IMPORT_SCHEMA_VERSION = 3
+EVIDENCE_SCHEMA_VERSION = 3
 
 
 def validate_plan_payload(payload: dict, schema: dict, *, activation: bool = False) -> dict:
     if not isinstance(payload, dict) or payload.get("schema_version") != PLAN_IMPORT_SCHEMA_VERSION:
-        raise ValueError("Only plan format version 2 is accepted.")
+        raise ValueError("Only plan format version 3 is accepted.")
     errors = list(Draft202012Validator(schema).iter_errors(payload))
     if errors:
         error = errors[0]
         path = "/".join(str(part) for part in error.absolute_path)
-        raise ValueError(f"Invalid plan v2 at {path}: {error.message}")
+        raise ValueError(f"Invalid plan v3 at {path}: {error.message}")
     _require_finite(payload)
     plan = payload["plan"]
     ensure_orders((day["order"] for day in plan["days"]), "Day")
@@ -74,8 +76,6 @@ def validate_stored_plan(payload, schema, originals, *, activation=False):
         projection = migration_validation_projection(action)
         action.clear()
         action.update(projection)
-    if not projected["rationale"] and any("provenance" in row for row in originals.values()):
-        projected["rationale"] = "validation-only"
     validate_plan_payload(projected, schema, activation=activation)
     return deepcopy(payload)
 
@@ -218,6 +218,59 @@ def diff_plans(before, after):
                 }
             )
     return changes
+
+
+_PLAN_TEXT_FIELDS = {"name", "purpose", "target_plan_name"}
+_ITEM_TEXT_FIELDS = {"name", "note", "transition"}
+_DOSE_AND_REST_FIELDS = {
+    "sets",
+    "note",
+    "transition",
+    "rest_after_action_seconds",
+    "rest_after_member_seconds",
+    "rest_after_group_seconds",
+    "rest_between_sides_seconds",
+    "rest_between_rounds_seconds",
+}
+
+
+def _structure_value(value):
+    if isinstance(value, list):
+        return [_structure_value(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    if "items" in value and "order" in value and "name" in value:
+        return {
+            "order": value["order"],
+            "name": value["name"],
+            "items": _structure_value(value["items"]),
+        }
+    return {
+        key: _structure_value(item)
+        for key, item in value.items()
+        if key not in _PLAN_TEXT_FIELDS | _ITEM_TEXT_FIELDS | _DOSE_AND_REST_FIELDS
+    }
+
+
+def revision_code_for_change(base_number, previous_code, before, after):
+    """Classify one upgrade from actual plan differences and return its root-local code."""
+    if type(base_number) is not int or not 1 <= base_number <= 999:
+        raise ValueError("A plan base number must be between 001 and 999.")
+    match = re.fullmatch(r"plan-(\d{3})\.(\d+)\.(\d+)", previous_code or "")
+    if match is None or int(match.group(1)) != base_number:
+        raise ValueError("The source plan code is invalid.")
+    changes = diff_plans(before, after)
+    if not changes:
+        raise ValueError("An unchanged copy cannot be saved as a new upgrade.")
+    if json.dumps(_structure_value(before), sort_keys=True, ensure_ascii=False) != json.dumps(
+        _structure_value(after), sort_keys=True, ensure_ascii=False
+    ):
+        major = int(match.group(2)) + 1
+        minor = 0
+    else:
+        major = int(match.group(2))
+        minor = int(match.group(3)) + 1
+    return f"plan-{base_number:03d}.{major:02d}.{minor:02d}", changes
 
 
 def new_item_id():

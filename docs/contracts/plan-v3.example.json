@@ -1,0 +1,96 @@
+{
+  "schema": "training_feedback.plan",
+  "schema_version": 3,
+  "intent": "new",
+  "change_description": "",
+  "rationale": "【合成契约样例】仅演示单项与连续组合的格式；哈希为占位，不是可导入的真实处方。",
+  "source": {"session_id": null, "export_id": null},
+  "plan": {
+    "name": "【合成契约样例】070-A",
+    "purpose": "  保留原文\t\r\n格式示例，不代表剂量建议  ",
+    "days": [{
+      "order": 1,
+      "name": "【合成契约样例】训练日",
+      "items": [
+        {
+          "kind": "action",
+          "item_id": "example.bridge",
+          "order": 1,
+          "phase": "main",
+          "exercise": {"source": "bundled", "key": "launch.glute-bridge"},
+          "exercise_name": "臀桥",
+          "content": {
+            "id": "training-feedback.launch.glute-bridge.zh-CN",
+            "version": 2,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "classification": {
+            "family_key": "family.glute-bridge", "variant_role": "base", "variant_order": 1,
+            "parent_exercise_key": null, "starting_position_class": "supine"
+          },
+          "sets": [
+            {"order": 1, "value": 2, "unit": "reps", "per_side": false, "note": "【合成契约样例】不是默认剂量", "rest_after_set_seconds": 10},
+            {"order": 2, "value": 1, "unit": "reps", "per_side": false, "note": "  原始备注\t保留  ", "rest_after_set_seconds": 0}
+          ],
+          "first_side": null,
+          "rest_between_sides_seconds": 0,
+          "rest_after_action_seconds": 15,
+          "note": "【合成契约样例】双侧单项"
+        },
+        {
+          "kind": "group",
+          "item_id": "example.kick-hydrant",
+          "order": 2,
+          "name": "【合成契约样例】后踢→消防栓",
+          "phase": "main",
+          "round_count": 2,
+          "side_sequence": "same_side_then_switch",
+          "first_side": "left",
+          "transition": "【合成契约样例】四点支撑下先完成左侧成员序列，再换右侧；按指导调整支撑。",
+          "rest_between_sides_seconds": 3,
+          "rest_between_rounds_seconds": 7,
+          "rest_after_group_seconds": 11,
+          "members": [
+            {
+              "item_id": "example.kick",
+              "order": 1,
+              "exercise": {"source": "bundled", "key": "main.quadruped-straight-leg-kickback"},
+              "exercise_name": "直腿后踢",
+              "content": {
+                "id": "training-feedback.main.quadruped-straight-leg-kickback.zh-CN",
+                "version": 2,
+                "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              "classification": {
+                "family_key": "family.quadruped-hip", "variant_role": "variant", "variant_order": 1,
+                "parent_exercise_key": null, "starting_position_class": "quadruped"
+              },
+              "sets": [{"order": 1, "value": 1, "unit": "reps", "per_side": true, "note": "【合成契约样例】每轮每侧", "rest_after_set_seconds": 0}],
+              "rest_after_member_seconds": 2,
+              "note": "【合成契约样例】成员 A"
+            },
+            {
+              "item_id": "example.hydrant",
+              "order": 2,
+              "exercise": {"source": "bundled", "key": "main.fire-hydrant"},
+              "exercise_name": "消防栓",
+              "content": {
+                "id": "training-feedback.main.fire-hydrant.zh-CN",
+                "version": 1,
+                "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              "classification": {
+                "family_key": "family.quadruped-hip", "variant_role": "variant", "variant_order": 5,
+                "parent_exercise_key": null, "starting_position_class": "quadruped"
+              },
+              "sets": [{"order": 1, "value": 1, "unit": "reps", "per_side": true, "note": "【合成契约样例】每轮每侧", "rest_after_set_seconds": 0}],
+              "rest_after_member_seconds": 0,
+              "note": "【合成契约样例】成员 B"
+            }
+          ],
+          "note": "【合成契约样例】两轮分别记录，不合计为一个动作的次数"
+        }
+      ]
+    }]
+  }
+}

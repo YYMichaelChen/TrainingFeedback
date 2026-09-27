@@ -12,6 +12,7 @@ from typing import Any
 from . import migrations
 from .database import Database
 from .migrations import OLDEST_SUPPORTED_SCHEMA_VERSION, FutureSchemaError
+from .one_time_reset import InvalidResetRootError, ResetRecoveryError, prepare_existing_root
 from .root_lock import RootBusyError
 
 APPLICATION_NAME = "TrainingFeedback"
@@ -219,6 +220,7 @@ def open_existing(root_path: Path) -> DataRoot:
     """Validate and open an existing application-owned data root."""
     root = inspect_existing(root_path)
     try:
+        prepare_existing_root(root.path)
         with Database(root.database_path):
             pass
     except FutureSchemaError as exc:
@@ -227,6 +229,15 @@ def open_existing(root_path: Path) -> DataRoot:
         ) from exc
     except RootBusyError as exc:
         raise DataRootAccessError(str(exc)) from exc
+    except InvalidResetRootError as exc:
+        raise InvalidDataRootError(
+            "The TrainingFeedback database is invalid or incomplete."
+        ) from exc
+    except ResetRecoveryError as exc:
+        raise DataRootAccessError(
+            "The one-time plan and training cleanup could not finish. "
+            "Close other applications and retry opening this data root."
+        ) from exc
     except Exception as exc:
         raise InvalidDataRootError("The TrainingFeedback database is invalid.") from exc
     return root

@@ -84,7 +84,7 @@ def test_switch_rejects_expired_target_without_changing_current_root(qt_app, tmp
     expired = tmp_path / "old"
     create_new(expired)
     with sqlite3.connect(expired / "training_feedback.sqlite3") as connection:
-        connection.execute("UPDATE schema_migration SET version=21 WHERE version=22")
+        connection.execute("UPDATE schema_migration SET version=21 WHERE version=23")
     before = (expired / "training_feedback.sqlite3").read_bytes()
 
     with pytest.raises(ExpiredDataRootError):
@@ -173,7 +173,7 @@ def _payload(context):
     from training_feedback.domain.group_plans import plan_actions
 
     value = json.loads(
-        (Path(__file__).resolve().parents[1] / "docs/contracts/plan-v2.example.json")
+        (Path(__file__).resolve().parents[1] / "docs/contracts/plan-v3.example.json")
         .read_text(encoding="utf-8")
     )
     value["plan"].pop("target_plan_name")

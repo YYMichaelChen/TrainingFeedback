@@ -13,19 +13,20 @@ import pytest
 from image_fixtures import png_bytes
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QDialog, QInputDialog, QLabel, QMessageBox, QPushButton
+from PySide6.QtWidgets import QDialog, QLabel, QMessageBox, QPushButton
 
 from training_feedback.app import LibraryContext
 from training_feedback.application.library_workflow import LibraryTarget
 from training_feedback.data.catalog_builder import build_catalog, source_content
 from training_feedback.data.database import transaction
-from training_feedback.data.plan_contract import plan_v2_schema
+from training_feedback.data.plan_contract import plan_v3_schema
 from training_feedback.domain.catalog import ExerciseReference, content_sha256
 from training_feedback.domain.group_plans import (
     PlanDocument,
     diff_plans,
     new_item_id,
     plan_actions,
+    revision_code_for_change,
     validate_plan_payload,
 )
 from training_feedback.ui.group_plan_page import (
@@ -33,6 +34,7 @@ from training_feedback.ui.group_plan_page import (
     GroupPlanActivation,
     GroupPlanEditor,
     GroupPrescriptionDialog,
+    MultiExerciseSelectionDialog,
     render_plan,
 )
 
@@ -64,8 +66,8 @@ def context(tmp_path):
 
 @pytest.fixture
 def payload(context):
-    value = json.loads((ROOT / "docs/contracts/plan-v2.example.json").read_text(encoding="utf-8"))
-    value["plan"].pop("target_plan_name")
+    value = json.loads((ROOT / "docs/contracts/plan-v3.example.json").read_text(encoding="utf-8"))
+    value["plan"].pop("target_plan_name", None)
     for _day, _item, action in plan_actions(value["plan"]):
         entry = context.catalog.get(action["exercise"]["key"])
         action["content"] = entry["reference"]
@@ -85,18 +87,72 @@ def enable(context, payload):
     context.library.set_enabled_batch(list(targets.values()), True, user_confirmed=True)
 
 
+def clone_plan(context, revision_id, *, name="【合成】独立副本"):
+    used = {plan["base_number"] for plan in context.plans.list_plans()}
+    base_number = next(number for number in range(1, 1000) if number not in used)
+    return context.plans.clone(
+        revision_id, base_number=base_number, name=name, change_description="",
+    )
+
+
 def activate(context, identifier):
     preview = context.plans.preview(identifier)
     context.plans.activate(identifier, expected_preview=preview["token"], user_confirmed=True)
     return preview
 
 
-def test_runtime_schema_matches_reviewed_contract_and_only_accepts_v2():
-    assert plan_v2_schema() == json.loads(
-        (ROOT / "docs/contracts/plan-v2.schema.json").read_text(encoding="utf-8")
+def test_runtime_schema_matches_reviewed_contract_and_only_accepts_v3():
+    schema = plan_v3_schema()
+    assert schema == json.loads(
+        (ROOT / "docs/contracts/plan-v3.schema.json").read_text(encoding="utf-8")
     )
-    with pytest.raises(ValueError, match="version 2"):
-        validate_plan_payload({"schema_version": 1}, plan_v2_schema())
+    with pytest.raises(ValueError, match="version 3"):
+        validate_plan_payload({"schema_version": 2}, schema)
+    example = json.loads((ROOT / "docs/contracts/plan-v3.example.json").read_text(encoding="utf-8"))
+    example["rationale"] = ""
+    assert validate_plan_payload(example, schema)["rationale"] == ""
+
+
+def test_revision_codes_classify_structure_and_text_and_grow_past_99(payload):
+    original = deepcopy(payload["plan"])
+    text_only = deepcopy(original)
+    text_only["purpose"] += "【说明】"
+    code, changes = revision_code_for_change(7, "plan-007.01.99", original, text_only)
+    assert code == "plan-007.01.100" and changes
+    structural = deepcopy(original)
+    structural["days"][0]["items"][0]["phase"] = "cooldown"
+    code, _ = revision_code_for_change(7, "plan-007.01.99", original, structural)
+    assert code == "plan-007.02.00"
+    with pytest.raises(ValueError, match="unchanged"):
+        revision_code_for_change(7, "plan-007.01.99", original, deepcopy(original))
+
+
+def test_upgrade_reopens_one_draft_and_recomputes_code_from_source(context, payload):
+    enable(context, payload)
+    identifier = context.plans.create(payload)
+    activate(context, identifier)
+    source = context.plans.get(identifier)
+    assert source["plan_code"] == "plan-001.01.00"
+    assert context.plans.upgrade_draft(identifier) is None
+
+    unchanged = deepcopy(source["payload"])
+    with pytest.raises(ValueError, match="unchanged"):
+        context.plans.create_upgrade(identifier, unchanged)
+
+    changed = deepcopy(source["payload"])
+    changed["plan"]["purpose"] += "【改版】"
+    draft_id = context.plans.create_upgrade(identifier, changed)
+    draft = context.plans.get(draft_id)
+    assert draft["plan_code"] == "plan-001.01.01"
+    assert draft["upgrade_source_revision_id"] == identifier
+    assert context.plans.upgrade_draft(identifier)["id"] == draft_id
+
+    changed_again = deepcopy(draft["payload"])
+    changed_again["plan"]["purpose"] += "【再编辑】"
+    context.plans.save(draft_id, changed_again, expected_token=draft["edit_token"])
+    updated = context.plans.get(draft_id)
+    assert updated["plan_code"] == "plan-001.01.01"
+    assert updated["revision_number"] == draft["revision_number"]
 
 
 def test_normalized_save_reopen_and_unequal_group_doses_remain_verbatim(context, payload):
@@ -127,7 +183,7 @@ def test_normalized_save_reopen_and_unequal_group_doses_remain_verbatim(context,
         lambda p: p["plan"]["days"][0]["items"][0]["exercise"].update(key="unknown.exercise"),
     ],
 )
-def test_invalid_v2_inputs_leave_no_partial_plan(context, payload, mutation):
+def test_invalid_v3_inputs_leave_no_partial_plan(context, payload, mutation):
     mutation(payload)
     with pytest.raises(ValueError):
         context.plans.create(payload)
@@ -154,13 +210,15 @@ def test_activation_freezes_prescription_and_assets_and_cloning_preserves_lineag
         with pytest.raises(sqlite3.IntegrityError, match="immutable"):
             with transaction(context.database.connection):
                 context.database.connection.execute(query)
-    clone = context.plans.clone(identifier)
+    clone = clone_plan(context, identifier)
     cloned = context.plans.get(clone)
-    assert cloned["payload"] == saved["payload"] and cloned["pins"] == []
+    assert cloned["payload"]["plan"] | {"name": saved["name"]} == saved["payload"]["plan"]
+    assert cloned["base_number"] != saved["base_number"] and cloned["pins"] == []
     activate(context, clone)
     old = context.plans.get(identifier)
-    assert old["status"] == "superseded"
+    assert old["status"] == "active"
     assert old["pins"] == saved["pins"] and old["payload"] == saved["payload"]
+    assert context.plans.get(clone)["status"] == "active"
     assert context.snapshot_assets.read(DIGEST) == PNG
 
 
@@ -197,7 +255,7 @@ def test_activation_failure_on_second_pin_rolls_back_everything(context, payload
     enable(context, payload)
     first = context.plans.create(payload)
     activate(context, first)
-    draft = context.plans.clone(first)
+    draft = clone_plan(context, first, name="【合成】失败回滚副本")
     preview = context.plans.preview(draft)
     original = context.plans.repository.pin
     count = 0
@@ -266,7 +324,7 @@ def test_item_key_cannot_be_reused_for_a_different_movement(context, payload):
     assert context.plans.get(identifier)["payload"] == payload
 
 
-def test_v2_file_import_retains_original_and_does_not_activate(context, payload, tmp_path):
+def test_v3_file_import_retains_original_and_does_not_activate(context, payload, tmp_path):
     path = tmp_path / "外部计划.json"
     raw = json.dumps(payload, ensure_ascii=False, indent=2).replace("\n", "\r\n").encode("utf-8")
     path.write_bytes(raw)
@@ -281,6 +339,25 @@ def test_v2_file_import_retains_original_and_does_not_activate(context, payload,
     context.plans.save(identifier, changed, expected_token=1)
     assert context.plans.get(identifier)["import"] == imported["import"]
     assert stored.read_bytes() == raw
+
+
+def test_v3_upgrade_import_targets_base_and_uses_difference_code(context, payload, tmp_path):
+    enable(context, payload)
+    active_id = context.plans.create(payload)
+    activate(context, active_id)
+    active = context.plans.get(active_id)
+    imported = deepcopy(active["payload"])
+    imported.update(intent="upgrade", target_base_number=active["base_number"])
+    imported["plan"]["purpose"] += "【导入改版】"
+    source = tmp_path / "upgrade.json"
+    source.write_text(json.dumps(imported, ensure_ascii=False), encoding="utf-8")
+
+    revision_id = context.plan_handoff.import_file(source)
+    revision = context.plans.get(revision_id)
+    assert revision["plan_id"] == active["plan_id"]
+    assert revision["upgrade_source_revision_id"] == active_id
+    assert revision["plan_code"] == "plan-001.01.01"
+    assert revision["status"] == "draft"
 
 
 @pytest.mark.parametrize(
@@ -326,7 +403,7 @@ def test_export_is_portable_and_json_markdown_agree_after_catalog_replacement(
     with LibraryContext.reopen(context.data_root.path, catalog_path=new_catalog) as reopened:
         destination = reopened.plan_handoff.export(identifier)
         evidence = json.loads((destination / "evidence.json").read_text(encoding="utf-8"))
-        assert evidence["schema_version"] == 2
+        assert evidence["schema_version"] == 3
         assert evidence["revision"] == baseline
         assert len(evidence["assets"]) == 1 and len(evidence["contents"]) == 3
         asset = evidence["assets"][0]
@@ -334,10 +411,11 @@ def test_export_is_portable_and_json_markdown_agree_after_catalog_replacement(
         markdown = (destination / "evidence.md").read_text(encoding="utf-8")
         embedded = markdown.split("```json\n", 1)[1].rsplit("\n```", 1)[0]
         assert json.loads(embedded) == evidence
-        assert json.loads((destination / "plan.json").read_text(encoding="utf-8")) == payload
+        exported_plan = json.loads((destination / "plan.json").read_text(encoding="utf-8"))
+        assert exported_plan == payload | {"plan_code": "plan-001.01.00"}
     # Unknown source identities fail; an existing managed export ID can be returned as a source.
     returned = deepcopy(payload)
-    returned["plan"]["target_plan_name"] = payload["plan"]["name"]
+    returned["plan"]["name"] = "【合成】已导回计划"
     returned["source"] = {"session_id": None, "export_id": evidence["provenance"]["export_id"]}
     path = tmp_path / "response.json"
     path.write_text(json.dumps(returned), encoding="utf-8")
@@ -399,38 +477,97 @@ def test_action_editor_invalid_input_stays_visible_and_cancel_does_not_write(
     dialog = ActionPrescriptionDialog(context.plans.exercise_choices(), action)
     dialog.save()
     assert dialog.value == action
+    blank = ActionPrescriptionDialog(context.plans.exercise_choices())
+    assert blank.rest.text() == "" and blank.side_rest.text() == ""
+    blank.add_set()
+    blank.add_set()
+    assert blank.sets.item(0, 0).text() == ""
+    assert blank.sets.item(0, 3).text() == ""
+    blank.sets.item(0, 0).setText("2")
+    blank.sets.item(0, 3).setText("5")
+    blank.sets.item(0, 4).setText("  【合成】剂量原文  ")
+    blank.sets.item(1, 0).setText("9")
+    blank.sets.item(1, 3).setText("0")
+    monkeypatch.setattr(
+        QMessageBox, "question", lambda *args: QMessageBox.StandardButton.Yes
+    )
+    blank.sets.setCurrentCell(0, 0)
+    blank.fill_equal_sets()
+    assert blank.sets.item(1, 0).text() == "2"
+    assert blank.sets.item(1, 3).text() == "5"
+    assert blank.sets.item(1, 4).text() == "  【合成】剂量原文  "
 
 
 def test_new_plan_add_day_selects_it_and_add_action_opens(qt_app, context, monkeypatch):
+    monkeypatch.setattr(QMessageBox, "warning", lambda *args: None)
     editor = GroupPlanEditor(context.plans)
     assert any("不对应日历日期" in label.text() for label in editor.findChildren(QLabel))
     buttons = {button.text(): button for button in editor.findChildren(QPushButton)}
-    messages = []
-    monkeypatch.setattr(QMessageBox, "information", lambda *args: messages.append(args[2]))
-    buttons["添加动作"].click()
-    assert messages == ["请先在列表中选择训练日；若列表为空，请先添加训练日。"]
-
-    monkeypatch.setattr(QInputDialog, "getText", lambda *args: ("【合成】上肢日", True))
+    selected = editor.tree.currentItem()
+    assert selected.data(0, Qt.ItemDataRole.UserRole) == (0, None, None)
+    selected.setText(0, "1. 【合成】上肢日")
+    assert editor.document.plan["days"][0]["name"] == "【合成】上肢日"
     buttons["添加训练日"].click()
     selected = editor.tree.currentItem()
-    assert selected.text(0) == "1. 【合成】上肢日"
-    assert selected.data(0, Qt.ItemDataRole.UserRole) == (0, None, None)
+    assert selected.text(0) == "2. "
+    assert selected.data(0, Qt.ItemDataRole.UserRole) == (1, None, None)
 
-    opened = []
-    monkeypatch.setattr(
-        ActionPrescriptionDialog,
-        "exec",
-        lambda dialog: opened.append(dialog) or QDialog.DialogCode.Rejected,
+    buttons["添加动作"].click()
+    first_editor = editor.inline_editor
+    assert isinstance(first_editor, MultiExerciseSelectionDialog)
+    assert not editor.tree.isEnabled()
+    first_editor.search.setText(first_editor.exercise_list.item(0).text().split(" · ", 1)[0])
+    assert first_editor.exercise_list.item(0).isHidden() is False
+    first_editor.exercise_list.item(0).setSelected(True)
+    first_editor.search.clear()
+    first_editor.exercise_list.item(1).setSelected(True)
+    first_editor.save()
+    actions = editor.document.plan["days"][1]["items"]
+    assert len(actions) == 2 and all(action["sets"] == [] for action in actions)
+    assert editor.tree.currentItem().data(0, Qt.ItemDataRole.UserRole) == (1, 0, None)
+    editor.name.setText("【合成】未完成计划")
+    editor.save()
+    assert editor.result() != QDialog.DialogCode.Accepted
+    assert actions[0]["sets"] == []
+    buttons["编辑所选项"].click()
+    assert isinstance(editor.inline_editor, ActionPrescriptionDialog)
+    editor.inline_editor.reject()
+    editor.tree.setCurrentItem(editor.tree.topLevelItem(1))
+    buttons["添加动作组"].click()
+    assert isinstance(editor.inline_editor, GroupPrescriptionDialog)
+    assert not editor.tree.isEnabled()
+    editor.inline_editor.reject()
+    assert editor.tree.currentItem().data(0, Qt.ItemDataRole.UserRole) == (1, None, None)
+
+
+def test_editor_hierarchy_shows_selected_action_group_and_member_doses(qt_app, context, payload):
+    editor = GroupPlanEditor(context.plans)
+    editor.document = PlanDocument(payload["plan"])
+    editor.refresh()
+    day = editor.tree.topLevelItem(0)
+    action = day.child(0)
+    editor.tree.setCurrentItem(action)
+    assert editor.detail_title.text() == payload["plan"]["days"][0]["items"][0]["exercise_name"]
+    assert editor.detail_sets.rowCount() == 2
+    group = day.child(1)
+    editor.tree.setCurrentItem(group)
+    assert editor.detail_sets.rowCount() == sum(
+        len(member["sets"]) for member in payload["plan"]["days"][0]["items"][1]["members"]
     )
-    buttons["添加动作"].click()
-    buttons["添加动作"].click()
-    assert len(opened) == 2
-    assert editor.tree.currentItem().data(0, Qt.ItemDataRole.UserRole) == (0, None, None)
+    member = group.child(0)
+    editor.tree.setCurrentItem(member)
+    assert editor.detail_title.text() == member.text(0).split(". ", 1)[1]
+    assert editor.detail_sets.rowCount() == len(
+        payload["plan"]["days"][0]["items"][1]["members"][0]["sets"]
+    )
 
 
 def test_ui_group_plan_creation_edit_cancel_and_confirmation(qt_app, context, payload, monkeypatch):
     warnings = []
     monkeypatch.setattr(QMessageBox, "warning", lambda *args: warnings.append(args[2]))
+    monkeypatch.setattr(
+        QMessageBox, "question", lambda *args: QMessageBox.StandardButton.Yes
+    )
     editor = GroupPlanEditor(context.plans)
     editor.document = PlanDocument(payload["plan"])
     editor.name.setText(payload["plan"]["name"])
@@ -580,6 +717,8 @@ def test_group_editor_keeps_invalid_side_and_rest_inputs(qt_app, context, payloa
     dialog.fields["rest_between_rounds_seconds"].setText("7")
     dialog.save()
     assert dialog.value == group
+    blank = GroupPrescriptionDialog(context.plans.exercise_choices())
+    assert all(field.text() == "" for field in blank.fields.values())
 
 
 def test_zero_free_dose_and_original_note_rendering_are_not_defaults(context, payload):
@@ -623,7 +762,7 @@ def test_activation_rechecks_images_and_enabled_state_after_preview(context, pay
 def test_another_activation_invalidates_preview_and_keeps_prior_pins(context, payload):
     enable(context, payload)
     first = context.plans.create(payload)
-    second = context.plans.clone(first)
+    second = clone_plan(context, first, name="【合成】并发激活副本")
     preview = context.plans.preview(second)
     activate(context, first)
     with pytest.raises(ValueError, match="preview changed"):

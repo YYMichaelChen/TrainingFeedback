@@ -123,7 +123,7 @@ def test_open_rejects_expired_schema_without_modifying_database(data_path):
     """Schema 21 sits one below the retention window and is refused read-only."""
     create_new(data_path)
     with sqlite3.connect(data_path / DATABASE_FILENAME) as connection:
-        connection.execute("UPDATE schema_migration SET version=21 WHERE version=22")
+        connection.execute("UPDATE schema_migration SET version=21 WHERE version=23")
     database_bytes = (data_path / DATABASE_FILENAME).read_bytes()
 
     with pytest.raises(ExpiredDataRootError) as failure:

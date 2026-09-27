@@ -5,7 +5,7 @@ from copy import deepcopy
 
 import pytest
 from test_070_group_execution import controller
-from test_070_group_plans import DIGEST, PNG, activate, context, enable, payload
+from test_070_group_plans import DIGEST, PNG, activate, clone_plan, context, enable, payload
 
 from training_feedback.app import LibraryContext
 from training_feedback.application.library_workflow import LibraryTarget
@@ -69,7 +69,7 @@ def test_batch_remove_preserves_all_evidence_and_records_verbatim(context, paylo
     selected = targets(context, payload)
     context.library.record_review([selected[0]], reviewer_type="human_expert", source="合成专家",
                                   occurred_at="2026-09-19", note="审核原文", user_confirmed=True)
-    draft = context.plans.clone(controller.session["revision_id"])
+    draft = clone_plan(context, controller.session["revision_id"], name="【合成】移除影响副本")
     directory = context.session_handoff.export(controller.session["id"])
     exports = {p.name: p.read_bytes() for p in directory.iterdir() if p.is_file()}
     frozen = deepcopy(controller.session)
@@ -230,7 +230,7 @@ def test_restore_validates_images_does_not_enable_or_reactivate_plan(context, pa
     context.library.set_enabled(selected[0], True, user_confirmed=True)
     with pytest.raises(ValueError, match="new plan revision"):
         context.sessions.preview_start(revision, 1)
-    renewed = context.plans.clone(revision)
+    renewed = clone_plan(context, revision, name="【合成】恢复后副本")
     activate(context, renewed)
     assert context.sessions.preview_start(renewed, 1)
     assert context.library.review_events(selected[0]) == review
@@ -361,7 +361,7 @@ def test_backup_and_other_roots_keep_decisions_isolated(context, payload, tmp_pa
         assert not other.library.eligibility(selected[0]).removed
 
 
-def test_schema22_reopen_preserves_rows_and_lifecycle_journal_immutable(tmp_path, context, payload):
+def test_schema23_reopen_preserves_rows_and_lifecycle_journal_immutable(tmp_path, context, payload):
     path = tmp_path / "schema22.sqlite3"
     with Database(path) as connection:
         connection.execute("INSERT INTO library_reference VALUES (1,'custom','example','unknown')")
@@ -370,7 +370,7 @@ def test_schema22_reopen_preserves_rows_and_lifecycle_journal_immutable(tmp_path
         assert tuple(connection.execute("SELECT * FROM library_reference").fetchone()) == (
             1, "custom", "example", "unknown",
         )
-        assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 22
+        assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 23
     remove(context, targets(context, payload)[:1])
     connection = context.database.connection
     for table in ("library_lifecycle_request", "library_lifecycle_event"):

@@ -11,6 +11,7 @@ from training_feedback.bootstrap import (
     open_root,
 )
 from training_feedback.data.data_root import DataRootAccessError, ExpiredDataRootError, create_new
+from training_feedback.data.library_root import initialize_library_root
 from training_feedback.data.locator import Locator
 
 
@@ -66,8 +67,9 @@ def test_locator_write_failure_is_reported_and_root_remains_openable(tmp_path):
 def test_open_root_refuses_out_of_window_root_and_never_records_locator(tmp_path):
     root = tmp_path / "expired"
     create_new(root)
+    initialize_library_root(root)
     with sqlite3.connect(root / "training_feedback.sqlite3") as connection:
-        connection.execute("UPDATE schema_migration SET version=21 WHERE version=22")
+        connection.execute("UPDATE schema_migration SET version=21 WHERE version=23")
     before = (root / "training_feedback.sqlite3").read_bytes()
     locator = Locator(tmp_path / "locator.json")
 

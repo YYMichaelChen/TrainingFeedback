@@ -9,6 +9,7 @@ from pathlib import Path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -42,6 +43,7 @@ from ..domain.group_plans import (
     PlanDocument,
     action_from_choice,
     blank_group,
+    diff_plans,
     group_from_item,
     migration_validation_projection,
     validate_action,
@@ -106,6 +108,8 @@ class ActionPrescriptionDialog(QDialog):
         fields = QVBoxLayout(body)
         form = QFormLayout()
         self.exercise = QComboBox()
+        self.exercise.setEditable(True)
+        self.exercise.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.exercise.setMinimumContentsLength(18)
         self.exercise.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
@@ -147,10 +151,10 @@ class ActionPrescriptionDialog(QDialog):
         if action and "provenance" in action:
             self.side.setEnabled(False)
         self.side_rest = QLineEdit(
-            str(action.get("rest_between_sides_seconds", 0) if action else 0)
+            str(action.get("rest_between_sides_seconds", "") if action else "")
         )
         rest_key = "rest_after_member_seconds" if member else "rest_after_action_seconds"
-        self.rest = QLineEdit(str(action.get(rest_key, 0) if action else 0))
+        self.rest = QLineEdit(str(action.get(rest_key, "") if action else ""))
         for edit in (self.side_rest, self.rest):
             if edit.text() == "None":
                 edit.clear()
@@ -178,8 +182,11 @@ class ActionPrescriptionDialog(QDialog):
         add.clicked.connect(lambda: self.add_set())
         remove = QPushButton(T["remove_set"])
         remove.clicked.connect(lambda: self.sets.removeRow(self.sets.currentRow()))
+        fill = QPushButton(T["fill_equal_sets"])
+        fill.clicked.connect(self.fill_equal_sets)
         controls.addWidget(add)
         controls.addWidget(remove)
+        controls.addWidget(fill)
         fields.addLayout(controls)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -196,7 +203,7 @@ class ActionPrescriptionDialog(QDialog):
             "value": None,
             "unit": "reps",
             "per_side": False,
-            "rest_after_set_seconds": 0,
+            "rest_after_set_seconds": None,
             "note": "",
         }
         self.sets.setItem(
@@ -211,6 +218,35 @@ class ActionPrescriptionDialog(QDialog):
         note = QTableWidgetItem(dose["note"])
         note.setData(Qt.ItemDataRole.UserRole, dose["note"])
         self.sets.setItem(row, 4, note)
+
+    def fill_equal_sets(self):
+        source = self.sets.currentRow()
+        if source < 0 or self.sets.rowCount() < 2:
+            return
+        answer = QMessageBox.question(
+            self,
+            T["fill_equal_sets"],
+            T["fill_equal_sets_confirm"],
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        value = self.sets.item(source, 0).text()
+        unit = self.sets.cellWidget(source, 1).currentData()
+        per_side = self.sets.cellWidget(source, 2).isChecked()
+        rest = self.sets.item(source, 3).text()
+        note = self.sets.item(source, 4).text()
+        for row in range(self.sets.rowCount()):
+            if row == source:
+                continue
+            self.sets.item(row, 0).setText(value)
+            self.sets.cellWidget(row, 1).setCurrentIndex(
+                self.sets.cellWidget(row, 1).findData(unit)
+            )
+            self.sets.cellWidget(row, 2).setChecked(per_side)
+            self.sets.item(row, 3).setText(rest)
+            self.sets.item(row, 4).setText(note)
 
     def save(self):
         try:
@@ -269,6 +305,13 @@ class GroupPrescriptionDialog(QDialog):
         self.choices = choices
         self.value = None
         self.group = deepcopy(group) if group else blank_group()
+        if group is None:
+            for key in (
+                "rest_between_sides_seconds",
+                "rest_between_rounds_seconds",
+                "rest_after_group_seconds",
+            ):
+                self.group[key] = None
         self.setWindowTitle(T["group"])
         self.resize(820, 660)
         layout = QVBoxLayout(self)
@@ -294,7 +337,9 @@ class GroupPrescriptionDialog(QDialog):
             ("rest_between_rounds_seconds", "round_rest"),
             ("rest_after_group_seconds", "exit_rest"),
         ):
-            self.fields[key] = QLineEdit(str(self.group[key]))
+            self.fields[key] = QLineEdit(
+                "" if self.group[key] is None else str(self.group[key])
+            )
             form.addRow(T[label], self.fields[key])
         self.transition = QPlainTextEdit(self.group["transition"])
         self.note = QPlainTextEdit(self.group["note"])
@@ -395,21 +440,88 @@ class GroupPrescriptionDialog(QDialog):
         self.accept()
 
 
+class MultiExerciseSelectionDialog(QDialog):
+    """Searchable multi-pick that inserts unfinished actions into the plan tree."""
+
+    def __init__(self, choices, parent=None):
+        super().__init__(parent)
+        self.value = None
+        self.setWindowTitle(T["add_action"])
+        self.search = QLineEdit()
+        self.search.setPlaceholderText(T["search_exercises"])
+        self.exercise_list = QListWidget()
+        self.exercise_list.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+        for choice in choices:
+            item = QListWidgetItem(
+                f"{choice['exercise_name']} · "
+                f"{POSITION_LABELS[choice['classification']['starting_position_class']]}"
+            )
+            item.setData(Qt.ItemDataRole.UserRole, choice)
+            self.exercise_list.addItem(item)
+        self.search.textChanged.connect(self.filter_choices)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.search)
+        layout.addWidget(self.exercise_list, 1)
+        self.buttons = dialog_buttons(self, self.save)
+        layout.addWidget(self.buttons)
+
+    def filter_choices(self, value):
+        query = value.casefold().strip()
+        for index in range(self.exercise_list.count()):
+            item = self.exercise_list.item(index)
+            item.setHidden(query not in item.text().casefold())
+
+    def save(self):
+        self.value = [
+            item.data(Qt.ItemDataRole.UserRole) for item in self.exercise_list.selectedItems()
+        ]
+        if not self.value:
+            QMessageBox.information(self, T["add_action"], T["choose_multiple_exercises"])
+            self.value = None
+            return
+        self.accept()
+
+
 class GroupPlanEditor(QDialog):
-    def __init__(self, service, revision=None, parent=None):
+    def __init__(self, service, revision=None, parent=None, *, upgrade_source=None,
+                 clone_source=None, clone_base_number=None, clone_name=None,
+                 change_description=None):
         super().__init__(parent)
         self.service, self.revision, self.saved_id = service, revision, None
+        self.clone_source = clone_source
+        self.clone_base_number = clone_base_number
+        self.clone_name = clone_name
+        if revision and revision.get("upgrade_source_revision_id") is not None:
+            upgrade_source = service.get(revision["upgrade_source_revision_id"])
+        self.upgrade_source = upgrade_source
         self.source = (
             deepcopy(revision["payload"])
             if revision
+            else deepcopy(clone_source["payload"])
+            if clone_source
+            else deepcopy(upgrade_source["payload"])
+            if upgrade_source
             else {
                 "schema": "training_feedback.plan",
-                "schema_version": 2,
+                "schema_version": 3,
+                "intent": "new",
                 "rationale": "",
+                "change_description": "",
                 "plan": {"name": "", "purpose": "", "days": []},
             }
         )
+        self.source.setdefault("intent", "new")
+        self.source.setdefault("change_description", "")
+        if self.upgrade_source:
+            self.source["intent"] = "upgrade"
+            self.source["target_base_number"] = self.upgrade_source["base_number"]
+        if self.clone_name is not None:
+            self.source["plan"]["name"] = self.clone_name
+        if change_description is not None:
+            self.source["change_description"] = change_description
         self.document = PlanDocument(self.source["plan"])
+        if not self.document.plan["days"]:
+            self.document.plan["days"].append({"order": 1, "name": "", "items": []})
         self.setWindowTitle(T["edit"])
         self.resize(950, 740)
         layout = QVBoxLayout(self)
@@ -417,18 +529,52 @@ class GroupPlanEditor(QDialog):
         self.name = QLineEdit(self.source["plan"]["name"])
         self.purpose = QPlainTextEdit(self.source["plan"]["purpose"])
         self.rationale = QPlainTextEdit(self.source["rationale"])
+        self.change_description = QPlainTextEdit(self.source["change_description"])
         self.purpose.setMaximumHeight(70)
         self.rationale.setMaximumHeight(70)
+        self.change_description.setMaximumHeight(60)
         for name, widget in (
             ("name", self.name),
             ("purpose", self.purpose),
             ("rationale", self.rationale),
+            ("change_description", self.change_description),
         ):
             form.addRow(T[name], widget)
         layout.addLayout(form)
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels([T["day"]])
-        layout.addWidget(self.tree, 1)
+        self.tree.itemChanged.connect(self._tree_changed)
+        self.tree.currentItemChanged.connect(self._show_selected_detail)
+        self.detail_panel = QWidget()
+        detail_layout = QVBoxLayout(self.detail_panel)
+        self.detail_content_layout = detail_layout
+        self.detail_summary = QWidget()
+        summary_layout = QVBoxLayout(self.detail_summary)
+        self.detail_title = QLabel(T["select_detail"])
+        self.detail_title.setWordWrap(True)
+        summary_layout.addWidget(self.detail_title)
+        self.detail_fields = QPlainTextEdit()
+        self.detail_fields.setReadOnly(True)
+        self.detail_fields.setMaximumHeight(170)
+        summary_layout.addWidget(self.detail_fields)
+        self.detail_sets = QTableWidget(0, 6)
+        self.detail_sets.setHorizontalHeaderLabels(
+            [T["member"], T["set_order"], T["value"], T["unit"], T["per_side"], T["set_rest"]]
+        )
+        self.detail_sets.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.detail_sets.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents
+        )
+        self.detail_sets.horizontalHeader().setStretchLastSection(True)
+        summary_layout.addWidget(self.detail_sets, 1)
+        detail_layout.addWidget(self.detail_summary, 1)
+        self.inline_editor = None
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.addWidget(self.tree)
+        splitter.addWidget(self.detail_panel)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 2)
+        layout.addWidget(splitter, 1)
         layout.addWidget(QLabel(T["day_hint"]))
         for names in (
             ("add_day", "rename_day", "add_action", "add_group", "edit_item"),
@@ -448,6 +594,7 @@ class GroupPlanEditor(QDialog):
         self.tree.clear()
         for d, day in enumerate(self.document.plan["days"]):
             parent = QTreeWidgetItem([f"{day['order']}. {day['name']}"])
+            parent.setFlags(parent.flags() | Qt.ItemFlag.ItemIsEditable)
             parent.setData(0, Qt.ItemDataRole.UserRole, (d, None, None))
             self.tree.addTopLevelItem(parent)
             for i, item in enumerate(day["items"]):
@@ -472,16 +619,61 @@ class GroupPlanEditor(QDialog):
                     item = item.child(m)
             self.tree.setCurrentItem(item)
 
+    def _tree_changed(self, item, column):
+        location = item.data(0, Qt.ItemDataRole.UserRole)
+        if location and location[1] is None:
+            d = location[0]
+            value = item.text(column).strip()
+            if value[:1].isdigit() and ". " in value:
+                value = value.split(". ", 1)[1]
+            self.document.plan["days"][d]["name"] = value
+
+    def _show_selected_detail(self, item, _previous=None):
+        self.detail_sets.setRowCount(0)
+        if item is None:
+            self.detail_title.setText(T["select_detail"])
+            self.detail_fields.clear()
+            return
+        d, i, m = item.data(0, Qt.ItemDataRole.UserRole)
+        if i is None:
+            day = self.document.plan["days"][d]
+            self.detail_title.setText(f"{T['day']} {day['order']} · {day['name']}")
+            self.detail_fields.setPlainText(T["day_detail_hint"])
+            return
+        plan_item = self.document.plan["days"][d]["items"][i]
+        selected = plan_item["members"][m] if m is not None else plan_item
+        title = selected.get("name", selected.get("exercise_name", T["group"]))
+        self.detail_title.setText(title)
+        self.detail_fields.setPlainText(render_fields(selected))
+        members = plan_item.get("members", []) if m is None else []
+        if m is not None or plan_item["kind"] == "action":
+            members = [{"order": "", **selected}]
+        for member in members:
+            for dose in member.get("sets", []):
+                row = self.detail_sets.rowCount()
+                self.detail_sets.insertRow(row)
+                values = (
+                    str(member.get("order", "")),
+                    str(dose["order"]),
+                    "" if dose["value"] is None else str(dose["value"]),
+                    DOSE_UNIT_LABELS[dose["unit"]],
+                    T["yes"] if dose["per_side"] else T["no"],
+                    T["unknown"] if dose["rest_after_set_seconds"] is None
+                    else str(dose["rest_after_set_seconds"]),
+                )
+                for column, value in enumerate(values):
+                    self.detail_sets.setItem(row, column, QTableWidgetItem(value))
+
     def command(self, command):
         selected = self.tree.currentItem()
         d, i, m = selected.data(0, Qt.ItemDataRole.UserRole) if selected else (None, None, None)
         selection = (d, i, m) if d is not None else None
         try:
             if command == "add_day":
-                name, accepted = QInputDialog.getText(self, T[command], T["day"])
-                if accepted:
-                    self.document.add_day(name)
-                    selection = (len(self.document.plan["days"]) - 1, None, None)
+                self.document.plan["days"].append({
+                    "order": len(self.document.plan["days"]) + 1, "name": "", "items": [],
+                })
+                selection = (len(self.document.plan["days"]) - 1, None, None)
             elif d is None:
                 if command in ("add_action", "add_group"):
                     QMessageBox.information(self, T["error"], T["select_day_first"])
@@ -520,7 +712,9 @@ class GroupPlanEditor(QDialog):
         source = items[i] if command == "edit_item" and i is not None else None
         if command == "edit_item" and source is None:
             return
-        if source and m is not None:
+        if command == "add_action" and i is None:
+            dialog = MultiExerciseSelectionDialog(choices, self)
+        elif source and m is not None:
             dialog = ActionPrescriptionDialog(
                 choices, source["members"][m], member=True, parent=self
             )
@@ -528,14 +722,58 @@ class GroupPlanEditor(QDialog):
             dialog = GroupPrescriptionDialog(choices, source, self)
         else:
             dialog = ActionPrescriptionDialog(choices, source, parent=self)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            if source is None:
-                items.append(dialog.value)
-                PlanDocument.reorder(items)
-            elif m is not None:
-                source["members"][m] = dialog.value
-            else:
-                items[i] = dialog.value
+        self._show_inline_editor(dialog, d, i, m)
+
+    def _show_inline_editor(self, dialog, d, i, m):
+        self.tree.setEnabled(False)
+        self.detail_summary.hide()
+        self.inline_editor = dialog
+        dialog.setParent(self.detail_panel)
+        dialog.setWindowFlags(Qt.WindowType.Widget)
+        dialog.setMinimumSize(380, 520)
+        self.detail_content_layout.addWidget(dialog, 1)
+        dialog.accepted.connect(lambda: self._inline_saved(dialog, d, i, m))
+        dialog.rejected.connect(self._inline_cancelled)
+        dialog.show()
+
+    def _inline_saved(self, dialog, d, i, m):
+        items = self.document.plan["days"][d]["items"]
+        source = items[i] if i is not None else None
+        if isinstance(dialog, MultiExerciseSelectionDialog):
+            selected = []
+            for choice in dialog.value:
+                action = action_from_choice(choice)
+                action["rest_between_sides_seconds"] = None
+                action["rest_after_action_seconds"] = None
+                items.append(action)
+                selected.append(len(items) - 1)
+            PlanDocument.reorder(items)
+            selection = (d, selected[0], None)
+        elif source is None:
+            items.append(dialog.value)
+            PlanDocument.reorder(items)
+            selection = (d, len(items) - 1, None)
+        elif m is not None:
+            source["members"][m] = dialog.value
+            selection = (d, i, m)
+        else:
+            items[i] = dialog.value
+            selection = (d, i, None)
+        self._close_inline_editor()
+        self.refresh(selection)
+
+    def _inline_cancelled(self):
+        self._close_inline_editor()
+        self._show_selected_detail(self.tree.currentItem())
+
+    def _close_inline_editor(self):
+        dialog, self.inline_editor = self.inline_editor, None
+        if dialog is not None:
+            self.detail_content_layout.removeWidget(dialog)
+            dialog.hide()
+            dialog.deleteLater()
+        self.tree.setEnabled(True)
+        self.detail_summary.show()
 
     def remove(self, d, i, m):
         if m is not None:
@@ -582,14 +820,89 @@ class GroupPlanEditor(QDialog):
             name=self.name.text(), purpose=text(self.purpose, self.source["plan"]["purpose"])
         )
         payload["rationale"] = text(self.rationale, self.source["rationale"])
+        payload["change_description"] = text(
+            self.change_description, self.source["change_description"]
+        )
         try:
-            if self.revision:
-                self.service.save(
-                    self.revision["id"], payload, expected_token=self.revision["edit_token"]
+            if self.upgrade_source:
+                preview = self.service.preview_upgrade(self.upgrade_source["id"], payload)
+                details = T["upgrade_preview"].format(code=preview["plan_code"])
+                if preview["changes"]:
+                    details += "\n\n" + render_changes(preview["changes"])
+                answer = QMessageBox.question(
+                    self,
+                    T["upgrade"],
+                    details,
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
                 )
-                self.saved_id = self.revision["id"]
+                if answer != QMessageBox.StandardButton.Yes:
+                    return
+                if self.revision:
+                    self.service.save(
+                        self.revision["id"], payload,
+                        expected_token=self.revision["edit_token"],
+                    )
+                    self.saved_id = self.revision["id"]
+                else:
+                    self.saved_id = self.service.create_upgrade(
+                        self.upgrade_source["id"], payload
+                    )
             else:
-                self.saved_id = self.service.create(payload)
+                self.service.validate(
+                    payload, stored=self.revision if self.revision else None
+                )
+                if self.clone_source:
+                    base_number = self.clone_base_number
+                    before = self.clone_source["payload"]["plan"]
+                elif self.revision:
+                    base_number = self.revision["base_number"]
+                    before = self.revision["payload"]["plan"]
+                else:
+                    used = {plan["base_number"] for plan in self.service.list_plans()}
+                    base_number = next(
+                        (number for number in range(1, 1000) if number not in used), None
+                    )
+                    before = None
+                if base_number is None:
+                    raise ValueError("All plan base numbers 001–999 are in use.")
+                code = (
+                    self.revision["plan_code"] if self.revision
+                    else f"plan-{base_number:03d}.01.00"
+                )
+                details = T["draft_preview"].format(code=code)
+                changes = diff_plans(before, payload["plan"])
+                if changes:
+                    details += "\n\n" + render_changes(changes)
+                answer = QMessageBox.question(
+                    self,
+                    T["save"],
+                    details,
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                )
+                if answer != QMessageBox.StandardButton.Yes:
+                    return
+                if self.clone_source:
+                    self.saved_id = self.service.clone(
+                        self.clone_source["id"],
+                        base_number=base_number,
+                        name=payload["plan"]["name"],
+                        change_description=payload["change_description"],
+                        payload=payload,
+                    )
+                elif self.revision:
+                    self.service.save(
+                        self.revision["id"], payload,
+                        expected_token=self.revision["edit_token"],
+                    )
+                    self.saved_id = self.revision["id"]
+                else:
+                    self.saved_id = self.service.create(
+                        payload,
+                        base_number=base_number,
+                        change_description=payload["change_description"],
+                    )
         except (ValueError, OSError) as exc:
             error(self, exc)
             return
@@ -641,8 +954,10 @@ def render_changes(changes):
     )
 
 
-def render_plan(plan, adjustment=None):
+def render_plan(plan, adjustment=None, plan_code=None):
     lines = [plan["name"], plan["purpose"]]
+    if plan_code:
+        lines.insert(0, plan_code)
     if adjustment:
         lines.append(f"{T['rationale']}：{adjustment}")
     for day in plan["days"]:
@@ -683,6 +998,7 @@ class GroupPlanActivation(QDialog):
             render_plan(
                 self.preview["revision"]["payload"]["plan"],
                 self.preview["revision"]["rationale"],
+                self.preview["revision"]["plan_code"],
             )
             + "\n"
             + T["diff"]
@@ -789,7 +1105,7 @@ class GroupPlanPage(QWidget):
         layout.addWidget(splitter, 1)
         row = QHBoxLayout()
         self.buttons = {}
-        for name in ("new", "edit", "clone", "activate", "import", "export"):
+        for name in ("new", "edit", "clone", "upgrade", "activate", "import", "export"):
             button = QPushButton(T[name].replace("…", ""))
             button.setObjectName(f"planCommand_{name}")
             button.clicked.connect(lambda checked=False, command=name: self.command(command))
@@ -807,7 +1123,7 @@ class GroupPlanPage(QWidget):
         for plan in self.service.list_plans():
             for revision in self.service.revisions(plan["id"]):
                 item = QListWidgetItem(
-                    f"{revision['name']}\nv{revision['revision_number']} · "
+                    f"{revision['name']}\n{revision['plan_code']} · "
                     + PLAN_STATUS_LABELS[revision["status"]]
                 )
                 metrics = QFontMetrics(self.revisions.font())
@@ -940,7 +1256,7 @@ class GroupPlanPage(QWidget):
             )
             self.revision_title.setText(self.presentation["name"])
             self.revision_meta.setText(
-                f"v{self.presentation['version']} · {self.presentation['status']}"
+                f"{revision['plan_code']} · {self.presentation['status']}"
             )
             self.purpose_label.setText(f"训练目的：{self.presentation['purpose']}")
             self.adjustment_label.setText(
@@ -974,6 +1290,11 @@ class GroupPlanPage(QWidget):
             self.day_navigation.setCurrentIndex(0 if self.day_cards else -1)
             self.day_navigation.blockSignals(False)
             self._set_command_state(self.presentation["status_key"])
+            active = self.service.repository.active(revision["plan_id"])
+            self.buttons["upgrade"].setEnabled(
+                revision["status"] == "active" and active is not None
+                and active["id"] == revision["id"]
+            )
         else:
             self.presentation = None
             self.revision_title.clear()
@@ -993,6 +1314,7 @@ class GroupPlanPage(QWidget):
         available = status is not None
         self.buttons["edit"].setEnabled(status == "draft")
         self.buttons["clone"].setEnabled(available)
+        self.buttons["upgrade"].setEnabled(False)
         self.buttons["activate"].setEnabled(status == "draft")
         self.buttons["export"].setEnabled(available)
 
@@ -1017,7 +1339,51 @@ class GroupPlanPage(QWidget):
                 self.dialog = GroupPlanEditor(self.service, revision, self)
                 self.dialog.exec()
             elif command == "clone":
-                identifier = self.service.clone(identifier)
+                source = self.service.get(identifier)
+                name, accepted = QInputDialog.getText(
+                    self, T["clone"], T["clone_name_prompt"]
+                )
+                if not accepted or not name.strip():
+                    return
+                base_number, accepted = QInputDialog.getInt(
+                    self, T["clone"], T["clone_base_prompt"], 1, 1, 999
+                )
+                if not accepted:
+                    return
+                description, accepted = QInputDialog.getText(
+                    self, T["clone"], T["change_description"]
+                )
+                if not accepted:
+                    return
+                self.dialog = GroupPlanEditor(
+                    self.service,
+                    parent=self,
+                    clone_source=source,
+                    clone_base_number=base_number,
+                    clone_name=name,
+                    change_description=description,
+                )
+                self.dialog.exec()
+                identifier = self.dialog.saved_id
+            elif command == "upgrade":
+                source = self.service.get(identifier)
+                existing = self.service.upgrade_draft(identifier)
+                if existing is not None:
+                    self.dialog = GroupPlanEditor(self.service, existing, self)
+                else:
+                    description, accepted = QInputDialog.getText(
+                        self, T["upgrade"], T["change_description"]
+                    )
+                    if not accepted:
+                        return
+                    self.dialog = GroupPlanEditor(
+                        self.service,
+                        parent=self,
+                        upgrade_source=source,
+                        change_description=description,
+                    )
+                self.dialog.exec()
+                identifier = self.dialog.saved_id
             elif command == "activate":
                 self.dialog = GroupPlanActivation(self.service, identifier, self)
                 self.dialog.exec()
