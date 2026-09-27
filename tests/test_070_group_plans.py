@@ -13,7 +13,7 @@ import pytest
 from image_fixtures import png_bytes
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QDialog, QLabel, QMessageBox
+from PySide6.QtWidgets import QDialog, QInputDialog, QLabel, QMessageBox, QPushButton
 
 from training_feedback.app import LibraryContext
 from training_feedback.application.library_workflow import LibraryTarget
@@ -399,6 +399,33 @@ def test_action_editor_invalid_input_stays_visible_and_cancel_does_not_write(
     dialog = ActionPrescriptionDialog(context.plans.exercise_choices(), action)
     dialog.save()
     assert dialog.value == action
+
+
+def test_new_plan_add_day_selects_it_and_add_action_opens(qt_app, context, monkeypatch):
+    editor = GroupPlanEditor(context.plans)
+    assert any("不对应日历日期" in label.text() for label in editor.findChildren(QLabel))
+    buttons = {button.text(): button for button in editor.findChildren(QPushButton)}
+    messages = []
+    monkeypatch.setattr(QMessageBox, "information", lambda *args: messages.append(args[2]))
+    buttons["添加动作"].click()
+    assert messages == ["请先在列表中选择训练日；若列表为空，请先添加训练日。"]
+
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args: ("【合成】上肢日", True))
+    buttons["添加训练日"].click()
+    selected = editor.tree.currentItem()
+    assert selected.text(0) == "1. 【合成】上肢日"
+    assert selected.data(0, Qt.ItemDataRole.UserRole) == (0, None, None)
+
+    opened = []
+    monkeypatch.setattr(
+        ActionPrescriptionDialog,
+        "exec",
+        lambda dialog: opened.append(dialog) or QDialog.DialogCode.Rejected,
+    )
+    buttons["添加动作"].click()
+    buttons["添加动作"].click()
+    assert len(opened) == 2
+    assert editor.tree.currentItem().data(0, Qt.ItemDataRole.UserRole) == (0, None, None)
 
 
 def test_ui_group_plan_creation_edit_cancel_and_confirmation(qt_app, context, payload, monkeypatch):

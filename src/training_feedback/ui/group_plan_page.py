@@ -429,6 +429,7 @@ class GroupPlanEditor(QDialog):
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels([T["day"]])
         layout.addWidget(self.tree, 1)
+        layout.addWidget(QLabel(T["day_hint"]))
         for names in (
             ("add_day", "rename_day", "add_action", "add_group", "edit_item"),
             ("remove", "up", "down", "move_day", "move_member"),
@@ -443,7 +444,7 @@ class GroupPlanEditor(QDialog):
         layout.addWidget(self.buttons)
         self.refresh()
 
-    def refresh(self):
+    def refresh(self, selection=None):
         self.tree.clear()
         for d, day in enumerate(self.document.plan["days"]):
             parent = QTreeWidgetItem([f"{day['order']}. {day['name']}"])
@@ -462,16 +463,28 @@ class GroupPlanEditor(QDialog):
                     leaf.setData(0, Qt.ItemDataRole.UserRole, (d, i, m))
                     child.addChild(leaf)
         self.tree.expandAll()
+        if self.tree.topLevelItemCount():
+            d, i, m = selection if selection is not None else (0, None, None)
+            item = self.tree.topLevelItem(min(d, self.tree.topLevelItemCount() - 1))
+            if i is not None and i < item.childCount():
+                item = item.child(i)
+                if m is not None and m < item.childCount():
+                    item = item.child(m)
+            self.tree.setCurrentItem(item)
 
     def command(self, command):
         selected = self.tree.currentItem()
         d, i, m = selected.data(0, Qt.ItemDataRole.UserRole) if selected else (None, None, None)
+        selection = (d, i, m) if d is not None else None
         try:
             if command == "add_day":
                 name, accepted = QInputDialog.getText(self, T[command], T["day"])
                 if accepted:
                     self.document.add_day(name)
+                    selection = (len(self.document.plan["days"]) - 1, None, None)
             elif d is None:
+                if command in ("add_action", "add_group"):
+                    QMessageBox.information(self, T["error"], T["select_day_first"])
                 return
             elif command == "rename_day":
                 name, accepted = QInputDialog.getText(
@@ -499,7 +512,7 @@ class GroupPlanEditor(QDialog):
         except ValueError as exc:
             error(self, exc)
             return
-        self.refresh()
+        self.refresh(selection)
 
     def edit_item(self, command, d, i, m):
         choices = self.service.exercise_choices()

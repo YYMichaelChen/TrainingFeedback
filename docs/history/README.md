@@ -15,7 +15,7 @@ not policy compliance.
 
 | Application version | Database baseline | History | Status |
 | --- | --- | --- | --- |
-| 0.7.4 | 22 | [Performance development](0.7.4/development.md) | Current development source; local candidate acceptance not run. |
+| 0.7.4 | 22 | [Performance development](0.7.4/development.md), [local candidate](0.7.4/local-candidate.md) | Current source; local candidate built, installed acceptance incomplete. |
 | 0.7.3 | 22 | [Plan page and local candidate](0.7.3/development.md) | Retained local candidate; public distribution remains deferred. |
 | 0.7.2 | 22 | [Version update](0.7.2/development.md) | Retained local candidate. |
 

@@ -59,6 +59,8 @@ GROUP_PLAN_TEXT = {
     "activate": "预览并启用", "import": "导入 v2 计划…", "export": "导出 v2 证据…",
     "name": "计划名称", "purpose": "训练目的", "rationale": "调整说明",
     "day": "训练日", "add_day": "添加训练日", "rename_day": "修改训练日名称",
+    "day_hint": "训练日是计划中一次训练的内容，不对应日历日期；先选中训练日，再添加动作。",
+    "select_day_first": "请先在列表中选择训练日；若列表为空，请先添加训练日。",
     "action": "独立动作", "group": "动作组", "add_action": "添加动作", "add_group": "添加动作组",
     "add_member": "添加成员", "edit_item": "编辑所选项", "remove": "移除所选项",
     "up": "上移", "down": "下移", "move_day": "移至另一训练日…", "move_member": "移至另一动作组…",

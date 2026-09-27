@@ -150,6 +150,8 @@ it does not block activation or training. The complete prescription
 and differences from the current revision are shown before confirmation.
 Saving a draft does not activate it. Superseding the previous revision and
 updating the active revision pointer form one transaction.
+Section 12.11 owns the planned 0.7.5 distinction between editing a draft,
+cloning an independent plan and explicitly upgrading an active plan.
 
 The editor places an action list beside a single per-set table. Equal-set entry
 is an optional collapsible batch-fill tool, with explicit confirmation before
@@ -340,17 +342,18 @@ Applying it creates a new immutable plan revision and records:
 
 - the previous revision;
 - the source training session or export;
-- the external rationale;
+- the external rationale when supplied, without inventing one when absent;
 - the confirmed new revision;
 - the confirmation time.
 
 No active plan is silently overwritten.
 
 The application owns the versioned contract; it is not tied to a particular AI
-provider. New imports use `training_feedback.plan` v2 and new evidence uses
-`training_feedback.evidence` v2. `contracts/plan-v2.schema.json` ships with the
-application; `data/plan_contract.py` loads it, domain/services validate it, and
-`group_plan_handoff.py` / `group_session_handoff.py` produce portable evidence.
+provider. Through 0.7.4, new imports use `training_feedback.plan` v2 and new
+evidence uses `training_feedback.evidence` v2. `contracts/plan-v2.schema.json`
+ships with that application; `data/plan_contract.py` loads it, domain/services
+validate it, and `group_plan_handoff.py` / `group_session_handoff.py` produce
+portable evidence. Section 12.11 owns the planned 0.7.5 v3 contract change.
 The UI imports JSON files into drafts and retains original bytes in managed
 imports. Clipboard import is outside current scope. Validation and saving never
 imply activation or approval. Section 12.8 owns the detailed wire contract.
@@ -504,9 +507,9 @@ database import, and automatic directory scanning.
 `data_format_version: 1`. Configuration uses the same application/format and
 `config_version: 1`; database migration state belongs in SQLite, not in the
 configuration. Opening validates the marker and configuration before accessing
-the database. Future schemas and development schemas outside the three-version
-support mapping must be rejected unchanged. Section 13.2 defines this policy;
-the current application/schema map is in the version history index.
+the database. Future schemas and development schemas outside the applicable
+support boundary are rejected unchanged; the planned schema 22 exception is in
+Section 13.4. The current application/schema map is in the version history index.
 
 A backup copies the complete data root, including marker, configuration, images,
 exports, and imports, to an explicitly selected empty destination outside the
@@ -528,6 +531,8 @@ resumed after switching back.
 
 Installer replacement must not write the database, images, exports or backups.
 Normal application startup may apply the declared supported-version migration.
+The planned 0.7.5 first-open reset of a selected schema 22 root is the explicit
+exception in Section 13.4; installing program files alone does not perform it.
 
 Windows distribution uses a directory payload with `icon/TrainingFeedback.ico`
 and a per-user Inno Setup installer with stable application identity, normal
@@ -570,7 +575,8 @@ window are versioned, append-only and transactional; never rewrite an applied
 migration. When a version leaves the window, retire its entry path and consolidate
 fresh-database initialization under Section 13.2, preserving the remaining paths.
 Every subsequent schema change also bumps the application version (Section 13.1).
-Failed migrations preserve the prior version.
+Failed ordinary migrations preserve the prior version; Section 13.4 defines the
+planned 0.7.5 reset's post-commit cleanup behavior.
 UI tests may use offscreen Qt; all tests use temporary databases and locators,
 never real user data. One QApplication is shared for a whole run, so a UI test
 must let Qt destroy the windows it created; widget graphs abandoned to Python
@@ -639,8 +645,8 @@ Required public-release coverage:
 - An independent Windows x64 environment without the build checkout or Python,
   using an ordinary non-administrator account.
 - Actual retained-version binaries and isolated representative roots for upgrade
-  preservation; unopened originals remain intact. Same-version relocation is
-  not upgrade evidence.
+  behavior; verify preservation normally and the explicit 0.7.5 reset under
+  Section 13.4. Same-version relocation is not upgrade evidence.
 - Installed backup/recovery, root isolation, session/history/export agreement,
   uninstall/reinstall boundaries and real-desktop scaling at 100%, 125% and 150%.
 
@@ -650,7 +656,8 @@ unavailable scenarios stay `not run`.
 
 ### 9.4 Verification And Record Ownership
 
-Verification must protect data preservation, frozen history, verbatim text,
+Verification must protect data preservation and, for the planned 0.7.5
+exception, the exact reset scope; it also covers frozen history, verbatim text,
 transactional rollback and supported upgrades. Tests use synthetic temporary
 roots and locators, never personal data. The version-independent
 [workflow](development-workflow.md) owns the stage budgets, test selection,
@@ -717,8 +724,9 @@ Section 13 governs supported upgrades and future version changes.
 
 The release delivers an application-owned bundled catalog, exercise families
 and variants, continuous plan action groups, mandatory illustration checks,
-and reviewed exercise removal. The upgrade must preserve user work while
-leaving one current runtime model. Native Windows/PySide6, local-only use,
+and reviewed exercise removal. Upgrades through 0.7.4 preserve user work while
+leaving one current runtime model; Section 13.4 records the planned 0.7.5
+exception. Native Windows/PySide6, local-only use,
 verbatim user text, transactional actions and frozen training history remain
 the product and engineering boundaries.
 
@@ -864,7 +872,8 @@ actions and groups, moving members, rounds, side order, per-round doses and rest
 Removing the penultimate group member must explicitly dissolve the group or
 cancel, not leave an invalid one-member group. Invalid input stays on screen.
 One save commits all children and ordering or nothing. Activated revisions are
-immutable and are cloned to edit. Diffs use stable item identities plus readable
+immutable and are copied to edit; Section 12.11 distinguishes the planned
+`Clone` and `Upgrade` operations. Diffs use stable item identities plus readable
 day/group/member paths, and include membership, ordering, side sequence, rounds,
 rest, dose, notes and pinned content changes.
 
@@ -1004,33 +1013,37 @@ unreviewed physical purge is offered.
 
 ### 12.7 Supported Root Opening And Historical Upgrade Evidence
 
-An installed update replaces only application files. It retains the locator,
-selected root, meaningful settings, frozen plans and completed history. Opening
-or switching to a supported root validates the marker, configuration, schema and
-current library model before use. No directory scanning or old Exercises@home
-database access is allowed.
+An installed update replaces only application files. Ordinary root opening
+retains the locator, selected root, meaningful settings, frozen plans and
+completed history. The planned 0.7.5 first-open reset deletes the plan/training
+scope in Section 13.4. Opening or switching to a supported root validates the
+marker, configuration, schema and current library model before use. No directory
+scanning or old Exercises@home database access is allowed.
 
 Historical conversions and retired fixtures do not expand the current support
-window; their dated design is in version history. Roots outside the current
-mapping are rejected read-only with the reinstall/new-empty-root guidance of
-Section 13.2; their files remain intact. Do not offer a migration wizard,
-compatibility setting, legacy library, fallback reader or implicit import for
-an expired root.
+window; their dated design is in version history. Roots outside the applicable
+boundary are rejected read-only with the reinstall/new-empty-root guidance of
+Section 13.2; schema 22 roots are the explicit 0.7.5 exception. Do not offer a
+migration wizard, compatibility setting, legacy library, fallback reader or
+implicit import for an expired root.
 
-Future in-window schema changes must use a version bump, pre-write validation,
-recoverable snapshots and transactional migrations. They must preserve frozen
-facts without inventing approval, images, physical results or user decisions.
-Normal root backup and restore remain separate user actions.
+Future in-window schema changes normally use a version bump, pre-write
+validation, recoverable snapshots and transactional migrations. They preserve
+frozen facts without inventing approval, images, physical results or user
+decisions. The planned 0.7.5 schema 22 reset in Section 13.4 instead discards
+the specified plan/training facts without a backup. Normal root backup and
+restore remain separate user actions outside that one-time reset.
 
 ### 12.8 External Handoff Contract
 
-Use `training_feedback.plan` version 2 for all new imports and
+Through 0.7.4, use `training_feedback.plan` version 2 for new imports and
 `training_feedback.evidence` version 2 for new exports; define their version
 constants independently. Only the current plan-import contract is accepted. A
-newly supplied v1 file gets a clear current-format error and the current
-schema, not a compatibility converter or version selector. Plans already stored
-in a supported root retain their frozen facts. Their original imported files
-and original exports are not rewritten or re-imported.
+newly supplied older-format file gets a clear current-format error and the
+current schema, not a compatibility converter or version selector. Through
+0.7.4, plans already stored in a supported root retain their frozen facts;
+their original imported files and original exports are not rewritten or
+re-imported. Sections 12.11 and 13.4 own the planned 0.7.5 changes.
 
 V2 carries namespaced action keys, exact content references, family/variant
 identity, ordered standalone/group items, rounds, side order, per-round sets,
@@ -1067,15 +1080,18 @@ belongs to H3 only after a public-release request.
   isolated synthetic data with renamed/missing-key actions,
   custom text, overrides, images, review attachments, active/draft plans,
   terminal and paused sessions, next-day feedback, retractions and original files.
-  Preserve an untouched baseline and compare logical facts/resource hashes.
-- Reject out-of-window development roots before writes, with the reinstall/new-root
-  instruction; preserve future-schema rejection and fresh initialization coverage.
+  Compare logical facts/resource hashes for ordinary preservation upgrades;
+  verify the declared 0.7.5 deletion scope instead for its one-time reset.
+- Reject out-of-window development roots before writes, except the planned 0.7.5
+  schema 22 reset; preserve future-schema rejection and fresh initialization coverage.
 - Missing image vs corrupt image vs changed hash, no-image drafts with prior
   review evidence, enabled-but-ineligible state, bundled and custom images,
   renamed families, repeated exercises in groups, asymmetric sides and mixed units.
-- Failure at backup, staging, SQL conversion, asset publication and cleanup;
-  disk/access errors, stale previews, competing opens, repeat startup and
-  root switching. No partial successful upgrade or fabricated approval.
+- Failure at backup, staging, SQL conversion, asset publication and cleanup for
+  ordinary upgrades; for the 0.7.5 reset, cover transactional database deletion
+  and resumable file cleanup without a snapshot. Include disk/access errors,
+  competing opens, repeat startup and root switching. No partial success or
+  fabricated approval.
 - Catalog withdrawal after plan activation; new-start blocking; resumed frozen
   work; history/export/backup restore with a newer catalog lacking that movement.
 - UI inventory and source review proving removal of manual bundled acceptance,
@@ -1098,16 +1114,65 @@ Keep local-release, external-review, personal-use and W4 results distinct.
 Independent 8-B2 is deferred/not run and is activated only by an explicit public
 release request. It is not a prerequisite for local packaging or local release.
 
-No supported-upgrade success claim may rely on a reset root, manual re-import,
-compatibility settings, changed historical doses or an earlier build's acceptance.
-Source regression covers supported synthetic upgrades and unchanged rejection of
-expired/future roots. Local installed checks and later public acceptance record
-their own actual scope and candidate identity.
+No ordinary supported-upgrade success claim may rely on a reset root, manual
+re-import, compatibility settings, changed historical doses or an earlier build's
+acceptance. The planned 0.7.5 reset is successful only when its exact deletion
+and retained-library scope is verified; it is not preservation evidence. Source
+regression covers supported synthetic upgrades and unchanged rejection of roots
+outside the applicable boundary. Local installed checks and later public
+acceptance record their own actual scope and candidate identity.
 
 This document owns product/architecture/migration contracts. The content
 document owns family membership, aliases, technique and proposed doses.
 Candidate evidence and task records document actual work without duplicating
 these specifications.
+
+### 12.11 Planned 0.7.5 Plan Authoring And Identity
+
+Decision accepted: 2026-09-28. This is planned behavior after the active 0.7.4
+release closes, not a claim about the 0.7.4 application or candidate.
+
+New-plan entry and editing use one page: a plan/day/item hierarchy beside the
+selected item's fields and per-set table. The new page starts with an unfinished
+day whose name is entered in place. Searchable, multiple exercise selection adds
+unsaved actions; groups and members use the same detail area. The user supplies
+set values, count, unit, per-side choice and applicable rest, including an
+explicit zero for no prescribed rest. No catalog proposal or UI placeholder is
+silently saved as a user dose. An explicit equal-set fill may replace existing
+values or notes only after confirmation. Incomplete or invalid input remains
+visible, blocks switching or saving as applicable, and identifies the field to
+repair. A valid draft still requires a name, a nonempty day and complete action
+sets; one save commits the complete prescription transactionally.
+
+Each root uses a visible code `plan-NNN.AA.DD`. A new plan takes the next free
+three-digit `NNN` on save and begins at `.01.00`. `Clone` copies the complete
+selected revision into an independent plan; on save the user supplies an unused
+three-digit base number and a distinct plan name, beginning at `.01.00`.
+`Upgrade` copies the latest active revision within the same plan; an existing
+upgrade draft reopens for editing, and an unchanged copy cannot be saved as a
+new upgrade. Draft edits keep their identity and do not create an extra version.
+Both operations ask for a change description when opened but allow it to remain
+empty. Copied prescription and user text remain verbatim until explicitly edited.
+
+The upgrade code is calculated from the actual difference against its source.
+Changes to day/group structure, action identity or content, item/member order,
+phase, first side or side sequence increment `AA` and reset `DD` to `00`.
+Changes confined to dose, rest or other plan text increment `DD`; combined
+changes use the structural rule. A rationale alone does not create an upgrade.
+Before every draft save, show the changed fields and resulting code, recheck
+uniqueness transactionally and recompute after later edits; activation fixes the
+code. Both suffixes have a two-digit minimum and may grow past 99. Base numbers
+are `001`–`999`, are unique within the root and never wrap or silently reuse.
+Internal revision IDs/ordinals remain for associations, but the plan page shows
+the code rather than automatic `v1`/`v2` labels.
+
+0.7.5 introduces database schema 23 and current plan/evidence wire contracts v3.
+The plan-import rationale may be empty. A new import receives a root-local base
+number; an upgrade import identifies the target by base code and follows the
+same difference classification. Only v3 is newly accepted; v2 imports receive
+the current-format error. JSON/Markdown evidence and new training snapshots
+show the complete code consistently. Saving a draft never activates it, and
+activation retains the existing eligibility and explicit confirmation gates.
 
 ## 13. Version Retention And Development Data Policy
 
@@ -1153,23 +1218,27 @@ database or upgrade a retained version. Consolidate new-database initialization
 without rewriting already-applied migration semantics in the supported window.
 Git/GitHub commit history stays intact; do not create an unbounded second archive.
 
-Supported roots reopen without changing frozen facts. A retained upgrade may
-use normal automatic recovery/conversion. Roots older than the support window must be detected read-only
-and refused before migration or other writes, with an actionable message such as:
+Except for the explicit one-time rule in Section 13.4, supported roots reopen
+without changing frozen facts and a retained upgrade may use normal automatic
+recovery/conversion. Roots outside the applicable support boundary are detected
+read-only and refused before migration or other writes, with an actionable
+message such as:
 
 > 此开发数据版本已超出支持范围，请重新安装当前版本并新建数据目录。
 > 原数据目录已保留，不会自动删除或重置。
 
 Reinstalling program files does not recreate the independent root. The user must
 explicitly choose a new empty directory; installation/uninstallation never deletes
-the old root or locator. Do not auto-import the unsupported database or offer a
-legacy runtime mode. Unsupported future roots also remain unchanged. New roots
-must load the complete current bundled catalog without relying on any older root.
+the old root or locator. Section 13.4 applies only when 0.7.5 first opens a
+selected valid schema 22 root. Do not auto-import an unsupported database or
+offer a legacy runtime mode. Unsupported future roots remain unchanged. New
+roots load the complete current bundled catalog without relying on an older root.
 
-Retention is for development artifacts and compatibility code, not permission to
-purge personal data, original answers/exports or historical evidence within a
-retained root. Active test-budget ledgers must not be reset during cleanup.
-Unclassified local files require inventory before disposal.
+Retention is for development artifacts and compatibility code, not general
+permission to purge personal data, original answers/exports or historical
+evidence within a retained root. Section 13.4 records the user's specific
+0.7.5 deletion decision. Active test-budget ledgers must not be reset during
+cleanup. Unclassified local files require inventory before disposal.
 
 ### 13.3 Development Content And Personal-Data Transition
 
@@ -1195,3 +1264,41 @@ scope and mechanism are deferred to that decision; existing custom/override
 features do not authorize a bulk copy of development records. Preserve real
 original facts if any are deliberately retained, and exclude synthetic facts from
 personal review, training and W4 evidence. Revisit long-term support policy then.
+
+### 13.4 Planned 0.7.5 One-Time Plan And Training Reset
+
+Decision accepted: 2026-09-28. After 0.7.4 is finished, 0.7.5 first opening
+any valid schema 22 TrainingFeedback root automatically deletes its existing
+plan and dependent training data without a confirmation prompt or recovery
+backup. Schema 22 roots created by 0.7.2, 0.7.3 and 0.7.4 do not record enough
+application-version information to distinguish their origin reliably; all are
+subject to this same reset. This is an explicit exception to Sections 12.7 and
+13.2, not evidence that prior plan or training facts were preserved.
+
+The reset removes current and retained legacy plan revisions, actions, doses,
+activation pins, sessions and their results, retractions, next-day feedback,
+plan/session import-export registrations and associated managed files. It also
+deletes existing backups inside that selected root, including backups that may
+contain other root data. It retains the root's library selections, custom
+actions, guidance, images, review and removal decisions that are independent of
+the deleted plans. No previous synthetic training or approval becomes a new
+personal fact. Files copied outside the selected root are not discovered or
+deleted. The old `Exercises@home` repository and database remain untouched.
+
+Before any write, validate the exact selected root's marker, configuration,
+schema, SQLite integrity and references, acquire its exclusive lease and
+inventory managed deletion paths. Apply the database reset and schema 23
+migration transactionally. Use only a metadata-only cleanup journal so an
+interrupted run finishes pending file deletions before the root becomes usable;
+do not create or retain a data snapshot, and do not report partial cleanup as
+success. Failure before the database commit leaves its old rows unchanged;
+failure afterward resumes the irreversible cleanup on next open. Installation
+alone and root discovery never trigger the reset.
+
+Fresh 0.7.5 roots start at schema 23 with no old plan data. Roots with a schema
+earlier than 22, a future schema or invalid metadata remain unchanged and are
+rejected before cleanup. Verify the exact deletion and retained-library scope
+with isolated synthetic roots, interrupted cleanup, repeat opening and installed
+checks; identify each candidate and never present the reset as a preserved-root
+upgrade. Ordinary preservation and backup policy resumes after this one-time
+transition.
