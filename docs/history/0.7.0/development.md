@@ -3,7 +3,7 @@
 Archived from the active development plan on 2026-09-20. Source delivery is not
 formal release acceptance. Current product rules and open tasks live in the
 [development plan](../../development-plan.md); the
-[release review](../../release-readiness-0.7.0.md) owns the closeout sequence.
+[release review](release-readiness.md) owns the dated closeout sequence.
 Detailed original stage notes are in [contract integration history](contract-integration-history.md).
 
 Application baseline: **0.7.0 / schema 22**. Schemas 17–22 were assigned during
@@ -205,7 +205,8 @@ No independent 070-01–070-12 scenario had run. The compiler existed at
   not an actual preserved old packaged executable. Later public acceptance must
   establish old-binary evidence separately.
 
-Detailed local task records remain under `.planning/archive/0.7.0/`.
+The local Planscope route is `.planning/archive/v0.7.0/SUMMARY.md`.
+Detailed earlier task records remain under `.planning/archive/0.7.0/`.
 Complete current source identity and candidate-level regression remain later tasks.
 
 ## Workspace Cleanup Completed 2026-09-21

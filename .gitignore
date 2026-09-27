@@ -8,11 +8,8 @@ build/
 dist/
 *.egg-info/
 
-# Local planning records and generated user data never belong in source control.
+# Local Planscope context, historical records and generated user data never belong in source control.
 .planning/
-task_plan.md
-findings.md
-progress.md
 .tmp/
 user_data/
 *.sqlite3

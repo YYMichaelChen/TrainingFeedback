@@ -1,10 +1,10 @@
-# 0.7.0 Local Release Closeout Plan
+# 0.7.0 Local Release Closeout Plan (historical)
 
 This is the dated 0.7.0 local-release review. The 0.7.2 support window and
-current development decisions are in [development plan §13](development-plan.md#13-version-retention-and-development-data-policy).
+current development decisions are in [development plan §13](../../development-plan.md#13-version-retention-and-development-data-policy).
 
 Updated: 2026-09-24. **070-H1-CONTENT, 070-H2-TESTS, 070-H2-SOURCE and
-070-H2-PACKAGE are complete; the local-release gate is satisfied.** Product authority is [development-plan.md](development-plan.md),
+070-H2-PACKAGE are complete; the local-release gate is satisfied.** Product authority is [development-plan.md](../../development-plan.md),
 especially Sections 9–10 and 12–13. This document owns execution details.
 
 The user's 2026-09-23 decision makes content closeout, tests, source provenance and
@@ -18,7 +18,7 @@ plan activation or personal-data transition.
 
 These observations identify current source separately from existing binaries.
 The detailed old review, test counts and completed cleanup are in
-[0.7.0 delivery history](history/0.7.0/development.md).
+[0.7.0 delivery history](development.md).
 
 | Area | State as of 2026-09-24 |
 | --- | --- |
@@ -60,7 +60,7 @@ scope, record the final identity, then rebuild and repeat affected package check
 ### 070-H1-CONTENT — Two remaining content revisions
 
 **Status:** complete 2026-09-23. Input: owned source `070-illustrated-1`, content
-rules in [initial-exercises-and-plan.md §10.1](initial-exercises-and-plan.md#101-canonical-names-and-movement-definitions).
+rules in [initial-exercises-and-plan.md §10.1](../../initial-exercises-and-plan.md#101-canonical-names-and-movement-definitions).
 Development scope: `070-H1-CONTENT`, tier dev, maximum 30 unique expanded cases.
 
 Implementation:
@@ -191,7 +191,7 @@ revision and its payload manifest reports the same clean source identity.
 - Application 0.7.0/schema22, catalog `070-illustrated-2`, v2 contract, all 36 images,
   Qt resources, ffi/sqlite DLLs and isolated Qt loading passed; no user DB/locator was
   present in the payload and no external Codex-runtime DLL remained.
-- [LOCAL-01—06](packaged-acceptance-runbook.md#12-local-installed-checks) passed with
+- [LOCAL-01—06](packaged-acceptance.md#12-local-installed-checks) passed with
   actual installed UI interaction, isolated profiles and a Chinese/space synthetic root.
   The representative group session preserved position 1, a user-entered partial 4-rep
   result, a blank—not zero—second actual, frozen v4 guidance/image and unreviewed state.
@@ -243,7 +243,7 @@ not a substitute location for hidden regression scenarios.
 
 The retained window is **0.7.0 / 0.6.1 / 0.6.0**. The completed 2026-09-21 cleanup,
 old space estimates and removed directories are recorded in
-[history](history/0.7.0/development.md#workspace-cleanup-completed-2026-09-21);
+[history](development.md#workspace-cleanup-completed-2026-09-21);
 they are not a fresh deletion queue.
 
 Current document cleanup:
@@ -252,7 +252,7 @@ Current document cleanup:
   `docs/history/<version>/`; merge duplicate status descriptions rather than
   creating another independent specification.
 - The retired single-file image-prompt entry is superseded by
-  [the batch index](image_prompts/README.md). Keep both complete batch files and
+  [the batch index](../../image_prompts/README.md). Keep both complete batch files and
   remove obsolete current links; do not delete current prompt content.
 - Archive the completed 2026-09-22 root task records as a concise 0.7.0 summary.
   Maintain root record soft limits of 150/250/200 lines.
@@ -269,14 +269,14 @@ Record exact retained/deleted locations and recovered space only after the actio
 ## 5. Deferred Public Release And Separate Follow-ups
 
 **070-H3 / 8-B2: deferred, not run.** The sole reactivation trigger is an explicit
-user request for public release. Then refresh the [public runbook](packaged-acceptance-runbook.md#5-public-release-acceptance--deferred)
+user request for public release. Then refresh the [public runbook](../../packaged-acceptance-runbook.md)
 and candidate evidence, locate identified 0.6.0/schema14 and 0.6.1/schema16 binaries,
 and execute independent installation/upgrade/recovery/backup/uninstall and scaling
 scenarios. A rebuilt old tag is not proof of a missing original dirty binary.
 Keep public signing/distribution requirements for that stage.
 
 External content review and W4 remain unfinished independent follow-ups under the
-[guidance runbook](guidance-review-runbook.md). They do not block local release.
+[guidance runbook](../../guidance-review-runbook.md). They do not block local release.
 Personal-data transition requires its own explicit user decision; synthetic
 approvals/training never become personal facts. Revisit public readiness against
 the exact candidate when that stage is requested.

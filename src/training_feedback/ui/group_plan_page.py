@@ -6,7 +6,8 @@ from copy import deepcopy
 from itertools import islice
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QHeaderView,
     QInputDialog,
@@ -25,6 +27,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QSpinBox,
     QSplitter,
     QTableWidget,
@@ -46,7 +49,6 @@ from ..domain.group_plans import (
 from .labels import (
     DOSE_UNIT_LABELS,
     EXERCISE_SOURCE_LABELS,
-    LIBRARY_REASON_LABELS,
     PLAN_PHASE_LABELS,
     PLAN_STATUS_LABELS,
     POSITION_LABELS,
@@ -59,6 +61,7 @@ from .labels import (
 from .labels import (
     GROUP_PLAN_TEXT as T,
 )
+from .plan_presentation import plan_presentation
 
 
 def combo(mapping, selected):
@@ -581,7 +584,8 @@ class GroupPlanEditor(QDialog):
 
 
 _SKIP_FIELDS = {"item_id", "group_id", "sha256", "key", "revision_id", "session_id",
-                "content_id", "content"}
+                "content_id", "content", "provenance", "source_id", "dose_scope",
+                "side_order_recorded", "set_rest_recorded"}
 
 
 def render_fields(value, indent=0, field=None):
@@ -624,8 +628,10 @@ def render_changes(changes):
     )
 
 
-def render_plan(plan):
+def render_plan(plan, adjustment=None):
     lines = [plan["name"], plan["purpose"]]
+    if adjustment:
+        lines.append(f"{T['rationale']}：{adjustment}")
     for day in plan["days"]:
         lines.append(f"\n{T['day']} {day['order']}: {day['name']}")
         for item in day["items"]:
@@ -661,7 +667,10 @@ class GroupPlanActivation(QDialog):
         view = QPlainTextEdit()
         view.setReadOnly(True)
         view.setPlainText(
-            render_plan(self.preview["revision"]["payload"]["plan"])
+            render_plan(
+                self.preview["revision"]["payload"]["plan"],
+                self.preview["revision"]["rationale"],
+            )
             + "\n"
             + T["diff"]
             + "\n"
@@ -693,65 +702,286 @@ class GroupPlanPage(QWidget):
     def __init__(self, service, handoff, parent=None):
         super().__init__(parent)
         self.service, self.handoff, self.dialog = service, handoff, None
+        self.presentation = None
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel(T["title"]))
-        splitter = QSplitter()
+        title = QLabel(T["title"])
+        title.setObjectName("pageTitle")
+        layout.addWidget(title)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setChildrenCollapsible(False)
         self.revisions = QListWidget()
-        self.detail = QPlainTextEdit()
-        self.detail.setReadOnly(True)
+        self.revisions.setObjectName("revisionNavigator")
+        self.revisions.setMinimumWidth(260)
+        self.revisions.setMaximumWidth(320)
+        self.revisions.setSpacing(4)
+        self.revisions.setWordWrap(True)
         splitter.addWidget(self.revisions)
-        splitter.addWidget(self.detail)
+
+        self.detail_panel = QWidget()
+        detail_layout = QVBoxLayout(self.detail_panel)
+        detail_layout.setContentsMargins(14, 0, 0, 0)
+        self.revision_title = QLabel()
+        self.revision_title.setObjectName("revisionTitle")
+        self.revision_title.setWordWrap(True)
+        self.revision_title.setSizePolicy(
+            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
+        )
+        detail_layout.addWidget(self.revision_title)
+        self.revision_meta = QLabel()
+        detail_layout.addWidget(self.revision_meta)
+        self.purpose_label = QLabel()
+        self.purpose_label.setWordWrap(True)
+        self.purpose_label.setSizePolicy(
+            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
+        )
+        self.purpose_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        detail_layout.addWidget(self.purpose_label)
+        self.adjustment_label = QLabel()
+        self.adjustment_label.setWordWrap(True)
+        self.adjustment_label.setSizePolicy(
+            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
+        )
+        self.adjustment_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        detail_layout.addWidget(self.adjustment_label)
+        self.issues_label = QLabel()
+        self.issues_label.setWordWrap(True)
+        self.issues_label.setSizePolicy(
+            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
+        )
+        self.issues_label.setObjectName("contentIssues")
+        detail_layout.addWidget(self.issues_label)
+        self.empty_label = QLabel(T["empty_revision_hint"])
+        self.empty_label.setWordWrap(True)
+        self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        detail_layout.addWidget(self.empty_label, 1)
+        self.day_navigation = QComboBox()
+        self.day_navigation.setObjectName("planDayNavigation")
+        self.day_navigation.currentIndexChanged.connect(self._jump_to_day)
+        detail_layout.addWidget(self.day_navigation)
+        self.detail_scroll = QScrollArea()
+        self.detail_scroll.setWidgetResizable(True)
+        self.detail_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.detail_host = QWidget()
+        self.detail_host.setMinimumWidth(0)
+        self.detail_rows = QVBoxLayout(self.detail_host)
+        self.detail_rows.setContentsMargins(0, 8, 8, 8)
+        self.detail_rows.setSpacing(12)
+        self.detail_rows.addStretch(1)
+        self.detail_scroll.setWidget(self.detail_host)
+        detail_layout.addWidget(self.detail_scroll, 1)
+        splitter.addWidget(self.detail_panel)
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 1)
+        splitter.setSizes([288, 1000])
         layout.addWidget(splitter, 1)
         row = QHBoxLayout()
+        self.buttons = {}
         for name in ("new", "edit", "clone", "activate", "import", "export"):
-            button = QPushButton(T[name])
+            button = QPushButton(T[name].replace("…", ""))
+            button.setObjectName(f"planCommand_{name}")
             button.clicked.connect(lambda checked=False, command=name: self.command(command))
             row.addWidget(button)
+            self.buttons[name] = button
         layout.addLayout(row)
         self.revisions.currentItemChanged.connect(self.show_revision)
         self.refresh()
 
     def refresh(self, preferred=None):
+        if preferred is None and self.revisions.currentItem() is not None:
+            preferred = self.revisions.currentItem().data(Qt.ItemDataRole.UserRole)
         self.revisions.clear()
+        selected = None
         for plan in self.service.list_plans():
             for revision in self.service.revisions(plan["id"]):
                 item = QListWidgetItem(
-                    f"{revision['name']} · v{revision['revision_number']} · "
+                    f"{revision['name']}\nv{revision['revision_number']} · "
                     + PLAN_STATUS_LABELS[revision["status"]]
                 )
+                metrics = QFontMetrics(self.revisions.font())
+                height = metrics.boundingRect(
+                    0,
+                    0,
+                    self.revisions.width() - 30,
+                    2000,
+                    Qt.TextFlag.TextWordWrap,
+                    item.text(),
+                ).height()
+                item.setSizeHint(QSize(self.revisions.width() - 12, height + 14))
                 item.setData(Qt.ItemDataRole.UserRole, revision["id"])
                 self.revisions.addItem(item)
-                if revision["id"] == preferred or (
-                    preferred is None and revision["status"] == "active"
-                ):
-                    self.revisions.setCurrentItem(item)
-        if self.revisions.currentItem() is None and self.revisions.count():
+                if revision["id"] == preferred:
+                    selected = item
+                elif selected is None and revision["status"] == "active":
+                    selected = item
+        if selected is not None:
+            self.revisions.setCurrentItem(selected)
+        elif self.revisions.count():
             self.revisions.setCurrentRow(self.revisions.count() - 1)
+        else:
+            self.show_revision(None)
+
+    def _clear_rows(self):
+        while self.detail_rows.count() > 1:
+            entry = self.detail_rows.takeAt(0)
+            widget = entry.widget()
+            if widget is not None:
+                widget.hide()
+                widget.deleteLater()
+
+    @staticmethod
+    def _label(value, *, bold=False):
+        label = QLabel(str(value))
+        label.setWordWrap(True)
+        label.setMinimumWidth(0)
+        label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        if bold:
+            label.setStyleSheet("font-weight: 600;")
+        return label
+
+    def _card(self, title, subtitle=None, *, level=0):
+        card = QFrame()
+        card.setFrameShape(QFrame.Shape.StyledPanel)
+        card.setObjectName("planCard" if level == 0 else "memberCard")
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        box = QVBoxLayout(card)
+        box.setContentsMargins(12, 10, 12, 10)
+        box.setSpacing(5)
+        box.addWidget(self._label(title, bold=True))
+        if subtitle:
+            box.addWidget(self._label(subtitle))
+        return card, box
+
+    @staticmethod
+    def _side_text(side, *, unilateral=True):
+        if not unilateral:
+            return "不适用"
+        if side == "not_applicable":
+            return "不适用"
+        return {"left": T["left"], "right": T["right"], None: "未记录"}.get(side, "未记录")
+
+    def _add_set_rows(self, layout, action, *, every_round=False, member_order=None):
+        for dose in action["sets"]:
+            prefix = f"成员 {member_order} · " if member_order is not None else ""
+            repeat = "每轮 · " if every_round else ""
+            suffix = " · 每侧" if dose["per_side"] else ""
+            if not dose["per_side"]:
+                suffix = " · 整体"
+            layout.addWidget(self._label(
+                f"{prefix}{repeat}第 {dose['order']} 组  {dose['dose']}{suffix}"
+            ))
+            if dose["note"]:
+                layout.addWidget(self._label(f"{T['note']}：{dose['note']}"))
+            layout.addWidget(self._label(f"本组后休息：{dose['rest']}"))
+
+    def _action_card(self, item):
+        card, box = self._card(f"{item['order']}. {item['name']} · {item['phase']}")
+        unilateral = any(dose["per_side"] for dose in item["sets"])
+        box.addWidget(self._label(
+            f"先做：{self._side_text(item['first_side'], unilateral=unilateral)} · "
+            f"换侧休息：{item['rest_between_sides']}"
+        ))
+        if item["note"]:
+            box.addWidget(self._label(f"{T['note']}：{item['note']}"))
+        self._add_set_rows(box, item)
+        box.addWidget(self._label(f"动作后休息：{item['rest_after']}"))
+        return card
+
+    def _group_card(self, item):
+        card, box = self._card(f"{item['order']}. {item['name']} · {item['phase']}")
+        box.addWidget(self._label(f"轮数：{item['round_count']} · 侧序：{item['side_sequence']}"))
+        unilateral = any(
+            dose["per_side"] for member in item["members"] for dose in member["sets"]
+        )
+        box.addWidget(self._label(
+            f"先做：{self._side_text(item['first_side'], unilateral=unilateral)} · "
+            f"换侧休息：{item['rest_between_sides']} · 轮间休息：{item['rest_between_rounds']}"
+        ))
+        if item["transition"]:
+            box.addWidget(self._label(f"转换：{item['transition']}"))
+        if item["note"]:
+            box.addWidget(self._label(f"{T['note']}：{item['note']}"))
+        for member in item["members"]:
+            member_card, member_box = self._card(
+                f"成员 {member['order']}. {member['name']}", level=1
+            )
+            if member["note"]:
+                member_box.addWidget(self._label(f"{T['note']}：{member['note']}"))
+            self._add_set_rows(
+                member_box, member, every_round=True, member_order=member["order"]
+            )
+            member_box.addWidget(self._label(f"成员后休息：{member['rest_after']}"))
+            box.addWidget(member_card)
+        box.addWidget(self._label(f"动作组结束后休息：{item['rest_after']}"))
+        return card
+
+    def _jump_to_day(self, index):
+        if 0 <= index < len(self.day_cards):
+            self.detail_scroll.ensureWidgetVisible(self.day_cards[index])
 
     def show_revision(self, item, previous=None):
         if item:
             revision = self.service.get(item.data(Qt.ItemDataRole.UserRole))
-            basis = revision["import"]
-            provenance = ""
-            if basis:
-                import json
-
-                original = json.loads(basis["original_payload"])
-                provenance = (
-                    f"\n{T['import_basis']}：{original['rationale']}\n"
-                    f"{T['original_file']}：{basis['source_path']}"
-                )
-            self.detail.setPlainText(
-                render_plan(revision["payload"]["plan"]) + "\n" + revision["rationale"] + provenance
-                + ("\n" + T["migration_basis"] + "\n" + render_fields(
-                    revision["conversion_registrations"]) if revision["conversion_registrations"]
-                   else "")
-                + "\n" + "\n".join(issue["name"] + "：" + "、".join(
-                    LIBRARY_REASON_LABELS.get(reason, reason) for reason in issue["reasons"])
-                    for issue in self.service.content_issues(revision["id"]))
+            self.presentation = plan_presentation(
+                revision, self.service.content_issues(revision["id"])
             )
+            self.revision_title.setText(self.presentation["name"])
+            self.revision_meta.setText(
+                f"v{self.presentation['version']} · {self.presentation['status']}"
+            )
+            self.purpose_label.setText(f"训练目的：{self.presentation['purpose']}")
+            self.adjustment_label.setText(
+                f"{T['rationale']}：{self.presentation['adjustment']}"
+                if self.presentation["adjustment"] else ""
+            )
+            self.issues_label.setText("\n".join(
+                issue["name"] + "：" + "、".join(issue["reasons"])
+                for issue in self.presentation["issues"]
+            ))
+            self.issues_label.setVisible(bool(self.presentation["issues"]))
+            self.empty_label.hide()
+            self.day_navigation.show()
+            self.detail_scroll.show()
+            self._clear_rows()
+            self.day_navigation.blockSignals(True)
+            self.day_navigation.clear()
+            self.day_cards = []
+            for day in self.presentation["days"]:
+                day_card, day_box = self._card(f"{T['day']} {day['order']} · {day['name']}")
+                for plan_item in day["items"]:
+                    widget = (
+                        self._group_card(plan_item)
+                        if plan_item["kind"] == "group"
+                        else self._action_card(plan_item)
+                    )
+                    day_box.addWidget(widget)
+                self.detail_rows.insertWidget(self.detail_rows.count() - 1, day_card)
+                self.day_cards.append(day_card)
+                self.day_navigation.addItem(f"{T['day']} {day['order']} · {day['name']}")
+            self.day_navigation.setCurrentIndex(0 if self.day_cards else -1)
+            self.day_navigation.blockSignals(False)
+            self._set_command_state(self.presentation["status_key"])
         else:
-            self.detail.clear()
+            self.presentation = None
+            self.revision_title.clear()
+            self.revision_meta.clear()
+            self.purpose_label.clear()
+            self.adjustment_label.clear()
+            self.issues_label.clear()
+            self.issues_label.hide()
+            self._clear_rows()
+            self.day_navigation.clear()
+            self.day_navigation.hide()
+            self.detail_scroll.hide()
+            self.empty_label.show()
+            self._set_command_state(None)
+
+    def _set_command_state(self, status):
+        available = status is not None
+        self.buttons["edit"].setEnabled(status == "draft")
+        self.buttons["clone"].setEnabled(available)
+        self.buttons["activate"].setEnabled(status == "draft")
+        self.buttons["export"].setEnabled(available)
 
     def command(self, command):
         selected = self.revisions.currentItem()

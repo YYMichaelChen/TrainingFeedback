@@ -10,9 +10,9 @@ and frozen session facts remained in the data layer.
 The source changes were left uncommitted at the time. Two local 0.7.1 installers
 were built from a dirty working tree and installed for review. They are local
 development evidence, not a reproducible clean source release. Those changes
-were subsequently included in the 0.7.2 source commit. The task records are
-retained locally under `.planning/archive/0.7.1/` while this version stays in
-the three-version window.
+were subsequently included in the 0.7.2 source commit. The local Planscope
+route is `.planning/archive/v0.7.1/SUMMARY.md`; earlier task records remain under
+`.planning/archive/0.7.1/` while this version stays in the three-version window.
 
 No local build established expert approval, plan activation, personal training
 facts or a personal-data transition.

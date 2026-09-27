@@ -27,19 +27,15 @@ affected file or node IDs with the same scope, for example:
 python -m pytest tests/test_database.py --test-scope my-task --basetemp .tmp/pytest
 ```
 
-For releases, use `--test-tier patch`, `minor`, or `major` and a release scope
-such as `--test-scope release-0.7.0`. Stage caps are **30 / 50 / 100 / 300** cases;
-parameter combinations and the union of selections across commands count.
-Explicit paths or `-k` replace the baseline profile. Keep one scope for a task
-or release; do not clear `.tmp/test-budgets/` while it is in progress.
-To inspect all cases without running them:
+For releases, use the corresponding `--test-tier patch|minor|major` with one
+stable `release-<version>` scope. To inspect all cases without running them:
 
 ```powershell
 python -m pytest --test-tier major --collect-only -q
 ```
 
-See [verification policy](docs/development-plan.md#94-verification-and-record-ownership)
-and [test maintenance notes](tests/README.md).
+See the [development workflow](docs/development-workflow.md) for the event-based
+gates and [test instructions](tests/README.md) for selection and accounting.
 
 ## Project layout
 
@@ -47,10 +43,9 @@ and [test maintenance notes](tests/README.md).
   Qt, no SQL).
 - `src/training_feedback/application/` — use-case services coordinating domain
   workflows and repositories.
-- `src/training_feedback/data/` — SQLite repositories, schema migrations, data
-  root lifecycle, backup, one-time schema-16 catalog conversion with upgrade
-  recovery, bundled catalog source, and v2 plan/session export-import file
-  handling. SQL is only allowed here.
+- `src/training_feedback/data/` — SQLite repositories, supported migrations,
+  data-root lifecycle, backup/recovery, bundled catalog source and current
+  export/import file handling. SQL is only allowed here.
 - `src/training_feedback/ui/` — PySide6 pages and dialogs (no SQL).
 - `src/training_feedback/app.py` / `bootstrap.py` / `main.py` — composition
   root, startup coordination, and the Qt entry point.
@@ -80,9 +75,9 @@ Setup.exe to users; they do not need Python, the repository, or PyInstaller. An
 adjacent `*.build-manifest.json` records the Setup.exe hash and the complete
 payload manifest for release verification.
 
-The locally produced Setup.exe is currently unsigned. Windows may therefore
-show an unknown-publisher warning; a trusted Authenticode certificate and
-release signing step are still required before broad public distribution.
+Record the actual Authenticode status of each Setup.exe. An unsigned local build
+may show an unknown-publisher warning; public distribution requires a trusted
+signature under the packaged-acceptance runbook.
 
 The build interpreter resolves to `-Python <path>` when given, then
 `.venv\Scripts\python.exe` (standard venv), then `.venv\python.exe` (Conda
@@ -107,21 +102,17 @@ survives upgrades and uninstalls and can be selected again after reinstalling.
 The installer is intentionally not a source-code updater. The release flow is:
 build a new Setup.exe, distribute it, then run it on the user's machine.
 
-The 0.7.2 source includes 36 illustrated entries. For local checks, create an
-isolated temporary profile and a new empty data root; see the
-[packaged acceptance runbook](docs/packaged-acceptance-runbook.md). The older
-schema16 preparation helper retired with the 0.6.1 support endpoint. Build
-manifests identify the exact source revision and payload for each candidate.
-
-Per the 2026-09-23 decision, independent Windows acceptance is deferred until an
-explicit public-release request. W4 and external content review are separate
-unfinished follow-ups; none blocks local release. See the
-[release boundaries](docs/development-plan.md#9-open-delivery-work) and
-[local installed checklist](docs/packaged-acceptance-runbook.md#12-local-installed-checks).
+Local installed checks use an isolated temporary profile and synthetic data
+root; see the [packaged acceptance runbook](docs/packaged-acceptance-runbook.md).
+Build manifests identify the exact source revision and payload. Independent
+Windows acceptance begins only on an explicit public-release request; external
+content review, W4 and personal-data transition have separate gates in the
+[product plan](docs/development-plan.md#9-open-delivery-work).
 
 ## Documentation
 
 - [Authoritative development plan](docs/development-plan.md)
+- [Version-independent development workflow](docs/development-workflow.md)
 - [Initial exercise catalog and plan proposal](docs/initial-exercises-and-plan.md)
 - [Version retention and development-data policy](docs/development-plan.md#13-version-retention-and-development-data-policy)
 - [Retained version history](docs/history/README.md)

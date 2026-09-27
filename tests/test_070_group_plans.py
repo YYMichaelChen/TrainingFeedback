@@ -11,7 +11,9 @@ from pathlib import Path
 
 import pytest
 from image_fixtures import png_bytes
-from PySide6.QtWidgets import QDialog, QMessageBox
+from PySide6.QtCore import Qt
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QDialog, QLabel, QMessageBox
 
 from training_feedback.app import LibraryContext
 from training_feedback.application.library_workflow import LibraryTarget
@@ -22,6 +24,7 @@ from training_feedback.domain.catalog import ExerciseReference, content_sha256
 from training_feedback.domain.group_plans import (
     PlanDocument,
     diff_plans,
+    new_item_id,
     plan_actions,
     validate_plan_payload,
 )
@@ -426,8 +429,116 @@ def test_ui_group_plan_creation_edit_cancel_and_confirmation(qt_app, context, pa
     assert context.plans.get(identifier)["status"] == "active"
     page = context.create_plan_page()
     assert page.revisions.count() == 1
-    assert "轮数" in page.detail.toPlainText()
-    assert "组间休息秒" in render_plan(saved["payload"]["plan"])
+    assert page.presentation["days"][0]["items"][1]["round_count"] == (
+        saved["payload"]["plan"]["days"][0]["items"][1]["round_count"]
+    )
+    assert page.presentation["days"][0]["items"][1]["rest_between_rounds"] == "7 秒"
+
+
+def test_plan_page_shows_adjustment_without_technical_evidence(qt_app, context, payload,
+                                                               monkeypatch):
+    payload["rationale"] = "【合成】根据昨日记录减少臀部训练量"
+    identifier = context.plans.create(payload)
+    revision = deepcopy(context.plans.get(identifier))
+    revision["import"] = {
+        "original_payload": json.dumps({"rationale": "【合成】导入原文"}),
+        "source_path": "imports/private-source.json",
+    }
+    revision["conversion_registrations"] = [{"source_id": 987}]
+    revision["payload"]["plan"]["days"][0]["items"][0]["provenance"] = {
+        "source_id": 987,
+    }
+    revision["payload"]["plan"]["days"][0]["items"][0]["source_id"] = 987
+    revision["payload"]["plan"]["days"][0]["items"][0]["dose_scope"] = "per_side_aggregate"
+    monkeypatch.setattr(context.plans, "get", lambda _identifier: revision)
+    monkeypatch.setattr(context.plans, "content_issues", lambda _identifier: [])
+
+    page = context.create_plan_page()
+    visible_text = "\n".join(label.text() for label in page.findChildren(QLabel))
+    assert page.presentation["adjustment"] == payload["rationale"]
+    assert visible_text.count("调整说明：") == 1
+    assert payload["rationale"] in visible_text
+    assert "原始导入依据" not in visible_text
+    assert "受管原件" not in visible_text
+    assert "迁移保留" not in visible_text
+    assert "private-source.json" not in visible_text
+    assert "987" not in visible_text
+    activation_text = render_plan(revision["payload"]["plan"], revision["rationale"])
+    assert activation_text.count("调整说明：") == 1
+    assert "987" not in activation_text
+    assert "per_side_aggregate" not in activation_text
+    assert page.presentation["days"][0]["items"][1]["kind"] == "group"
+    group = page.presentation["days"][0]["items"][1]
+    assert group["round_count"] == payload["plan"]["days"][0]["items"][1]["round_count"]
+    assert all(member["sets"][0]["every_round"] for member in group["members"])
+
+
+def test_plan_page_empty_state_and_revision_navigation(qt_app, context, payload):
+    page = context.create_plan_page()
+    assert page.revisions.count() == 0
+    assert not page.empty_label.isHidden()
+    assert page.detail_scroll.isHidden()
+
+    first = context.plans.create(payload)
+    second_payload = deepcopy(payload)
+    second_payload["plan"]["name"] = "【合成】另一版计划"
+    second_day = deepcopy(second_payload["plan"]["days"][0])
+    second_day["order"] = 2
+    second_day["name"] = "【合成】第二训练日"
+    for plan_item in second_day["items"]:
+        plan_item["item_id"] = new_item_id()
+        if plan_item["kind"] == "group":
+            for member in plan_item["members"]:
+                member["item_id"] = new_item_id()
+    second_payload["plan"]["days"].append(second_day)
+    second = context.plans.create(second_payload)
+    page.refresh(second)
+    assert page.revisions.count() == 2
+    assert page.revisions.currentItem().data(Qt.ItemDataRole.UserRole) == second
+    assert page.revision_title.text() == second_payload["plan"]["name"]
+    assert page.day_navigation.count() == len(second_payload["plan"]["days"])
+    page.resize(1366, 768)
+    page.show()
+    qt_app.processEvents()
+    page.day_navigation.setFocus()
+    QTest.keyClick(page.day_navigation, Qt.Key.Key_Down)
+    qt_app.processEvents()
+    assert page.day_navigation.currentIndex() == 1
+    assert page.detail_scroll.verticalScrollBar().value() > 0
+    page.refresh(first)
+    assert page.revisions.currentItem().data(Qt.ItemDataRole.UserRole) == first
+    assert page.presentation["name"] == payload["plan"]["name"]
+
+
+def test_plan_presentation_keeps_zero_unknown_and_per_side_distinct(context, payload):
+    from training_feedback.ui.plan_presentation import plan_presentation
+
+    identifier = context.plans.create(payload)
+    revision = deepcopy(context.plans.get(identifier))
+    action = revision["payload"]["plan"]["days"][0]["items"][0]
+    action["rest_after_action_seconds"] = None
+    action["rest_between_sides_seconds"] = 0.123456789
+    action["sets"][0]["value"] = 1.123456789
+    action["sets"][0]["rest_after_set_seconds"] = 0
+    action["sets"][0]["per_side"] = False
+    action["sets"][1]["per_side"] = True
+    model = plan_presentation(revision)
+    shown_action = model["days"][0]["items"][0]
+    assert shown_action["rest_after"] == "未记录"
+    assert shown_action["sets"][0]["rest"] == "0 秒"
+    assert shown_action["sets"][0]["dose"] == "1.123456789 次"
+    assert shown_action["rest_between_sides"] == "0.123456789 秒"
+    assert shown_action["sets"][0]["per_side"] is False
+    assert shown_action["sets"][1]["per_side"] is True
+
+    missing = deepcopy(revision)
+    missing_action = missing["payload"]["plan"]["days"][0]["items"][0]
+    del missing_action["rest_after_action_seconds"]
+    del missing_action["sets"][0]["rest_after_set_seconds"]
+    missing_model = plan_presentation(missing)
+    shown_missing = missing_model["days"][0]["items"][0]
+    assert shown_missing["rest_after"] == "不适用"
+    assert shown_missing["sets"][0]["rest"] == "不适用"
 
 
 def test_group_editor_keeps_invalid_side_and_rest_inputs(qt_app, context, payload, monkeypatch):

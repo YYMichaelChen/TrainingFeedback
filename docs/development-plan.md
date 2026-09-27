@@ -1,27 +1,30 @@
 # TrainingFeedback Development Plan
 
-Status: development stage; 0.7.0 / schema22; local-release closeout complete;
-public-release acceptance deferred; external review and W4 remain follow-ups.
-Last updated: 2026-09-24
+Status: development stage; local release available; public-release acceptance
+deferred; external review and W4 remain follow-ups. Current version and support
+window: [version history index](history/README.md).
+Last updated: 2026-09-26
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
 seed content and proposed doses. Use these entry points:
 
 - [Product rules and current baseline](#1-product-goal): Sections 1–8.
-- [Delivery status and open work](#9-open-delivery-work): completed local release tasks and separate follow-ups.
-- [First usable release](#10-first-usable-release-definition): local completion and public-release boundaries.
+- [Delivery status and open work](#9-open-delivery-work): current follow-ups and separate gates.
+- [First usable release](#10-first-usable-release-definition): product capability and release boundaries.
 - [Current catalog/group contract](#12-current-catalog-and-group-contract):
   ownership, eligibility, execution, removal and supported-root conversion.
 - [Version and development-data policy](#13-version-retention-and-development-data-policy):
   three application versions, schema bumps and the user-directed personal-data transition.
 - [Versioned delivery history](history/README.md): completed work and superseded rules.
-- [Release review and cleanup execution plan](release-readiness-0.7.0.md): findings,
-  evidence, ordered tasks and acceptance criteria; no implied release approval.
+- [Version-independent workflow](development-workflow.md): task, verification,
+  release and rotation procedures.
+- [0.7.0 release review](history/0.7.0/release-readiness.md): dated findings and
+  candidate evidence, not current release instructions.
 
-This document contains current requirements and open work. Completed delivery
-details belong in the versioned archive. Policy acceptance alone does not establish
-implementation or candidate acceptance; Section 9.1 records the current status.
+This document contains product requirements and open work. Completed delivery
+details belong in versioned history. Process steps belong in the workflow and
+runbooks; historical candidate checks do not certify a later build.
 
 ## 1. Product Goal
 
@@ -101,7 +104,7 @@ The first version excludes:
 
 ### 4.1 Plans Drive Training
 
-For 0.7.0, Section 12.3 extends this model with ordered action groups and rounds;
+Section 12.3 extends this model with ordered action groups and rounds;
 Section 12.5 pins content and images before catalog updates can change a plan.
 
 An exercise describes how a movement is performed. A plan describes what to do
@@ -163,6 +166,19 @@ Show every set's order, value, unit, per-side flag and original note in plan,
 training, history and exports; free doses retain their explanation. Imported
 rationale, source references and the managed original file remain unchanged by
 later draft edits.
+
+The training-plan page presents revisions in compact navigation and the selected
+plan as a readable hierarchy of days, ordered actions or groups, members and
+per-round sets. Its first view emphasizes plan identity, status, purpose,
+prescription and execution order instead of raw stored fields. Show side order,
+rest at its applicable boundary, original notes and content issues without
+inventing defaults; zero and unknown remain distinct. A plan may show one concise
+adjustment description explaining a deliberate prescription change, using the
+saved rationale verbatim. It must not present inferred symptoms as user feedback.
+Import paths, source IDs, migration registrations and other technical provenance
+do not appear in the plan page or its activation preview; they remain preserved
+in storage and appropriate machine-readable evidence. The page does not alter
+revision targeting, activation checks or stored facts.
 
 ### 4.2 Exercise Results Stay Simple
 
@@ -489,8 +505,8 @@ database import, and automatic directory scanning.
 `config_version: 1`; database migration state belongs in SQLite, not in the
 configuration. Opening validates the marker and configuration before accessing
 the database. Future schemas and development schemas outside the three-version
-support mapping must be rejected unchanged. Section 13.2 defines the latter
-policy; the current lower bound is schema22 for the retained 0.7.0–0.7.2 window.
+support mapping must be rejected unchanged. Section 13.2 defines this policy;
+the current application/schema map is in the version history index.
 
 A backup copies the complete data root, including marker, configuration, images,
 exports, and imports, to an explicitly selected empty destination outside the
@@ -565,58 +581,29 @@ cover 01:59, 02:00, and 02:01.
 
 ### 9.1 Current Baseline
 
-Current working source is **0.7.0 / schema22**, with plan/evidence v2.
-070-A–G, frozen-baseline repair R1 and version-window implementation R2 are complete;
-dated evidence lives in the [0.7.0 history](history/0.7.0/development.md).
-The current source catalog is `070-illustrated-3`: 36 externally unreviewed entries
-with 36 technically valid bundled illustrations. Four video-informed guidance changes
-and the 36 images were delivered on 2026-09-22; the two bridge revisions were delivered
-on 2026-09-23. On 2026-09-24, one prone bilateral leg-raise image caption was corrected
-to match the unchanged written guidance and total-repetition count.
-The 13-action initial plan remains a proposal.
+The current application/schema support map is in the [version history index](history/README.md).
+Completed version work, candidate identities and checks are in the matching version
+history; the 0.7.0 [release review](history/0.7.0/release-readiness.md) is dated
+evidence. The initial plan remains a proposal, and the bundled guidance has not
+received an external expert review.
 
-The current directory candidate and 0.7.0 Setup were rebuilt on 2026-09-24 from
-clean source revision `b88feba`; the 293-file payload includes catalog
-`070-illustrated-3`. The installed candidate passed affected local checks LOCAL-01,
-02, 03 and 05 with isolated synthetic data. The previous `736223e` / catalog
-`070-illustrated-2` candidate and its complete LOCAL-01—06 results remain preserved;
-bridge-search and group-session scenarios 04/06 were not repeated for this image-only
-rebuild. [Candidate-specific evidence](release-readiness-0.7.0.md) records identities
-and limits.
+**Release decision, 2026-09-23:** a local release needs candidate content closeout,
+budgeted regression, complete reproducible source and verified installer/local
+installed checks. Independent Windows acceptance (H3/8-B2) and public-distribution
+requirements become gates only on an explicit public-release request. W4 and
+external content review are separate follow-ups. Deferred/not-run work is not
+passed work; local release does not authorize a personal-data transition, create
+review facts or activate a plan. The [workflow](development-workflow.md) owns
+execution order and verification selection.
 
-**Release decision, 2026-09-23:** local release requires only the four active tasks
-below. Independent Windows acceptance (070-H3/8-B2) and public-distribution
-requirements become gates only when the user explicitly requests a public release.
-W4 and external content review remain separate follow-ups and do not block local
-release. Deferred/not-run work is not passed work. Local publication does not
-authorize a personal-data transition, create review facts or activate a plan.
-
-This is the single active product work list; the [release execution plan](release-readiness-0.7.0.md)
-owns dependency order, scopes, commands, deliverables and acceptance evidence.
-
-| ID / status | Next action | Completion evidence |
-| --- | --- | --- |
-| 070-H1-CONTENT — complete, 2026-09-23 | Added the bridge three-second hold and two aliases; advanced only the two affected entries to v4 and rebuilt catalog070-illustrated-2. | Dev scope 3/30 passed; alias identity/search, unchanged other 34 entries and all image bytes, preserved history, 36-image integrity and reproducible catalog verified. |
-| 070-H2-TESTS — complete, 2026-09-23 | Repaired the minor selection and separated frozen historical validation from current catalog verification; retired the obsolete generator. | Default collection succeeds; dev 5/30 and release minor 77/100 unique cases passed; frozen inputs stayed unchanged and target static checks passed. |
-| 070-H2-SOURCE — complete, 2026-09-24 | Reviewed all current additions/deletions, completed documentation cleanup, preserved the old candidate and committed the complete source. | Clean 218-file archive imported all 67 modules, preserved 14 frozen files, verified 36 image pairs and reproduced all 38 catalog files byte-for-byte; no local/user data entered source. |
-| 070-H2-PACKAGE — complete, 2026-09-24 | Built the clean `736223e` directory candidate and 0.7.0 Setup, repaired isolated Qt DLL provenance, and executed installed LOCAL-01—06 with isolated synthetic data. | 293/293 payload files and double manifests matched; LOCAL-01—06 passed, including cancel-with-no-root, 36-entry catalog/aliases and exact group-session pause/restart/resume. EXE/Setup unsigned status is disclosed. |
-| 071-UI — complete, 2026-09-25 | Frontend cleanup for 0.7.1: removed the library version picker (latest content always shown), removed all SHA-256/internal-ID/stable-key displays, localized remaining enums, and made migrated history events human-readable. Second round hid the exercise-version concept entirely: comparison tab removed, image file paths no longer shown, version-free status/action wording (plan revisions intentionally kept). Data model, freezing and exact-match logic unchanged. | Patch scope 071-UI 35/50 unique cases passed; ruff clean. Intentional behavior change: older content versions can no longer be selected or reviewed from the UI; history, review events and frozen references are preserved. Rebuilt and silently upgraded the installed 0.7.1 twice. |
-| 071-GALLERY — complete, 2026-09-26 | Replaced the exercise library table and persistent split detail with illustration cards. A card opens its guidance, images, review history and actions; filters return to the gallery, and an explicit batch mode retains multi-action selection. Cards search and display current content while the default library browse semantics used elsewhere remain unchanged. | Dev scope 071-GALLERY 3/30 affected cases passed; Ruff and diff checks clean. Isolated 36-image gallery and detail layouts inspected. Rebuilt the 0.7.1 installer and upgraded the local program directory; installation log succeeded and installed EXE matched build SHA-256. |
-| 072-RELEASE — complete, 2026-09-26 | Labeled the combined interface work 0.7.2, rotated the support window to 0.7.2/0.7.1/0.7.0 (all schema22), retired expired schema16 conversion inputs and consolidated fresh schema22 creation. Old roots are refused read-only before model checks. | Patch scope 072-RELEASE 42/50 unique affected cases passed after one targeted repair; 175 resident cases collect, Ruff and diff checks pass. The version tag identifies the source; the local installer manifest records the clean source revision and payload, with installed checks kept as candidate evidence. Public H3 remains deferred. |
-
-Separate follow-ups:
+Open follow-ups:
 
 | ID / status | Trigger and required evidence |
 | --- | --- |
-| 070-H3 / 8-B2 — deferred, not run | Explicit user request for public release; independent Windows, actual retained-binary upgrades, recovery/backup/uninstall and full scaling matrix. All 12 public scenarios remain not run. |
+| H3 / 8-B2 — deferred, not run | Explicit user request for public release; independent Windows, actual retained-binary upgrades, recovery/backup/uninstall and full scaling matrix. Required public scenarios remain not run. |
 | CONTENT-REVIEW — not completed | A separately requested real review of exact content/image versions, with original answers and actual source/time. Valid images alone are not review. |
 | PERSONAL — user-directed | Explicit transition decision, deliberate personal root/content baseline and complete plan confirmation; no synthetic facts promoted. |
 | W4 — not completed | After PERSONAL and applicable local checks, at least three real sessions, feedback and a genuine expert revision cycle with unchanged history. |
-
-R1/R2 are completed prerequisites, not new implementation tasks. Candidate-source
-supported-upgrade and refusal regression completed in 070-H2-TESTS; actual old-binary
-packaged acceptance is deferred with H3. Three-version retention is ongoing policy;
-the 2026-09-21 cleanup and 070-H2-SOURCE evidence housekeeping are completed history.
 
 ### 9.2 W4 Real-Use Gate
 
@@ -644,91 +631,38 @@ local software checks cannot close this gate or establish full content review.
 **Deferred / not run; not a local-release blocker.** Re-enable this gate only when
 the user explicitly requests a public release, then complete it before public
 publication. Local packaging or installation does not trigger it automatically.
-The [packaged acceptance runbook](packaged-acceptance-runbook.md) retains the public
-scenarios and evidence forms. Superseded 0.6.x procedures are historical material.
-Refresh candidate identities, retained binaries and transfer fixtures when enabled.
+The [packaged acceptance runbook](packaged-acceptance-runbook.md) owns the
+candidate-specific scenarios and evidence form.
 
 Required public-release coverage:
 
-- Independent Windows x64 VM or machine without Python, Conda, source checkout
-  or access to the build environment; a new build-machine account is insufficient.
-- Ordinary non-administrator first launch, create/open/switch, invalid or
-  occupied roots, cancellation and restart; Chinese and space-containing paths.
-- Supported-window upgrades from actual previous-version programs using isolated
-  representative roots. Preserve unopened originals; compare logical records,
-  historical snapshots and resource hashes, allowing only declared migrations.
-  Same-version relocation is not upgrade evidence.
-- Packaged online whole-root backup and normal-flow reopening, paused-session
-  resume, history/feedback/export agreement, source isolation and failed destinations.
-- Real-desktop 100%, 125% and 150% scaling, including 1366×768 and 1920×1080
-  where available: startup/switch dialogs, guidance, long Chinese text and many
-  actual-set rows; core training controls remain outside scrolling.
+- An independent Windows x64 environment without the build checkout or Python,
+  using an ordinary non-administrator account.
+- Actual retained-version binaries and isolated representative roots for upgrade
+  preservation; unopened originals remain intact. Same-version relocation is
+  not upgrade evidence.
+- Installed backup/recovery, root isolation, session/history/export agreement,
+  uninstall/reinstall boundaries and real-desktop scaling at 100%, 125% and 150%.
 
 Identify each candidate by its original manifest, hashes and source snapshot.
-Keep previous results historical when a candidate changes and rerun affected
-checks. Offscreen tests and startup smoke checks support acceptance but cannot
-replace independent runtime or desktop evidence; unavailable scenarios stay
-`not run`.
+Offscreen checks cannot replace independent runtime or desktop evidence;
+unavailable scenarios stay `not run`.
 
 ### 9.4 Verification And Record Ownership
 
-Prioritize reproduced data/history errors, workflow blockers, then redundant
-operations and unclear messages. Each repair needs reproduction steps, expected
-behavior and a focused acceptance case. Use PowerShell 7, the repository
-interpreter, temporary roots/locators and injectable clocks. Select meaningful
-affected tests within the stage budget below; run Ruff for `src` and `tests`,
-and `git diff --check` before implementation delivery. Include packaging checks
-when payloads or fixtures change.
-
-#### Regression Budgets
-
-| Verification stage | Maximum parameter-expanded pytest cases |
-| --- | ---: |
-| Small development step (`dev`) | 30 |
-| Patch release, x.y.z → x.y.(z+1) (`patch`) | 50 |
-| Minor release, x.y.z → x.(y+1).0 (`minor`) | 100 |
-| Major release, x.y.z → (x+1).0.0 (`major`) | 300 |
-
-These are ceilings, not targets. Keep the resident suite at or below 300 cases.
-Small edits use the affected cases, often fewer than ten. Patch/minor release
-profiles cover core workflows plus stage-specific integration; add the actual
-release's affected cases within the same budget. Major releases use the full
-resident suite. Release budgets are inclusive, not added to each lower tier;
-earlier development checks are historical, not a reason to rerun every case
-during release verification.
-
-`pyproject.toml` defines small, nested baseline profiles. Explicit pytest paths,
-node IDs, `-k`, or `-m` replace that baseline selection for focused work; the cap
-still applies. Every execution supplies a stable `--test-scope` task/release ID.
-The pytest budget plugin checks expanded cases before execution and reserves
-their union across commands in `.tmp/test-budgets/`. Repeated cases consume no
-additional slots, but passing checks should not be repeated without new changes,
-failures or unresolved concerns. Interrupted runs keep their reservations.
-Collection-only commands neither execute tests nor reserve slots; use
-`--test-tier major --collect-only` to inspect the entire resident suite.
-
-Do not silently truncate a selection, bypass the cap by splitting commands or
-changing a scope, or disguise independent cases as loops inside one test. If a
-selection exceeds its budget, review duplicate/low-value coverage and choose
-representative independent risks. Prefer transactional rollback, frozen history,
-verbatim text, backup/reopen and upgrade preservation over repeated field/label
-checks. UI tests should cover coherent user workflows. Add regression cases for
-new behavior or reproduced defects only when existing cases cannot cover the risk.
-Normal lint, inventory and packaging integrity checks are not pytest cases;
-do not move regression scenarios into ad-hoc scripts to evade the budget.
-
-Product/content requirements stay in this document and the seed specification;
-execution procedures stay in the runbooks. Candidate hashes, generated fixtures
-and dated checks stay in local task artifacts. Keep only the active task in the
-three root records; archive completed work by application version under
-`.planning/archive/<version>/`. Full documents, contracts, evidence and archives
-obey the same three-version retention window in Section 13; moving material into
-an archive does not exempt it from expiry.
+Verification must protect data preservation, frozen history, verbatim text,
+transactional rollback and supported upgrades. Tests use synthetic temporary
+roots and locators, never personal data. The version-independent
+[workflow](development-workflow.md) owns the stage budgets, test selection,
+static checks, task records and candidate evidence. [Test instructions](../tests/README.md)
+give the executable commands; [packaged acceptance](packaged-acceptance-runbook.md)
+owns installed and independent-machine procedures. Candidate hashes and dated
+results are evidence for their identified build only.
 
 ## 10. First Usable Release Definition
 
-For the current development stage, the first usable **local release** must support
-these capabilities, demonstrated with isolated synthetic inputs where appropriate:
+The first usable **local release** established these continuing capabilities,
+demonstrated with isolated synthetic inputs where appropriate:
 
 - choose a data directory;
 - back up the complete data root and switch to another valid root;
@@ -745,10 +679,11 @@ these capabilities, demonstrated with isolated synthetic inputs where appropriat
 - confirm a revised plan without losing the previous plan;
 - run the packaged Windows application without Streamlit or the old project.
 
-Local-release completion requires the four tasks in Section 9.1, including valid
-bundled images, final-source regression, reproducible source and installed local
-checks. The current plan remains a proposal; unreviewed guidance is disclosed and
-all existing selection/activation rules remain in force.
+Each new local release closes its intended content, verifies final source and
+builds a reproducible installer with local installed checks under the
+[workflow](development-workflow.md). The initial plan remains a proposal;
+unreviewed guidance is disclosed and all selection/activation rules remain in
+force.
 
 External content review and W4 remain separate unfinished follow-ups. Neither blocks
 local release. Independent 8-B2 and public-distribution requirements apply only after
@@ -762,9 +697,9 @@ The following remain intentionally open until implementation evidence or real
 use resolves them:
 
 - the final prescribed dose for the initial plan;
-- later exercise batches. Illustration availability is a mandatory 0.7.0
-  enablement condition under Section 12.4; missing illustrations are no longer
-  deferred for actions offered as usable in that release.
+- later exercise batches. Illustration availability is a mandatory enablement
+  condition under Section 12.4; missing illustrations are not deferred for
+  actions offered as usable.
 
 Clipboard import, provider-specific adapters, advanced trend analysis, and
 automatic updates are optional later scope, not unresolved
@@ -775,10 +710,10 @@ is defined in Section 4.6.
 
 ## 12. Current Catalog And Group Contract
 
-This is the current 0.7.0 product contract, not a completed-task log. The desktop
-uses `LibraryContext` with schema 22. Source delivery is recorded in the
-[version history](history/0.7.0/development.md); open acceptance is in Section 9.
-Section 13 narrows supported upgrades and governs future schema/version changes.
+This catalog and group contract originated in the 0.7.0 work and remains the
+product rule until deliberately revised. Source delivery is recorded in the
+[version history](history/0.7.0/development.md); Section 9 owns open work and
+Section 13 governs supported upgrades and future version changes.
 
 The release delivers an application-owned bundled catalog, exercise families
 and variants, continuous plan action groups, mandatory illustration checks,
@@ -855,7 +790,7 @@ does not imply difficulty, progression, interchangeability or inherited review.
 Conceptual catalog fields are `family_key`, `variant_role` (`base`, `variant`,
 `standalone`), `variant_order`, an optional `parent_exercise_key`, and
 `starting_position_class`. A family has its own stable key, display name and
-description. In 0.7.0 an action has at most one primary family; optional parent
+description. An action has at most one primary family; optional parent
 links remain within that family and cannot self-reference or form a cycle.
 Standalone actions need no artificial family. Family metadata is versioned;
 moving/renaming a member does not merge its history or change pinned plans.
@@ -1065,21 +1000,19 @@ The tombstone contains identity and disposition metadata, not a trainable legacy
 library or compatibility entry point. History reads its own snapshots. Restore
 requires a new explicit decision and current image/content validation; it does
 not restore enablement, plans or invalid review evidence automatically. No
-unreviewed physical purge is included in 0.7.0.
+unreviewed physical purge is offered.
 
 ### 12.7 Supported Root Opening And Historical Upgrade Evidence
 
 An installed update replaces only application files. It retains the locator,
 selected root, meaningful settings, frozen plans and completed history. Opening
-or switching to a schema22 root validates the marker, configuration, schema and
+or switching to a supported root validates the marker, configuration, schema and
 current library model before use. No directory scanning or old Exercises@home
 database access is allowed.
 
-The 0.7.0 schema16 catalog conversion was a completed development migration.
-Its old-root runtime entry and synthetic fixture retired when 0.6.1 left the
-three-version window at 0.7.2. The complete conversion design and dated
-evidence remain in the retained 0.7.0 history and Git history. Roots below
-schema22 are rejected read-only with the reinstall/new-empty-root guidance of
+Historical conversions and retired fixtures do not expand the current support
+window; their dated design is in version history. Roots outside the current
+mapping are rejected read-only with the reinstall/new-empty-root guidance of
 Section 13.2; their files remain intact. Do not offer a migration wizard,
 compatibility setting, legacy library, fallback reader or implicit import for
 an expired root.
@@ -1093,8 +1026,8 @@ Normal root backup and restore remain separate user actions.
 
 Use `training_feedback.plan` version 2 for all new imports and
 `training_feedback.evidence` version 2 for new exports; define their version
-constants independently. Only the current plan-import contract is accepted in
-0.7.2. A newly supplied v1 file gets a clear current-format error and the current
+constants independently. Only the current plan-import contract is accepted. A
+newly supplied v1 file gets a clear current-format error and the current
 schema, not a compatibility converter or version selector. Plans already stored
 in a supported root retain their frozen facts. Their original imported files
 and original exports are not rewritten or re-imported.
@@ -1124,18 +1057,13 @@ to render recorded history.
 
 ### 12.9 Remaining Delivery And Verification
 
-Section 9.1 is the single active work list. Completed A–G milestones and the
-local part of H are in the [0.7.0 delivery history](history/0.7.0/development.md),
-not additional pending development plans. The [contract annex](contracts/0.7.0-contracts.md)
-owns detailed current serialization/mapping. Changes to backup, root switching,
-fixtures, resources and current imports must be covered in their implementing task.
-
-Verification is split by the release boundary in Section 9.1. Local regression
-covers the retained synthetic fixtures and the risks below. Actual old-binary
-baselines and independent desktop execution belong to deferred H3.
+Section 9.1 is the open work list. The [contract annex](contracts/0.7.0-contracts.md)
+owns the retained detailed serialization/mapping baseline. Regression protects
+the risks below; actual retained-binary and independent Windows acceptance
+belongs to H3 only after a public-release request.
 
 - For a later public release: supported baselines generated/opened by identified
-  0.7.0/schema22 and 0.7.1/schema22 programs, using
+  retained-version programs, using
   isolated synthetic data with renamed/missing-key actions,
   custom text, overrides, images, review attachments, active/draft plans,
   terminal and paused sessions, next-day feedback, retractions and original files.
@@ -1155,24 +1083,16 @@ baselines and independent desktop execution belong to deferred H3.
   runtime branches. Read-only provenance and recovery artifacts are labelled
   as evidence, not selectable settings.
 
-Use PowerShell 7 and temporary roots/locators. Run meaningful affected tests
-within Section 9.4's stage budget (each 070 work item is development, the 0.7.0
-release is minor), Ruff and `git diff --check` for implementation delivery.
-Run packaging checks when the payload/fixtures change. The packaged runbook must
-identify the candidate/schema/catalog and distinguish required local installed
-checks from deferred public H3. Local checks cover clean launch/cancellation,
-Chinese/space paths, current catalog/images/aliases, restart and a representative
-group/pause/resume workflow with isolated data. Actual retained-binary upgrades,
-independent backup/recovery/uninstall acceptance and the full 100/125/150% matrix
-become required only for an explicitly requested public release.
+The [development workflow](development-workflow.md) owns selection and verification
+steps. The [packaged runbook](packaged-acceptance-runbook.md) owns installed and
+independent-machine checks, each tied to an exact candidate.
 
 ### 12.10 Release Exit And Documentation Ownership
 
-0.7.0 local release is ready when the four ordered tasks in Section 9.1 pass their
-acceptance. The current content/image inventory must be explicit: all 36 entries
-retain stable identities and truthful readiness, and usable actions meet Section
-12.4. The 36 delivered illustrations and completed bridge revisions do not establish
-expert review. All four Section 9.1 local-release tasks are complete.
+Usable actions meet Section 12.4 and the bundled content/image inventory must
+report truthful readiness. A technically valid illustration does not establish
+expert review. The dated 0.7.0 local-release exit and checks are recorded in its
+[version history](history/0.7.0/release-readiness.md).
 
 Keep local-release, external-review, personal-use and W4 results distinct.
 Independent 8-B2 is deferred/not run and is activated only by an explicit public
@@ -1185,20 +1105,17 @@ expired/future roots. Local installed checks and later public acceptance record
 their own actual scope and candidate identity.
 
 This document owns product/architecture/migration contracts. The content
-document owns family membership, aliases, technique and proposed doses. The
-guidance review runbook owns the version-specific review procedure, and the
-packaged acceptance runbook owns candidate-specific execution evidence. Update
-all four as implementation is delivered; keep completed procedures in their
-version archives and never offer them as selectable runtime behavior. Root task
-records capture development work and verification rather than duplicating these specifications.
+document owns family membership, aliases, technique and proposed doses.
+Candidate evidence and task records document actual work without duplicating
+these specifications.
 
 ## 13. Version Retention And Development Data Policy
 
-Decision accepted: 2026-09-20; documented: 2026-09-21. The project remains in
-development. This policy supersedes unlimited historical-document retention and
-unbounded migration-chain support. Runtime enforcement was implemented as
-070-R2 on 2026-09-21 (then schema-14 lower bound, pre-write refusal); workspace
-artifact rotation is DEV-CLEAN, not completed by documenting the policy.
+Decision accepted: 2026-09-20. The project remains in development. This policy
+supersedes unlimited historical-document retention and unbounded migration-chain
+support. The current application/schema support map is in the
+[version history index](history/README.md); dated implementation evidence is in
+version history. Rotation procedure is in the [workflow](development-workflow.md).
 
 ### 13.1 Application Versions And Schema Changes
 
@@ -1206,19 +1123,14 @@ artifact rotation is DEV-CLEAN, not completed by documenting the policy.
   Count distinct version numbers, including patch versions, not GitHub commits.
   Several commits with the same version consume one slot. Record the actual
   commit/source snapshot/build identity for each retained version.
-- The current window is **0.7.2 / 0.7.1 / 0.7.0**. All three use database schema
-  **22**. Existing roots below schema22 are outside the window and are refused
-  read-only before migration or other writes. The next schema revision is 23
-  and must accompany an application patch-or-greater bump.
 - Every subsequent database schema revision must bump the application version
-  at least by one patch in the same change. Do not append several schema revisions
-  while continuing to call the application 0.7.0. A minor/major bump may accompany
+  at least by one patch in the same change. A minor/major bump may accompany
   a schema change; an application-only fix may keep the existing schema.
-- Existing intermediate schemas 15 and 17–21 retain their historic numbers; do
-  not fabricate released application versions for them. Required internal steps
+- Historical intermediate schemas retain their original numbers; do not
+  fabricate released application versions for them. Required internal steps
   may remain while a supported endpoint depends on them, but are not additional
-  independent supported releases. Decide intermediate-root handling explicitly
-  in the version/schema mapping; never equate a numeric range with release support.
+  supported releases. Decide intermediate-root handling explicitly in the
+  version/schema mapping; never equate a numeric range with release support.
 - Maintain application version, database schema, catalog/content version and
   external wire-contract version separately. Changing a wire schema requires an
   application bump too, but need not change the database schema without a storage
@@ -1230,7 +1142,7 @@ Complete development plans, task records, acceptance evidence, schema documents,
 contract snapshots, synthetic baselines and runtime migration entry support share
 the three-application-version window. Current specifications keep valid rules and
 open work; completed work of a retained version is tracked under
-`docs/history/<version>/` (or local `.planning/archive/<version>/`), and moves to
+`docs/history/<version>/` (or local `.planning/archive/`), and moves to
 the untracked local `docs/archive/` holding area when the version expires.
 Archiving is not permanent retention.
 
@@ -1241,8 +1153,8 @@ database or upgrade a retained version. Consolidate new-database initialization
 without rewriting already-applied migration semantics in the supported window.
 Git/GitHub commit history stays intact; do not create an unbounded second archive.
 
-Supported schema22 roots reopen without changing frozen facts. A future retained
-upgrade may use normal automatic recovery/conversion. Roots older than the support window must be detected read-only
+Supported roots reopen without changing frozen facts. A retained upgrade may
+use normal automatic recovery/conversion. Roots older than the support window must be detected read-only
 and refused before migration or other writes, with an actionable message such as:
 
 > 此开发数据版本已超出支持范围，请重新安装当前版本并新建数据目录。
