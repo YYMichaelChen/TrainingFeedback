@@ -15,7 +15,7 @@ not policy compliance.
 
 | Application version | Database baseline | History | Status |
 | --- | --- | --- | --- |
-| 0.7.5 | 23 | [Plan and reset development](0.7.5/development.md), [local candidate](0.7.5/local-candidate.md) | Source development complete; candidate verification in progress. |
+| 0.7.5 | 23 | [Plan and reset development](0.7.5/development.md), [local candidate](0.7.5/local-candidate.md) | Source complete; candidate installed; local acceptance incomplete. |
 | 0.7.4 | 22 | [Performance development](0.7.4/development.md), [local candidate](0.7.4/local-candidate.md) | Retained source and schema22 reset baseline; installed acceptance incomplete. |
 | 0.7.3 | 22 | [Plan page and local candidate](0.7.3/development.md) | Retained local candidate; public distribution remains deferred. |
 

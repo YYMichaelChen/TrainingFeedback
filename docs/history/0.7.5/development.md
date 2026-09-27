@@ -29,9 +29,13 @@ and its [plan authoring section](../../development-plan.md#1211-075-plan-authori
 - Patch scope `release-0.7.5`: 48 unique cases were selected and passed after
   rerunning affected failures. The ledger remains at the same scope and tier.
 - Ruff, `git diff --check`, and Python bytecode compilation passed.
+- Catalog source verification passed for `070-illustrated-3` (36 exercises).
 - The configured patch regression profile selects 30 cases. Its union with the
   already reserved affected cases would be 65, above the patch cap of 50, so the
   profile was not executed. No cases were removed from or split out of the
   release scope.
-- Candidate build, payload installation and installed checks are recorded in
+- A clean build from pushed revision `acce64846feb6c6090331bc17acd31d1377f5ef4`
+  and installation into the standard per-user program directory completed;
+  all 295 installed payload hashes match. UI/root workflow acceptance remains
+  incomplete. Candidate identity and check limits are recorded in
   [local candidate evidence](local-candidate.md).
