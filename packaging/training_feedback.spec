@@ -55,7 +55,12 @@ def normalize_binary_sources(entries):
     Windows ICU/API-set contracts that the supported OS resolves; fail on every
     other external source.
     """
-    allowed_roots = [project_root.resolve(), Path(os.environ["SystemRoot"]).resolve()]
+    allowed_roots = [
+        project_root.resolve(),
+        Path(sys.prefix).resolve(),
+        Path(sys.base_prefix).resolve(),
+        Path(os.environ["SystemRoot"]).resolve(),
+    ]
     interpreter_dirs = [
         Path(sys.prefix) / "Library" / "bin",
         Path(sys.prefix) / "DLLs",
