@@ -1,81 +1,83 @@
-# Project Rules
+# Project Agent Rules
 
-TrainingFeedback is a native PySide6 desktop application for Windows, with its
-own SQLite data root. The old `Exercises@home` repository is reference material,
-never a runtime dependency or a database source.
+TrainingFeedback is a native PySide6 Windows application with its own SQLite
+data root. The old `Exercises@home` repository is reference material only.
 
-## Authority and workflow
-
-- `docs/development-plan.md` owns product behavior, release boundaries and
-  retention policy; `docs/initial-exercises-and-plan.md` owns the proposed seed
-  catalog. Do not duplicate their specifications in README or source comments.
-- `docs/development-workflow.md` is the single version-independent development
-  and delivery procedure. `docs/packaged-acceptance-runbook.md` supplies installed
-  and public-release checks; `tests/README.md` supplies pytest command details.
-- `docs/history/README.md` is the current human-readable application/schema
-  support map. Version-specific completed work and candidate evidence belong in
-  version history or candidate-specific local artifacts, not in this file.
-- Classify work by event: development, local release/installed acceptance,
-  explicit public release, and application-version rotation. A normal code change
-  does not require an installer. Do not mark deferred or unrun checks as passed.
-
-## Product and data boundaries
+## Hard invariants
 
 - Never discover, open, migrate or modify the old training database. Do not add
   Streamlit, wardrobe management, LAN/mobile access or old submission-package
   compatibility.
-- Preserve user text verbatim; defaults are not user facts. Freeze plan and
-  exercise facts needed to interpret completed sessions so later catalog edits
-  cannot rewrite history.
-- New or revised development exercises, guidance and illustrations belong in
-  owned source and the built-in catalog. Reconcile deliberate development content
-  before retiring a development root. Never promote synthetic approvals/training
-  to personal facts. Only the user can authorize the later personal-data transition.
-- A local release requires complete candidate content, bounded regression,
-  reproducible source and verified installer/installed checks. Independent
-  Windows acceptance and public-distribution gates start only on an explicit
-  public-release request. External content review and W4 are separate follow-ups;
-  local release establishes neither of them nor personal-use readiness.
+- Keep user data separate from application binaries. Tests and acceptance use
+  isolated synthetic roots, never real user data.
+- Preserve user text verbatim. Defaults are not user facts; unknown is not zero.
+  Freeze facts needed to interpret completed sessions. Synthetic training and
+  approvals never become personal facts.
+- UI contains no SQL or business rules. A session controller owns training
+  execution state. Writes completing one user action are transactional.
+- `not run` is not `pass`. Candidate evidence certifies only its exact build.
+  A local candidate does not establish public acceptance, external content
+  review, W4 or personal-use readiness.
+
+## Authority
+
+| Question | Authoritative source |
+| --- | --- |
+| Product behavior, release gates, retention and personal transition | `docs/development-plan.md` |
+| Proposed seed catalog | `docs/initial-exercises-and-plan.md` |
+| Current application/schema support map and retained release history | `docs/history/README.md` and `docs/history/<version>/` |
+| Development, local release, version rotation and release close procedure | `docs/development-workflow.md` |
+| Pytest commands, tiers, scope and budget accounting | `tests/README.md` |
+| Installed and public acceptance | `docs/packaged-acceptance-runbook.md` |
+| Content review, personal transition and W4 procedure | `docs/guidance-review-runbook.md` |
+| Active release execution state | `.planning/releases/<version>/PLAN.md`, projected into `.planning/INDEX.md` |
+
+Tracked `docs/` owns requirements and formal evidence. Local Planscope owns
+execution context. A PLAN task cannot change product policy; planning archives
+are historical context and never override tracked requirements.
+
+## Context routing and Planscope usage
+
+- Micro edit: read the affected file; use `.planning/INDEX.md` only if release
+  context might matter. Do not create planning noise.
+- Normal development: read `INDEX.md`, the relevant active PLAN section and
+  affected tracked requirements. Search `KNOWLEDGE.md` only for a relevant
+  existing finding.
+- Complex feature, migration or release: read `INDEX.md`, active PLAN current
+  state and phase, relevant KNOWLEDGE sections and tracked requirements. Read
+  `PROJECT.md` for a relevant cross-release decision only.
+- Recovery: `INDEX.md` → PLAN current state → Git state → search KNOWLEDGE →
+  recent LOG only if needed. Do not load archives or all planning files by default.
+- `PLAN.md` owns the active phase, task, blockers and next action. After changing
+  these, run the installed Planscope `plan.py sync`; do not hand-edit their INDEX
+  projection. Keep one active release. Use KNOWLEDGE only for findings future
+  work cannot reliably recover, and LOG only for recent recovery context.
+- If `.planning/INDEX.md` is absent, the clone remains valid: use tracked docs
+  and Git state. Initialize Planscope only when work warrants durable planning;
+  never infer an active release from stale historical files. Keep `.planning/`
+  local and its archives within the product's retention window.
 
 ## Engineering boundaries
 
-- Keep UI, domain workflow and SQLite access separate. UI contains no SQL or
-  business rules; a session controller owns training execution state. Writes
-  completing one user action are transactional.
-- Keep user data separate from application binaries. Tests use temporary roots,
-  never real user data.
-- Use PowerShell 7 for project commands on Windows and `apply_patch` for manual
-  file edits.
-- Layout: `src/training_feedback/domain/` for pure rules,
-  `application/` for use cases, `data/` for SQLite and root lifecycle, `ui/` for
-  PySide6. Startup follows `main.py` → `bootstrap.py` → `app.py` →
-  `ui/main_window.py`.
+- `src/training_feedback/domain/` contains pure rules; `application/` owns use
+  cases; `data/` owns SQLite and root lifecycle; `ui/` owns PySide6. Startup is
+  `main.py` → `bootstrap.py` → `app.py` → `ui/main_window.py`.
+- Deliberate development exercises, guidance and illustrations belong in owned
+  source and the built-in catalog before a development root is retired. Only
+  the user can authorize the personal-data transition.
+- Use PowerShell 7 for project commands and `apply_patch` for manual edits.
 
-## Version and verification invariants
+## Verification entry points
 
-- Retain complete development material and migration entry support for the
-  current application version plus two predecessors. Same-version commits take
-  one slot. A schema or external wire-schema revision requires an application
-  patch-or-greater bump in the same change. Preserve retained upgrades and reject
-  expired roots unchanged before writes; reinstall does not reset a data root.
-- Pytest limits on parameter-expanded cases are dev 30, patch 50, minor 100,
-  major 300; resident suite at most 300. Use one stable `--test-scope` and tier for
-  a task or release, counting unique cases across commands. Never reset/split
-  scopes, hide cases or loop independent scenarios to evade a cap. `--collect-only`
-  does not execute or reserve cases. Run affected cases, then stop once relevant
-  checks pass; rerun failed/affected cases after a fix.
+Classify development, local installed acceptance, explicit public release and
+application-version rotation by event. Follow `docs/development-workflow.md`
+and `tests/README.md`; do not evade test-scope accounting. A normal code change
+does not require an installer. A schema or external wire-schema revision requires
+an application patch-or-greater bump in the same change. Retain the current
+application version and two predecessors, preserving their upgrade paths; reject
+expired roots unchanged before writes. Reinstall does not reset a data root.
 
-## Planning context
+## Task completion report
 
-- Use the installed `planscope` skill for work that needs durable planning context.
-  Its entry point is `.planning/INDEX.md`; load only the relevant active release
-  sections. Small local changes may skip planning unless they change release state
-  or stable project constraints.
-- Keep one active release at most. `PLAN.md` owns its current state; run the
-  planscope `sync` command after changing that state. Use `KNOWLEDGE.md` only for
-  findings future work cannot reliably recover from source, and `LOG.md` only
-  for recent recovery context. Product decisions and release policy remain under
-  `docs/`.
-- Keep planning archives within the three-application-version window in the
-  development plan. Historical legacy task records are read-only evidence; do
-  not load them as active context or duplicate them in new plans.
+Report changed files, actual verification and unrun checks, application/schema/
+catalog/contract impact, candidate limits, and Planscope state changes when used.

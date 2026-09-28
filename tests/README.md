@@ -1,9 +1,23 @@
 # Running the regression suite
 
-The [development workflow](../docs/development-workflow.md) owns verification
-policy and stage budgets. Tests use temporary databases, locators and synthetic
-assets only. Run these commands in PowerShell 7 with the repository interpreter
+The [development workflow](../docs/development-workflow.md) owns when to verify
+each affected risk. This file owns pytest tiers, limits, scopes and commands.
+Tests use temporary databases, locators and synthetic assets only. Run these
+commands in PowerShell 7 with the repository interpreter
 (shown here as `python` after activating the project environment).
+
+| Tier | Maximum parameter-expanded unique cases per scope |
+| --- | ---: |
+| `dev` | 30 |
+| `patch` | 50 |
+| `minor` | 100 |
+| `major` | 300 |
+
+The resident suite has at most 300 cases. These are ceilings, not targets.
+Use one stable `--test-scope` and tier for the whole task or release, counting
+unique cases across commands. Do not reset or split scopes, hide cases at
+collection, or loop independent scenarios to evade a limit. A release uses its
+one tier and scope from the first execution.
 
 For an ordinary change, select affected tests explicitly and keep one task scope:
 
@@ -30,6 +44,10 @@ Collection inventories without execution or budget reservation:
 ```powershell
 python -m pytest --test-tier major --collect-only -q
 ```
+
+`--collect-only` does not execute or reserve cases. Stop after the relevant
+checks pass; after a fix, rerun only failed or affected cases under the same
+scope and tier.
 
 `tests/budget_plugin.py` counts parameter-expanded unique node IDs across all
 executions in `.tmp/test-budgets/<scope>.json`. Failed or interrupted cases stay

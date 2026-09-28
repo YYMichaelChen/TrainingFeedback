@@ -52,3 +52,47 @@ The source checks and local installation completed. Local release acceptance
 remains incomplete because the configured regression profile exceeded the
 single-scope patch limit and the installed UI/root workflows were not visually
 verified. The installation is the identified local candidate only.
+
+## 2026-09-28 acceptance continuation
+
+The installed candidate above was opened with isolated `%LOCALAPPDATA%` profiles
+and synthetic roots under `.tmp/acceptance-075/`. Its root chooser cancelled
+without creating a locator or root. A Chinese/space-containing new root opened
+at schema 23, and the UI showed the bundled `070-illustrated-3` catalog with 36
+illustrated exercises. A blank plan save was rejected; cancelling the editor
+left zero plans. Restart through the same isolated locator opened the root.
+
+The candidate **failed** the retained-root installed check: a valid schema 22
+synthetic copy produced “数据目录中的数据库无效或已损坏。” The untouched original and failed
+copy both retained schema 22, one old group plan and session, one legacy plan
+and session, and the same database SHA-256
+`9273dbea8630f3740063f13714702fdf7a7552bf63b1af4dbddc2a5f96007695`.
+The installed payload omitted `training_feedback/data/schema22.sql`, which
+`one_time_reset.py` reads before migration. The original installed candidate
+therefore cannot be accepted for schema 22 upgrades.
+
+The packaging spec and build gate now include both SQL schemas. A **dirty-source
+directory preview**, not an accepted candidate, was built and inspected:
+
+- Manifest SHA-256 `4e2c1c2eb79e5727a9d29fedc6345bc8d671a015410f8ccbd62087ce22f06308`;
+  EXE SHA-256 `9606033e101bfed74e4884f171ffe398b9d70e9f1e1dfb0a7e1f3ca98ecf3286`.
+- All 296 payload paths, sizes and hashes matched the manifest. Bundled
+  `schema22.sql` matched source bytes; its SHA-256 is
+  `614a34ac9c4e3fc6e894049f8e3421769090d83ad910a7ee83a1a04a6893c721`.
+- The preview EXE opened a closed schema 22 synthetic copy from an isolated
+  locator and displayed the main window. After closing, its database was schema
+  23; group/legacy plans and sessions were empty, retained `body_area` and
+  `library_reference` rows remained, managed backup/export/import directories
+  were empty, and the cleanup journal was empty. The unopened original stayed
+  at the SHA-256 above with its old rows and managed files intact.
+- The preview manifest says `source_dirty: true`. No Setup was built or installed
+  from it. These results do not transfer to a later clean candidate.
+
+The single `release-0.7.5` patch ledger now contains 50 unique cases. Two
+additional risk-selected cases passed; one needed a stale test assertion updated
+for the new `plan_code` field before its rerun. The configured 30-case profile
+was still not run, and its 17 distinct unselected cases remain unrun. Selection
+and reasons are in [acceptance test design](acceptance-test-design.md). Installed
+invalid/occupied destinations, complete plan-to-training workflow, and other
+applicable candidate checks remain `not run` for the corrected build. Local
+acceptance remains incomplete.

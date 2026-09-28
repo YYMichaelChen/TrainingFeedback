@@ -107,7 +107,7 @@ root; see the [packaged acceptance runbook](docs/packaged-acceptance-runbook.md)
 Build manifests identify the exact source revision and payload. Independent
 Windows acceptance begins only on an explicit public-release request; external
 content review, W4 and personal-data transition have separate gates in the
-[product plan](docs/development-plan.md#9-open-delivery-work).
+[product plan](docs/development-plan.md#9-delivery-gates).
 
 ## Documentation
 
@@ -116,3 +116,11 @@ content review, W4 and personal-data transition have separate gates in the
 - [Initial exercise catalog and plan proposal](docs/initial-exercises-and-plan.md)
 - [Version retention and development-data policy](docs/development-plan.md#13-version-retention-and-development-data-policy)
 - [Retained version history](docs/history/README.md)
+- [Installed and public acceptance procedure](docs/packaged-acceptance-runbook.md)
+- [Content review and W4 procedure](docs/guidance-review-runbook.md)
+- [Pytest scopes and budgets](tests/README.md)
+
+The tracked [version history](docs/history/README.md) gives the current
+application/schema baseline and candidate status. Active release tasks, when
+Planscope is initialized locally, are in `.planning/INDEX.md` and its linked
+PLAN. A fresh clone does not need `.planning/` to use the tracked project docs.

@@ -8,8 +8,10 @@ build/
 dist/
 *.egg-info/
 
-# Local Planscope context, historical records and generated user data never belong in source control.
+# Local Planscope execution context. Tracked product rules and formal retained
+# release evidence live under docs/. A fresh clone is valid without .planning/.
 .planning/
+# Local generated user data and historical holding material stay untracked.
 .tmp/
 user_data/
 *.sqlite3

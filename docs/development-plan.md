@@ -1,16 +1,15 @@
 # TrainingFeedback Development Plan
 
-Status: development stage; local release available; public-release acceptance
-deferred; external review and W4 remain follow-ups. Current version and support
-window: [version history index](history/README.md).
-Last updated: 2026-09-26
+Current application/schema baseline: [version history index](history/README.md).
+Public-release acceptance, external review and W4 have separate gates below.
+Last updated: 2026-09-28
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
 seed content and proposed doses. Use these entry points:
 
 - [Product rules and current baseline](#1-product-goal): Sections 1–8.
-- [Delivery status and open work](#9-open-delivery-work): current follow-ups and separate gates.
+- [Delivery gates](#9-delivery-gates): stable release and follow-up boundaries.
 - [First usable release](#10-first-usable-release-definition): product capability and release boundaries.
 - [Current catalog/group contract](#12-current-catalog-and-group-contract):
   ownership, eligibility, execution, removal and supported-root conversion.
@@ -22,9 +21,10 @@ seed content and proposed doses. Use these entry points:
 - [0.7.0 release review](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/release-readiness.md): dated findings and
   candidate evidence, not current release instructions.
 
-This document contains product requirements and open work. Completed delivery
-details belong in versioned history. Process steps belong in the workflow and
-runbooks; historical candidate checks do not certify a later build.
+This document contains product requirements and stable delivery gates. Active
+tasks belong in the local Planscope PLAN when present. Completed delivery facts
+belong in versioned history; process steps belong in the workflow and runbooks.
+Historical candidate checks do not certify a later build.
 
 ## 1. Product Goal
 
@@ -487,7 +487,7 @@ the locator contains no training data and is not an alternate configuration
 source. If it is absent or invalid, the application asks the user to select a
 data root.
 
-First launch supports:
+Through 0.7.6, first launch supports:
 
 - create a new data root in an empty directory;
 - open an existing valid TrainingFeedback data root.
@@ -540,6 +540,40 @@ shortcuts and an uninstaller. The default installation directory is
 `%LocalAppData%\Programs\TrainingFeedback`; upgrades replace program files in
 place. Install, upgrade and uninstall own no locator or user-root files.
 
+### 7.1 0.7.7 New-Root Directory Creation
+
+For 0.7.7, **create a new data root** asks the user to select a *parent*
+directory and a name for the new data directory. The name defaults to
+`TrainingFeedbackData`. Before confirmation, show the resulting full path, for
+example selecting `Documents` with the default name previews
+`Documents\TrainingFeedbackData`. Create the marker, database, configuration and
+managed subdirectories only inside that child directory; selecting `Documents`
+must never place those items directly in `Documents`.
+
+The suggested first-launch parent is the user's Windows Documents location,
+resolved through the system location API so redirected Documents folders work.
+The suggestion is only a proposal and creates nothing until the user confirms.
+The directory name must be a single valid Windows directory name, not a path.
+Do not silently choose a numbered or different name. If the child does not
+exist, create it; an already existing empty child may be used. If it contains a
+valid TrainingFeedback root, explain that the user can explicitly open that
+root. If it contains unrelated or incomplete content, refuse creation without
+modifying it. A cancelled or failed attempt must not update the last-root
+locator. Failed creation must not leave an incomplete child presented as a
+usable root.
+
+**Open an existing data root** continues to select the root directory itself,
+including roots created before 0.7.7 and copied backups; opening must not append
+another directory layer. Use the same create behavior from first launch and
+Settings when creating and switching to a new root. The separate backup and
+root-copy destination flows retain their own complete-root semantics.
+
+Acceptance for 0.7.7 covers a redirected Documents suggestion, create-path
+preview, successful parent-to-child creation, existing empty/valid/occupied
+children, invalid names, cancellation and failure cleanup, locator persistence,
+and direct opening of existing or backup roots. Use temporary roots for these
+checks, never a personal data directory.
+
 ## 8. Application Architecture
 
 ```text
@@ -583,33 +617,24 @@ must let Qt destroy the windows it created; widget graphs abandoned to Python
 garbage collection crash the interpreter later in the run. Date-boundary checks
 cover 01:59, 02:00, and 02:01.
 
-## 9. Open Delivery Work
+## 9. Delivery Gates
 
-### 9.1 Current Baseline
+### 9.1 Release And Follow-Up Boundaries
 
-The current application/schema support map is in the [version history index](history/README.md).
-Completed version work, candidate identities and checks are in the matching version
-history; the 0.7.0 [release review](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/release-readiness.md) is dated
-evidence. The initial plan remains a proposal, and the bundled guidance has not
-received an external expert review.
+A local release requires candidate content closeout, budgeted regression,
+complete reproducible source and verified installer/local installed checks.
+Independent Windows acceptance (H3/8-B2) and public-distribution requirements
+become gates only on an explicit public-release request. External content review
+is a separate review of exact content/image versions with original answers and
+actual source/time; valid images alone are not review. The personal-data
+transition requires the user's explicit decision under Section 13.3. W4 follows
+that transition and the real-use gate below. No local release automatically
+authorizes either transition, creates review facts or activates a plan.
 
-**Release decision, 2026-09-23:** a local release needs candidate content closeout,
-budgeted regression, complete reproducible source and verified installer/local
-installed checks. Independent Windows acceptance (H3/8-B2) and public-distribution
-requirements become gates only on an explicit public-release request. W4 and
-external content review are separate follow-ups. Deferred/not-run work is not
-passed work; local release does not authorize a personal-data transition, create
-review facts or activate a plan. The [workflow](development-workflow.md) owns
-execution order and verification selection.
-
-Open follow-ups:
-
-| ID / status | Trigger and required evidence |
-| --- | --- |
-| H3 / 8-B2 — deferred, not run | Explicit user request for public release; independent Windows, actual retained-binary upgrades, recovery/backup/uninstall and full scaling matrix. Required public scenarios remain not run. |
-| CONTENT-REVIEW — not completed | A separately requested real review of exact content/image versions, with original answers and actual source/time. Valid images alone are not review. |
-| PERSONAL — user-directed | Explicit transition decision, deliberate personal root/content baseline and complete plan confirmation; no synthetic facts promoted. |
-| W4 — not completed | After PERSONAL and applicable local checks, at least three real sessions, feedback and a genuine expert revision cycle with unchanged history. |
+Deferred or unrun checks are not passed checks. The [version history index](history/README.md)
+owns the current application/schema and candidate baseline; version history
+owns dated evidence. The [workflow](development-workflow.md) owns execution
+order and verification selection.
 
 ### 9.2 W4 Real-Use Gate
 
@@ -617,9 +642,9 @@ W4 begins only after the user authorizes the personal-data transition in Section
 13.3. Required actions must have complete text and valid images, be explicitly
 enabled, and belong to a fully confirmed active plan; applicable local program
 checks must pass. Unreviewed guidance is disclosed and frozen in session evidence.
-W4 and external content review are independent follow-ups, not local-release gates
-(decision 2026-09-23). H3 is deferred until an explicit public-release request;
-starting personal observation does not pass H3. No personal-use readiness is assumed.
+W4 and external content review are independent follow-ups, not local-release gates.
+H3 starts only on an explicit public-release request; starting personal
+observation does not pass H3. No personal-use readiness is assumed.
 
 Use the [guidance review runbook](guidance-review-runbook.md) for review and W4
 templates. Record binary identity, plan/guidance versions, real session IDs and
@@ -634,9 +659,9 @@ local software checks cannot close this gate or establish full content review.
 
 ### 9.3 Independent Windows Gate (8-B2)
 
-**Deferred / not run; not a local-release blocker.** Re-enable this gate only when
-the user explicitly requests a public release, then complete it before public
-publication. Local packaging or installation does not trigger it automatically.
+This gate begins only when the user explicitly requests a public release and
+must complete before public publication. Local packaging or installation does
+not trigger it automatically.
 The [packaged acceptance runbook](packaged-acceptance-runbook.md) owns the
 candidate-specific scenarios and evidence form.
 
@@ -656,12 +681,12 @@ unavailable scenarios stay `not run`.
 
 ### 9.4 Verification And Record Ownership
 
-Verification must protect data preservation and, for the planned 0.7.5
+Verification must protect data preservation and, for the 0.7.5
 exception, the exact reset scope; it also covers frozen history, verbatim text,
 transactional rollback and supported upgrades. Tests use synthetic temporary
 roots and locators, never personal data. The version-independent
-[workflow](development-workflow.md) owns the stage budgets, test selection,
-static checks, task records and candidate evidence. [Test instructions](../tests/README.md)
+[workflow](development-workflow.md) owns test selection, static checks and
+candidate procedure. [Test instructions](../tests/README.md)
 give the executable commands; [packaged acceptance](packaged-acceptance-runbook.md)
 owns installed and independent-machine procedures. Candidate hashes and dated
 results are evidence for their identified build only.
@@ -719,7 +744,7 @@ is defined in Section 4.6.
 
 This catalog and group contract originated in the 0.7.0 work and remains the
 product rule until deliberately revised. Source delivery is recorded in the
-[version history](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/development.md); Section 9 owns open work and
+[version history](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/development.md); Section 9 owns delivery gates and
 Section 13 governs supported upgrades and future version changes.
 
 The release delivers an application-owned bundled catalog, exercise families
@@ -1207,9 +1232,11 @@ Complete development plans, task records, acceptance evidence, schema documents,
 contract snapshots, synthetic baselines and runtime migration entry support share
 the three-application-version window. Current specifications keep valid rules and
 open work; completed work of a retained version is tracked under
-`docs/history/<version>/` (or local `.planning/archive/`), and moves to
+`docs/history/<version>/`, and moves to
 the untracked local `docs/archive/` holding area when the version expires.
-Archiving is not permanent retention.
+Local `.planning/archive/` contains historical execution context only; it is
+not a substitute for tracked release evidence. Archiving is not permanent
+retention.
 
 At rotation, inventory references, merge still-valid rules into current documents,
 then remove the expired version's full records and exclusive fixtures/helpers.

@@ -13,19 +13,24 @@ window, its complete subdirectory moves to the untracked local `docs/archive/`
 holding area in the same action — archiving into another unlimited location is
 not policy compliance.
 
-| Application version | Database baseline | History | Status |
+Current development application version: **0.7.5** (database schema **23**).
+Latest locally accepted candidate: **0.7.3**. Later 0.7.4 and 0.7.5
+candidates have incomplete installed/local acceptance recorded below.
+
+| Application version | Database schema | Role | Local candidate |
 | --- | --- | --- | --- |
-| 0.7.5 | 23 | [Plan and reset development](0.7.5/development.md), [local candidate](0.7.5/local-candidate.md) | Source complete; candidate installed; local acceptance incomplete. |
-| 0.7.4 | 22 | [Performance development](0.7.4/development.md), [local candidate](0.7.4/local-candidate.md) | Retained source and schema22 reset baseline; installed acceptance incomplete. |
-| 0.7.3 | 22 | [Plan page and local candidate](0.7.3/development.md) | Retained local candidate; public distribution remains deferred. |
+| 0.7.5 | 23 | Current development source: [plan and reset development](0.7.5/development.md) | [Installed; local acceptance incomplete](0.7.5/local-candidate.md) |
+| 0.7.4 | 22 | Retained predecessor: [performance development](0.7.4/development.md) | [Installed acceptance incomplete](0.7.4/local-candidate.md) |
+| 0.7.3 | 22 | Retained predecessor: [plan page development](0.7.3/development.md) | [Accepted local candidate](0.7.3/development.md) |
 
 History records explain completed work and dated evidence; they do not override
 current requirements or certify a later build. Multiple schemas already created
 during 0.6.1/0.7.0 are historical exceptions, not a future numbering pattern.
 
-In 0.7.5, rotate the window, merge still-valid requirements into current
-specifications, and move the expired version's complete history subdirectory
-plus its exclusive fixtures/migration support to `docs/archive/`.
+On each distinct application-version change, rotate the window, merge
+still-valid requirements into current specifications, and move the expired
+version's complete history subdirectory plus its exclusive fixtures/migration
+support to `docs/archive/`.
 The 0.6.0 and 0.6.1 directories and schema16-only fixture rotated out in 0.7.2;
 their committed bytes remain in Git history.
 The complete 0.7.0 history, local planning records and candidate evidence rotated to the ignored

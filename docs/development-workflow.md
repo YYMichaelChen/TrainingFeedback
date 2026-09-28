@@ -37,22 +37,22 @@ testing or a version bump. Synthetic facts never become personal facts.
 
 ### Start and record one task
 
-Before implementation, inspect the working tree and identify the event(s), scope,
-affected behaviors, expected result and verification tier. For work needing
-durable context, use the installed `planscope` skill and start at
-`.planning/INDEX.md`. It routes to the single active release's `PLAN.md`,
-`KNOWLEDGE.md` and recent `LOG.md`. Read only relevant sections. A small local
-change may skip planning unless it changes release state or stable constraints.
+Before implementation, inspect the working tree; classify the event(s) and
+micro, normal or complex scope; identify affected risks and the expected result.
+Use the installed `planscope` skill when work needs durable context. Read
+`.planning/INDEX.md` first, then only the active PLAN current/affected phase.
+Search KNOWLEDGE for relevant findings, read PROJECT for cross-release decisions,
+and consult recent LOG only for recovery. Micro edits may skip planning. If
+`.planning/` is absent, use tracked docs and Git state; initialize it only for
+work needing durable planning, without inventing a release from old records.
 
-`PLAN.md` owns current release work; after editing its current state, run
-`plan.py sync` to update `INDEX.md`. Record only reusable discoveries in
-`KNOWLEDGE.md` and recent recovery context in `LOG.md`. Use the skill's
-`doctor` and `compact` checks when changing planning structure. Close a release
-only after its acceptance work is complete; keep archives inside the
-three-application-version retention window. The pre-Planscope local task records
-remain read-only historical evidence; use the `archive/v<version>/SUMMARY.md`
-route for past work and do not load archives as active context. Keep product rules
-and decisions in the development plan, not in planning summaries.
+Load the affected tracked product rules after routing context. Implement and
+verify the change, then update PLAN when task/phase state changes and run
+`plan.py sync` after changing current phase, task, blockers or next action.
+Record only non-recoverable reusable findings in KNOWLEDGE and recent recovery
+context in LOG. Use `plan.py doctor` and `compact` after structural planning
+changes. Historical planning records remain read-only context; product rules
+and formal release evidence stay in tracked docs.
 
 ### Verify a development task
 
@@ -64,14 +64,28 @@ and `git diff --check`. A documentation-only change needs link, status and diff
 checks, not routine pytest. Stop after relevant checks pass; after a fix, rerun
 only failed or affected checks.
 
-Budgets count parameter-expanded unique cases across commands in one immutable
-scope: dev 30, patch 50, minor 100, major 300, with at most 300 resident cases.
-These are ceilings, not targets. Never split or reset a scope to evade a cap,
-hide cases at collection, or move independent regression scenarios into loops.
-The pytest plugin enforces selection and accounting; this procedure does not
-change its CLI. A release task uses the matching patch/minor/major scope from
-its first execution and includes affected cases within that scope. Do not run
-all tier profiles in sequence.
+Use the tier and stable scope selected for the task; a release task uses its
+matching patch/minor/major release scope from first execution and includes
+affected cases within it. Follow [test instructions](../tests/README.md) for
+limits, unique-case accounting, locks, reruns and collection behavior. Do not
+run all tier profiles in sequence.
+
+### Verification by affected risk
+
+| Change or risk | Minimum verification expectation |
+| --- | --- |
+| Documentation only | Link/status consistency and `git diff --check` |
+| UI presentation | Affected UI cases and Ruff for changed Python |
+| Domain behavior | Affected domain/application and integration cases |
+| User-data write | Success and rollback/failure behavior |
+| Session state | Affected transitions |
+| Database/schema/migration | Fresh DB, retained endpoints, expired/future refusal |
+| Root switching/backup | Preservation and failure cleanup |
+| Catalog/image eligibility | Affected valid and failure paths |
+| Plan/group execution | Ordering, sides, rounds and frozen facts |
+| Import/export | Valid, malformed, stale and unsupported paths |
+| Version bump | Identity map and support rotation |
+| Release candidate | Release tier, affected cases and installed checks |
 
 ### Prepare a local candidate
 
@@ -102,6 +116,16 @@ in the same release scope and affected installed checks for the new candidate.
 Reference earlier unchanged checks explicitly rather than silently claiming they
 were repeated. A local result never implies public acceptance, expert review or
 personal-use readiness.
+
+### Close a release
+
+Verify its acceptance criteria and record formal, candidate-specific evidence
+in `docs/history/<version>/` before closing planning. Create the Planscope
+`SUMMARY.md`, promote only durable non-recoverable project knowledge, update
+ROADMAP, mark every PLAN phase and its status complete, then run `plan.py doctor`
+and `plan.py close <version>`. The close command archives execution context;
+its archive does not replace tracked release evidence. Keep planning archives
+within the product's three-version window.
 
 ### Rotate a version
 

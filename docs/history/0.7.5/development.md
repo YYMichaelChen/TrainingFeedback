@@ -39,3 +39,14 @@ and its [plan authoring section](../../development-plan.md#1211-075-plan-authori
   all 295 installed payload hashes match. UI/root workflow acceptance remains
   incomplete. Candidate identity and check limits are recorded in
   [local candidate evidence](local-candidate.md).
+
+Acceptance continuation on 2026-09-28 raised the unchanged patch ledger to 50
+unique risk-selected cases; both additional cases passed after correcting a
+stale expected payload shape in one test. Installed UI checks exposed a package
+defect: the 295-file candidate omitted `schema22.sql` and refused a valid
+schema 22 root. The packaging spec and build check now require both schemas.
+A 296-file dirty-source directory preview upgraded an isolated synthetic copy
+while leaving its original untouched. The installed candidate remains failed for
+the retained-root scenario, and a clean rebuilt installer plus remaining installed
+checks are required. See [test selection](acceptance-test-design.md) and
+[candidate evidence](local-candidate.md).
