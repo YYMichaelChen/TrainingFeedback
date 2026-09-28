@@ -34,10 +34,22 @@ def _schema22_root(path):
             "INSERT INTO body_area(id,name,active) VALUES (1,'保留区域',1)"
         )
         connection.execute(
-            "INSERT INTO library_reference VALUES (1,'custom','保留动作','unknown')"
+            "INSERT INTO library_reference VALUES (1,'custom','custom.keep','unknown')"
         )
         connection.execute(
             "INSERT INTO training_plan(id,name,created_at) VALUES (1,'旧计划','unknown')"
+        )
+        connection.execute(
+            "INSERT INTO training_plan_revision(id,plan_id,revision_number,status,created_at) "
+            "VALUES (1,1,1,'active','unknown')"
+        )
+        connection.execute(
+            "INSERT INTO training_session(id,plan_revision_id,training_date,status,started_at,"
+            "updated_at) VALUES (1,1,'2026-01-01','paused','unknown','unknown')"
+        )
+        connection.execute(
+            "INSERT INTO next_day_feedback(id,session_id,overall_note,submitted_at) "
+            "VALUES (1,1,'旧反馈原文','unknown')"
         )
         connection.execute("INSERT INTO group_plan(id,name,created_at) "
                            "VALUES (1,'旧分组计划','unknown')")
@@ -45,6 +57,33 @@ def _schema22_root(path):
             "INSERT INTO group_plan_revision(id,plan_id,revision_number,status,name,purpose,"
             "rationale,source_json,created_at) "
             "VALUES (1,1,1,'draft','旧分组计划','','','null','unknown')"
+        )
+        connection.execute(
+            "INSERT INTO group_plan_day VALUES (1,1,1,'旧训练日')"
+        )
+        connection.execute(
+            "INSERT INTO group_plan_item VALUES "
+            "(1,1,1,NULL,'old.action',1,'action','{}')"
+        )
+        connection.execute(
+            "INSERT INTO group_plan_set VALUES (1,1,1,3,'次',0,'原文',0)"
+        )
+        connection.execute(
+            "INSERT INTO group_session(id,revision_id,training_date,status,snapshot_json,"
+            "started_at) VALUES (1,1,'2026-01-01','paused','{}','unknown')"
+        )
+        connection.execute(
+            "INSERT INTO group_session_feedback VALUES (1,'旧会话反馈','unknown')"
+        )
+        connection.execute(
+            "INSERT INTO group_plan_import VALUES "
+            "(1,1,'imports/source.json','old-hash','旧导入原文','unknown')"
+        )
+        connection.execute(
+            "INSERT INTO group_plan_export VALUES (1,1,'exports','unknown')"
+        )
+        connection.execute(
+            "INSERT INTO group_session_export VALUES (1,1)"
         )
 
     (path / "backups").mkdir(exist_ok=True)
@@ -60,23 +99,35 @@ def _schema22_root(path):
 def test_schema22_open_resets_plans_and_training_and_retains_library(tmp_path):
     root = tmp_path / "reset root"
     database = _schema22_root(root)
+    with sqlite3.connect(database) as connection:
+        retained_before = {
+            table: connection.execute(f'SELECT * FROM "{table}"').fetchall()
+            for table in ("body_area", "library_reference")
+        }
 
     opened = open_existing(root)
 
     with sqlite3.connect(database) as connection:
         assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 23
         for table in (
-            "training_plan", "training_plan_revision", "group_plan", "group_plan_revision",
-            "group_session", "training_session", "plan_import", "ai_export",
+            "training_plan", "training_plan_revision", "training_session",
+            "next_day_feedback", "group_plan", "group_plan_revision", "group_plan_day",
+            "group_plan_item", "group_plan_set", "group_session", "group_session_occurrence",
+            "group_session_feedback", "group_plan_import", "group_plan_export",
+            "group_session_export", "plan_import", "ai_export",
         ):
             assert connection.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0] == 0
+        assert {
+            table: connection.execute(f'SELECT * FROM "{table}"').fetchall()
+            for table in retained_before
+        } == retained_before
         assert (
             connection.execute("SELECT name FROM body_area WHERE id=1").fetchone()[0]
             == "保留区域"
         )
         assert connection.execute(
             "SELECT stable_key FROM library_reference WHERE id=1"
-        ).fetchone()[0] == "保留动作"
+        ).fetchone()[0] == "custom.keep"
         assert connection.execute("SELECT COUNT(*) FROM one_time_reset_journal").fetchone()[0] == 0
 
     assert opened.path == root

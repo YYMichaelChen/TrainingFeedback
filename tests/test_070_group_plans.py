@@ -158,7 +158,8 @@ def test_upgrade_reopens_one_draft_and_recomputes_code_from_source(context, payl
 def test_normalized_save_reopen_and_unequal_group_doses_remain_verbatim(context, payload):
     identifier = context.plans.create(payload)
     saved = context.plans.get(identifier)
-    assert saved["payload"] == payload
+    assert saved["plan_code"] == "plan-001.01.00"
+    assert saved["payload"] == {**payload, "plan_code": saved["plan_code"]}
     assert saved["status"] == "draft" and saved["pins"] == []
     connection = context.database.connection
     counts = {
