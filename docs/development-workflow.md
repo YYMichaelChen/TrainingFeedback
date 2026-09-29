@@ -9,7 +9,7 @@ also run a separate development profile.
 ## Authority and current state
 
 - [Development plan](development-plan.md) owns product behavior, the local/public
-  release boundary, and the three-application-version retention policy. The
+  release boundary, and the formal-release compatibility policy. The
   [initial catalog specification](initial-exercises-and-plan.md) owns proposed
   built-in content until deliberately revised.
 - This document owns the procedure. [Packaged acceptance](packaged-acceptance-runbook.md)
@@ -34,8 +34,9 @@ also run a separate development profile.
 | --- | --- | --- |
 | Development task | State the intended behavior and affected risks; inspect existing coverage, make the change, run focused verification and applicable static checks. | Relevant checks pass and their actual results are recorded. No automatic installer build. |
 | Local release or user-requested installed acceptance | Close intended candidate content; verify final source and release regression; build and inspect the installer; exercise the installed app with isolated synthetic roots. | Candidate identity, manifests, installed checks and evidence limits are recorded. |
+| Formal release declaration | Only the user can declare it. Fix the first formal baseline or, on later formal releases, select one or two available predecessor formal versions and their support window. | Formal-release identity and, where predecessors exist, actual compatibility evidence are recorded; a local candidate alone does not activate this event. |
 | Public release | Start only on the user's explicit request; run the independent Windows and public-distribution gate in the packaged-acceptance runbook. | Every required public scenario has candidate-specific evidence; `not run` is never `pass`. |
-| Application version change | Update application version and distinct schema/catalog/contract mappings; rotate the three-version window and support paths. | Retained roots work, expired roots are refused unchanged before writes, and old data remains intact. |
+| Application version change | Update application version and distinct schema/catalog/contract mappings; inventory obsolete support paths. Before formal release, omit old-version compatibility work. After the first formal baseline, rotate the selected one or two predecessor formal versions. | Current roots work; unknown/unsupported roots are refused unchanged before writes. Formally supported older roots work when available. |
 
 External content review, personal-data transition and W4 have their own product
 triggers in the development plan. None follows automatically from packaging,
@@ -93,7 +94,7 @@ statuses and never consume that pytest budget.
 | Domain behavior | Affected domain/application and integration cases |
 | User-data write | Success and rollback/failure behavior |
 | Session state | Affected transitions |
-| Database/schema/migration | Fresh DB, retained endpoints, expired/future refusal |
+| Database/schema/migration | Fresh/current DB, malformed/future refusal and rollback; formally supported older endpoints only after formal release |
 | Root switching/backup | Preservation and failure cleanup |
 | Catalog/image eligibility | Affected valid and failure paths |
 | Plan/group execution | Ordering, sides, rounds and frozen facts |
@@ -123,9 +124,12 @@ statuses and never consume that pytest budget.
    preview with its exact source snapshot and limit disclosed.
 4. Install that candidate under an isolated locator/profile and synthetic roots.
    Verify the installed payload, fresh launch and cancel, new-root catalog,
-   restart/reopen, and the affected user workflow. Include supported-root upgrade
-   and out-of-window read-only refusal when compatibility changes. Record the
-   account, paths, inputs, expected/actual result and evidence for each check.
+   restart/reopen, and the affected user workflow. Before formal release, omit
+   old-version upgrade and compatibility checks completely. After formal release,
+   include selected predecessor upgrades and out-of-window read-only refusal.
+   Always verify current-root and unknown/future-root safety when affected.
+   Record the account, paths, inputs, expected/actual result and evidence for
+   each check.
 
 Candidate evidence is immutable and identified by source revision/snapshot,
 manifest and installer/executable hashes. If source or payload changes after a
@@ -142,37 +146,43 @@ in `docs/history/<version>/` before closing planning. Create the Planscope
 `SUMMARY.md`, promote only durable non-recoverable project knowledge, update
 ROADMAP, mark every PLAN phase and its status complete, then run `plan.py doctor`
 and `plan.py close <version>`. The close command archives execution context;
-its archive does not replace tracked release evidence. Keep planning archives
-within the product's three-version window.
+its archive does not replace tracked release evidence. Compact planning
+archives under the audited retention rules in Section 13 of the development plan.
 
 ### Rotate a version
 
 An application-only fix may retain its schema. Every new database schema revision
 or external wire-schema change requires an application patch-or-greater bump in
 the same change. On every distinct application version bump, update the version
-history index, source version values, supported application/schema mapping and
-relevant contract/catalog identities. Retain the current application version plus
-two immediate predecessors; several commits of one version consume one slot.
+history index, source version values, implemented application/schema mapping and
+relevant contract/catalog identities. Before formal release, no old-version
+support window or compatibility test is required. After user-declared formal
+release, retain the selected one or two predecessor formal versions; several
+commits of one version consume one slot.
 If the bump is still a development step, use its dev scope; a task that directly
 forms a release uses the release scope instead.
 
 Inventory completed documents, planning archives, contract/schema baselines,
-synthetic fixtures and migration entry support. Move expired complete records to
-the local `docs/archive/` holding area and remove exclusive runtime/test entry
-paths only after verifying retained upgrades and fresh initialization. Git history
-remains available; the local archive is not an unlimited second retention system.
-Reject expired or future roots before writes with actionable new-empty-root
-guidance, without deleting or importing their data. Program reinstall alone does
-not reset a data root.
+synthetic fixtures and migration entry support. Before removing a path, verify
+current initialization and safety, plus formally supported upgrades when those
+exist. Git history remains available; the local archive is not an unlimited
+second retention system. Reject unsupported or future roots before writes with
+actionable new-empty-root guidance, without deleting or importing their data.
+Program reinstall alone does not reset a data root; v0.8.0 opt-in uninstall
+deletion is the explicit exception under the product's path-verification rule.
 
 ## Three walkthroughs
 
 - **Small UI change:** one dev task and scope; affected UI cases, Ruff and diff
   check; no installer unless the user asks for installed acceptance.
-- **Schema-changing patch release:** one patch release scope, including affected
-  upgrade/preservation/refusal cases; application patch bump and window rotation;
-  clean source, verified installer and isolated installed compatibility checks.
-- **Requested public release:** complete the local candidate gate, then use the
-  explicit public gate on an independent Windows environment with actual retained
-  binaries and distribution evidence. Mark unavailable checks `not run` and do
-  not publish as accepted while required public checks remain open.
+- **Schema-changing patch release:** one patch release scope, including current
+  initialization, preservation/refusal and rollback cases; application patch
+  bump, clean source and verified installer. Old-version upgrade tests and
+  installed compatibility checks begin only after formal-release declaration.
+- **Requested public release:** if the user also declares the first formal
+  release, establish its baseline; for later formal releases, select one or two
+  available predecessor formal versions. Complete the local candidate gate,
+  then use the explicit public gate on an independent Windows environment with
+  actual selected binaries when applicable and distribution evidence. Mark
+  unavailable checks `not run`; required public checks must pass before public
+  acceptance.

@@ -27,9 +27,11 @@ procedure, not a certificate for any build.
    Candidate identity changes when source or payload bytes change. Preserve prior
    candidate evidence under its own identity.
 
-The installer replaces program files only. Compare closed isolated locator/root
-bytes before launching a replacement program; application startup may then apply
-only a declared supported migration. Never use a real personal root for fault
+Installation and upgrade replace program files only. Compare closed isolated
+locator/root bytes before launching a replacement program; application startup
+may then apply only a declared supported migration after formal release. The
+v0.8.0 uninstaller has a separately confirmed optional data deletion path;
+ordinary uninstall retains the root. Never use a real personal root for fault
 injection or synthetic training.
 
 ## 2. Local installed acceptance
@@ -47,7 +49,9 @@ named profiles for independent inputs. Close the app before copying a root.
 | New root | A Chinese or space-containing empty root receives the complete current built-in catalog and valid assets without an old root, manual import or invented review/plan/training facts. |
 | Restart | The same isolated root reopens with its selected state and frozen facts; no duplicate migration or stray data in program files. |
 | Affected workflow | Exercise the actual UI path changed by this candidate. For a release with no narrower workflow, use a representative plan, result, pause, restart and resume path with blank actuals preserved. |
-| Compatibility, when changed | Open copies of each retained endpoint and verify declared upgrade preservation; reject expired/future roots unchanged before writes. Preserve untouched originals. |
+| Current-root safety | Check current-root restart/reinstall and affected malformed/future-root refusal unchanged before writes. This remains required when the candidate affects root safety. |
+| Old-version compatibility | Disabled before the user declares a formal release. Thereafter open copies of each selected predecessor formal version and verify declared upgrade preservation; reject unsupported roots unchanged. Preserve untouched originals. |
+| v0.8.0 installer/uninstaller | Manually choose a custom program directory; verify shortcut/uninstall identity. Verify default uninstall leaves isolated root/locator intact, and explicitly confirmed deletion removes only the displayed synthetic root and locator. Cancel and invalid-path attempts leave data intact. |
 
 For each applicable check, record candidate and installed identities, account,
 paths, synthetic input baseline, operations, expected/observed result, evidence
@@ -63,10 +67,13 @@ public-distribution requirement.
 ## 3. Public release preparation — explicit request only
 
 Do not start independent acceptance or public distribution without the user's
-explicit public-release request. The local gate must first identify the exact
-candidate. Prepare isolated synthetic roots from **actual** retained-version
-programs and manifests named by the current version index. Preserve unopened
-originals, closed transfer copies, logical facts, original text/unknown fields,
+explicit public-release request. The first formal release establishes a baseline;
+later formal releases select one or two available predecessor formal versions
+before old-version compatibility becomes required. The local gate must first
+identify the exact candidate. When predecessors exist, prepare isolated
+synthetic roots from their **actual** programs and manifests named by the
+current version index. Preserve unopened originals, closed transfer copies,
+logical facts, original text/unknown fields,
 resource hashes and database hashes. A tag rebuilt later is a different binary
 identity. Include one expired root for unchanged refusal and a future-schema
 root; arbitrary intermediate schemas are not upgrade promises.
@@ -87,7 +94,7 @@ resource comparison, evidence path/hash and a `pass`, `fail` or `not run` status
 | ID | Scenario and required result |
 | --- | --- |
 | PUB-01 | Install as an ordinary user; cancel, create a fresh Chinese/space root and try invalid/occupied paths. Built-ins load without old data; cancel leaves nothing partial. |
-| PUB-02 | Install over each actual retained-version program and open copies of its root. Installer preserves data; supported startup upgrade preserves locator, text, unknowns and frozen facts without re-import. |
+| PUB-02 | For later formal releases, install over each actual selected predecessor formal-version program and open copies of its root. Installer preserves data; supported startup upgrade preserves locator, text, unknowns and frozen facts without re-import. For the first formal release, record this row as not applicable because no predecessor formal version exists. |
 | PUB-03 | Compare upgraded facts/resources, restart twice and restart Windows, then switch roots. No duplicate conversion, approval or assets; paused position and root isolation survive. |
 | PUB-04 | Open interrupted supported roots; exercise access, space and backup failures, expired and future roots. Recovery is consistent; unsupported roots remain unchanged with actionable guidance. |
 | PUB-05 | Exercise guidance/image eligibility through review, plan and start. Invalid/missing assets block new use; valid unreviewed assets invent no approval; originals remain. |
@@ -96,7 +103,7 @@ resource comparison, evidence path/hash and a `pass`, `fail` or `not run` status
 | PUB-08 | Exercise removal, restoration and publisher withdrawal. New use is blocked as declared; frozen work/history remain usable; restoration does not auto-enable. |
 | PUB-09 | Export portable evidence/images and import the current contract. JSON/Markdown/hashes agree; originals remain; imports are drafts; unsupported formats fail clearly. |
 | PUB-10 | Back up an active synthetic root, try bad destinations, reopen and resume with a newer catalog. Assets and facts survive; failures leave no misleading partial backup. |
-| PUB-11 | Inspect settings/library/import, then upgrade, uninstall and reinstall. Program operations leave locator/root intact and fresh roots use current built-ins. |
+| PUB-11 | Inspect settings/library/import, then upgrade, default uninstall and reinstall. Program operations leave locator/root intact and fresh roots use current built-ins. Separately exercise v0.8.0 opt-in deletion using only an isolated synthetic root, including cancel and invalid-path refusal. |
 | PUB-12 | Inspect real desktop scaling at 100%, 125% and 150% on 1366×768 and 1920×1080 where available. Long Chinese text and many actual-set rows keep core controls reachable. |
 
 Record actual alternatives for unavailable display sizes; a required scenario

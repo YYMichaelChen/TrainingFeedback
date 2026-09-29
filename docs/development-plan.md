@@ -537,8 +537,14 @@ exception in Section 13.4; installing program files alone does not perform it.
 Windows distribution uses a directory payload with `icon/TrainingFeedback.ico`
 and a per-user Inno Setup installer with stable application identity, normal
 shortcuts and an uninstaller. The default installation directory is
-`%LocalAppData%\Programs\TrainingFeedback`; upgrades replace program files in
-place. Install, upgrade and uninstall own no locator or user-root files.
+`%LocalAppData%\Programs\TrainingFeedback`. From v0.8.0, interactive installation
+must let the user select a safe program directory; upgrades default to the
+previous program directory. Installation and upgrade never own the locator or
+data root. Normal uninstall removes program files only. An explicitly selected,
+confirmed v0.8.0 uninstall option may delete only validated, displayed user
+data paths under the exact scope in [the v0.8.0 design](0.8.0-design.md); an
+invalid or unverified path must be left intact. External backups remain outside
+the uninstall option.
 
 ### 7.1 0.7.7 New-Root Directory Creation
 
@@ -636,6 +642,17 @@ owns the current application/schema and candidate baseline; version history
 owns dated evidence. The [workflow](development-workflow.md) owns execution
 order and verification selection.
 
+Before the user explicitly declares a formal release, old-application-version
+compatibility testing and support promises are disabled, including old binary,
+old root and installed upgrade checks. Current-version behavior, data integrity,
+same-version restart/reinstall and read-only rejection of unknown/future roots
+remain required when affected. A local candidate or version number alone does
+not trigger formal-release compatibility duties. The first user-declared formal
+release establishes the baseline. Later formal releases select one or two
+available predecessor formal versions and pass the matching compatibility gate.
+Section 13 defines the data-safety boundary; [the v0.8.0 design](0.8.0-design.md)
+records the transition.
+
 For future candidate acceptance, choose pytest cases from the candidate's
 affected and material risks before execution. Low-risk, unaffected cases are
 not part of a default release run; keep them available for changes that make
@@ -678,9 +695,12 @@ Required public-release coverage:
 
 - An independent Windows x64 environment without the build checkout or Python,
   using an ordinary non-administrator account.
-- Actual retained-version binaries and isolated representative roots for upgrade
-  behavior; verify preservation normally and the explicit 0.7.5 reset under
-  Section 13.4. Same-version relocation is not upgrade evidence.
+- For later formal releases, actual binaries of the selected one or two
+  predecessor formal versions, with isolated representative roots for upgrade
+  preservation. The first formal release establishes the baseline and has no
+  predecessor-formal-version upgrade to test. Development candidates are not
+  automatically supported baselines; same-version relocation is not upgrade
+  evidence.
 - Installed backup/recovery, root isolation, session/history/export agreement,
   uninstall/reinstall boundaries and real-desktop scaling at 100%, 125% and 150%.
 
@@ -1055,18 +1075,19 @@ marker, configuration, schema and current library model before use. No directory
 scanning or old Exercises@home database access is allowed.
 
 Historical conversions and retired fixtures do not expand the current support
-window; their dated design is in version history. Roots outside the applicable
+boundary; their dated design is in version history. Roots outside the applicable
 boundary are rejected read-only with the reinstall/new-empty-root guidance of
-Section 13.2; schema 22 roots are the explicit 0.7.5 exception. Do not offer a
+Section 13.2; schema 22 roots were the explicit 0.7.5 exception. Do not offer a
 migration wizard, compatibility setting, legacy library, fallback reader or
 implicit import for an expired root.
 
-Future in-window schema changes normally use a version bump, pre-write
+After formal release, supported schema changes use a version bump, pre-write
 validation, recoverable snapshots and transactional migrations. They preserve
 frozen facts without inventing approval, images, physical results or user
-decisions. The planned 0.7.5 schema 22 reset in Section 13.4 instead discards
-the specified plan/training facts without a backup. Normal root backup and
-restore remain separate user actions outside that one-time reset.
+decisions. Before formal release, an old root has no upgrade promise, but a
+refused root remains unchanged. The 0.7.5 schema 22 reset in Section 13.4
+discarded its specified plan/training facts without a backup. Normal root
+backup and restore remain separate user actions outside that one-time reset.
 
 ### 12.8 External Handoff Contract
 
@@ -1105,25 +1126,26 @@ to render recorded history.
 ### 12.9 Remaining Delivery And Verification
 
 Section 9.1 is the open work list. The [contract annex](contracts/0.7.0-contracts.md)
-owns the retained detailed serialization/mapping baseline. Regression protects
-the risks below; actual retained-binary and independent Windows acceptance
+owns the historical detailed serialization/mapping baseline. Regression protects
+current-model risks below. Old-version binary/root compatibility is dormant
+until the user's formal-release declaration; independent Windows acceptance
 belongs to H3 only after a public-release request.
 
-- For a later public release: supported baselines generated/opened by identified
-  retained-version programs, using
+- For a later formal/public release: selected predecessor formal-version
+  baselines generated/opened by identified programs, using
   isolated synthetic data with renamed/missing-key actions,
   custom text, overrides, images, review attachments, active/draft plans,
   terminal and paused sessions, next-day feedback, retractions and original files.
-  Compare logical facts/resource hashes for ordinary preservation upgrades;
-  verify the declared 0.7.5 deletion scope instead for its one-time reset.
-- Reject out-of-window development roots before writes, except the planned 0.7.5
-  schema 22 reset; preserve future-schema rejection and fresh initialization coverage.
+  Compare logical facts/resource hashes for preservation upgrades. The 0.7.5
+  one-time reset remains historical evidence, not a new formal support promise.
+- Reject unsupported development and future roots before writes; preserve fresh
+  initialization coverage. The 0.7.5 schema 22 reset remains a dated exception.
 - Missing image vs corrupt image vs changed hash, no-image drafts with prior
   review evidence, enabled-but-ineligible state, bundled and custom images,
   renamed families, repeated exercises in groups, asymmetric sides and mixed units.
-- Failure at backup, staging, SQL conversion, asset publication and cleanup for
-  ordinary upgrades; for the 0.7.5 reset, cover transactional database deletion
-  and resumable file cleanup without a snapshot. Include disk/access errors,
+- Failure at backup, staging, asset publication and cleanup for current flows;
+  after formal release include supported SQL conversion. The 0.7.5 reset
+  verification belongs to its historical evidence. Include disk/access errors,
   competing opens, repeat startup and root switching. No partial success or
   fabricated approval.
 - Catalog withdrawal after plan activation; new-start blocking; resumed frozen
@@ -1148,13 +1170,13 @@ Keep local-release, external-review, personal-use and W4 results distinct.
 Independent 8-B2 is deferred/not run and is activated only by an explicit public
 release request. It is not a prerequisite for local packaging or local release.
 
-No ordinary supported-upgrade success claim may rely on a reset root, manual
-re-import, compatibility settings, changed historical doses or an earlier build's
-acceptance. The planned 0.7.5 reset is successful only when its exact deletion
-and retained-library scope is verified; it is not preservation evidence. Source
-regression covers supported synthetic upgrades and unchanged rejection of roots
-outside the applicable boundary. Local installed checks and later public
-acceptance record their own actual scope and candidate identity.
+After formal release, no supported-upgrade success claim may rely on a reset
+root, manual re-import, compatibility settings, changed historical doses or an
+earlier build's acceptance. The 0.7.5 reset is historical deletion evidence,
+not preservation evidence. Before formal release, source regression covers
+current roots and unchanged rejection of unknown/future roots; supported
+synthetic upgrades join only after the formal declaration. Local installed checks
+and later public acceptance record their own actual scope and candidate identity.
 
 This document owns product/architecture/migration contracts. The content
 document owns family membership, aliases, technique and proposed doses.
@@ -1210,26 +1232,32 @@ activation retains the existing eligibility and explicit confirmation gates.
 
 ## 13. Version Retention And Development Data Policy
 
-Decision accepted: 2026-09-20. The project remains in development. This policy
-supersedes unlimited historical-document retention and unbounded migration-chain
-support. The current application/schema support map is in the
+The 2026-09-20 three-version development policy is superseded by the user's
+2026-09-29 decision: old-version compatibility testing is closed until the user
+declares a formal release. This is not permission to alter or delete an old
+data root. The current application/schema implementation map is in the
 [version history index](history/README.md); dated implementation evidence is in
 version history. Rotation procedure is in the [workflow](development-workflow.md).
 
 ### 13.1 Application Versions And Schema Changes
 
-- Keep the current application version plus its two immediate predecessors.
-  Count distinct version numbers, including patch versions, not GitHub commits.
-  Several commits with the same version consume one slot. Record the actual
-  commit/source snapshot/build identity for each retained version.
+- Before formal release, keep an accurate current application/schema map but do
+  not promise that a new application opens any older application version's root.
+  Existing supported paths may remain during v0.8.0 slimming, but do not create
+  new compatibility obligations. The first formal release establishes a
+  baseline. For later formal releases, select one or two available predecessor
+  **formal** versions, record their exact source/build identity and support
+  paths, and test those actual endpoints. Development candidate numbers do not
+  automatically fill those slots.
 - Every subsequent database schema revision must bump the application version
   at least by one patch in the same change. A minor/major bump may accompany
   a schema change; an application-only fix may keep the existing schema.
 - Historical intermediate schemas retain their original numbers; do not
   fabricate released application versions for them. Required internal steps
-  may remain while a supported endpoint depends on them, but are not additional
-  supported releases. Decide intermediate-root handling explicitly in the
-  version/schema mapping; never equate a numeric range with release support.
+  may remain while a current or formally supported endpoint depends on them,
+  but are not additional supported releases. Decide intermediate-root handling
+  explicitly in the version/schema mapping; never equate a numeric range with
+  release support.
 - Maintain application version, database schema, catalog/content version and
   external wire-contract version separately. Changing a wire schema requires an
   application bump too, but need not change the database schema without a storage
@@ -1237,44 +1265,48 @@ version history. Rotation procedure is in the [workflow](development-workflow.md
 
 ### 13.2 Retention And Supported Database Upgrades
 
-Complete development plans, task records, acceptance evidence, schema documents,
-contract snapshots, synthetic baselines and runtime migration entry support share
-the three-application-version window. Current specifications keep valid rules and
-open work; completed work of a retained version is tracked under
-`docs/history/<version>/`, and moves to
-the untracked local `docs/archive/` holding area when the version expires.
-Local `.planning/archive/` contains historical execution context only; it is
-not a substitute for tracked release evidence. Archiving is not permanent
-retention.
+Current specifications keep valid rules and open work. Completed version facts
+are tracked under `docs/history/<version>/`; local `.planning/archive/` is
+historical execution context, not a substitute for tracked release evidence.
+Before formal release, slimming may remove duplicate or obsolete development
+records, fixtures and compatibility entries after reference and data-safety
+audit; preserve any still-current product rule and candidate fact in an
+appropriate tracked document or Git history. After formal release, keep the
+selected one-or-two-version support material and required upgrade paths.
+Archiving is not permanent retention.
 
-At rotation, inventory references, merge still-valid rules into current documents,
-then remove the expired version's full records and exclusive fixtures/helpers.
-Keep only schema definitions and migration steps needed to create the current
-database or upgrade a retained version. Consolidate new-database initialization
-without rewriting already-applied migration semantics in the supported window.
-Git/GitHub commit history stays intact; do not create an unbounded second archive.
+At version rotation or slimming, inventory references, merge still-valid rules
+into current documents, then remove proven obsolete records and exclusive
+fixtures/helpers. Keep schema definitions and steps needed to create the current
+database or upgrade a formally supported version. Consolidate new-database
+initialization without rewriting already-applied migration semantics in the
+selected support range. Git/GitHub commit history stays intact; do not create
+an unbounded second archive.
 
-Except for the explicit one-time rule in Section 13.4, supported roots reopen
-without changing frozen facts and a retained upgrade may use normal automatic
-recovery/conversion. Roots outside the applicable support boundary are detected
-read-only and refused before migration or other writes, with an actionable
+Except for the historical one-time rule in Section 13.4, the current root
+reopens without changing frozen facts; formally supported upgrades may use
+declared automatic recovery/conversion. Roots outside the applicable boundary
+are detected read-only and refused before migration or other writes, with an actionable
 message such as:
 
 > 此开发数据版本已超出支持范围，请重新安装当前版本并新建数据目录。
 > 原数据目录已保留，不会自动删除或重置。
 
 Reinstalling program files does not recreate the independent root. The user must
-explicitly choose a new empty directory; installation/uninstallation never deletes
-the old root or locator. Section 13.4 applies only when 0.7.5 first opens a
-selected valid schema 22 root. Do not auto-import an unsupported database or
-offer a legacy runtime mode. Unsupported future roots remain unchanged. New
+explicitly choose a new empty directory for a new root. Ordinary uninstall
+preserves the root and locator; from v0.8.0 only an explicitly opted-in,
+path-verified uninstall may delete the displayed current data root as defined
+in Section 7. Section 13.4 applied only when 0.7.5 first opened a selected
+valid schema 22 root. Do not auto-import an unsupported database or offer a
+legacy runtime mode. Unsupported future roots remain unchanged. New
 roots load the complete current bundled catalog without relying on an older root.
 
-Retention is for development artifacts and compatibility code, not general
-permission to purge personal data, original answers/exports or historical
-evidence within a retained root. Section 13.4 records the user's specific
-0.7.5 deletion decision. Active test-budget ledgers must not be reset during
-cleanup. Unclassified local files require inventory before disposal.
+Artifact cleanup is not general permission to purge personal data, original
+answers/exports or historical evidence within any root. The separately
+confirmed v0.8.0 uninstall option is the narrow user-controlled exception;
+Section 13.4 records the historical 0.7.5 reset decision. Active test-budget
+ledgers must not be reset during cleanup. Unclassified local files require
+inventory before disposal.
 
 ### 13.3 Development Content And Personal-Data Transition
 

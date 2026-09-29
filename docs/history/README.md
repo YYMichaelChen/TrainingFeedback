@@ -1,17 +1,16 @@
 # Versioned Development History
 
 Retention authority: [development plan §13](../development-plan.md#13-version-retention-and-development-data-policy).
-This table is the single human-readable current application/schema support map;
+This table is the single human-readable current application/schema implementation map;
 the [development workflow](../development-workflow.md) owns future rotation steps.
-Keep complete development documents for the current application version and its
-two predecessors, not the last three Git commits or schema numbers.
+The user has suspended old-version compatibility obligations until an explicit
+formal release. Rows for older development versions describe recorded behavior
+and evidence, not a current support promise.
 
 This directory is **tracked in Git**. Each subdirectory is labeled with the exact
-application version it documents. Any file that must be retained for the window
-lives here under its version; when a version rotates out of the three-version
-window, its complete subdirectory moves to the untracked local `docs/archive/`
-holding area in the same action — archiving into another unlimited location is
-not policy compliance.
+application version it documents. Version history and local archive cleanup now
+follow the audited retention rule in development plan §13; existing historical
+rotations below are facts, not a continuing three-version obligation.
 
 Current development application version: **0.7.7** (database schema **23**).
 Latest locally accepted candidate: **0.7.3**; that version is now outside the
@@ -23,17 +22,17 @@ technical acceptance pass or evidence for 0.7.7.
 | Application version | Database schema | Role | Local candidate |
 | --- | --- | --- | --- |
 | 0.7.7 | 23 | Closed development version: [new-root creation](0.7.7/development.md) | [User-approved partial closeout; full local installed acceptance incomplete](0.7.7/local-candidate.md#2026-09-29-部分验收收尾) |
-| 0.7.6 | 23 | Retained predecessor: [documentation ownership and routing](0.7.6/development.md) | No installer candidate; development verification only |
-| 0.7.5 | 23 | Retained predecessor: [plan and reset development](0.7.5/development.md) | [User-approved closeout; installed acceptance incomplete](0.7.5/local-candidate.md#2026-09-29-final-version-closeout) |
+| 0.7.6 | 23 | Historical development version: [documentation ownership and routing](0.7.6/development.md) | No installer candidate; development verification only |
+| 0.7.5 | 23 | Historical development version: [plan and reset development](0.7.5/development.md) | [User-approved closeout; installed acceptance incomplete](0.7.5/local-candidate.md#2026-09-29-final-version-closeout) |
 
 History records explain completed work and dated evidence; they do not override
 current requirements or certify a later build. Multiple schemas already created
 during 0.6.1/0.7.0 are historical exceptions, not a future numbering pattern.
 
-On each distinct application-version change, rotate the window, merge
-still-valid requirements into current specifications, and move the expired
-version's complete history subdirectory plus its exclusive fixtures/migration
-support to `docs/archive/`.
+On future application-version changes, update this implementation map and merge
+still-valid requirements into current specifications. Remove obsolete history,
+fixtures and migration entry points only after the v0.8.0 audit; after formal
+release, retain the user-selected one or two predecessor formal versions.
 The 0.6.0 and 0.6.1 directories and schema16-only fixture rotated out in 0.7.2;
 their committed bytes remain in Git history.
 The complete 0.7.0 history, local planning records and candidate evidence rotated to the ignored
