@@ -165,6 +165,10 @@ installed row above remains `not run`. The configured patch regression profile
 was not run and its 17 unselected cases remain `not run`. Neither omission is
 recorded as a pass. The technical local acceptance state remains incomplete.
 
+The 50-case `release-0.7.5` ledger and its 17 unselected cases refer only to
+pytest node IDs. None of the client or installed checks above is included in
+that version-update test quantity; each has its own candidate-specific status.
+
 This decision authorizes continued development only. It does not authorize a
 personal-data transition or establish independent public acceptance, content
 review or W4 readiness. If installed acceptance is requested later, it must use

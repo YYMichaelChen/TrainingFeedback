@@ -53,6 +53,8 @@ For each applicable check, record candidate and installed identities, account,
 paths, synthetic input baseline, operations, expected/observed result, evidence
 path/hash and `pass`, `fail` or `not run`. Inspect interactive UI where the claim
 depends on visible behavior; offscreen process survival alone is not that evidence.
+These client checks are recorded separately and do not count toward the
+version-update pytest case limit in [test instructions](../tests/README.md).
 If a candidate changes, rerun affected checks and explicitly cite earlier
 unchanged checks that were not repeated. Do not relabel prior results as new
 candidate passes. Unsigned local builds disclose their status; signing is a

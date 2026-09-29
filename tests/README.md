@@ -19,6 +19,14 @@ unique cases across commands. Do not reset or split scopes, hide cases at
 collection, or loop independent scenarios to evade a limit. A release uses its
 one tier and scope from the first execution.
 
+The budget counts only parameter-expanded pytest node IDs reserved under that
+scope. Developer-operated client checks, including installed acceptance, do not
+count toward a version-update tier limit. Record their `pass`, `fail` or `not run`
+results separately against the exact candidate. Static package inspection,
+Ruff and diff checks also do not consume pytest case slots; none substitutes for
+an unrun pytest case or client check.
+UI-focused tests run through pytest still count as pytest cases.
+
 For an ordinary change, select affected tests explicitly and keep one task scope:
 
 ```powershell

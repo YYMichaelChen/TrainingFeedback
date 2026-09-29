@@ -69,6 +69,9 @@ matching patch/minor/major release scope from first execution and includes
 affected cases within it. Follow [test instructions](../tests/README.md) for
 limits, unique-case accounting, locks, reruns and collection behavior. Do not
 run all tier profiles in sequence.
+The version-update test quantity is the pytest scope's unique case count only.
+Developer-operated client and installed checks have separate candidate-specific
+statuses and never consume that pytest budget.
 
 ### Verification by affected risk
 

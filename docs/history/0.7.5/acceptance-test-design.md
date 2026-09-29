@@ -6,6 +6,8 @@ serious application failure. The existing ledger is immutable: 48 affected cases
 were already reserved before this review. This review added exactly two distinct
 cases, reaching 50/50. It did not reset the ledger, change tier, or hide cases at
 collection. A version change to 0.8.0 is not justified by this selection.
+The 50/50 count consists solely of pytest node IDs. Installed client checks are
+independent candidate evidence and consume no patch-scope case slots.
 
 | Risk | Evidence selected | Reason |
 | --- | --- | --- |
