@@ -139,9 +139,8 @@ def test_locator_failure_rolls_back_and_candidate_is_released(qt_app, tmp_path, 
     assert switcher.window is window
     assert switcher.context.sessions.active() is None
     assert switcher.locator.load() == tmp_path / "A"
-    # 候选上下文已关闭：B 可以立即被重新打开使用。
-    candidate = DataRootSwitcher.prepare(tmp_path / "B", False)
-    candidate.close()
+    # 新建候选的所有受管产物已回滚。
+    assert not (tmp_path / "B").exists()
     switcher.context.close()
 
 
@@ -176,7 +175,7 @@ def _payload(context):
         (Path(__file__).resolve().parents[1] / "docs/contracts/plan-v3.example.json")
         .read_text(encoding="utf-8")
     )
-    value["plan"].pop("target_plan_name")
+    value["plan"].pop("target_plan_name", None)
     for _day, _item, action in plan_actions(value["plan"]):
         entry = context.catalog.get(action["exercise"]["key"])
         action["content"] = entry["reference"]
@@ -199,7 +198,7 @@ def test_settings_switch_cancel_and_failure_feedback(qt_app, tmp_path, monkeypat
     from training_feedback.ui import settings_page
 
     class CancelDialog:
-        def __init__(self, parent=None):
+        def __init__(self, parent=None, **_kwargs):
             pass
 
         def exec(self):

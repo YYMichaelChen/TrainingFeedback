@@ -12,7 +12,7 @@ from typing import Any
 from . import migrations
 from .database import Database
 from .migrations import OLDEST_SUPPORTED_SCHEMA_VERSION, FutureSchemaError
-from .one_time_reset import InvalidResetRootError, ResetRecoveryError, prepare_existing_root
+from .one_time_reset import ResetRecoveryError, prepare_existing_root
 from .root_lock import RootBusyError
 
 APPLICATION_NAME = "TrainingFeedback"
@@ -31,6 +31,10 @@ class DataRootError(Exception):
 
 class DataRootNotEmptyError(DataRootError):
     pass
+
+
+class ExistingDataRootError(DataRootError):
+    """Create mode selected a supported root that must be opened explicitly."""
 
 
 class InvalidDataRootError(DataRootError):
@@ -229,10 +233,6 @@ def open_existing(root_path: Path) -> DataRoot:
         ) from exc
     except RootBusyError as exc:
         raise DataRootAccessError(str(exc)) from exc
-    except InvalidResetRootError as exc:
-        raise InvalidDataRootError(
-            "The TrainingFeedback database is invalid or incomplete."
-        ) from exc
     except ResetRecoveryError as exc:
         raise DataRootAccessError(
             "The one-time plan and training cleanup could not finish. "

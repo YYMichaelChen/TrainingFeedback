@@ -538,6 +538,11 @@ ERROR_TRANSLATIONS = {
     "External rationale must contain text.": "外部调整理由不能为空。",
     "The selected path is not an empty directory.": "所选路径不是空目录，无法在此创建数据目录。",
     "The selected directory is not empty.": "所选目录不是空目录，无法在此创建数据目录。",
+    "This is already a data root. Open it explicitly.": (
+        "该目录已是有效数据目录，请选择「打开已有数据目录」并直接选中它。"
+    ),
+    "Choose one valid Windows directory name.": "请输入单个有效的 Windows 目录名称。",
+    "Choose an existing parent directory.": "请选择已存在的父目录。",
     "The directory is not a TrainingFeedback data root.": "所选目录不是训练反馈数据目录。",
     "The data-root metadata is incomplete or invalid.": "所选目录的数据信息不完整或已损坏。",
     "The data-root metadata cannot be read.": "所选目录的标记或配置文件无法读取，可能已损坏。",

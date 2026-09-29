@@ -47,7 +47,7 @@ def test_create_in_occupied_directory_is_reported_then_retry_succeeds(tmp_path):
     assert locator.load() == empty
 
 
-def test_locator_write_failure_is_reported_and_root_remains_openable(tmp_path):
+def test_locator_write_failure_rolls_back_new_root(tmp_path):
     blocker = tmp_path / "blocker"
     blocker.write_text("not a directory", encoding="utf-8")
     bad_locator = Locator(blocker / "locator.json")
@@ -56,12 +56,7 @@ def test_locator_write_failure_is_reported_and_root_remains_openable(tmp_path):
     with pytest.raises(DataRootAccessError):
         create_root(root, bad_locator)
 
-    good_locator = Locator(tmp_path / "locator.json")
-    context = choose_data_root(good_locator, lambda: (root, False))
-
-    assert context is not None
-    context.close()
-    assert good_locator.load() == root
+    assert not root.exists()
 
 
 def test_open_root_refuses_out_of_window_root_and_never_records_locator(tmp_path):

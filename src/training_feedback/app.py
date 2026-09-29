@@ -5,7 +5,19 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable
 
-from .data.data_root import DataRootAccessError, create_new, inspect_existing, open_existing
+from .application.new_root import validate_child_name
+from .data.data_root import (
+    CONFIG_FILENAME,
+    DATABASE_FILENAME,
+    MANAGED_DIRECTORIES,
+    MARKER_FILENAME,
+    DataRootAccessError,
+    DataRootNotEmptyError,
+    ExistingDataRootError,
+    create_new,
+    inspect_existing,
+    open_existing,
+)
 from .data.database import Database
 from .data.locator import Locator
 
@@ -115,6 +127,7 @@ class LibraryContext:
             self.library, parent, removals=self.removals, progressive=progressive,
         )
 
+
     def create_removal_page(self, parent=None):
         from .ui.library_lifecycle_page import LibraryLifecyclePage
 
@@ -141,6 +154,68 @@ class LibraryContext:
         return GroupSessionPage(self, parent)
 
 
+class RootCreation:
+    """Own a new root until context and locator/window commit have succeeded."""
+
+    def __init__(self, target: Path):
+        self.target = Path(target)
+        self.created_child = False
+        self.owns_artifacts = False
+        self.context = None
+
+    def prepare(self) -> LibraryContext:
+        from .data.library_root import require_library_root
+
+        target = self.target
+        validate_child_name(target.name)
+        if target.is_symlink():
+            raise DataRootNotEmptyError("The selected path is not an empty directory.")
+        try:
+            exists = target.exists()
+            if exists:
+                if not target.is_dir():
+                    raise DataRootNotEmptyError("The selected path is not an empty directory.")
+                if any(target.iterdir()):
+                    inspect_existing(target)
+                    require_library_root(target)
+                    raise ExistingDataRootError("This is already a data root. Open it explicitly.")
+            elif not target.parent.is_dir():
+                raise DataRootAccessError("Cannot create the data root.")
+            self.created_child = not exists
+            self.owns_artifacts = True
+            self.context = LibraryContext.create(target)
+            return self.context
+        except Exception:
+            self.rollback()
+            raise
+
+    def rollback(self) -> None:
+        if not self.owns_artifacts:
+            return
+        if self.context is not None:
+            self.context.close()
+            self.context = None
+        # Only remove names created by root initialization. Never sweep unknown files.
+        for name in (MARKER_FILENAME, DATABASE_FILENAME + "-shm", DATABASE_FILENAME + "-wal",
+                     DATABASE_FILENAME + "-journal", ".training-feedback.lock",
+                     DATABASE_FILENAME, CONFIG_FILENAME):
+            path = self.target / name
+            if path.is_file() or path.is_symlink():
+                path.unlink(missing_ok=True)
+        for name in (*MANAGED_DIRECTORIES, "custom-exercise-images", "snapshot-assets"):
+            path = self.target / name
+            if path.is_dir():
+                try:
+                    path.rmdir()
+                except OSError:
+                    pass
+        if self.created_child:
+            try:
+                self.target.rmdir()
+            except OSError:
+                pass
+
+
 class DataRootSwitcher:
     """数据根切换协调：准备候选 → 构建窗口 → 提交 locator → 替换窗口 → 关闭旧上下文。
 
@@ -161,31 +236,38 @@ class DataRootSwitcher:
     @staticmethod
     def prepare(path: Path, create: bool) -> LibraryContext:
         """准备候选上下文：新建或打开当前模型根；不写 locator。"""
-        target = Path(path).resolve()
+        target = Path(path)
         if create:
-            return LibraryContext.create(target)
+            return RootCreation(target).prepare()
         return LibraryContext.reopen(target)
 
     def switch(self, path: Path, create: bool, build_window: Callable) -> bool:
         """切换到指定数据根；同路径无操作返回 False，成功切换返回 True。"""
-        target = Path(path).resolve()
-        if target == Path(self.context.data_root.path).resolve():
+        target = Path(path)
+        if target.resolve() == Path(self.context.data_root.path).resolve():
             return False
         active = self.context.sessions.active()
         if active and active["status"] == "open":
             raise ValueError("Pause the active training session before switching data roots.")
-        candidate = self.prepare(target, create)
+        creation = RootCreation(target) if create else None
+        candidate = creation.prepare() if creation else self.prepare(target, False)
         try:
             new_window = build_window(candidate)
         except Exception:
-            candidate.close()
+            if creation:
+                creation.rollback()
+            else:
+                candidate.close()
             raise
         try:
             self.locator.save(candidate.data_root.path)
         except OSError as exc:
             new_window.close()
             new_window.deleteLater()
-            candidate.close()
+            if creation:
+                creation.rollback()
+            else:
+                candidate.close()
             raise DataRootAccessError("Cannot record the data-root location.") from exc
         old_window, old_context = self.window, self.context
         self.context = candidate

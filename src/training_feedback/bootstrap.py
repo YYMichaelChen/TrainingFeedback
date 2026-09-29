@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable
 
-from .app import LibraryContext
+from .app import LibraryContext, RootCreation
 from .data.data_root import DataRootAccessError, DataRootError
 from .data.locator import Locator
 
@@ -27,7 +27,13 @@ def open_root(path: Path, locator: Locator) -> LibraryContext:
 
 def create_root(path: Path, locator: Locator) -> LibraryContext:
     """新建当前模型数据根并记录位置。"""
-    return _record_locator(LibraryContext.create(path), locator)
+    creation = RootCreation(path)
+    context = creation.prepare()
+    try:
+        return _record_locator(context, locator)
+    except Exception:
+        creation.rollback()
+        raise
 
 
 def open_from_locator(
@@ -66,7 +72,7 @@ def choose_data_root(
             if create:
                 return create_root(path, locator)
             return open_root(path, locator)
-        except DataRootError as exc:
+        except (DataRootError, ValueError) as exc:
             if report_error is None:
                 raise
             report_error(exc)

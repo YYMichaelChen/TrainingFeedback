@@ -1,4 +1,4 @@
-"""启动时的数据目录选择对话框：打开已有目录或创建新目录。"""
+"""Shared first-launch and Settings data-root chooser."""
 
 from pathlib import Path
 
@@ -9,86 +9,112 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QLabel,
     QLineEdit,
+    QPushButton,
     QRadioButton,
     QVBoxLayout,
 )
 
-from ..data.data_root import CANDIDATE_EXISTING, CANDIDATE_NEW, describe_candidate
+from ..application.new_root import DEFAULT_ROOT_DIRECTORY_NAME, NewRootProposal
 from .labels import localize_dialog_buttons
-
-DEFAULT_ROOT_DIRECTORY_NAME = "TrainingFeedbackData"
 
 
 def suggested_data_root() -> Path | None:
-    """首启建议路径：用户文档目录下的固定子目录。用 Qt 取文档位置以尊重系统重定向。"""
+    """Use Windows' known Documents location, including folder redirection."""
     documents = QStandardPaths.writableLocation(
         QStandardPaths.StandardLocation.DocumentsLocation
     )
-    if not documents:
-        return None
-    return Path(documents) / DEFAULT_ROOT_DIRECTORY_NAME
+    return Path(documents) if documents else None
 
 
 class DataRootDialog(QDialog):
-    """Explicitly chooses whether to create or open a data root."""
+    """Create from parent/name or open the exact selected root directory."""
 
     def __init__(self, parent=None, *, suggested_path: Path | None = None):
         super().__init__(parent)
         self.setWindowTitle("选择训练反馈数据目录")
-        self.path_edit = QLineEdit()
-        self.path_edit.setPlaceholderText("请选择数据目录")
+        self._create_text = str(suggested_path or suggested_data_root() or "")
+        self._open_text = ""
+        self._current_create = True
+        self._selected = None
         self.open_mode = QRadioButton("打开已有数据目录")
         self.create_mode = QRadioButton("创建新的数据目录")
-        self.open_mode.setChecked(True)
-        self.suggestion_label = QLabel("")
-        browse = QFileDialog.getExistingDirectory
-        browse_button = QDialogButtonBox(QDialogButtonBox.StandardButton.Open)
-        localize_dialog_buttons(browse_button)
-        browse_button.clicked.connect(lambda checked=False: self._browse(browse))
+        self.create_mode.setChecked(True)
+        self.path_label = QLabel("父目录")
+        self.path_edit = QLineEdit(self._create_text)
+        self.name_label = QLabel("新目录名称")
+        self.name_edit = QLineEdit(DEFAULT_ROOT_DIRECTORY_NAME)
+        self.preview_label = QLabel()
+        self.preview_label.setWordWrap(True)
+        self.browse_button = QPushButton("浏览…")
+        self.browse_button.clicked.connect(self._browse)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         localize_dialog_buttons(buttons)
+        self.ok_button = buttons.button(QDialogButtonBox.StandardButton.Ok)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout = QVBoxLayout(self)
-        layout.addWidget(
-            QLabel("请选择已有的训练反馈数据目录，或选择空目录创建新的数据目录。")
-        )
-        layout.addWidget(self.open_mode)
-        layout.addWidget(self.create_mode)
-        layout.addWidget(self.path_edit)
-        layout.addWidget(self.suggestion_label)
-        layout.addWidget(browse_button)
-        layout.addWidget(buttons)
-        self._apply_suggestion(suggested_path)
+        layout.addWidget(QLabel("请选择已有数据目录，或在所选父目录下创建新数据目录。"))
+        for widget in (self.open_mode, self.create_mode, self.path_label,
+                       self.path_edit, self.name_label, self.name_edit,
+                       self.preview_label, self.browse_button, buttons):
+            layout.addWidget(widget)
+        self.create_mode.toggled.connect(self._mode_changed)
+        self.path_edit.textChanged.connect(self._refresh)
+        self.name_edit.textChanged.connect(self._refresh)
+        self._refresh()
 
-    def _apply_suggestion(self, suggested_path: Path | None) -> None:
-        """预填建议路径并按该路径的实际状态预选模式；仍需用户确认才会创建或打开。
-
-        只检查这一个确切路径，不扫描目录；无法使用的路径不预填，避免给出行不通的建议。
-        """
-        if suggested_path is None:
+    def _mode_changed(self, checked: bool) -> None:
+        if checked == self._current_create:
             return
-        candidate = describe_candidate(suggested_path)
-        if candidate == CANDIDATE_EXISTING:
-            self.open_mode.setChecked(True)
-        elif candidate == CANDIDATE_NEW:
-            self.create_mode.setChecked(True)
+        if self._current_create:
+            self._create_text = self.path_edit.text()
+            self.path_edit.setText(self._open_text)
         else:
-            return
-        self.path_edit.setText(str(suggested_path))
-        self.suggestion_label.setText(
-            f"默认位置：{suggested_path}（可改为其他位置）"
-        )
+            self._open_text = self.path_edit.text()
+            self.path_edit.setText(self._create_text)
+        self._current_create = checked
+        self.path_label.setText("父目录" if checked else "已有数据目录")
+        self.name_label.setVisible(checked)
+        self.name_edit.setVisible(checked)
+        self._refresh()
 
-    def _browse(self, picker) -> None:
-        selected = picker(self, "选择数据目录")
+    def _browse(self) -> None:
+        title = "选择父目录" if self.creates_new_root() else "选择已有数据目录"
+        selected = QFileDialog.getExistingDirectory(self, title)
         if selected:
             self.path_edit.setText(selected)
 
+    def _refresh(self) -> None:
+        if self.creates_new_root():
+            try:
+                if not self.path_edit.text():
+                    raise ValueError("Choose an existing parent directory.")
+                proposal = NewRootProposal(Path(self.path_edit.text()), self.name_edit.text())
+            except ValueError as exc:
+                self._selected = None
+                self.preview_label.setText(str(exc))
+            else:
+                self._selected = proposal.target
+                self.preview_label.setText(f"将创建：{proposal.preview}")
+        else:
+            path_text = self.path_edit.text()
+            self._selected = Path(path_text) if path_text and Path(path_text).is_dir() else None
+            self.preview_label.setText(
+                f"将打开：{path_text}" if path_text else "请选择已有数据目录"
+            )
+        self.ok_button.setEnabled(self._selected is not None)
+
+    def accept(self) -> None:
+        self._refresh()
+        if self._selected is not None:
+            super().accept()
+
     def selected_path(self) -> Path:
-        return Path(self.path_edit.text().strip())
+        if self._selected is None:
+            raise ValueError("Choose a valid data-root location.")
+        return self._selected
 
     def creates_new_root(self) -> bool:
         return self.create_mode.isChecked()

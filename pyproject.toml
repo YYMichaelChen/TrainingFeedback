@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "training-feedback"
-version = "0.7.6"
+version = "0.7.7"
 description = "Local-first personal training desktop application"
 requires-python = ">=3.12"
 dependencies = [
@@ -45,9 +45,8 @@ regression_dev = [
     "test_actual_entry_is_blank_side_locked_invalid_preserved_and_cancel_safe",
 ]
 regression_patch = [
-    "test_schema22_open_resets_plans_and_training_and_retains_library",
-    "test_schema22_reset_rolls_back_before_commit",
-    "test_schema22_reset_resumes_file_cleanup_after_commit",
+    "test_schema23_pending_reset_cleanup_resumes",
+    "test_schema22_root_is_refused_without_writes",
     "test_open_rejects_future_schema_without_modifying_database",
     "test_switch_round_trip_keeps_datasets_separate",
     "test_open_from_locator_reopens_current_root_and_is_idempotent",
@@ -69,7 +68,7 @@ regression_minor = [
     "test_open_rejects_expired_schema_without_modifying_database",
     "test_open_root_refuses_out_of_window_root_and_never_records_locator",
     "test_switch_rejects_expired_target_without_changing_current_root",
-    "test_schema22_open_resets_plans_and_training_and_retains_library",
+    "test_schema22_root_is_refused_without_writes",
     "test_open_from_locator_reopens_current_root_and_is_idempotent",
     "test_start_freezes_everything_and_requires_fresh_disclosure",
     "test_overrides_custom_copy_and_catalog_upgrade_keep_originals",

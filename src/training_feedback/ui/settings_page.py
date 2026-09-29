@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 
 from ..data.backup import BackupError, create_backup
 from ..data.data_root import DataRootError
-from .data_root_dialog import DataRootDialog
+from .data_root_dialog import DataRootDialog, suggested_data_root
 from .labels import user_message
 
 
@@ -65,7 +65,7 @@ class SettingsPage(QWidget):
                 self, "无法切换数据目录", "请先保存或关闭其他打开的窗口，再切换数据目录。"
             )
             return
-        dialog = DataRootDialog(self)
+        dialog = DataRootDialog(self, suggested_path=suggested_data_root())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         try:

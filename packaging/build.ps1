@@ -114,7 +114,6 @@ $exe = Join-Path $outputDir 'TrainingFeedback.exe'
 $requiredBuildArtifacts = @(
     $exe,
     (Join-Path $outputDir '_internal' 'sqlite3.dll'),
-    (Join-Path $outputDir '_internal' 'training_feedback/data/schema22.sql'),
     (Join-Path $outputDir '_internal' 'training_feedback/data/schema23.sql')
 )
 $condaFfi = Join-Path $pythonBasePrefix 'Library\bin\ffi.dll'
