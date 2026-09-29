@@ -16,10 +16,12 @@ not policy compliance.
 Current development application version: **0.7.5** (database schema **23**).
 Latest locally accepted candidate: **0.7.3**. Later 0.7.4 and 0.7.5
 candidates have incomplete installed/local acceptance recorded below.
+The user approved continuing development after 0.7.5 with its unrun checks
+recorded; this is not a technical acceptance pass.
 
 | Application version | Database schema | Role | Local candidate |
 | --- | --- | --- | --- |
-| 0.7.5 | 23 | Current development source: [plan and reset development](0.7.5/development.md) | [Installed; local acceptance incomplete](0.7.5/local-candidate.md) |
+| 0.7.5 | 23 | Current development source: [plan and reset development](0.7.5/development.md) | [User-approved progression; installed acceptance incomplete](0.7.5/local-candidate.md) |
 | 0.7.4 | 22 | Retained predecessor: [performance development](0.7.4/development.md) | [Installed acceptance incomplete](0.7.4/local-candidate.md) |
 | 0.7.3 | 22 | Retained predecessor: [plan page development](0.7.3/development.md) | [Accepted local candidate](0.7.3/development.md) |
 
