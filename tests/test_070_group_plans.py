@@ -66,7 +66,9 @@ def context(tmp_path):
 
 @pytest.fixture
 def payload(context):
-    value = json.loads((ROOT / "docs/contracts/plan-v3.example.json").read_text(encoding="utf-8"))
+    value = json.loads(
+        (ROOT / "docs/reference/contracts/plan-v3.example.json").read_text(encoding="utf-8")
+    )
     value["plan"].pop("target_plan_name", None)
     for _day, _item, action in plan_actions(value["plan"]):
         entry = context.catalog.get(action["exercise"]["key"])
@@ -104,11 +106,15 @@ def activate(context, identifier):
 def test_runtime_schema_matches_reviewed_contract_and_only_accepts_v3():
     schema = plan_v3_schema()
     assert schema == json.loads(
-        (ROOT / "docs/contracts/plan-v3.schema.json").read_text(encoding="utf-8")
+        (ROOT / "src/training_feedback/contracts/plan-v3.schema.json").read_text(
+            encoding="utf-8"
+        )
     )
     with pytest.raises(ValueError, match="version 3"):
         validate_plan_payload({"schema_version": 2}, schema)
-    example = json.loads((ROOT / "docs/contracts/plan-v3.example.json").read_text(encoding="utf-8"))
+    example = json.loads(
+        (ROOT / "docs/reference/contracts/plan-v3.example.json").read_text(encoding="utf-8")
+    )
     example["rationale"] = ""
     assert validate_plan_payload(example, schema)["rationale"] == ""
 

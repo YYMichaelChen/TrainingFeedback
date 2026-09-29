@@ -111,8 +111,9 @@ usable release:
 The old project may be consulted manually, but the completed guidance belongs
 to this repository's own seed data and must not be loaded from the old runtime.
 
-Current implementation: `data/seed/catalog.py` owns the guidance for all 36
-exercises. `data/seed/images.py` explicitly maps the 36 owned source PNGs, and
+Current implementation: `src/training_feedback/data/seed/catalog.py` owns the
+guidance for all 36 exercises. `src/training_feedback/data/seed/images.py`
+explicitly maps the 36 owned source PNGs, and
 `070-illustrated-3` contains one required, technically valid 1254×1254 image per
 entry. The 2026-09-22 image integration advanced every content version by one:
 current versions span v2–v5; standing forward fold is v5, single-knee-to-chest v4,
@@ -161,8 +162,9 @@ These values exist to exercise the software model. Before this plan becomes a
 real active plan, the application must present it for explicit confirmation or
 replace it with a plan returned by an external AI expert.
 
-`data/seed/plans.py` creates this one-day proposal as a draft. Draft creation
-may reference exercises whose guidance is still awaiting review. Activation
+This one-day proposal is a specification and test input; the current application
+does not auto-create it from a seed-plan module. A manually entered or imported
+draft may reference exercises whose guidance is still awaiting review. Activation
 requires all referenced exercises to be enabled with complete guidance selected
 as their in-use revision, and the user to confirm the full prescription. Unreviewed
 guidance is listed in the activation preview but does not block activation;
@@ -590,9 +592,10 @@ the coarse class alone does not establish transition equivalence. Membership
 and classification changes are versioned, and historical snapshots keep the
 meaning originally recorded.
 
-The checked [070-A source inventory](contracts/baseline/catalog-070-baseline.json)
+The checked [070-A source inventory](reference/contracts/baseline/catalog-070-baseline.json)
 records every stable key, original name/alias, content identity/hash, classification
-and explicit missing-image/unreviewed state. `data/seed/families.py` owns the
+and explicit missing-image/unreviewed state.
+`src/training_feedback/data/seed/families.py` owns the
 executable mapping consumed by the program catalog build. Baseline hashes describe
 the historical annex's content envelope, not current content or stored history.
 The bridge technique and aliases in Section 10.1 are delivered in
@@ -653,7 +656,8 @@ in the [dated delivery history](https://github.com/YYMichaelChen/TrainingFeedbac
 Current inventory evidence is keyed by stable exercise identity: canonical
 name/aliases, family/order, position, content ID/version/hash and image path/hash.
 Use source content plus `catalog-manifest.json` and actual image bytes for current
-verification. Retain `contracts/baseline/catalog-070-baseline.json` unchanged as
+verification. Retain
+`docs/reference/contracts/baseline/catalog-070-baseline.json` unchanged as
 the earlier missing-image/unreviewed baseline; do not regenerate it from current
 source or rewrite its hashes to make the two inventories equal.
 

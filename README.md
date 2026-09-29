@@ -4,6 +4,13 @@ TrainingFeedback is a new local-first PySide6 training desktop application. It
 is intentionally independent from the existing `Exercises@home` application,
 database, Streamlit UI, wardrobe data, and submission format.
 
+## Current status
+
+- Application: `0.7.8`
+- Database schema: `23`
+- Current development target: [`0.8.0`](docs/releases/0.8.0/design.md)
+- Version and candidate status: [`docs/history/README.md`](docs/history/README.md)
+
 ## Run
 
 ```powershell
@@ -25,6 +32,7 @@ affected file or node IDs with the same scope, for example:
 
 ```powershell
 python -m pytest tests/test_database.py --test-scope my-task --basetemp .tmp/pytest
+python packaging/check_docs.py
 ```
 
 For releases, use the corresponding `--test-tier patch|minor|major` with one
@@ -107,20 +115,12 @@ root; see the [packaged acceptance runbook](docs/packaged-acceptance-runbook.md)
 Build manifests identify the exact source revision and payload. Independent
 Windows acceptance begins only on an explicit public-release request; external
 content review, W4 and personal-data transition have separate gates in the
-[product plan](docs/development-plan.md#9-delivery-gates).
+[product specification](docs/development-plan.md#9-delivery-gates).
 
 ## Documentation
 
-- [Authoritative development plan](docs/development-plan.md)
-- [Version-independent development workflow](docs/development-workflow.md)
-- [Initial exercise catalog and plan proposal](docs/initial-exercises-and-plan.md)
-- [Version retention and development-data policy](docs/development-plan.md#13-version-retention-and-development-data-policy)
-- [Retained version history](docs/history/README.md)
-- [Installed and public acceptance procedure](docs/packaged-acceptance-runbook.md)
-- [Content review and W4 procedure](docs/guidance-review-runbook.md)
-- [Pytest scopes and budgets](tests/README.md)
-
-The tracked [version history](docs/history/README.md) gives the current
-application/schema baseline and candidate status. Active release tasks, when
-Planscope is initialized locally, are in `.planning/INDEX.md` and its linked
-PLAN. A fresh clone does not need `.planning/` to use the tracked project docs.
+Use the [documentation index](docs/README.md) to find the authoritative product
+specification, procedures, release design, current identity map and historical
+evidence. Active release tasks, when Planscope is initialized locally, are in
+`.planning/INDEX.md` and its linked PLAN. A fresh clone does not need
+`.planning/` to use the tracked project documentation.

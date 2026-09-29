@@ -2,6 +2,10 @@
 
 本目录按批次保存动作示意图提示词。每个批次文件都必须能够独立使用：完整写出标题、使用约定、本批说明、本批动作索引，以及每个动作可单独复制的完整提示词。
 
+这些文件是内容生产资产，不是产品规范或审核证据。动作与计划规则由
+[`docs/initial-exercises-and-plan.md`](../../docs/initial-exercises-and-plan.md)
+和 [`docs/development-plan.md`](../../docs/development-plan.md) 定义；提示词本身不表示图片已生成、审核或批准。
+
 ## 文件索引
 
 - [第 01–20 项](exercise-image2.5-prompts-01-20.md)

@@ -111,7 +111,7 @@ requirement into a pass or complete 0.7.5 acceptance.
 The schema 22 reset test verifies retained `body_area` and `library_reference`
 rows and checks that synthetic image/review files remain. Its fixture does not
 contain library review, selection, custom-content or removal-decision rows.
-The [product rule](../../development-plan.md#134-075-one-time-plan-and-training-reset)
+The [historical reset design](reset-design.md)
 requires those independent library facts to survive. A focused synthetic reset
 case with those rows, plus the candidate-specific manual installed upgrade
 checks, is still needed before claiming that full retention requirement was

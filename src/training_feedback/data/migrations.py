@@ -9,7 +9,7 @@ from typing import Callable
 
 LATEST_SCHEMA_VERSION = 23
 OLDEST_SUPPORTED_SCHEMA_VERSION = 23
-SUPPORTED_SCHEMA_APPLICATIONS = {23: "0.7.5/0.7.6/0.7.7"}
+SUPPORTED_SCHEMA_APPLICATIONS = {23: "0.7.5/0.7.6/0.7.7/0.7.8"}
 
 _MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {}
 

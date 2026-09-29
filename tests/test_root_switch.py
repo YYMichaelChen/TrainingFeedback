@@ -172,7 +172,10 @@ def _payload(context):
     from training_feedback.domain.group_plans import plan_actions
 
     value = json.loads(
-        (Path(__file__).resolve().parents[1] / "docs/contracts/plan-v3.example.json")
+        (
+            Path(__file__).resolve().parents[1]
+            / "docs/reference/contracts/plan-v3.example.json"
+        )
         .read_text(encoding="utf-8")
     )
     value["plan"].pop("target_plan_name", None)

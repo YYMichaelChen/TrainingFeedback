@@ -2,7 +2,7 @@
 
 Current application/schema baseline: [version history index](history/README.md).
 Public-release acceptance, external review and W4 have separate gates below.
-Last updated: 2026-09-28
+Last updated: 2026-09-30
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
@@ -14,7 +14,8 @@ seed content and proposed doses. Use these entry points:
 - [Current catalog/group contract](#12-current-catalog-and-group-contract):
   ownership, eligibility, execution, removal and supported-root conversion.
 - [Version and development-data policy](#13-version-retention-and-development-data-policy):
-  three application versions, schema bumps and the user-directed personal-data transition.
+  application/schema identity, formal-release support policy, unsupported-root
+  safety and the user-directed personal-data transition.
 - [Versioned delivery history](history/README.md): completed work and superseded rules.
 - [Version-independent workflow](development-workflow.md): task, verification,
   release and rotation procedures.
@@ -150,8 +151,8 @@ it does not block activation or training. The complete prescription
 and differences from the current revision are shown before confirmation.
 Saving a draft does not activate it. Superseding the previous revision and
 updating the active revision pointer form one transaction.
-Section 12.11 owns the planned 0.7.5 distinction between editing a draft,
-cloning an independent plan and explicitly upgrading an active plan.
+Section 12.11 owns the distinction between editing a draft, cloning an
+independent plan and explicitly upgrading an active plan.
 
 The editor places an action list beside a single per-set table. Equal-set entry
 is an optional collapsible batch-fill tool, with explicit confirmation before
@@ -349,11 +350,11 @@ Applying it creates a new immutable plan revision and records:
 No active plan is silently overwritten.
 
 The application owns the versioned contract; it is not tied to a particular AI
-provider. Through 0.7.4, new imports use `training_feedback.plan` v2 and new
-evidence uses `training_feedback.evidence` v2. `contracts/plan-v2.schema.json`
-ships with that application; `data/plan_contract.py` loads it, domain/services
-validate it, and `group_plan_handoff.py` / `group_session_handoff.py` produce
-portable evidence. Section 12.11 owns the planned 0.7.5 v3 contract change.
+provider. New imports use `training_feedback.plan` v3 and new evidence uses
+`training_feedback.evidence` v3. The canonical runtime schema is
+`src/training_feedback/contracts/plan-v3.schema.json`;
+`src/training_feedback/data/plan_contract.py` loads it, domain/application code
+validates it, and the handoff repositories produce portable evidence.
 The UI imports JSON files into drafts and retains original bytes in managed
 imports. Clipboard import is outside current scope. Validation and saving never
 imply activation or approval. Section 12.8 owns the detailed wire contract.
@@ -487,7 +488,7 @@ the locator contains no training data and is not an alternate configuration
 source. If it is absent or invalid, the application asks the user to select a
 data root.
 
-Through 0.7.6, first launch supports:
+First launch supports:
 
 - create a new data root in an empty directory;
 - open an existing valid TrainingFeedback data root.
@@ -508,7 +509,7 @@ database import, and automatic directory scanning.
 `config_version: 1`; database migration state belongs in SQLite, not in the
 configuration. Opening validates the marker and configuration before accessing
 the database. Future schemas and development schemas outside the applicable
-support boundary are rejected unchanged; the planned schema 22 exception is in
+support boundary are rejected unchanged; the historical schema 22 exception is in
 Section 13.4. The current application/schema map is in the version history index.
 
 A backup copies the complete data root, including marker, configuration, images,
@@ -531,24 +532,21 @@ resumed after switching back.
 
 Installer replacement must not write the database, images, exports or backups.
 Normal application startup may apply the declared supported-version migration.
-The planned 0.7.5 first-open reset of a selected schema 22 root is the explicit
-exception in Section 13.4; installing program files alone does not perform it.
+The historical 0.7.5 first-open reset was the one-time exception summarized in
+Section 13.4; installing program files alone does not perform it.
 
 Windows distribution uses a directory payload with `icon/TrainingFeedback.ico`
 and a per-user Inno Setup installer with stable application identity, normal
 shortcuts and an uninstaller. The default installation directory is
-`%LocalAppData%\Programs\TrainingFeedback`. From v0.8.0, interactive installation
-must let the user select a safe program directory; upgrades default to the
-previous program directory. Installation and upgrade never own the locator or
-data root. Normal uninstall removes program files only. An explicitly selected,
-confirmed v0.8.0 uninstall option may delete only validated, displayed user
-data paths under the exact scope in [the v0.8.0 design](0.8.0-design.md); an
-invalid or unverified path must be left intact. External backups remain outside
-the uninstall option.
+`%LocalAppData%\Programs\TrainingFeedback`. Installation and upgrade never own
+the locator or data root. Normal uninstall removes program files only. The
+[v0.8.0 design](releases/0.8.0/design.md) proposes selectable installation and
+an explicit, path-verified data-deletion option; that design is not current
+behavior until implemented and accepted.
 
-### 7.1 0.7.7 New-Root Directory Creation
+### 7.1 New-Root Directory Creation
 
-For 0.7.7, **create a new data root** asks the user to select a *parent*
+**Create a new data root** asks the user to select a *parent*
 directory and a name for the new data directory. The name defaults to
 `TrainingFeedbackData`. Before confirmation, show the resulting full path, for
 example selecting `Documents` with the default name previews
@@ -568,13 +566,13 @@ modifying it. A cancelled or failed attempt must not update the last-root
 locator. Failed creation must not leave an incomplete child presented as a
 usable root.
 
-**Open an existing data root** continues to select the root directory itself,
-including roots created before 0.7.7 and copied backups; opening must not append
+**Open an existing data root** selects the root directory itself, including
+roots created by earlier application versions and copied backups; opening must not append
 another directory layer. Use the same create behavior from first launch and
 Settings when creating and switching to a new root. The separate backup and
 root-copy destination flows retain their own complete-root semantics.
 
-Acceptance for 0.7.7 covers a redirected Documents suggestion, create-path
+Acceptance covers a redirected Documents suggestion, create-path
 preview, successful parent-to-child creation, existing empty/valid/occupied
 children, invalid names, cancellation and failure cleanup, locator persistence,
 and direct opening of existing or backup roots. Use temporary roots for these
@@ -615,8 +613,8 @@ window are versioned, append-only and transactional; never rewrite an applied
 migration. When a version leaves the window, retire its entry path and consolidate
 fresh-database initialization under Section 13.2, preserving the remaining paths.
 Every subsequent schema change also bumps the application version (Section 13.1).
-Failed ordinary migrations preserve the prior version; Section 13.4 defines the
-planned 0.7.5 reset's post-commit cleanup behavior.
+Failed ordinary migrations preserve the prior version; the historical exception
+is recorded in Section 13.4.
 UI tests may use offscreen Qt; all tests use temporary databases and locators,
 never real user data. One QApplication is shared for a whole run, so a UI test
 must let Qt destroy the windows it created; widget graphs abandoned to Python
@@ -650,7 +648,7 @@ remain required when affected. A local candidate or version number alone does
 not trigger formal-release compatibility duties. The first user-declared formal
 release establishes the baseline. Later formal releases select one or two
 available predecessor formal versions and pass the matching compatibility gate.
-Section 13 defines the data-safety boundary; [the v0.8.0 design](0.8.0-design.md)
+Section 13 defines the data-safety boundary; [the v0.8.0 design](releases/0.8.0/design.md)
 records the transition.
 
 For future candidate acceptance, choose pytest cases from the candidate's
@@ -710,8 +708,8 @@ unavailable scenarios stay `not run`.
 
 ### 9.4 Verification And Record Ownership
 
-Verification must protect data preservation and, for the 0.7.5
-exception, the exact reset scope; it also covers frozen history, verbatim text,
+Verification must protect data preservation and the exact scope of any declared
+exception; it also covers frozen history, verbatim text,
 transactional rollback and supported upgrades. Tests use synthetic temporary
 roots and locators, never personal data. The version-independent
 [workflow](development-workflow.md) owns test selection, static checks and
@@ -771,16 +769,14 @@ is defined in Section 4.6.
 
 ## 12. Current Catalog And Group Contract
 
-This catalog and group contract originated in the 0.7.0 work and remains the
-product rule until deliberately revised. Source delivery is recorded in the
-[version history](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/development.md); Section 9 owns delivery gates and
-Section 13 governs supported upgrades and future version changes.
+This catalog and group contract remains the product rule until deliberately
+revised. Historical source delivery is discoverable through Git history;
+Section 9 owns delivery gates and Section 13 governs version changes.
 
-The release delivers an application-owned bundled catalog, exercise families
+The application provides an application-owned bundled catalog, exercise families
 and variants, continuous plan action groups, mandatory illustration checks,
-and reviewed exercise removal. Upgrades through 0.7.4 preserve user work while
-leaving one current runtime model; Section 13.4 records the planned 0.7.5
-exception. Native Windows/PySide6, local-only use,
+and reviewed exercise removal. Current behavior uses one runtime model; Section
+13.4 records the historical 0.7.5 exception. Native Windows/PySide6, local-only use,
 verbatim user text, transactional actions and frozen training history remain
 the product and engineering boundaries.
 
@@ -1069,7 +1065,7 @@ unreviewed physical purge is offered.
 
 An installed update replaces only application files. Ordinary root opening
 retains the locator, selected root, meaningful settings, frozen plans and
-completed history. The planned 0.7.5 first-open reset deletes the plan/training
+completed history. The historical 0.7.5 first-open reset deleted the plan/training
 scope in Section 13.4. Opening or switching to a supported root validates the
 marker, configuration, schema and current library model before use. No directory
 scanning or old Exercises@home database access is allowed.
@@ -1091,16 +1087,15 @@ backup and restore remain separate user actions outside that one-time reset.
 
 ### 12.8 External Handoff Contract
 
-Through 0.7.4, use `training_feedback.plan` version 2 for new imports and
-`training_feedback.evidence` version 2 for new exports; define their version
+Use `training_feedback.plan` version 3 for new imports and
+`training_feedback.evidence` version 3 for new exports; define their version
 constants independently. Only the current plan-import contract is accepted. A
 newly supplied older-format file gets a clear current-format error and the
-current schema, not a compatibility converter or version selector. Through
-0.7.4, plans already stored in a supported root retain their frozen facts;
-their original imported files and original exports are not rewritten or
-re-imported. Sections 12.11 and 13.4 own the planned 0.7.5 changes.
+current schema, not a compatibility converter or version selector. Plans
+already stored in a usable current root retain their frozen facts; their
+original imported files and original exports are not rewritten or re-imported.
 
-V2 carries namespaced action keys, exact content references, family/variant
+V3 carries namespaced action keys, exact content references, family/variant
 identity, ordered standalone/group items, rounds, side order, per-round sets,
 all rest boundaries and source rationale. Imports create drafts only and cannot
 create approval, enablement, deletion decisions or plan activation. Schema and
@@ -1125,7 +1120,7 @@ to render recorded history.
 
 ### 12.9 Remaining Delivery And Verification
 
-Section 9.1 is the open work list. The [contract annex](contracts/0.7.0-contracts.md)
+Section 9.1 owns the delivery gates. The [contract annex](reference/contracts/0.7.0-contracts.md)
 owns the historical detailed serialization/mapping baseline. Regression protects
 current-model risks below. Old-version binary/root compatibility is dormant
 until the user's formal-release declaration; independent Windows acceptance
@@ -1163,8 +1158,8 @@ independent-machine checks, each tied to an exact candidate.
 
 Usable actions meet Section 12.4 and the bundled content/image inventory must
 report truthful readiness. A technically valid illustration does not establish
-expert review. The dated 0.7.0 local-release exit and checks are recorded in its
-[version history](https://github.com/YYMichaelChen/TrainingFeedback/blob/f2e0700362bc1413a19af86739ffef50f5ac5cf5/docs/history/0.7.0/release-readiness.md).
+expert review. Dated release exits and candidate checks belong to version
+history and Git history, not to this current specification.
 
 Keep local-release, external-review, personal-use and W4 results distinct.
 Independent 8-B2 is deferred/not run and is activated only by an explicit public
@@ -1183,10 +1178,7 @@ document owns family membership, aliases, technique and proposed doses.
 Candidate evidence and task records document actual work without duplicating
 these specifications.
 
-### 12.11 0.7.5 Plan Authoring And Identity
-
-Decision accepted: 2026-09-28. This defines 0.7.5 behavior; it is not a claim
-about the 0.7.4 application or candidate.
+### 12.11 Plan Authoring And Identity
 
 New-plan entry and editing use one page: a plan/day/item hierarchy beside the
 selected item's fields and per-set table. The new page starts with an unfinished
@@ -1222,10 +1214,10 @@ are `001`–`999`, are unique within the root and never wrap or silently reuse.
 Internal revision IDs/ordinals remain for associations, but the plan page shows
 the code rather than automatic `v1`/`v2` labels.
 
-0.7.5 introduces database schema 23 and current plan/evidence wire contracts v3.
+Database schema 23 uses the current plan/evidence wire contracts v3.
 The plan-import rationale may be empty. A new import receives a root-local base
 number; an upgrade import identifies the target by base code and follows the
-same difference classification. Only v3 is newly accepted; v2 imports receive
+same difference classification. Only v3 is accepted; v2 imports receive
 the current-format error. JSON/Markdown evidence and new training snapshots
 show the complete code consistently. Saving a draft never activates it, and
 activation retains the existing eligibility and explicit confirmation gates.
@@ -1243,7 +1235,7 @@ version history. Rotation procedure is in the [workflow](development-workflow.md
 
 - Before formal release, keep an accurate current application/schema map but do
   not promise that a new application opens any older application version's root.
-  Existing supported paths may remain during v0.8.0 slimming, but do not create
+  Existing development paths may remain during an audit, but do not create
   new compatibility obligations. The first formal release establishes a
   baseline. For later formal releases, select one or two available predecessor
   **formal** versions, record their exact source/build identity and support
@@ -1294,17 +1286,14 @@ message such as:
 
 Reinstalling program files does not recreate the independent root. The user must
 explicitly choose a new empty directory for a new root. Ordinary uninstall
-preserves the root and locator; from v0.8.0 only an explicitly opted-in,
-path-verified uninstall may delete the displayed current data root as defined
-in Section 7. Section 13.4 applied only when 0.7.5 first opened a selected
-valid schema 22 root. Do not auto-import an unsupported database or offer a
+preserves the root and locator. Any future exception requires an explicitly
+adopted product rule and path-verification boundary. Do not auto-import an unsupported database or offer a
 legacy runtime mode. Unsupported future roots remain unchanged. New
 roots load the complete current bundled catalog without relying on an older root.
 
 Artifact cleanup is not general permission to purge personal data, original
-answers/exports or historical evidence within any root. The separately
-confirmed v0.8.0 uninstall option is the narrow user-controlled exception;
-Section 13.4 records the historical 0.7.5 reset decision. Active test-budget
+answers/exports or historical evidence within any root. Section 13.4 records
+the historical 0.7.5 reset decision. Active test-budget
 ledgers must not be reset during cleanup. Unclassified local files require
 inventory before disposal.
 
@@ -1333,40 +1322,10 @@ features do not authorize a bulk copy of development records. Preserve real
 original facts if any are deliberately retained, and exclude synthetic facts from
 personal review, training and W4 evidence. Revisit long-term support policy then.
 
-### 13.4 0.7.5 One-Time Plan And Training Reset
+### 13.4 Historical 0.7.5 Reset Exception
 
-Decision accepted: 2026-09-28. After 0.7.4 source work closes, 0.7.5 first opening
-any valid schema 22 TrainingFeedback root automatically deletes its existing
-plan and dependent training data without a confirmation prompt or recovery
-backup. Schema 22 roots created by 0.7.2, 0.7.3 and 0.7.4 do not record enough
-application-version information to distinguish their origin reliably; all are
-subject to this same reset. This is an explicit exception to Sections 12.7 and
-13.2, not evidence that prior plan or training facts were preserved.
-
-The reset removes current and retained legacy plan revisions, actions, doses,
-activation pins, sessions and their results, retractions, next-day feedback,
-plan/session import-export registrations and associated managed files. It also
-deletes existing backups inside that selected root, including backups that may
-contain other root data. It retains the root's library selections, custom
-actions, guidance, images, review and removal decisions that are independent of
-the deleted plans. No previous synthetic training or approval becomes a new
-personal fact. Files copied outside the selected root are not discovered or
-deleted. The old `Exercises@home` repository and database remain untouched.
-
-Before any write, validate the exact selected root's marker, configuration,
-schema, SQLite integrity and references, acquire its exclusive lease and
-inventory managed deletion paths. Apply the database reset and schema 23
-migration transactionally. Use only a metadata-only cleanup journal so an
-interrupted run finishes pending file deletions before the root becomes usable;
-do not create or retain a data snapshot, and do not report partial cleanup as
-success. Failure before the database commit leaves its old rows unchanged;
-failure afterward resumes the irreversible cleanup on next open. Installation
-alone and root discovery never trigger the reset.
-
-Fresh 0.7.5 roots start at schema 23 with no old plan data. Roots with a schema
-earlier than 22, a future schema or invalid metadata remain unchanged and are
-rejected before cleanup. Verify the exact deletion and retained-library scope
-with isolated synthetic roots, interrupted cleanup, repeat opening and installed
-checks; identify each candidate and never present the reset as a preserved-root
-upgrade. Ordinary preservation and backup policy resumes after this one-time
-transition.
+The 0.7.5 schema-22 reset was a historical one-time exception and does not
+define current upgrade behavior. Its full design, deletion scope and recovery
+semantics are retained with the [0.7.5 historical record](history/0.7.5/reset-design.md).
+Current and future behavior follows Sections 13.1–13.3 unless a new rule is
+deliberately adopted in this specification.

@@ -21,7 +21,8 @@ from training_feedback.domain.catalog import ExerciseReference, content_sha256
 from training_feedback.domain.plans import PlannedSet
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACTS = ROOT / "docs" / "contracts"
+REFERENCE_CONTRACTS = ROOT / "docs" / "reference" / "contracts"
+RUNTIME_CONTRACTS = ROOT / "src" / "training_feedback" / "contracts"
 
 
 def load_json(path):
@@ -29,7 +30,7 @@ def load_json(path):
 
 
 def example():
-    return load_json(CONTRACTS / "plan-v3.example.json")
+    return load_json(REFERENCE_CONTRACTS / "plan-v3.example.json")
 
 
 def group_contract(payload=None):
@@ -54,7 +55,7 @@ def group_contract(payload=None):
 
 @pytest.fixture
 def validator():
-    schema = load_json(CONTRACTS / "plan-v3.schema.json")
+    schema = load_json(RUNTIME_CONTRACTS / "plan-v3.schema.json")
     Draft202012Validator.check_schema(schema)
     return Draft202012Validator(schema)
 
@@ -152,7 +153,7 @@ def test_identity_and_hash_preserve_namespaces_text_and_array_order():
 
 
 def test_catalog_inventory_covers_all_source_identities_and_freezes_v1():
-    baseline_path = CONTRACTS / "baseline/catalog-070-baseline.json"
+    baseline_path = REFERENCE_CONTRACTS / "baseline/catalog-070-baseline.json"
     assert hashlib.sha256(baseline_path.read_bytes()).hexdigest() == (
         "d3555e076d4a553996d2a0917c53fa224632778a369d9e70c821981efd629521"
     )
@@ -161,7 +162,7 @@ def test_catalog_inventory_covers_all_source_identities_and_freezes_v1():
     assert baseline["database_schema_baseline"] == 16
     assert "not shipped 0.7.0 artwork or approval" in baseline["notice"]
 
-    v1_path = CONTRACTS / "baseline/plan-v1-baseline.schema.json"
+    v1_path = REFERENCE_CONTRACTS / "baseline/plan-v1-baseline.schema.json"
     assert hashlib.sha256(v1_path.read_bytes()).hexdigest() == (
         "ecedf88628c687ca9aeb789005f717e8e0d81dc4340f82b36e26f9259956e41f"
     )

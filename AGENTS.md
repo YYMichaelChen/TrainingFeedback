@@ -23,8 +23,9 @@ data root. The old `Exercises@home` repository is reference material only.
 
 | Question | Authoritative source |
 | --- | --- |
+| Documentation routing and authority ownership | `docs/README.md` |
 | Product behavior, release gates, retention and personal transition | `docs/development-plan.md` |
-| Proposed seed catalog | `docs/initial-exercises-and-plan.md` |
+| Proposed catalog content and initial plan | `docs/initial-exercises-and-plan.md` |
 | Current application/schema implementation map and release history | `docs/history/README.md` and `docs/history/<version>/` |
 | Development, local release, version rotation and release close procedure | `docs/development-workflow.md` |
 | Pytest commands, tiers, scope and budget accounting | `tests/README.md` |
@@ -77,16 +78,14 @@ run, but they do not substitute for manual client verification; report client
 checks as `not run` until the developer provides their results.
 
 Classify development, local installed acceptance, user-declared formal release,
-explicit public release and application-version rotation by event. Follow `docs/development-workflow.md`
-and `tests/README.md`; do not evade test-scope accounting. A normal code change
-does not require an installer. A schema or external wire-schema revision requires
-an application patch-or-greater bump in the same change. Before the user's
-explicit formal-release declaration, old-version compatibility tests and
-support promises are disabled. Afterwards, support the user-selected one or
-two predecessor formal versions and verify their upgrade paths. Reject
-unsupported/future roots unchanged before writes. Reinstall does not reset a
-data root; v0.8.0's explicitly confirmed uninstall deletion follows the
-narrow path rules in the development plan.
+explicit public release and application-version rotation by event. Follow
+`docs/development-workflow.md`, the release policy in `docs/development-plan.md`
+and `tests/README.md`; do not evade test-scope accounting. Do not infer
+compatibility, formal-release, public-release or personal-data status from a
+version number or installer build. A normal code change does not require an
+installer. A schema or external wire-schema revision requires an application
+patch-or-greater bump in the same change. Reject unsupported or future roots
+unchanged before writes.
 
 ## Task completion report
 

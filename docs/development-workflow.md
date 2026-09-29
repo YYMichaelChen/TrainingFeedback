@@ -8,6 +8,8 @@ also run a separate development profile.
 
 ## Authority and current state
 
+- The [documentation index](README.md) routes durable authority and document
+  lifecycle. It is distinct from local Planscope execution routing.
 - [Development plan](development-plan.md) owns product behavior, the local/public
   release boundary, and the formal-release compatibility policy. The
   [initial catalog specification](initial-exercises-and-plan.md) owns proposed
@@ -21,7 +23,7 @@ also run a separate development profile.
   plan determine when each is in scope.
 - [Version history index](history/README.md) is the one human-readable current
   application/schema support map. The running values live in `pyproject.toml`,
-  `src/training_feedback/__init__.py`, `data/migrations.py`, the catalog manifest,
+  `src/training_feedback/__init__.py`, `src/training_feedback/data/migrations.py`, the catalog manifest,
   and the bundled wire contracts. Check these separately at a version change;
   a catalog or contract revision is not a database schema revision.
 - Local Planscope is execution context: `.planning/INDEX.md` routes to the active
@@ -34,9 +36,9 @@ also run a separate development profile.
 | --- | --- | --- |
 | Development task | State the intended behavior and affected risks; inspect existing coverage, make the change, run focused verification and applicable static checks. | Relevant checks pass and their actual results are recorded. No automatic installer build. |
 | Local release or user-requested installed acceptance | Close intended candidate content; verify final source and release regression; build and inspect the installer; exercise the installed app with isolated synthetic roots. | Candidate identity, manifests, installed checks and evidence limits are recorded. |
-| Formal release declaration | Only the user can declare it. Fix the first formal baseline or, on later formal releases, select one or two available predecessor formal versions and their support window. | Formal-release identity and, where predecessors exist, actual compatibility evidence are recorded; a local candidate alone does not activate this event. |
+| Formal release declaration | Only the user can declare it. Apply the compatibility boundary defined by the product release policy and identify any required predecessor endpoints. | Formal-release identity and applicable compatibility evidence are recorded; a local candidate alone does not activate this event. |
 | Public release | Start only on the user's explicit request; run the independent Windows and public-distribution gate in the packaged-acceptance runbook. | Every required public scenario has candidate-specific evidence; `not run` is never `pass`. |
-| Application version change | Update application version and distinct schema/catalog/contract mappings; inventory obsolete support paths. Before formal release, omit old-version compatibility work. After the first formal baseline, rotate the selected one or two predecessor formal versions. | Current roots work; unknown/unsupported roots are refused unchanged before writes. Formally supported older roots work when available. |
+| Application version change | Update application version and distinct schema/catalog/contract mappings; inventory obsolete support paths and apply the product compatibility policy. | Current roots work; unknown/unsupported roots are refused unchanged before writes. Formally supported older roots work when applicable. |
 
 External content review, personal-data transition and W4 have their own product
 triggers in the development plan. None follows automatically from packaging,
@@ -70,6 +72,9 @@ pytest nodes/files (or `-k`) with `--test-tier dev --test-scope TASK-ID`; use
 and `git diff --check`. A documentation-only change needs link, status and diff
 checks, not routine pytest. Stop after relevant checks pass; after a fix, rerun
 only failed or affected checks.
+
+Run `python packaging/check_docs.py` when tracked documentation, source-path
+references, current identities or contract ownership changes.
 
 Use the tier and stable scope selected for the task; a release task uses its
 matching patch/minor/major release scope from first execution. Before that
@@ -124,10 +129,9 @@ statuses and never consume that pytest budget.
    preview with its exact source snapshot and limit disclosed.
 4. Install that candidate under an isolated locator/profile and synthetic roots.
    Verify the installed payload, fresh launch and cancel, new-root catalog,
-   restart/reopen, and the affected user workflow. Before formal release, omit
-   old-version upgrade and compatibility checks completely. After formal release,
-   include selected predecessor upgrades and out-of-window read-only refusal.
-   Always verify current-root and unknown/future-root safety when affected.
+   restart/reopen, and the affected user workflow. Apply the current
+   compatibility boundary from the product release policy; always verify
+   current-root and unknown/future-root safety when affected.
    Record the account, paths, inputs, expected/actual result and evidence for
    each check.
 
@@ -155,10 +159,9 @@ An application-only fix may retain its schema. Every new database schema revisio
 or external wire-schema change requires an application patch-or-greater bump in
 the same change. On every distinct application version bump, update the version
 history index, source version values, implemented application/schema mapping and
-relevant contract/catalog identities. Before formal release, no old-version
-support window or compatibility test is required. After user-declared formal
-release, retain the selected one or two predecessor formal versions; several
-commits of one version consume one slot.
+relevant contract/catalog identities. Apply the compatibility and retention
+boundary owned by the product release policy; several commits of one version do
+not create distinct version identities.
 If the bump is still a development step, use its dev scope; a task that directly
 forms a release uses the release scope instead.
 
@@ -168,8 +171,8 @@ current initialization and safety, plus formally supported upgrades when those
 exist. Git history remains available; the local archive is not an unlimited
 second retention system. Reject unsupported or future roots before writes with
 actionable new-empty-root guidance, without deleting or importing their data.
-Program reinstall alone does not reset a data root; v0.8.0 opt-in uninstall
-deletion is the explicit exception under the product's path-verification rule.
+Program reinstall alone does not reset a data root. Any adopted exception must
+follow the product's explicit path-verification and confirmation rules.
 
 ## Three walkthroughs
 
@@ -179,9 +182,8 @@ deletion is the explicit exception under the product's path-verification rule.
   initialization, preservation/refusal and rollback cases; application patch
   bump, clean source and verified installer. Old-version upgrade tests and
   installed compatibility checks begin only after formal-release declaration.
-- **Requested public release:** if the user also declares the first formal
-  release, establish its baseline; for later formal releases, select one or two
-  available predecessor formal versions. Complete the local candidate gate,
+- **Requested public release:** apply any separate formal-release declaration
+  and compatibility boundary, then complete the local candidate gate,
   then use the explicit public gate on an independent Windows environment with
   actual selected binaries when applicable and distribution evidence. Mark
   unavailable checks `not run`; required public checks must pass before public

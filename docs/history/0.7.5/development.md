@@ -4,8 +4,8 @@
 
 This version rotates the supported window to application 0.7.5 and schema 23.
 The accepted reset and authoring behavior remains defined by the
-[development plan](../../development-plan.md#134-075-one-time-plan-and-training-reset)
-and its [plan authoring section](../../development-plan.md#1211-075-plan-authoring-and-identity).
+[historical reset design](reset-design.md) and the current
+[plan authoring specification](../../development-plan.md#1211-plan-authoring-and-identity).
 
 ## Implemented
 
