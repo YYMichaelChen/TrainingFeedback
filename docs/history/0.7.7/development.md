@@ -39,6 +39,9 @@ because their behavior and contracts are unchanged. Excluded cases are not passe
   [local candidate](local-candidate.md). An earlier build from `154fce4`
   preceded the access-error correction and had no installed client checks; it
   is superseded and carries no acceptance result.
-- Developer-operated installed client checks: `not run`.
+- Developer-operated installed client checks: on 2026-09-29 the user reported
+  installing/opening the application and creating/seeing a new directory.
+  Candidate hash, profile/root, preview equality and other changed-flow
+  observations were not reported; remaining checks are `not run`.
 - Independent public acceptance: `not run` (not requested).
 - External content review, W4, and personal-use readiness: `not run`.
