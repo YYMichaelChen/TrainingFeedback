@@ -13,17 +13,18 @@ window, its complete subdirectory moves to the untracked local `docs/archive/`
 holding area in the same action — archiving into another unlimited location is
 not policy compliance.
 
-Current development application version: **0.7.5** (database schema **23**).
-Latest locally accepted candidate: **0.7.3**. Later 0.7.4 and 0.7.5
-candidates have incomplete installed/local acceptance recorded below.
-The user approved continuing development after 0.7.5 with its unrun checks
-recorded; this is not a technical acceptance pass.
+Current development application version: **0.7.6** (database schema **23**).
+Latest locally accepted candidate: **0.7.3**; that version is now outside the
+retained window, and its acceptance is historical. The 0.7.4 and 0.7.5
+candidates have incomplete installed/local acceptance recorded below. The user
+closed 0.7.5 for continued development with its unrun checks recorded; this is
+not a technical acceptance pass or evidence for 0.7.6.
 
 | Application version | Database schema | Role | Local candidate |
 | --- | --- | --- | --- |
-| 0.7.5 | 23 | Current development source: [plan and reset development](0.7.5/development.md) | [User-approved progression; installed acceptance incomplete](0.7.5/local-candidate.md) |
+| 0.7.6 | 23 | Current development version: [documentation ownership and routing](0.7.6/development.md) | No installer candidate; development verification only |
+| 0.7.5 | 23 | Closed development version: [plan and reset development](0.7.5/development.md) | [User-approved closeout; installed acceptance incomplete](0.7.5/local-candidate.md#2026-09-29-final-version-closeout) |
 | 0.7.4 | 22 | Retained predecessor: [performance development](0.7.4/development.md) | [Installed acceptance incomplete](0.7.4/local-candidate.md) |
-| 0.7.3 | 22 | Retained predecessor: [plan page development](0.7.3/development.md) | [Accepted local candidate](0.7.3/development.md) |
 
 History records explain completed work and dated evidence; they do not override
 current requirements or certify a later build. Multiple schemas already created
@@ -41,6 +42,9 @@ The complete 0.7.0 history, local planning records and candidate evidence rotate
 The 0.7.1 history and local planning records rotated into the ignored
 `docs/archive/0.7.1/` holding area in 0.7.4; Git history retains the tracked
 development record.
+The 0.7.3 history and local planning records rotated into the ignored
+`docs/archive/0.7.3/` holding area in 0.7.6; Git history retains their tracked
+history. Schema 22 remains supported through the retained 0.7.4 root lifecycle.
 Git history is not rewritten. Historical references inside a retained version's
 own evidence do not create another supported version or a requirement to retain
 that older program.

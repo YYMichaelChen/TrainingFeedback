@@ -91,7 +91,7 @@ directory preview**, not an accepted candidate, was built and inspected:
 The single `release-0.7.5` patch ledger now contains 50 unique cases. Two
 additional risk-selected cases passed; one needed a stale test assertion updated
 for the new `plan_code` field before its rerun. The configured 30-case profile
-was still not run, and its 17 distinct unselected cases remain unrun. Selection
+was still not run, and its 15 distinct unselected cases remain unrun. Selection
 and reasons are in [acceptance test design](acceptance-test-design.md). Installed
 invalid/occupied destinations, complete plan-to-training workflow, and other
 applicable candidate checks remain `not run` for the corrected build. Local
@@ -130,7 +130,7 @@ do not count as installed results for it.
   locator or user-data SQLite file was found in the payload.
 - The `release-0.7.5` ledger is still one `patch` scope with 50 distinct cases.
   No new pytest case was executed for this package inspection. The configured
-  profile and its 17 unselected cases remain `not run`.
+  profile and its 15 unselected cases remain `not run`.
 
 ### Installed checks awaiting developer operation
 
@@ -162,14 +162,33 @@ The user directed: “放行0.7.5，标记批准继续开发。” This approves
 must not use any computer-control plugin during acceptance. The corrected Setup
 was not installed or operated in this continuation; every corrected-candidate
 installed row above remains `not run`. The configured patch regression profile
-was not run and its 17 unselected cases remain `not run`. Neither omission is
+was not run and its 15 unselected cases remain `not run`. Neither omission is
 recorded as a pass. The technical local acceptance state remains incomplete.
 
-The 50-case `release-0.7.5` ledger and its 17 unselected cases refer only to
+The 50-case `release-0.7.5` ledger and its 15 unselected cases refer only to
 pytest node IDs. None of the client or installed checks above is included in
 that version-update test quantity; each has its own candidate-specific status.
+
+The [2026-09-29 test reassessment](test-reassessment-2026-09-29.md) explains the
+corrected count and the limits of a fresh risk-based selection. It does not
+retroactively change the 50 reserved cases or this candidate's acceptance state.
 
 This decision authorizes continued development only. It does not authorize a
 personal-data transition or establish independent public acceptance, content
 review or W4 readiness. If installed acceptance is requested later, it must use
 candidate-specific developer-operated evidence under the project rules.
+
+## 2026-09-29 final version closeout
+
+The user directed that 0.7.5 be closed and that future acceptance omit
+low-risk, unaffected pytest cases from its default selection. Version 0.7.5 is
+closed for continued development with the recorded evidence limits, **not**
+technically accepted. The [65-case recount and 45-case proposed risk selection](test-reassessment-2026-09-29.md)
+are an assessment, not a new execution or a reset of the 50-case patch ledger.
+The 15 configured-profile cases outside that ledger remain unrun; the corrected
+clean candidate's installed-client rows above remain `not run`. The schema 22
+reset's full independent-library retention scope also lacks targeted evidence.
+No new candidate, installer, version, schema, catalog or wire-contract identity
+was created for this closeout. The prospective selection procedure in the
+[development workflow](../../development-workflow.md) does not reclassify any
+0.7.5 result as a pass.

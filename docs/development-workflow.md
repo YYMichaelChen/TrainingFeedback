@@ -16,11 +16,17 @@ also run a separate development profile.
   owns installation and machine-level checks; [test instructions](../tests/README.md)
   explain commands. Completed candidate results belong to dated version history
   and candidate-specific evidence, not to these procedures.
+- [Guidance review](guidance-review-runbook.md) owns external content review,
+  personal transition and W4 procedures. The release gates in the development
+  plan determine when each is in scope.
 - [Version history index](history/README.md) is the one human-readable current
   application/schema support map. The running values live in `pyproject.toml`,
   `src/training_feedback/__init__.py`, `data/migrations.py`, the catalog manifest,
   and the bundled wire contracts. Check these separately at a version change;
   a catalog or contract revision is not a database schema revision.
+- Local Planscope is execution context: `.planning/INDEX.md` routes to the active
+  release `PLAN.md`, which owns its phase, task, blockers and next action. It does
+  not replace tracked requirements or candidate evidence.
 
 ## Events and minimum gates
 
@@ -65,10 +71,15 @@ checks, not routine pytest. Stop after relevant checks pass; after a fix, rerun
 only failed or affected checks.
 
 Use the tier and stable scope selected for the task; a release task uses its
-matching patch/minor/major release scope from first execution and includes
-affected cases within it. Follow [test instructions](../tests/README.md) for
-limits, unique-case accounting, locks, reruns and collection behavior. Do not
-run all tier profiles in sequence.
+matching patch/minor/major release scope from first execution. Before that
+execution, inventory the configured profile and affected tests without budget
+reservation. Record the release-specific risk selection: each material changed
+or cross-cutting risk, the selected node IDs, and any lower-risk or overlapping
+cases excluded. Run selected cases explicitly under the one release scope;
+configured profiles and the full resident suite are inventories, not default
+release acceptance runs. An unaffected low-risk test stays available and becomes
+required when a later change makes its risk material. Follow [test instructions](../tests/README.md)
+for limits, unique-case accounting, locks, reruns and collection behavior.
 The version-update test quantity is the pytest scope's unique case count only.
 Developer-operated client and installed checks have separate candidate-specific
 statuses and never consume that pytest budget.
@@ -97,9 +108,13 @@ statuses and never consume that pytest budget.
    development root; do not inspect or promote personal roots automatically.
 2. Identify the final reproducible source snapshot and the separate application,
    schema, catalog and wire-contract versions. Use a stable `release-<version>`
-   test scope and the appropriate release tier; run its baseline plus affected
-   integration cases within the one tier budget, then applicable Ruff and diff
-   checks. A same-version commit uses the same version slot and release scope.
+   test scope and the appropriate release tier. Review the risk selection before
+   the first execution, then run its explicitly selected cases within the one
+   tier budget, followed by applicable Ruff and diff checks. Record the reason
+   for excluding low-risk cases; an exclusion does not count as a pass. If a
+   required risk cannot be covered within the cap, leave acceptance incomplete
+   until the coverage or cap policy is resolved without resetting or splitting
+   the scope. A same-version commit uses the same version slot and release scope.
 3. Build the installer from the identified complete source with the pinned
    toolchain. Verify source identity/dirty status, complete payload and installer
    manifests, hashes, bundled catalog and assets, required runtime files and

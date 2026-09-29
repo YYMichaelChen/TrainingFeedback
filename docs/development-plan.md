@@ -636,6 +636,15 @@ owns the current application/schema and candidate baseline; version history
 owns dated evidence. The [workflow](development-workflow.md) owns execution
 order and verification selection.
 
+For future candidate acceptance, choose pytest cases from the candidate's
+affected and material risks before execution. Low-risk, unaffected cases are
+not part of a default release run; keep them available for changes that make
+their risks relevant. A case excluded after review is not a pass. Preserve
+one release scope and its count, and record selected coverage, exclusions and
+unrun required checks with the exact candidate. Installed client checks remain
+separate and must be completed when applicable. A required risk left unverified
+prevents technical acceptance even when the selected pytest count meets its cap.
+
 ### 9.2 W4 Real-Use Gate
 
 W4 begins only after the user authorizes the personal-data transition in Section

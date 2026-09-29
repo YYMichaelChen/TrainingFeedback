@@ -16,7 +16,7 @@ independent candidate evidence and consume no patch-scope case slots.
 | Frozen training after the schema 23 transition | Already reserved activation pin, frozen export and schema 23 reopen cases; added `test_pause_restart_keeps_position_and_frozen_work_after_catalog_replacement` | A defect can lose the active session or reinterpret its facts. |
 | Package completeness | Complete payload hash check plus explicit `schema22.sql` and `schema23.sql` checks in `packaging/build.ps1`; installed schema 22 copy | Source-only migration success does not prove that the executable contains the migration inputs. |
 
-The configured 30-case patch regression profile has 17 unique cases outside the
+The configured 30-case patch regression profile has 15 unique cases outside the
 selected 50. It was **not run as a profile**. These cases remain independent,
 but do not meet the added-case threshold for this version after the cases above:
 
@@ -29,6 +29,11 @@ but do not meet the added-case threshold for this version after the cases above:
 | Main navigation | `test_main_window_navigation_and_chinese_labels`: installed navigation is inspected directly. |
 
 The user's risk-selection instruction does not turn the unrun configured profile
-into a pass. The workflow and active plan still require release baseline evidence;
-record the actual 50-case selection and this explicit limitation at release close.
+into a pass. The workflow in force during 0.7.5 required release baseline
+evidence; record the actual 50-case selection and this explicit limitation at
+release close. The later risk-selected procedure applies prospectively.
 Installed checks have their own status in `local-candidate.md`.
+
+The [2026-09-29 reassessment](test-reassessment-2026-09-29.md) corrects the
+post-50 arithmetic, inventories the 65-case union and reviews a 45-case
+risk-selected set. It does not change this scope's reservations or results.

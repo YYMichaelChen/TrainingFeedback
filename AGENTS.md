@@ -69,6 +69,13 @@ are historical context and never override tracked requirements.
 
 ## Verification entry points
 
+Do not use computer use, GUI automation, remote-control tools, scripted clicks
+or keystrokes, or similar capabilities to directly test client functionality.
+The developer must manually operate the client and record the results of client
+checks, including installed acceptance. Automated code-level tests may still
+run, but they do not substitute for manual client verification; report client
+checks as `not run` until the developer provides their results.
+
 Classify development, local installed acceptance, explicit public release and
 application-version rotation by event. Follow `docs/development-workflow.md`
 and `tests/README.md`; do not evade test-scope accounting. A normal code change

@@ -81,6 +81,12 @@ def pytest_collection_modifyitems(config, items):
     tier = config.getoption("test_tier")
     explicit = (config.args_source == pytest.Config.ArgsSource.ARGS
                 or config.getoption("keyword") or config.getoption("markexpr"))
+    scope = config.getoption("test_scope") or ""
+    if scope.startswith("release-") and not explicit and not config.getoption("collectonly"):
+        raise pytest.UsageError(
+            "Release verification requires an explicit risk-selected path, node ID, -k, or -m; "
+            "the default regression profile is not an acceptance selection."
+        )
     if not explicit:
         check_budget("major", [item.nodeid for item in items])
         configured = profile_names(config, "minor")
