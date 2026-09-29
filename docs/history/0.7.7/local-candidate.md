@@ -27,23 +27,16 @@ An earlier clean build from commit `154fce4` passed static manifest inspection,
 then was superseded before any installed client check by the error-handling
 correction in `831f7ed`. Its checks do not certify this candidate.
 
-## Developer-operated installed checks
+## 用户自行安装与测试
 
-The developer must manually install and operate the client using an isolated
-`%LOCALAPPDATA%` profile/locator and synthetic roots. Record account, actual
-paths, input, observed result and evidence for each row against the Setup hash
-above. No automated UI operation substitutes for these checks.
+请使用普通用户账户、隔离的 `%LOCALAPPDATA%` 配置和纯合成数据目录，手动安装并操作上述 SHA-256 对应的安装包。每项完成后勾选，并填写测试账户、实际路径、输入、观察结果及证据位置。**勾选只表示已执行；只有记录了实际结果，才能将状态改为「通过」或「失败」。**未执行的项目保留 `not run`。
 
-| Check | Expected result | Status | Actual evidence |
-| --- | --- | --- | --- |
-| Install and payload | Ordinary-user install succeeds; installed payload matches manifest and prior isolated root/locator is unchanged | not run | Awaiting developer record |
-| Fresh cancel | Cancel creates no locator or child | not run | Awaiting developer record |
-| Create form | Redirected Documents suggestion, parent/name/path preview, invalid names; no pre-confirmation writes | not run | Awaiting developer record |
-| Child states | Missing and empty child succeed; valid root requires explicit open; occupied/incomplete/future/expired refuse unchanged | not run | Awaiting developer record |
-| New root | Chinese/space name; complete built-in catalog and assets; no invented personal facts | not run | Awaiting developer record |
-| Settings and direct open | Create from Settings, open supported existing and copied-backup roots directly; backup destination remains a complete-root selection | not run | Awaiting developer record |
-| Restart and compatibility | Isolated locator/restart persists; 0.7.5/0.7.6 schema-23 roots reopen, pending cleanup completes, schema-22 root refuses read-only | not run | Awaiting developer record |
+- [ ] **安装与文件核对**：安装成功；安装后的文件与完整载荷清单一致；安装前已关闭的隔离数据目录和定位文件保持不变。状态：`not run`；实际记录：待填写。
+- [ ] **首次启动取消**：取消选择数据目录后，没有创建定位文件或新子目录。状态：`not run`；实际记录：待填写。
+- [ ] **创建表单**：重定向后的“文档”目录建议正确；父目录、子目录名及完整路径预览一致；无效名称不能确认；确认前不写入文件。状态：`not run`；实际记录：待填写。
+- [ ] **子目录状态**：不存在和已存在但为空的子目录可创建；已有有效根提示明确打开；占用、不完整、未来版本及过期根均原样拒绝。状态：`not run`；实际记录：待填写。
+- [ ] **新根内容**：使用含中文或空格的名称创建；完整内置动作目录和图片可见；没有凭空生成个人审核、计划或训练事实。状态：`not run`；实际记录：待填写。
+- [ ] **设置页与直接打开**：从设置页创建新根；直接打开受支持的已有根和备份副本；备份目标仍按完整根目录处理。状态：`not run`；实际记录：待填写。
+- [ ] **重启与兼容性**：隔离定位文件在重启后生效；0.7.5／0.7.6 的 schema 23 根可重新打开，已提交的清理日志可继续完成；schema 22 根只读拒绝且原始字节不变。状态：`not run`；实际记录：待填写。
 
-Local installed acceptance remains incomplete while any required row is
-`not run`. Independent public acceptance, content review, W4 and personal-use
-readiness are separate and have no result from this candidate.
+只要必需项目仍为 `not run`，本地安装验收就未完成。公开发布验收、外部内容审核、W4 和个人使用准备各有独立门槛，本候选尚无这些结果。
