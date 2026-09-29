@@ -168,9 +168,9 @@ class RootCreation:
 
         target = self.target
         validate_child_name(target.name)
-        if target.is_symlink():
-            raise DataRootNotEmptyError("The selected path is not an empty directory.")
         try:
+            if target.is_symlink():
+                raise DataRootNotEmptyError("The selected path is not an empty directory.")
             exists = target.exists()
             if exists:
                 if not target.is_dir():
@@ -185,6 +185,9 @@ class RootCreation:
             self.owns_artifacts = True
             self.context = LibraryContext.create(target)
             return self.context
+        except OSError as exc:
+            self.rollback()
+            raise DataRootAccessError("Cannot create the data root.") from exc
         except Exception:
             self.rollback()
             raise

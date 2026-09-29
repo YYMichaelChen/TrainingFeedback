@@ -12,6 +12,7 @@ from training_feedback.application.new_root import (
 )
 from training_feedback.bootstrap import create_root
 from training_feedback.data.data_root import (
+    DataRootAccessError,
     ExistingDataRootError,
     ExpiredDataRootError,
     InvalidDataRootError,
@@ -101,7 +102,7 @@ def test_preexisting_empty_child_is_kept_on_failed_creation(tmp_path, monkeypatc
         (path / "training_feedback.marker.json").write_text("partial", encoding="utf-8")
         raise OSError("injected")
     monkeypatch.setattr(LibraryContext, "create", classmethod(fail_create))
-    with pytest.raises(OSError):
+    with pytest.raises(DataRootAccessError):
         RootCreation(target).prepare()
     assert target.is_dir() and list(target.iterdir()) == []
 
@@ -113,7 +114,7 @@ def test_missing_child_removed_on_failed_creation(tmp_path, monkeypatch):
         (path / "training_feedback.marker.json").write_text("partial", encoding="utf-8")
         raise OSError("injected")
     monkeypatch.setattr(LibraryContext, "create", classmethod(fail_create))
-    with pytest.raises(OSError):
+    with pytest.raises(DataRootAccessError):
         RootCreation(target).prepare()
     assert not target.exists()
 
@@ -129,7 +130,7 @@ def test_creation_rollback_after_library_initialization_failure(tmp_path, monkey
         raise OSError("injected library failure")
 
     monkeypatch.setattr(library_root, "initialize_library_root", fail_after_initialize)
-    with pytest.raises(OSError):
+    with pytest.raises(DataRootAccessError):
         RootCreation(target).prepare()
     assert not target.exists()
 
