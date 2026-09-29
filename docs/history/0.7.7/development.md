@@ -32,8 +32,13 @@ because their behavior and contracts are unchanged. Excluded cases are not passe
 - Source verification: 50 unique selected cases reserved; initial run 45 pass,
   3 fail; the 3 failed cases passed after fixture corrections. The two added
   failure-stage cases passed; affected root-switch cases passed after path
-  handling adjustment. Ruff changed Python areas and `git diff --check` passed.
-- Candidate build and manifest: pending.
+  handling adjustment, and affected creation cases passed after error handling
+  correction. All 50 selected cases have a pass for the final source.
+  Ruff changed Python areas and `git diff --check` passed.
+- Candidate build and manifest: clean candidate `831f7ed`; see
+  [local candidate](local-candidate.md). An earlier build from `154fce4`
+  preceded the access-error correction and had no installed client checks; it
+  is superseded and carries no acceptance result.
 - Developer-operated installed client checks: `not run`.
 - Independent public acceptance: `not run` (not requested).
 - External content review, W4, and personal-use readiness: `not run`.
