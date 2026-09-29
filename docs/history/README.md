@@ -22,7 +22,7 @@ technical acceptance pass or evidence for 0.7.7.
 
 | Application version | Database schema | Role | Local candidate |
 | --- | --- | --- | --- |
-| 0.7.7 | 23 | Current development version: [new-root creation](0.7.7/development.md) | Candidate and installed checks pending |
+| 0.7.7 | 23 | Closed development version: [new-root creation](0.7.7/development.md) | [User-approved partial closeout; full local installed acceptance incomplete](0.7.7/local-candidate.md#2026-09-29-部分验收收尾) |
 | 0.7.6 | 23 | Retained predecessor: [documentation ownership and routing](0.7.6/development.md) | No installer candidate; development verification only |
 | 0.7.5 | 23 | Retained predecessor: [plan and reset development](0.7.5/development.md) | [User-approved closeout; installed acceptance incomplete](0.7.5/local-candidate.md#2026-09-29-final-version-closeout) |
 

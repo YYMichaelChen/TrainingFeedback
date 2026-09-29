@@ -40,8 +40,13 @@ because their behavior and contracts are unchanged. Excluded cases are not passe
   preceded the access-error correction and had no installed client checks; it
   is superseded and carries no acceptance result.
 - Developer-operated installed client checks: on 2026-09-29 the user reported
-  installing/opening the application and creating/seeing a new directory.
-  Candidate hash, profile/root, preview equality and other changed-flow
-  observations were not reported; remaining checks are `not run`.
+  installing/opening the application, creating/seeing a new directory, and
+  observing that path preview, Settings creation and direct existing-root
+  opening all met expectations. Candidate hash, profile/root and other
+  installed observations were not reported; those checks remain `not run`.
 - Independent public acceptance: `not run` (not requested).
 - External content review, W4, and personal-use readiness: `not run`.
+- Closeout: on 2026-09-29 the user explicitly approved partial 0.7.7
+  acceptance and continuation to the next development version. The source work
+  and candidate record are complete; full local installed acceptance remains
+  incomplete with the exact unrun items in `local-candidate.md`.
