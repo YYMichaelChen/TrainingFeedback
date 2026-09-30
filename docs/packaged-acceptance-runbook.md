@@ -37,6 +37,23 @@ injection or synthetic training.
 
 ## 2. Local installed acceptance
 
+### 手动验收清单写法
+
+交给开发者实际操作的手动验收清单必须使用简单易懂的中文，按执行顺序编号。
+每一项都要写清：开始前需要什么、操作哪个程序或测试目录、具体怎么做、应该
+看到什么、什么情况算失败，以及做完后要反馈什么。不要只写“验收切根”“确认
+receipt”“检查回滚”等概括或术语，让开发者自行猜测步骤。
+
+首次出现的技术词先用中文解释；界面只有英文按钮时，同时给出按钮原文和中文
+含义。命令必须可以直接复制，注明需要改的路径、运行位置和预期输出。涉及
+删除时，必须先指出具体测试目录、哪些文件会被删除、哪些应保留。
+复杂故障案例应先提供隔离的合成测试材料和操作步骤；尚未准备好的案例明确写
+“暂不执行／未运行”，不得让开发者自行修改真实数据库或猜测如何制造故障。
+
+结果用“通过、失败、未运行”表示，并对应证据中的 `pass`、`fail`、`not run`。
+未运行的项目不得打勾为通过。给出简短的中文反馈模板；技术统计由代理根据
+原始记录计算，不能要求开发者自行理解或计算 p50/p95。
+
 Use the newly built Setup on the build machine with an ordinary-user context,
 isolated `%LOCALAPPDATA%` locator and synthetic roots. Resolve the installed EXE
 before changing `%LOCALAPPDATA%`; suppress automatic post-install launch until

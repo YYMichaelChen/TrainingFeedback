@@ -77,6 +77,10 @@ checks, including installed acceptance. Automated code-level tests may still
 run, but they do not substitute for manual client verification; report client
 checks as `not run` until the developer provides their results.
 
+手动验收清单必须用简单易懂的中文，按实际操作顺序分步写清楚要求。
+遵循 `docs/packaged-acceptance-runbook.md` 的“手动验收清单写法”：交代准备、
+具体操作、预期结果、失败判断和反馈内容；不能只给编号、术语或概括表格。
+
 Classify development, local installed acceptance, user-declared formal release,
 explicit public release and application-version rotation by event. Follow
 `docs/development-workflow.md`, the release policy in `docs/development-plan.md`
