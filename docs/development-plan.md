@@ -1286,8 +1286,14 @@ message such as:
 
 Reinstalling program files does not recreate the independent root. The user must
 explicitly choose a new empty directory for a new root. Ordinary uninstall
-preserves the root and locator. Any future exception requires an explicitly
-adopted product rule and path-verification boundary. Do not auto-import an unsupported database or offer a
+preserves the root and locator. Starting with 0.8.0, an interactive uninstaller
+may offer a separate, default-unchecked deletion of only the locator's exact
+current root, after ownership, version, path, exclusive-handle and confirmation
+checks. Silent uninstall retains data. Historical roots and external backups
+are excluded. Interrupted deletion retains a recovery record and prevents opening
+the partially deleted root; retry requires the same verified objects. The
+[uninstall design](releases/0.8.0/uninstall-design.md) specifies the boundary.
+Do not auto-import an unsupported database or offer a
 legacy runtime mode. Unsupported future roots remain unchanged. New
 roots load the complete current bundled catalog without relying on an older root.
 
@@ -1329,3 +1335,7 @@ define current upgrade behavior. Its full design, deletion scope and recovery
 semantics are retained with the [0.7.5 historical record](history/0.7.5/reset-design.md).
 Current and future behavior follows Sections 13.1–13.3 unless a new rule is
 deliberately adopted in this specification.
+
+From 0.8.0 onward, unfinished historical reset or upgrade journals are refused
+read-only. No historical reset deletion or migration is resumed. The original
+root remains unchanged and the developer must choose a new empty root.

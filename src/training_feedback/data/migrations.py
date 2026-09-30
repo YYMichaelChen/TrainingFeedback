@@ -5,14 +5,10 @@ from __future__ import annotations
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
 
 LATEST_SCHEMA_VERSION = 23
 OLDEST_SUPPORTED_SCHEMA_VERSION = 23
-SUPPORTED_SCHEMA_APPLICATIONS = {23: "0.7.5/0.7.6/0.7.7/0.7.8"}
-
-_MIGRATIONS: dict[int, Callable[[sqlite3.Connection], None]] = {}
-
+SUPPORTED_SCHEMA_APPLICATIONS = {23: "0.8.0"}
 
 class FutureSchemaError(sqlite3.DatabaseError):
     """The database belongs to a newer application version."""
@@ -53,21 +49,6 @@ def _initialize(connection: sqlite3.Connection) -> None:
         raise
 
 
-def _apply(connection: sqlite3.Connection, version: int,
-           body: Callable[[sqlite3.Connection], None]) -> None:
-    try:
-        connection.execute("BEGIN")
-        body(connection)
-        connection.execute(
-            "INSERT INTO schema_migration(version, applied_at) VALUES (?, ?)",
-            (version, datetime.now(UTC).isoformat()),
-        )
-        connection.commit()
-    except Exception:
-        connection.rollback()
-        raise
-
-
 def apply_migrations(connection: sqlite3.Connection) -> None:
     """Inspect existing roots read-only before any schema write."""
     current = _current_version(connection)
@@ -78,8 +59,3 @@ def apply_migrations(connection: sqlite3.Connection) -> None:
     if current == 0:
         _initialize(connection)
         return
-    for version in range(current + 1, LATEST_SCHEMA_VERSION + 1):
-        body = _MIGRATIONS.get(version)
-        if body is None:
-            raise sqlite3.DatabaseError(f"Schema migration {version} is missing.")
-        _apply(connection, version, body)

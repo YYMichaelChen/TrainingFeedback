@@ -7,7 +7,7 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.7.8**
+- Application: **0.8.0**
 - Database schema: **23**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **3**
@@ -22,7 +22,8 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.7.8 | 23 | Current development version: [documentation and knowledge governance](0.7.8/development.md) | No installer candidate; documentation/identity verification only |
+| 0.8.0 | 23 | Current development version: [installation, cleanup and response work](0.8.0/development.md) | Candidate preparation; manual installed/response acceptance not run |
+| 0.7.8 | 23 | Historical development version: [documentation and knowledge governance](0.7.8/development.md) | No installer candidate; documentation/identity verification only |
 | 0.7.7 | 23 | Historical development version: [new-root creation](0.7.7/development.md) | [User-approved partial closeout; full installed acceptance incomplete](0.7.7/local-candidate.md#2026-09-29-部分验收收尾) |
 | 0.7.6 | 23 | Historical development version: [documentation ownership and routing](0.7.6/development.md) | No installer candidate; development verification only |
 | 0.7.5 | 23 | Historical development version: [plan/reset development](0.7.5/development.md) | [User-approved closeout; installed acceptance incomplete](0.7.5/local-candidate.md#2026-09-29-final-version-closeout) |
@@ -32,6 +33,7 @@ identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
 
+0.8.0 candidate preparation is in progress; no installed acceptance is claimed.
 No 0.7.8 installer candidate was built or accepted. The latest historical
 locally accepted candidate was 0.7.3 and is outside the current tracked history
 set. The 0.7.5 and 0.7.7 records explicitly preserve incomplete or unrun client
@@ -40,6 +42,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.0 development record](0.8.0/development.md)
 - [0.7.8 documentation-governance development record](0.7.8/development.md)
 - [0.7.7 development and partial candidate evidence](0.7.7/)
 - [0.7.6 development record](0.7.6/)

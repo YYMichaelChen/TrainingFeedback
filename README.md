@@ -6,7 +6,7 @@ database, Streamlit UI, wardrobe data, and submission format.
 
 ## Current status
 
-- Application: `0.7.8`
+- Application: `0.8.0`
 - Database schema: `23`
 - Current development target: [`0.8.0`](docs/releases/0.8.0/design.md)
 - Version and candidate status: [`docs/history/README.md`](docs/history/README.md)

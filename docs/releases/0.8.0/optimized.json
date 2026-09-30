@@ -1,0 +1,1294 @@
+{
+  "measured_at_utc": "2026-09-30T09:04:38.038892+00:00",
+  "source_revision": "d0dd44f37afe7ed57db2f52ac7412320d5b11cfa",
+  "source_dirty": true,
+  "measurement_script_sha256": "707f27f2716f0638d2d10392a481a2d2ef89a38990bfb9f71b7bec7d962cf5ef",
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 151 Stepping 2, GenuineIntel",
+    "python": "3.12.14",
+    "dependencies": {
+      "PySide6": "6.11.2",
+      "jsonschema": "4.26.0",
+      "pytest": "8.4.2",
+      "ruff": "0.16.6",
+      "pyinstaller": "6.22.2",
+      "pyinstaller-hooks-contrib": "2026.7"
+    }
+  },
+  "inventory": {
+    "basis": "git ls-files working-tree bytes; ignored trees never enumerated",
+    "tracked_paths_missing_from_worktree": [
+      "src/training_feedback/data/seed/images/01-glute-bridge.png",
+      "src/training_feedback/data/seed/images/02-clamshell.png",
+      "src/training_feedback/data/seed/images/03-chair-squat.png",
+      "src/training_feedback/data/seed/images/04-dead-bug.png",
+      "src/training_feedback/data/seed/images/05-frog-bridge.png",
+      "src/training_feedback/data/seed/images/06-kneeling-hip-thrust.png",
+      "src/training_feedback/data/seed/images/07-isometric-glute-bridge.png",
+      "src/training_feedback/data/seed/images/08-supine-360-breathing.png",
+      "src/training_feedback/data/seed/images/09-small-cat-cow.png",
+      "src/training_feedback/data/seed/images/10-seated-90-90-switch.png",
+      "src/training_feedback/data/seed/images/11-butterfly-stretch.png",
+      "src/training_feedback/data/seed/images/12-supine-figure-four-stretch.png",
+      "src/training_feedback/data/seed/images/13-half-kneeling-hip-flexor-stretch.png",
+      "src/training_feedback/data/seed/images/14-standing-forward-fold.png",
+      "src/training_feedback/data/seed/images/15-wall-calf-stretch.png",
+      "src/training_feedback/data/seed/images/16-supine-single-knee-to-chest.png",
+      "src/training_feedback/data/seed/images/17-wall-supported-calf-raise.png",
+      "src/training_feedback/data/seed/images/18-bird-dog.png",
+      "src/training_feedback/data/seed/images/19-kneeling-rock-back-push-up.png",
+      "src/training_feedback/data/seed/images/20-kneeling-arms-forward-stretch.png",
+      "src/training_feedback/data/seed/images/21-supine-straight-leg-open-close.png",
+      "src/training_feedback/data/seed/images/22-seated-supported-leg-extension.png",
+      "src/training_feedback/data/seed/images/23-seated-supported-bicycle.png",
+      "src/training_feedback/data/seed/images/24-seated-supported-lateral-extension.png",
+      "src/training_feedback/data/seed/images/25-seated-supported-combination-extension.png",
+      "src/training_feedback/data/seed/images/26-glute-bridge-leg-open-close.png",
+      "src/training_feedback/data/seed/images/27-glute-bridge-single-leg-kick.png",
+      "src/training_feedback/data/seed/images/28-single-leg-glute-bridge.png",
+      "src/training_feedback/data/seed/images/29-quadruped-straight-leg-kickback.png",
+      "src/training_feedback/data/seed/images/30-donkey-kick.png",
+      "src/training_feedback/data/seed/images/31-donkey-kick-pulse.png",
+      "src/training_feedback/data/seed/images/32-diagonal-donkey-kick.png",
+      "src/training_feedback/data/seed/images/33-fire-hydrant.png",
+      "src/training_feedback/data/seed/images/34-prone-straight-leg-raise.png",
+      "src/training_feedback/data/seed/images/35-prone-bent-knee-leg-raise.png",
+      "src/training_feedback/data/seed/images/36-prone-double-bent-knee-leg-raise.png",
+      "src/training_feedback/data/upgrade_recovery.py",
+      "tests/test_070_upgrade_recovery.py"
+    ],
+    "groups": {
+      "content": {
+        "files": 3,
+        "bytes": 173593
+      },
+      "docs": {
+        "files": 23,
+        "bytes": 273344
+      },
+      "icon": {
+        "files": 1,
+        "bytes": 44695
+      },
+      "packaging": {
+        "files": 8,
+        "bytes": 48570
+      },
+      "src": {
+        "files": 112,
+        "bytes": 51217362
+      },
+      "tests": {
+        "files": 26,
+        "bytes": 186919
+      },
+      "top-level": {
+        "files": 5,
+        "bytes": 16238
+      }
+    },
+    "total_files": 178,
+    "total_bytes": 51960721,
+    "largest": [
+      {
+        "path": "src/training_feedback/catalog/images/36-prone-double-bent-knee-leg-raise.png",
+        "bytes": 1837783
+      },
+      {
+        "path": "src/training_feedback/catalog/images/16-supine-single-knee-to-chest.png",
+        "bytes": 1733162
+      },
+      {
+        "path": "src/training_feedback/catalog/images/08-supine-360-breathing.png",
+        "bytes": 1731646
+      },
+      {
+        "path": "src/training_feedback/catalog/images/14-standing-forward-fold.png",
+        "bytes": 1699616
+      },
+      {
+        "path": "src/training_feedback/catalog/images/15-wall-calf-stretch.png",
+        "bytes": 1622103
+      },
+      {
+        "path": "src/training_feedback/catalog/images/17-wall-supported-calf-raise.png",
+        "bytes": 1585756
+      },
+      {
+        "path": "src/training_feedback/catalog/images/27-glute-bridge-single-leg-kick.png",
+        "bytes": 1564831
+      },
+      {
+        "path": "src/training_feedback/catalog/images/02-clamshell.png",
+        "bytes": 1501084
+      },
+      {
+        "path": "src/training_feedback/catalog/images/13-half-kneeling-hip-flexor-stretch.png",
+        "bytes": 1498383
+      },
+      {
+        "path": "src/training_feedback/catalog/images/05-frog-bridge.png",
+        "bytes": 1481488
+      },
+      {
+        "path": "src/training_feedback/catalog/images/10-seated-90-90-switch.png",
+        "bytes": 1478911
+      },
+      {
+        "path": "src/training_feedback/catalog/images/25-seated-supported-combination-extension.png",
+        "bytes": 1469141
+      },
+      {
+        "path": "src/training_feedback/catalog/images/34-prone-straight-leg-raise.png",
+        "bytes": 1459145
+      },
+      {
+        "path": "src/training_feedback/catalog/images/01-glute-bridge.png",
+        "bytes": 1432314
+      },
+      {
+        "path": "src/training_feedback/catalog/images/12-supine-figure-four-stretch.png",
+        "bytes": 1429602
+      }
+    ],
+    "exact_duplicates": [],
+    "payload": {
+      "status": "historical manifest inventory only; payload not reverified",
+      "application_version": "0.7.7",
+      "source_revision": "831f7edf2f80a062f5919223b10cada4037f577b",
+      "source_dirty": false,
+      "built_at": "2026-09-29T15:12:44Z",
+      "manifest_sha256": "9d7deb4651547ecf217618c3c914a4e2564d179935e633f47a2b500fb990271b",
+      "files": 295,
+      "bytes": 176740757,
+      "largest": [
+        {
+          "path": "_internal\\PySide6\\opengl32sw.dll",
+          "sha256": "34b444c016289b560662ff896deceb7f4b2c0723aed3d319ae167c9186ce42b3",
+          "bytes": 20639544
+        },
+        {
+          "path": "_internal\\PySide6\\Qt6Core.dll",
+          "sha256": "d6a3c37c5263c5d418fc0e80b722bc9fca7c0859e6f635f9624a2fde00bdc653",
+          "bytes": 10363704
+        },
+        {
+          "path": "_internal\\PySide6\\Qt6Gui.dll",
+          "sha256": "ae29b005f51b6850bf57fa06fced0dc8c7039fd6fafc3bfbcfe76e38adc7abf1",
+          "bytes": 9546552
+        },
+        {
+          "path": "_internal\\python312.dll",
+          "sha256": "09fd317ed7a16ab96e0e7e2375017547a343196aa87b53e63a8f5127cba83506",
+          "bytes": 7408968
+        },
+        {
+          "path": "_internal\\libcrypto-3-x64.dll",
+          "sha256": "5b557011f287e80b988c599316187b581cafedaca7bba7bf38186766bf863189",
+          "bytes": 7349064
+        },
+        {
+          "path": "_internal\\PySide6\\Qt6Quick.dll",
+          "sha256": "900a493625af1f7d9fe6071b9aaee15e560cc7afc122702656723539ed81975f",
+          "bytes": 6569272
+        },
+        {
+          "path": "_internal\\PySide6\\Qt6Widgets.dll",
+          "sha256": "ff0df9e2e6827e035f0731a4cedfc6333f4602bca00775e56346f27032406b74",
+          "bytes": 6497080
+        },
+        {
+          "path": "_internal\\PySide6\\Qt6Qml.dll",
+          "sha256": "514fc8d9ff0754d2bcb446bbe0f6cc421213d92c8c1870e4cf787e4e176d51f6",
+          "bytes": 5337912
+        },
+        {
+          "path": "_internal\\PySide6\\QtWidgets.pyd",
+          "sha256": "f12f4ca641998e5706d5f7b0023147d573f0f2d2361e26dadf31bdbf05fbfd1d",
+          "bytes": 4857656
+        },
+        {
+          "path": "_internal\\PySide6\\Qt6Pdf.dll",
+          "sha256": "6fc87c84a723b05a0a3d7dce87083d25d23b1558e8806ff1cc7952bb9c5c9779",
+          "bytes": 4620600
+        }
+      ]
+    },
+    "build_duration": {
+      "status": "not run",
+      "reason": "No build for this development task."
+    }
+  },
+  "services": {
+    "protocol": "2 warmups, nearest-rank percentiles; wall clock; sequential operations",
+    "samples_per_operation": 20,
+    "catalog": "owned bundled catalog; custom text synthetic; no synthetic approvals",
+    "cache_conditions": "OS file cache uncontrolled/warm; cold means image-check cache only",
+    "create_context_including_close": {
+      "samples": 20,
+      "p50_ms": 125.524,
+      "p95_ms": 129.468,
+      "max_ms": 131.628,
+      "raw_ms": [
+        125.576,
+        125.091,
+        131.628,
+        126.601,
+        126.248,
+        124.632,
+        124.34,
+        127.775,
+        123.989,
+        126.19,
+        129.468,
+        124.407,
+        125.524,
+        122.554,
+        125.529,
+        124.372,
+        126.381,
+        123.239,
+        124.311,
+        126.406
+      ]
+    },
+    "datasets": [
+      {
+        "custom_exercises_initial": 0,
+        "local_overrides_after_save": 1,
+        "plans": 0,
+        "sessions": 0,
+        "root_bytes": 483537,
+        "timings": {
+          "catalog_browse_deferred": {
+            "samples": 20,
+            "p50_ms": 7.12,
+            "p95_ms": 7.387,
+            "max_ms": 7.507,
+            "raw_ms": [
+              6.847,
+              7.225,
+              7.233,
+              7.107,
+              6.756,
+              7.23,
+              6.621,
+              7.197,
+              7.173,
+              7.322,
+              7.096,
+              7.507,
+              6.814,
+              7.387,
+              7.326,
+              6.797,
+              7.12,
+              6.976,
+              7.331,
+              6.878
+            ]
+          },
+          "catalog_browse_display_warm": {
+            "samples": 20,
+            "p50_ms": 73.219,
+            "p95_ms": 76.703,
+            "max_ms": 79.55,
+            "raw_ms": [
+              74.153,
+              75.451,
+              76.036,
+              75.013,
+              75.302,
+              79.55,
+              73.155,
+              73.146,
+              73.219,
+              76.703,
+              75.837,
+              72.196,
+              72.456,
+              73.696,
+              71.863,
+              71.801,
+              72.079,
+              72.856,
+              73.026,
+              74.012
+            ]
+          },
+          "catalog_browse_display_cache_cold": {
+            "samples": 20,
+            "p50_ms": 825.362,
+            "p95_ms": 833.814,
+            "max_ms": 837.295,
+            "raw_ms": [
+              812.012,
+              816.478,
+              823.134,
+              819.451,
+              821.753,
+              830.246,
+              825.362,
+              837.295,
+              833.574,
+              832.323,
+              832.572,
+              828.445,
+              828.551,
+              819.793,
+              819.012,
+              820.17,
+              819.305,
+              828.881,
+              828.212,
+              833.814
+            ]
+          },
+          "catalog_search_display": {
+            "samples": 20,
+            "p50_ms": 22.59,
+            "p95_ms": 23.305,
+            "max_ms": 23.341,
+            "raw_ms": [
+              22.057,
+              22.612,
+              22.604,
+              23.298,
+              22.464,
+              23.305,
+              23.225,
+              23.132,
+              22.363,
+              22.795,
+              21.215,
+              21.743,
+              22.78,
+              23.341,
+              22.719,
+              22.259,
+              21.851,
+              21.595,
+              22.59,
+              22.36
+            ]
+          },
+          "plan_list": {
+            "samples": 20,
+            "p50_ms": 0.012,
+            "p95_ms": 0.012,
+            "max_ms": 0.012,
+            "raw_ms": [
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.011,
+              0.012,
+              0.012,
+              0.012,
+              0.011
+            ]
+          },
+          "history_empty": {
+            "samples": 20,
+            "p50_ms": 0.012,
+            "p95_ms": 0.012,
+            "max_ms": 0.021,
+            "raw_ms": [
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.021,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.012
+            ]
+          },
+          "override_save_transaction": {
+            "samples": 20,
+            "p50_ms": 20.116,
+            "p95_ms": 22.066,
+            "max_ms": 22.131,
+            "raw_ms": [
+              20.071,
+              19.936,
+              19.987,
+              19.981,
+              20.07,
+              19.929,
+              20.06,
+              19.853,
+              20.116,
+              21.917,
+              21.974,
+              20.03,
+              22.131,
+              21.904,
+              21.952,
+              22.066,
+              22.011,
+              21.96,
+              21.999,
+              22.065
+            ]
+          },
+          "backup": {
+            "samples": 20,
+            "p50_ms": 13.994,
+            "p95_ms": 14.097,
+            "max_ms": 14.142,
+            "raw_ms": [
+              13.921,
+              14.097,
+              13.898,
+              14.016,
+              14.089,
+              13.946,
+              13.961,
+              14.059,
+              13.95,
+              13.994,
+              13.94,
+              14.061,
+              14.023,
+              13.925,
+              13.994,
+              13.964,
+              14.06,
+              14.045,
+              14.142,
+              13.862
+            ]
+          },
+          "root_reopen_same_process": {
+            "samples": 20,
+            "p50_ms": 116.338,
+            "p95_ms": 131.075,
+            "max_ms": 133.982,
+            "raw_ms": [
+              118.621,
+              123.206,
+              121.275,
+              131.075,
+              133.982,
+              117.699,
+              116.869,
+              115.649,
+              114.216,
+              118.751,
+              125.584,
+              116.448,
+              116.338,
+              115.586,
+              114.923,
+              114.261,
+              113.748,
+              115.029,
+              112.126,
+              115.372
+            ]
+          },
+          "fresh_process_context": {
+            "samples": 20,
+            "p50_ms": 353.664,
+            "p95_ms": 360.898,
+            "max_ms": 366.464,
+            "raw_ms": [
+              347.271,
+              347.002,
+              354.146,
+              366.464,
+              352.987,
+              352.466,
+              360.898,
+              352.32,
+              353.394,
+              351.27,
+              355.286,
+              356.507,
+              356.274,
+              351.469,
+              360.109,
+              354.085,
+              354.149,
+              352.961,
+              359.391,
+              353.664
+            ]
+          }
+        },
+        "profiles": {
+          "display_warm": [
+            {
+              "function": "src/training_feedback/application/library_workflow.py:396:browse",
+              "calls": 1,
+              "own_ms": 0.264,
+              "cumulative_ms": 91.512
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:135:display_eligibility",
+              "calls": 36,
+              "own_ms": 0.244,
+              "cumulative_ms": 82.368
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:28:_display_image_checks",
+              "calls": 36,
+              "own_ms": 2.163,
+              "cumulative_ms": 67.068
+            },
+            {
+              "function": "src/training_feedback/data/catalog_resources.py:19:managed_path",
+              "calls": 72,
+              "own_ms": 0.419,
+              "cumulative_ms": 26.587
+            },
+            {
+              "function": "src/training_feedback/data/catalog_repository.py:82:_decode",
+              "calls": 144,
+              "own_ms": 0.461,
+              "cumulative_ms": 13.955
+            },
+            {
+              "function": "src/training_feedback/data/catalog_repository.py:95:get",
+              "calls": 108,
+              "own_ms": 0.17,
+              "cumulative_ms": 12.516
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:28:get",
+              "calls": 72,
+              "own_ms": 0.211,
+              "cumulative_ms": 11.588
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:41:list",
+              "calls": 1,
+              "own_ms": 0.101,
+              "cumulative_ms": 8.519
+            },
+            {
+              "function": "src/training_feedback/domain/catalog.py:57:require_content_envelope",
+              "calls": 144,
+              "own_ms": 1.261,
+              "cumulative_ms": 7.822
+            },
+            {
+              "function": "src/training_feedback/domain/catalog.py:45:content_sha256",
+              "calls": 288,
+              "own_ms": 0.375,
+              "cumulative_ms": 7.449
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:50:removal_state",
+              "calls": 36,
+              "own_ms": 0.076,
+              "cumulative_ms": 6.721
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:67:target_entry",
+              "calls": 36,
+              "own_ms": 0.113,
+              "cumulative_ms": 6.563
+            }
+          ],
+          "save": [
+            {
+              "function": "src/training_feedback/application/library_service.py:94:save_override",
+              "calls": 1,
+              "own_ms": 0.091,
+              "cumulative_ms": 27.815
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:41:list",
+              "calls": 2,
+              "own_ms": 0.185,
+              "cumulative_ms": 19.018
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:163:_retain",
+              "calls": 1,
+              "own_ms": 0.093,
+              "cumulative_ms": 15.368
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:28:get",
+              "calls": 73,
+              "own_ms": 0.184,
+              "cumulative_ms": 13.21
+            },
+            {
+              "function": "src/training_feedback/data/catalog_repository.py:82:_decode",
+              "calls": 145,
+              "own_ms": 0.356,
+              "cumulative_ms": 13.013
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:312:_local_entry",
+              "calls": 1,
+              "own_ms": 0.011,
+              "cumulative_ms": 10.906
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:319:_retain_in_transaction",
+              "calls": 1,
+              "own_ms": 0.009,
+              "cumulative_ms": 9.64
+            },
+            {
+              "function": "src/training_feedback/domain/catalog.py:45:content_sha256",
+              "calls": 365,
+              "own_ms": 0.391,
+              "cumulative_ms": 8.51
+            },
+            {
+              "function": "src/training_feedback/data/catalog_repository.py:95:get",
+              "calls": 73,
+              "own_ms": 0.092,
+              "cumulative_ms": 7.518
+            },
+            {
+              "function": "src/training_feedback/domain/catalog.py:57:require_content_envelope",
+              "calls": 149,
+              "own_ms": 1.075,
+              "cumulative_ms": 7.087
+            },
+            {
+              "function": "src/training_feedback/data/catalog_repository.py:100:list",
+              "calls": 2,
+              "own_ms": 0.508,
+              "cumulative_ms": 6.742
+            },
+            {
+              "function": "src/training_feedback/data/database.py:76:transaction",
+              "calls": 2,
+              "own_ms": 0.005,
+              "cumulative_ms": 5.621
+            }
+          ]
+        },
+        "reopen_profile": [
+          {
+            "function": "src/training_feedback/app.py:75:reopen",
+            "calls": 1,
+            "own_ms": 0.215,
+            "cumulative_ms": 137.225
+          },
+          {
+            "function": "src/training_feedback/data/catalog_repository.py:14:__init__",
+            "calls": 1,
+            "own_ms": 4.49,
+            "cumulative_ms": 111.806
+          },
+          {
+            "function": "src/training_feedback/data/catalog_resources.py:40:checked_bytes",
+            "calls": 73,
+            "own_ms": 0.423,
+            "cumulative_ms": 97.322
+          },
+          {
+            "function": "src/training_feedback/data/catalog_resources.py:19:managed_path",
+            "calls": 75,
+            "own_ms": 0.564,
+            "cumulative_ms": 24.94
+          },
+          {
+            "function": "src/training_feedback/app.py:90:_connect",
+            "calls": 1,
+            "own_ms": 0.006,
+            "cumulative_ms": 15.512
+          },
+          {
+            "function": "src/training_feedback/app.py:28:__init__",
+            "calls": 1,
+            "own_ms": 0.071,
+            "cumulative_ms": 13.849
+          },
+          {
+            "function": "src/training_feedback/application/library_lifecycle_service.py:27:sync_publisher",
+            "calls": 1,
+            "own_ms": 0.024,
+            "cumulative_ms": 12.764
+          },
+          {
+            "function": "src/training_feedback/data/catalog_repository.py:82:_decode",
+            "calls": 146,
+            "own_ms": 0.348,
+            "cumulative_ms": 12.734
+          },
+          {
+            "function": "src/training_feedback/data/catalog_repository.py:100:list",
+            "calls": 3,
+            "own_ms": 0.666,
+            "cumulative_ms": 9.965
+          },
+          {
+            "function": "src/training_feedback/application/library_workflow.py:373:relationship_anchors",
+            "calls": 1,
+            "own_ms": 0.097,
+            "cumulative_ms": 9.082
+          },
+          {
+            "function": "src/training_feedback/application/library_service.py:41:list",
+            "calls": 1,
+            "own_ms": 0.101,
+            "cumulative_ms": 8.986
+          },
+          {
+            "function": "src/training_feedback/domain/catalog.py:45:content_sha256",
+            "calls": 317,
+            "own_ms": 0.348,
+            "cumulative_ms": 7.352
+          }
+        ]
+      },
+      {
+        "custom_exercises_initial": 100,
+        "local_overrides_after_save": 1,
+        "plans": 20,
+        "sessions": 0,
+        "root_bytes": 1011921,
+        "timings": {
+          "catalog_browse_deferred": {
+            "samples": 20,
+            "p50_ms": 18.377,
+            "p95_ms": 19.579,
+            "max_ms": 22.56,
+            "raw_ms": [
+              18.967,
+              17.773,
+              19.579,
+              18.417,
+              17.972,
+              18.328,
+              19.401,
+              18.109,
+              17.923,
+              18.882,
+              19.327,
+              18.214,
+              19.188,
+              19.076,
+              18.873,
+              18.106,
+              17.633,
+              18.377,
+              22.56,
+              18.104
+            ]
+          },
+          "catalog_browse_display_warm": {
+            "samples": 20,
+            "p50_ms": 105.951,
+            "p95_ms": 117.797,
+            "max_ms": 119.369,
+            "raw_ms": [
+              110.548,
+              105.375,
+              105.951,
+              105.204,
+              107.922,
+              106.948,
+              108.324,
+              113.327,
+              104.04,
+              101.693,
+              108.509,
+              119.369,
+              113.192,
+              109.991,
+              117.797,
+              102.257,
+              102.108,
+              99.209,
+              101.361,
+              102.108
+            ]
+          },
+          "catalog_browse_display_cache_cold": {
+            "samples": 20,
+            "p50_ms": 847.925,
+            "p95_ms": 853.278,
+            "max_ms": 856.444,
+            "raw_ms": [
+              853.278,
+              847.764,
+              848.628,
+              843.304,
+              848.62,
+              847.691,
+              846.813,
+              846.467,
+              846.709,
+              847.925,
+              849.777,
+              856.444,
+              847.556,
+              848.413,
+              848.965,
+              846.477,
+              850.68,
+              843.647,
+              848.819,
+              849.637
+            ]
+          },
+          "catalog_search_display": {
+            "samples": 20,
+            "p50_ms": 33.958,
+            "p95_ms": 35.629,
+            "max_ms": 37.938,
+            "raw_ms": [
+              33.297,
+              33.568,
+              33.311,
+              34.008,
+              33.767,
+              33.923,
+              37.938,
+              34.521,
+              33.958,
+              34.18,
+              34.072,
+              34.259,
+              34.047,
+              33.552,
+              34.19,
+              33.751,
+              35.629,
+              33.458,
+              34.477,
+              33.691
+            ]
+          },
+          "plan_list": {
+            "samples": 20,
+            "p50_ms": 0.04,
+            "p95_ms": 0.048,
+            "max_ms": 0.051,
+            "raw_ms": [
+              0.043,
+              0.041,
+              0.051,
+              0.041,
+              0.04,
+              0.04,
+              0.04,
+              0.04,
+              0.041,
+              0.041,
+              0.041,
+              0.04,
+              0.04,
+              0.041,
+              0.048,
+              0.042,
+              0.04,
+              0.04,
+              0.04,
+              0.04
+            ]
+          },
+          "history_empty": {
+            "samples": 20,
+            "p50_ms": 0.012,
+            "p95_ms": 0.016,
+            "max_ms": 0.039,
+            "raw_ms": [
+              0.012,
+              0.012,
+              0.012,
+              0.012,
+              0.011,
+              0.012,
+              0.012,
+              0.012,
+              0.013,
+              0.012,
+              0.012,
+              0.012,
+              0.016,
+              0.039,
+              0.012,
+              0.012,
+              0.013,
+              0.015,
+              0.012,
+              0.012
+            ]
+          },
+          "override_save_transaction": {
+            "samples": 20,
+            "p50_ms": 39.856,
+            "p95_ms": 43.902,
+            "max_ms": 43.99,
+            "raw_ms": [
+              35.866,
+              38.058,
+              37.932,
+              37.95,
+              38.089,
+              36.05,
+              39.992,
+              37.961,
+              43.902,
+              38.072,
+              40.033,
+              41.969,
+              40.081,
+              39.856,
+              40.112,
+              39.95,
+              39.973,
+              43.99,
+              38.051,
+              40.065
+            ]
+          },
+          "backup": {
+            "samples": 20,
+            "p50_ms": 13.987,
+            "p95_ms": 14.123,
+            "max_ms": 14.266,
+            "raw_ms": [
+              13.997,
+              14.266,
+              13.765,
+              14.054,
+              13.955,
+              14.003,
+              14.116,
+              13.922,
+              13.952,
+              14.053,
+              13.967,
+              14.123,
+              13.901,
+              13.973,
+              13.965,
+              13.987,
+              14.098,
+              13.973,
+              13.998,
+              13.987
+            ]
+          },
+          "root_reopen_same_process": {
+            "samples": 20,
+            "p50_ms": 122.356,
+            "p95_ms": 127.191,
+            "max_ms": 129.183,
+            "raw_ms": [
+              120.391,
+              120.198,
+              122.356,
+              120.415,
+              121.502,
+              127.191,
+              122.819,
+              122.629,
+              121.87,
+              129.183,
+              121.201,
+              120.584,
+              122.367,
+              120.671,
+              121.86,
+              124.272,
+              125.377,
+              123.817,
+              122.677,
+              124.878
+            ]
+          },
+          "fresh_process_context": {
+            "samples": 20,
+            "p50_ms": 354.125,
+            "p95_ms": 370.226,
+            "max_ms": 376.667,
+            "raw_ms": [
+              347.164,
+              346.73,
+              351.248,
+              348.503,
+              376.667,
+              370.226,
+              362.473,
+              355.294,
+              361.683,
+              353.812,
+              360.253,
+              352.632,
+              354.125,
+              367.041,
+              351.845,
+              354.143,
+              350.36,
+              364.008,
+              353.229,
+              360.296
+            ]
+          }
+        },
+        "profiles": {
+          "display_warm": [
+            {
+              "function": "src/training_feedback/application/library_workflow.py:396:browse",
+              "calls": 1,
+              "own_ms": 0.81,
+              "cumulative_ms": 127.625
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:135:display_eligibility",
+              "calls": 136,
+              "own_ms": 0.499,
+              "cumulative_ms": 103.398
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:28:_display_image_checks",
+              "calls": 136,
+              "own_ms": 2.313,
+              "cumulative_ms": 67.158
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:28:get",
+              "calls": 272,
+              "own_ms": 0.661,
+              "cumulative_ms": 37.808
+            },
+            {
+              "function": "src/training_feedback/data/catalog_resources.py:19:managed_path",
+              "calls": 72,
+              "own_ms": 0.429,
+              "cumulative_ms": 26.155
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:41:list",
+              "calls": 1,
+              "own_ms": 0.145,
+              "cumulative_ms": 22.141
+            },
+            {
+              "function": "src/training_feedback/data/library_repository.py:54:contents",
+              "calls": 272,
+              "own_ms": 0.793,
+              "cumulative_ms": 20.966
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:67:target_entry",
+              "calls": 136,
+              "own_ms": 0.309,
+              "cumulative_ms": 20.109
+            },
+            {
+              "function": "src/training_feedback/data/library_repository.py:61:content",
+              "calls": 472,
+              "own_ms": 0.891,
+              "cumulative_ms": 19.371
+            },
+            {
+              "function": "src/training_feedback/data/catalog_repository.py:82:_decode",
+              "calls": 144,
+              "own_ms": 0.464,
+              "cumulative_ms": 14.504
+            },
+            {
+              "function": "src/training_feedback/data/catalog_repository.py:95:get",
+              "calls": 108,
+              "own_ms": 0.212,
+              "cumulative_ms": 13.088
+            },
+            {
+              "function": "src/training_feedback/domain/catalog.py:45:content_sha256",
+              "calls": 488,
+              "own_ms": 0.626,
+              "cumulative_ms": 12.324
+            }
+          ],
+          "save": [
+            {
+              "function": "src/training_feedback/application/library_service.py:94:save_override",
+              "calls": 1,
+              "own_ms": 0.281,
+              "cumulative_ms": 51.855
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:41:list",
+              "calls": 2,
+              "own_ms": 0.299,
+              "cumulative_ms": 40.181
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:28:get",
+              "calls": 273,
+              "own_ms": 0.568,
+              "cumulative_ms": 33.155
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:312:_local_entry",
+              "calls": 1,
+              "own_ms": 0.021,
+              "cumulative_ms": 25.632
+            },
+            {
+              "function": "src/training_feedback/application/library_service.py:163:_retain",
+              "calls": 1,
+              "own_ms": 0.244,
+              "cumulative_ms": 24.471
+            },
+            {
+              "function": "src/training_feedback/data/library_repository.py:54:contents",
+              "calls": 273,
+              "own_ms": 0.764,
+              "cumulative_ms": 19.778
+            },
+            {
+              "function": "src/training_feedback/data/library_repository.py:61:content",
+              "calls": 542,
+              "own_ms": 1.024,
+              "cumulative_ms": 18.757
+            },
+            {
+              "function": "src/training_feedback/application/library_workflow.py:319:_retain_in_transaction",
+              "calls": 1,
+              "own_ms": 0.015,
+              "cumulative_ms": 17.448
+            },
+            {
+              "function": "src/training_feedback/data/catalog_repository.py:82:_decode",
+              "calls": 145,
+              "own_ms": 0.364,
+              "cumulative_ms": 13.132
+            },
+            {
+              "function": "src/training_feedback/domain/catalog.py:45:content_sha256",
+              "calls": 565,
+              "own_ms": 0.632,
+              "cumulative_ms": 12.823
+            },
+            {
+              "function": "src/training_feedback/data/catalog_repository.py:95:get",
+              "calls": 73,
+              "own_ms": 0.096,
+              "cumulative_ms": 7.468
+            },
+            {
+              "function": "src/training_feedback/domain/catalog.py:57:require_content_envelope",
+              "calls": 149,
+              "own_ms": 1.115,
+              "cumulative_ms": 7.255
+            }
+          ]
+        },
+        "reopen_profile": [
+          {
+            "function": "src/training_feedback/app.py:75:reopen",
+            "calls": 1,
+            "own_ms": 0.203,
+            "cumulative_ms": 145.752
+          },
+          {
+            "function": "src/training_feedback/data/catalog_repository.py:14:__init__",
+            "calls": 1,
+            "own_ms": 3.923,
+            "cumulative_ms": 110.092
+          },
+          {
+            "function": "src/training_feedback/data/catalog_resources.py:40:checked_bytes",
+            "calls": 73,
+            "own_ms": 0.402,
+            "cumulative_ms": 96.125
+          },
+          {
+            "function": "src/training_feedback/data/catalog_resources.py:19:managed_path",
+            "calls": 75,
+            "own_ms": 0.506,
+            "cumulative_ms": 24.562
+          },
+          {
+            "function": "src/training_feedback/app.py:90:_connect",
+            "calls": 1,
+            "own_ms": 0.006,
+            "cumulative_ms": 23.637
+          },
+          {
+            "function": "src/training_feedback/app.py:28:__init__",
+            "calls": 1,
+            "own_ms": 0.071,
+            "cumulative_ms": 22.084
+          },
+          {
+            "function": "src/training_feedback/application/library_lifecycle_service.py:27:sync_publisher",
+            "calls": 1,
+            "own_ms": 0.027,
+            "cumulative_ms": 21.068
+          },
+          {
+            "function": "src/training_feedback/application/library_workflow.py:373:relationship_anchors",
+            "calls": 1,
+            "own_ms": 0.268,
+            "cumulative_ms": 16.931
+          },
+          {
+            "function": "src/training_feedback/application/library_service.py:41:list",
+            "calls": 1,
+            "own_ms": 0.133,
+            "cumulative_ms": 16.663
+          },
+          {
+            "function": "src/training_feedback/data/catalog_repository.py:82:_decode",
+            "calls": 146,
+            "own_ms": 0.341,
+            "cumulative_ms": 12.499
+          },
+          {
+            "function": "src/training_feedback/application/library_service.py:28:get",
+            "calls": 136,
+            "own_ms": 0.259,
+            "cumulative_ms": 12.454
+          },
+          {
+            "function": "src/training_feedback/data/catalog_repository.py:100:list",
+            "calls": 3,
+            "own_ms": 0.661,
+            "cumulative_ms": 9.787
+          }
+        ]
+      }
+    ],
+    "client_checks": {
+      "startup_to_usable_window": "not run",
+      "root_switch_window": "not run",
+      "page_rendering": "not run",
+      "input_to_search_update": "not run",
+      "populated_history": "not run",
+      "max_ui_unresponsive_interval": "not run"
+    }
+  }
+}

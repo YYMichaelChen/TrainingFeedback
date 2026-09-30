@@ -28,6 +28,8 @@ class LibraryWorkflowService(LibraryService):
     def _display_image_checks(self, entry: dict):
         """Reuse unchanged image checks for browsing; actions still validate afresh."""
         images = entry["content"]["guidance"]["images"]
+        if not images:
+            return inspect_images(images, lambda image: self._read_image(entry, image))
         signature = []
         for image in images:
             try:
@@ -52,10 +54,13 @@ class LibraryWorkflowService(LibraryService):
             cache = self._display_checks_cache = {}
         cached = cache.get(key)
         if cached is not None and cached[0] == signature:
+            cache.pop(key)
+            cache[key] = cached
             return cached[1]
         checks = inspect_images(images, lambda image: self._read_image(entry, image))
+        cache.pop(key, None)
         if len(cache) >= 128:
-            cache.clear()
+            cache.pop(next(iter(cache)))
         cache[key] = (signature, checks)
         return checks
 
@@ -306,23 +311,25 @@ class LibraryWorkflowService(LibraryService):
 
     def _local_entry(self, content):
         entry = super()._local_entry(content)
-        self._validate_family(entry["content"])
-        self._validate_names(entry["content"])
+        rows = self.list()
+        self._validate_family(entry["content"], rows)
+        self._validate_names(entry["content"], rows)
         return entry
 
     def _retain_in_transaction(self, entry, origin, provenance, read_image):
         # Revalidate names and relationships after acquiring the SQLite writer lock.
         if origin != "bundled":
-            self._validate_family(entry["content"])
-            self._validate_names(entry["content"])
+            rows = self.list()
+            self._validate_family(entry["content"], rows)
+            self._validate_names(entry["content"], rows)
         return super()._retain_in_transaction(entry, origin, provenance, read_image)
 
-    def _validate_names(self, content):
+    def _validate_names(self, content, rows):
         requested = [normalize_name(name) for name in
                      (content["canonical_name"], *content["aliases"])]
         if len(set(requested)) != len(requested):
             raise CatalogError("Names and aliases must be distinct.")
-        for row in self.list():
+        for row in rows:
             if row["exercise"] == content["exercise"]:
                 continue
             entry = row["local_contents"][-1] if row["local_contents"] else row["bundled"]
@@ -331,7 +338,7 @@ class LibraryWorkflowService(LibraryService):
                                  (other["canonical_name"], *other["aliases"])}:
                 raise CatalogError("A name or alias belongs to another exercise.")
 
-    def _validate_family(self, content):
+    def _validate_family(self, content, rows):
         require_content_envelope(content)
         classification = content["classification"]
         families = {family["key"] for family in self.catalog.families()}
@@ -340,11 +347,11 @@ class LibraryWorkflowService(LibraryService):
             raise CatalogError("Unknown exercise family.")
         reference = ExerciseReference(**content["exercise"])
         graph = {}
-        for row in self.list():
+        for row in rows:
             candidate = row["local_contents"][-1] if row["local_contents"] else row["bundled"]
             graph[ExerciseReference(**row["exercise"])] = candidate["content"]["classification"]
         graph[reference] = classification
-        anchors = self.relationship_anchors()
+        anchors = self.relationship_anchors(rows=rows)
         for child, relation in graph.items():
             seen = {child}
             parent = relation["parent_exercise_key"]
@@ -363,9 +370,9 @@ class LibraryWorkflowService(LibraryService):
                     raise CatalogError("Exercise parent must be in the same family.")
                 parent = graph[parent_ref]["parent_exercise_key"]
 
-    def relationship_anchors(self, *, include_bundled=True):
+    def relationship_anchors(self, *, include_bundled=True, rows=None):
         anchors = {}
-        for row in self.list():
+        for row in self.list() if rows is None else rows:
             entries = list(row["local_contents"])
             if include_bundled and row["bundled"]:
                 entries.append(row["bundled"])

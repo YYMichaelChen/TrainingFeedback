@@ -5,7 +5,7 @@ routes current execution work; this file routes tracked project authority.
 
 ## Current state
 
-- Current application: `0.7.8`
+- Current application: `0.8.0`
 - Current database schema: `23`
 - Current plan/evidence contract: `3`
 - Current catalog: `070-illustrated-3`

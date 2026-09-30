@@ -369,6 +369,55 @@ def test_family_cycles_rejected_without_overwriting_existing_versions(context):
     assert len(service.get(b.exercise)["local_contents"]) == 1
 
 
+def test_large_draft_library_keeps_valid_display_checks_without_stale_bytes(context, monkeypatch):
+    from training_feedback.data import library_images
+
+    service = context.library
+    content = deepcopy(service.target_entry(target(context))["content"])
+    content["guidance"]["images"] = []
+    content["aliases"] = []
+    content["classification"]["parent_exercise_key"] = None
+    for number in range(100):
+        content["canonical_name"] = f"【合成】无图草稿 {number}"
+        service.create_custom(content)
+    service.browse(latest=True, for_display=True)
+    decode = library_images.decode_image_size
+    calls = []
+
+    def counted(data):
+        calls.append(1)
+        return decode(data)
+
+    monkeypatch.setattr(library_images, "decode_image_size", counted)
+    rows = service.browse(latest=True, for_display=True)
+    assert len(rows) == 136
+    assert not calls
+    (context.catalog.directory / "images/synthetic.png").write_bytes(b"changed")
+    assert not service.display_eligibility(target(context)).eligible
+
+
+def test_save_rechecks_names_after_another_writer_changes_the_library(context, monkeypatch):
+    service, item = context.library, target(context)
+    content = deepcopy(service.target_entry(item)["content"])
+    content["canonical_name"] = "【合成】并发占用名称"
+    content["aliases"] = []
+    retain = service._retain
+
+    def race(*args):
+        with LibraryContext.reopen(
+            context.data_root.path, catalog_path=context.catalog.directory,
+        ) as other:
+            competing = deepcopy(content)
+            competing["guidance"]["images"] = []
+            other.library.create_custom(competing)
+        return retain(*args)
+
+    monkeypatch.setattr(service, "_retain", race)
+    with pytest.raises(CatalogError, match="name or alias"):
+        service.save_override(BRIDGE, content, item.content)
+    assert not service.get(BRIDGE)["local_contents"]
+
+
 def test_batch_selection_revalidates_and_rolls_back_earlier_target(context):
     service = context.library
     good, other = target(context), target(context, CLAM)

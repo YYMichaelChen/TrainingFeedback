@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "training-feedback"
-version = "0.7.8"
+version = "0.8.0"
 description = "Local-first personal training desktop application"
 requires-python = ">=3.12"
 dependencies = [
@@ -45,7 +45,7 @@ regression_dev = [
     "test_actual_entry_is_blank_side_locked_invalid_preserved_and_cancel_safe",
 ]
 regression_patch = [
-    "test_schema23_pending_reset_cleanup_resumes",
+    "test_pending_historical_reset_is_refused_without_writes",
     "test_schema22_root_is_refused_without_writes",
     "test_open_rejects_future_schema_without_modifying_database",
     "test_switch_round_trip_keeps_datasets_separate",

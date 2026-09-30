@@ -2,7 +2,9 @@
 
 from pathlib import Path
 
-IMAGE_DIRECTORY = Path(__file__).with_name("images")
+# The shipped catalog owns the sole illustration copy. Rebuilds read these
+# bytes into a separate output directory; they never replace this source.
+IMAGE_DIRECTORY = Path(__file__).resolve().parents[2] / "catalog" / "images"
 
 BUNDLED_IMAGE_FILENAMES = {
     "臀桥": "01-glute-bridge.png",

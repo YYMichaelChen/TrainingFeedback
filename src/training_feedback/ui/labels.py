@@ -389,6 +389,15 @@ def localize_dialog_buttons(buttons: QDialogButtonBox) -> None:
 
 
 ERROR_TRANSLATIONS = {
+    "An unfinished historical upgrade is unsupported. Create a new empty "
+    "data root; the original root and files are preserved.":
+        "此数据目录有未完成的历史升级，当前版本不再续做。请新建空数据目录；原目录和文件已保留。",
+    "An unfinished historical reset is unsupported. Create a new empty "
+    "data root; the original root and files are preserved.":
+        "此数据目录有未完成的历史重置，当前版本不再续做。请新建空数据目录；原目录和文件已保留。",
+    "This root has interrupted uninstall cleanup. Reinstall the current program "
+    "and retry cleanup; the remaining files are preserved.":
+        "此目录有未完成的卸载数据清理。请重新安装当前程序后重试清理；剩余文件已保留。",
     "Only plan format version 3 is accepted.": "此入口只接受 v3 计划，请使用当前导出附带的格式。",
     "The displayed plan revision changed.": "当前草稿已被修改，请重新打开后核对。",
     "A plan base number must be between 001 and 999.": "计划编号必须是 001 至 999 的整数。",

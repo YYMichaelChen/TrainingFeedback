@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 LOCK_FILENAME = ".training-feedback.lock"
+CLEANUP_MARKER_FILENAME = ".training-feedback-cleanup.json"
 JOURNAL_FILENAME = ".training-feedback-upgrade.json"
 RECOVERY_FORMAT = "training_feedback.upgrade-recovery"
 RECOVERY_VERSION = 1
@@ -29,7 +30,8 @@ def require_no_pending_upgrade(root: Path) -> None:
         ready = False
     if not ready:
         raise RootBusyError(
-            "An interrupted data upgrade must be recovered before opening this root."
+            "An unfinished historical upgrade is unsupported. Create a new empty "
+            "data root; the original root and files are preserved."
         )
 
 

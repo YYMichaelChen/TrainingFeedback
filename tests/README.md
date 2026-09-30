@@ -45,7 +45,7 @@ deduplicate node IDs, and record selected material risks and excluded low-risk
 cases. Run all selected cases under the **same release scope and tier**. For example:
 
 ```powershell
-python -m pytest tests/test_one_time_reset.py::test_schema22_reset_rolls_back_before_commit --test-tier patch --test-scope release-X.Y.Z --basetemp .tmp/pytest-release-X.Y.Z
+python -m pytest tests/test_one_time_reset.py::test_pending_historical_reset_is_refused_without_writes --test-tier patch --test-scope release-X.Y.Z --basetemp .tmp/pytest-release-X.Y.Z
 python -m pytest tests/test_root_switch.py::test_switch_round_trip_keeps_datasets_separate --test-tier patch --test-scope release-X.Y.Z --basetemp .tmp/pytest-release-X.Y.Z
 ```
 

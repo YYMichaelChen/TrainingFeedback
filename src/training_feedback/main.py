@@ -1,22 +1,32 @@
 """应用入口：负责 Qt 启动与数据目录选择，具体组装逻辑在 bootstrap/app 模块。"""
 
 import sys
-from pathlib import Path
-
-from PySide6.QtWidgets import QApplication, QMessageBox
-
-from training_feedback.app import DataRootSwitcher, LibraryContext
-from training_feedback.bootstrap import choose_data_root, open_from_locator
-from training_feedback.data.data_root import DataRootError
-from training_feedback.data.locator import Locator, default_locator_path
-from training_feedback.ui.data_root_dialog import DataRootDialog, suggested_data_root
-from training_feedback.ui.labels import user_message
-from training_feedback.ui.main_window import MainWindow
-from training_feedback.ui.theme import apply_theme
 
 
 def main() -> int:
     """Start the native desktop application."""
+    if len(sys.argv) > 1 and sys.argv[1] == "--installer-helper":
+        from training_feedback.application.installer_cli import main as installer_main
+
+        return installer_main(sys.argv[2:])
+    if len(sys.argv) > 1 and sys.argv[1] == "--uninstall-helper":
+        from training_feedback.application.uninstall_cli import main as uninstall_main
+
+        return uninstall_main(sys.argv[2:])
+
+    from pathlib import Path
+
+    from PySide6.QtWidgets import QApplication, QMessageBox
+
+    from training_feedback.app import DataRootSwitcher, LibraryContext
+    from training_feedback.bootstrap import choose_data_root, open_from_locator
+    from training_feedback.data.data_root import DataRootError
+    from training_feedback.data.locator import Locator, default_locator_path
+    from training_feedback.ui.data_root_dialog import DataRootDialog, suggested_data_root
+    from training_feedback.ui.labels import user_message
+    from training_feedback.ui.main_window import MainWindow
+    from training_feedback.ui.theme import apply_theme
+
     application = QApplication(sys.argv)
     apply_theme(application)
     locator = Locator(default_locator_path())

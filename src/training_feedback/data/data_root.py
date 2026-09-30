@@ -13,7 +13,7 @@ from . import migrations
 from .database import Database
 from .migrations import OLDEST_SUPPORTED_SCHEMA_VERSION, FutureSchemaError
 from .one_time_reset import ResetRecoveryError, prepare_existing_root
-from .root_lock import RootBusyError
+from .root_lock import CLEANUP_MARKER_FILENAME, RootBusyError
 
 APPLICATION_NAME = "TrainingFeedback"
 DATA_FORMAT_VERSION = 1
@@ -179,6 +179,11 @@ def create_new(root_path: Path) -> DataRoot:
 def inspect_existing(root_path: Path) -> DataRoot:
     """Validate without migrating or creating files; usable before a recovery snapshot."""
     root = Path(root_path)
+    if (root / CLEANUP_MARKER_FILENAME).exists():
+        raise DataRootAccessError(
+            "This root has interrupted uninstall cleanup. Reinstall the current program "
+            "and retry cleanup; the remaining files are preserved."
+        )
     if not root.is_dir():
         raise InvalidDataRootError("The selected path is not a directory.")
     # 空目录是首次启动最常见的误选：报缺少标记文件无法帮助用户，明确指向创建流程。
@@ -234,10 +239,7 @@ def open_existing(root_path: Path) -> DataRoot:
     except RootBusyError as exc:
         raise DataRootAccessError(str(exc)) from exc
     except ResetRecoveryError as exc:
-        raise DataRootAccessError(
-            "The one-time plan and training cleanup could not finish. "
-            "Close other applications and retry opening this data root."
-        ) from exc
+        raise DataRootAccessError(str(exc)) from exc
     except Exception as exc:
         raise InvalidDataRootError("The TrainingFeedback database is invalid.") from exc
     return root

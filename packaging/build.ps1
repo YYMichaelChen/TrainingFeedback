@@ -148,6 +148,10 @@ if ($leaked) {
 }
 
 # Build manifest: identifies the candidate and records artifact hashes.
+& $python (Join-Path $PSScriptRoot 'program_manifest.py') $outputDir
+if ($LASTEXITCODE -ne 0) {
+    throw 'Program ownership manifest creation failed.'
+}
 $sourceRevision = $null
 $sourceDirty = $null
 try {
