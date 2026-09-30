@@ -35,3 +35,8 @@ cases；以 collection 与 budget ledger 的实际结果核对，超限则不执
 28.37 s。完整结果在本地 .tmp/pytest-release-0.8.0.log，budget ledger 保留。
 Ruff、文档一致性与 diff 检查通过。精确候选身份在构建后进入版本历史；
 安装和客户端手动检查仍 not run。
+
+最终句柄安全复查收紧目录写共享，并在现有目录替换用例加入实际 Windows
+写句柄拒绝检查。原 scope 内重跑受影响的 26 清理 + 2 程序清理 cases：
+**28 passed，2.48 s**，累计仍为 98。其余未受该句柄改动影响的先前结果明确复用，
+未重跑不冒充重复执行；最终候选从修复后的干净 source 构建。

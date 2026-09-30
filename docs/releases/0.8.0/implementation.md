@@ -44,7 +44,9 @@ Inno 与 helper 的运行期协作仍需精确候选手测，静态编译不替�
 `usUninstall` 阶段、程序 payload 删除前执行。取消与确认后拒绝保留数据。
 
 `BoundTree` 持有祖先、根、每个子目录和文件的 Windows 句柄，拒绝重解析点、
-硬链接、其它所有者、只读与冲突打开句柄。文件独占绑定，删除用
+硬链接、其它所有者、只读与冲突打开句柄。目录句柄也拒绝其它写句柄，防止清单
+读取期间将空目录转换为连接；创建子文件仍可完成。最终安全复查在原 release
+scope 内复核。文件独占绑定，删除用
 `SetFileInformationByHandle`，不递归删除任何 locator 路径字符串。预检读取
 句柄绑定的 marker/config 和 SQLite 字节，在内存中检查当前 schema、integrity
 与外键，不运行根上的迁移、恢复或写入。先验证本应用 marker 再枚举数据库。

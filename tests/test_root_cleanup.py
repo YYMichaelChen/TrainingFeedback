@@ -223,10 +223,20 @@ def test_process_crash_releases_handles_and_same_root_recovers(policy):
 
 
 def test_bound_tree_prevents_directory_replacement(policy, tmp_path):
+    import ctypes
+
     target = root(policy)
-    with BoundTree(target):
+    with BoundTree(target) as tree:
         with pytest.raises(OSError):
             target.rename(tmp_path / "replacement")
+        kernel = tree.objects[""].kernel
+        handle = kernel.CreateFileW(
+            str(target / "imports"), 0x40000000, 7, None, 3, 0x02200000, None,
+        )
+        invalid = ctypes.c_void_p(-1).value
+        if handle != invalid:
+            kernel.CloseHandle(handle)
+        assert handle == invalid  # No concurrent write/reparse mutation handle.
     assert target.exists()
 
 

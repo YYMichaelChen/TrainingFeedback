@@ -89,8 +89,10 @@ class BoundFile:
         access = 0x20080 | (0x10000 if delete else 0)  # READ_CONTROL, ATTRIBUTES, DELETE
         if not directory:
             access |= 0x80000000  # GENERIC_READ
-        # Parent directories permit reads/writes but deny rename/delete. Files are exclusive.
-        share = 3 if directory else 0
+        # Deny directory write handles as well as rename/delete: a pinned empty
+        # directory must not be converted into a reparse point during inventory.
+        # Creating children does not require a shared write handle on the parent.
+        share = 1 if directory else 0
         handle = self.kernel.CreateFileW(str(path), access, share, None, 3,
                                          0x02000000 | 0x00200000, None)
         if handle == ctypes.c_void_p(-1).value:
