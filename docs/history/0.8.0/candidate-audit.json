@@ -1,0 +1,22 @@
+{
+  "application_version": "0.8.0",
+  "schema": 23,
+  "catalog": "070-illustrated-3",
+  "wire_contract": 3,
+  "source_revision": "cdb0972022efa833179172ba423684a0369d6b06",
+  "source_dirty": false,
+  "built_at": "2026-09-30T09:20:56Z",
+  "payload_files": 296,
+  "payload_bytes": 176808298.0,
+  "payload_manifest_sha256": "82306950df306869eb04121e57ce3bfe5c2e9b1d51b16796c81a4eb639ef62f4",
+  "executable_sha256": "2ad35abd0daf49ffff6eea76aee7ee8b6d5434a2a0fd03960af3c55a24a9eb5c",
+  "setup_sha256": "b5b67479dfd0bdca1ae763908ead7651bbf9b2dfbfc8111d8fadd4f455186cf4",
+  "setup_bytes": 85603202,
+  "setup_manifest_sha256": "e97707f5173115743376c3798bd0d016f3e9aa7b0f6e60cd6df32b7742bded9b",
+  "ownership_manifest_sha256": "09ff6e3988f52a71e384a8b4a93f306d59c7020f4a30467427ea1a6bf23d0023",
+  "authenticode": "NotSigned",
+  "build_duration_seconds": 60.61782,
+  "static_payload": "pass: all paths/sizes/hashes, embedded manifest, ownership, catalog and required runtime",
+  "installed_acceptance": "not run",
+  "client_response": "not run"
+}

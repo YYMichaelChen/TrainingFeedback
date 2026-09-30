@@ -22,6 +22,7 @@ and actual client response remain incomplete. See the
 The single release-0.8.0 minor scope passed **98/100 unique cases** in 28.37 s;
 the [risk selection](../../releases/0.8.0/release-verification.md) was recorded before
 execution. Ruff, documentation consistency and diff checks passed. Candidate
-preparation is in progress. Developer-operated
+preparation has produced the [exact local candidate](local-candidate.md).
+Developer-operated
 client, installed, 200 ms responsiveness, populated history and large-backup
 checks remain **not run**. Development evidence does not certify an installer.
