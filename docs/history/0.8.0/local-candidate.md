@@ -1,5 +1,9 @@
 # 0.8.0 Local Candidate — 2026-09-30
 
+Historical exact candidate. The current deliverable is the
+[October 2 rebuilt candidate](local-candidate-2026-10-02.md); this record's hashes
+and unrun checks remain attached only to the September 30 build.
+
 **Prepared for manual acceptance; installed and client checks are not run.**
 This is an unsigned local candidate, not a completed local/public release,
 formal-release declaration, external content review, W4 or personal-use baseline.

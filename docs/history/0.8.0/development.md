@@ -26,3 +26,13 @@ preparation has produced the [exact local candidate](local-candidate.md).
 Developer-operated
 client, installed, 200 ms responsiveness, populated history and large-backup
 checks remain **not run**. Development evidence does not certify an installer.
+
+On October 2, a developer screenshot exposed an unhandled missing program
+ownership file on the installer directory page. The missing manifest/receipt
+now produces Chinese recovery steps, and Inno preserves the full multi-line
+message. Safe refusal of unowned directories is unchanged. The affected 26
+installation cases passed, including two new cases, under the original minor
+release scope (now 100/100 unique). Unaffected prior results are reused.
+The [rebuilt exact candidate](local-candidate-2026-10-02.md) has clean source
+`b55e746`; its manual retest is not run. The screenshot's prompt result is failed,
+with exact artifact identity unavailable; no training data status is inferred.
