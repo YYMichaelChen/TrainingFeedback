@@ -17,14 +17,13 @@
 ## 旧程序已清理，先退出并重新打开安装器
 
 1. 如果截图中的安装器还开着，点击右下角 `Cancel`（取消），退出这次安装。
-   如果还有错误框，先点“确定”。已打开的安装器可能还记着清理前的旧路径，
-   不能继续在原窗口点 `Back`（上一步）重试。
+   如果还有错误框，先点“确定”。本次安装包修复了旧路径选择逻辑，要使用本次新包。
 2. 两份旧程序、安装登记及快捷方式已按你的要求清理。不需要再去找旧卸载器，
    也不要删除测试父目录、训练数据或备份。
-3. 按下面“一、先准备测试环境”设置隔离测试路径，再从同一个 PowerShell 窗口
-   打开本次 0.8.0 安装包。在目录页明确填入准备阶段输出的“程序 甲”完整路径。
-   如果你已经做过准备，保留原 PowerShell 窗口和变量，不重复创建同名测试目录，
-   直接从 M01 的启动安装器开始。
+3. 重新复制下面“一、先准备测试环境”的本次命令。新命令使用以 `tf080` 开头的
+   变量和新的 `E:\TrainingFeedback-080-PathFix` 父目录，不使用旧验收窗口留下的
+   `$program` 等变量。旧测试目录保持原样，不要删除。然后从同一个 PowerShell
+   窗口执行 M01；命令会明确指定“程序 甲”，无需靠安装器猜上次的位置。
 
 **应该看到：** 重新打开后，安装器能对新的空程序目录继续安装，不再因截图中的
 旧程序路径阻塞。之后按 M01 核对程序和安装记录是否存在。
@@ -38,28 +37,32 @@
 1. 登录一个专门用于测试的普通 Windows 账户，不要用已有个人训练数据的账户
    做删除测试。如果没有这样的账户，先告诉我，暂不进行安装、卸载删除测试。
 2. 打开 **PowerShell 7**。下面的命令都在这个窗口运行，先不要关闭它。
-3. 选一个全新的测试父目录。下面以 `E:\TrainingFeedback-080-Acceptance` 为例。
+3. 选一个全新的测试父目录。下面以 `E:\TrainingFeedback-080-PathFix` 为例。
    如果这个目录已经存在，只改下面第一行，换成一个新的目录名。
 4. 复制下面整段命令到 PowerShell，按回车。它只创建测试目录，不启动程序。
 
 ```powershell
-$acceptanceDirectory = 'E:\TrainingFeedback-080-Acceptance'
-if (Test-Path -LiteralPath $acceptanceDirectory) { throw '测试目录已存在，请换一个新目录名。' }
-$setup = 'E:\Github\TrainingFeedback\dist\installer\TrainingFeedback-0.8.0-Setup.exe'
-if (-not (Test-Path -LiteralPath $setup)) { throw '找不到安装包，请先确认安装包路径。' }
-$env:LOCALAPPDATA = Join-Path $acceptanceDirectory '测试配置'
-$program = Join-Path $acceptanceDirectory '程序 甲'
-$programNext = Join-Path $acceptanceDirectory '程序 乙'
-$rootA = Join-Path $acceptanceDirectory '测试数据 A'
-$rootB = Join-Path $acceptanceDirectory '测试数据 B'
-$outside = Join-Path $acceptanceDirectory '根外备份'
-$pointer = Join-Path $env:LOCALAPPDATA 'TrainingFeedback/locator.json'
-New-Item -ItemType Directory -Path $env:LOCALAPPDATA, $outside -Force | Out-Null
-Set-Content -LiteralPath (Join-Path $outside '保留检查.txt') -Value '这份测试文件必须保留' -Encoding utf8
-Write-Output "程序安装位置：$program"
-Write-Output "数据 A：$rootA"
-Write-Output "数据 B：$rootB"
+. {
+$tf080Setup = $null
+$tf080Program = $null
+$tf080AcceptanceDirectory = 'E:\TrainingFeedback-080-PathFix'
+if (Test-Path -LiteralPath $tf080AcceptanceDirectory) { throw '测试目录已存在，请换一个新目录名。' }
+$tf080Setup = 'E:\Github\TrainingFeedback\dist\installer\TrainingFeedback-0.8.0-Setup.exe'
+if (-not (Test-Path -LiteralPath $tf080Setup)) { throw '找不到安装包，请先确认安装包路径。' }
+$env:LOCALAPPDATA = Join-Path $tf080AcceptanceDirectory '测试配置'
+$tf080Program = Join-Path $tf080AcceptanceDirectory '程序 甲'
+$tf080ProgramNext = Join-Path $tf080AcceptanceDirectory '程序 乙'
+$tf080RootA = Join-Path $tf080AcceptanceDirectory '测试数据 A'
+$tf080RootB = Join-Path $tf080AcceptanceDirectory '测试数据 B'
+$tf080Outside = Join-Path $tf080AcceptanceDirectory '根外备份'
+$tf080Pointer = Join-Path $env:LOCALAPPDATA 'TrainingFeedback/locator.json'
+New-Item -ItemType Directory -Path $env:LOCALAPPDATA, $tf080Outside -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $tf080Outside '保留检查.txt') -Value '这份测试文件必须保留' -Encoding utf8
+Write-Output "程序安装位置：$tf080Program"
+Write-Output "数据 A：$tf080RootA"
+Write-Output "数据 B：$tf080RootB"
 Write-Output "独立测试配置：$env:LOCALAPPDATA"
+}
 ```
 
 **应该看到：** 输出四个测试路径，没有红色错误。记下这些路径。
@@ -75,20 +78,25 @@ Write-Output "独立测试配置：$env:LOCALAPPDATA"
 1. 在 PowerShell 运行：
 
    ```powershell
-   Start-Process -FilePath $setup -Wait
+   & {
+       if (-not $tf080Setup -or -not $tf080Program) { throw '请先完整运行本次准备命令。' }
+       Write-Output "本次安装位置：$tf080Program"
+       Start-Process -FilePath $tf080Setup -ArgumentList ('/DIR="' + $tf080Program + '"') -Wait
+   }
    ```
 
-2. 按安装向导前进。到安装目录页面时，把位置改成准备阶段输出的“程序安装位置”，
-   也就是“程序 甲”的完整路径。不要选数据 A、数据 B 或测试父目录本身。
+2. 按安装向导前进。到安装目录页面时，应已经填好准备阶段输出的“程序安装位置”，
+   也就是“程序 甲”的完整路径。核对它与 PowerShell 输出相同；若仍是旧测试地址，
+   点击取消并反馈。不要选数据 A、数据 B 或测试父目录本身。目录页仍应允许修改位置。
 3. 勾选创建桌面快捷方式，以便后面检查它的目标。安装前的汇总页面应显示你选的路径。
 4. 完成安装。最后一页如果有 `Launch TrainingFeedback`（启动程序），取消勾选，
    再点击 `Finish`（完成）。
 5. 回到 PowerShell，运行：
 
    ```powershell
-   Test-Path -LiteralPath (Join-Path $program 'TrainingFeedback.exe')
-   Test-Path -LiteralPath (Join-Path $program '.training-feedback-install.json')
-   Start-Process -FilePath (Join-Path $program 'TrainingFeedback.exe') -Wait
+   Test-Path -LiteralPath (Join-Path $tf080Program 'TrainingFeedback.exe')
+   Test-Path -LiteralPath (Join-Path $tf080Program '.training-feedback-install.json')
+   Start-Process -FilePath (Join-Path $tf080Program 'TrainingFeedback.exe') -Wait
    ```
 
 6. 前两行应该各输出一个 `True`，表示程序和安装归属记录都存在。
@@ -96,8 +104,8 @@ Write-Output "独立测试配置：$env:LOCALAPPDATA"
 7. 程序关闭后，在 PowerShell 检查：
 
    ```powershell
-   Test-Path -LiteralPath $pointer
-   Test-Path -LiteralPath $rootA
+   Test-Path -LiteralPath $tf080Pointer
+   Test-Path -LiteralPath $tf080RootA
    ```
 
 **通过要求：** 安装目录可修改，程序从“程序 甲”启动；取消首次选择后，最后两行
@@ -138,25 +146,29 @@ Write-Output "独立测试配置：$env:LOCALAPPDATA"
    供重装后比较；不会修改这些文件。
 
    ```powershell
-   function Get-TestFileState {
-       foreach ($directory in @($rootA, $rootB)) {
+   function Get-Tf080TestFileState {
+       foreach ($directory in @($tf080RootA, $tf080RootB)) {
            Get-ChildItem -LiteralPath $directory -Recurse -File | ForEach-Object {
                $_.FullName + '|' + (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash
            }
        }
-       if (Test-Path -LiteralPath $pointer) {
-           $pointer + '|' + (Get-FileHash -LiteralPath $pointer -Algorithm SHA256).Hash
+       if (Test-Path -LiteralPath $tf080Pointer) {
+           $tf080Pointer + '|' + (Get-FileHash -LiteralPath $tf080Pointer -Algorithm SHA256).Hash
        }
    }
-   $beforeReinstall = @(Get-TestFileState | Sort-Object)
+   $tf080BeforeReinstall = @(Get-Tf080TestFileState | Sort-Object)
    ```
 
-2. 运行 `Start-Process -FilePath $setup -Wait`，在同一个“程序 甲”目录重装。
+2. 运行下面命令，在同一个“程序 甲”目录重装：
+
+   ```powershell
+   Start-Process -FilePath $tf080Setup -ArgumentList ('/DIR="' + $tf080Program + '"') -Wait
+   ```
    完成页仍取消自动启动程序。
 3. 程序还没有启动时，运行：
 
    ```powershell
-   Compare-Object $beforeReinstall @(Get-TestFileState | Sort-Object)
+   Compare-Object $tf080BeforeReinstall @(Get-Tf080TestFileState | Sort-Object)
    ```
 
    **应该没有任何输出。** 如果出现路径或校验值，说明有文件变化，记录下来。
@@ -165,9 +177,9 @@ Write-Output "独立测试配置：$env:LOCALAPPDATA"
 5. 再运行第 3 步的比较命令，仍应没有输出。然后运行：
 
    ```powershell
-   Test-Path -LiteralPath (Join-Path $program 'TrainingFeedback.exe')
-   Test-Path -LiteralPath (Join-Path $programNext 'TrainingFeedback.exe')
-   $program = $programNext
+   Test-Path -LiteralPath (Join-Path $tf080Program 'TrainingFeedback.exe')
+   Test-Path -LiteralPath (Join-Path $tf080ProgramNext 'TrainingFeedback.exe')
+   $tf080Program = $tf080ProgramNext
    ```
 
    前两行应依次输出 `False`、`True`，表示旧位置的程序已移除、新位置存在程序。
@@ -184,7 +196,7 @@ Write-Output "独立测试配置：$env:LOCALAPPDATA"
    如果这个文件不存在，先报告，不要自行猜其它程序文件。
 
    ```powershell
-   Start-Process -FilePath (Join-Path $program 'unins000.exe') -Wait
+   Start-Process -FilePath (Join-Path $tf080Program 'unins000.exe') -Wait
    ```
 
 2. 卸载窗口中，`Delete my data at the exact path above` 的意思是“删除上方路径里的
@@ -198,9 +210,9 @@ Write-Output "独立测试配置：$env:LOCALAPPDATA"
 6. 卸载完成后运行：
 
    ```powershell
-   Test-Path -LiteralPath (Join-Path $program 'TrainingFeedback.exe')
-   Test-Path -LiteralPath $rootB
-   Test-Path -LiteralPath $pointer
+   Test-Path -LiteralPath (Join-Path $tf080Program 'TrainingFeedback.exe')
+   Test-Path -LiteralPath $tf080RootB
+   Test-Path -LiteralPath $tf080Pointer
    ```
 
    应依次输出 `False`、`True`、`True`：程序删掉了，B 和上次打开目录的记录保留。
@@ -225,10 +237,10 @@ Write-Output "独立测试配置：$env:LOCALAPPDATA"
 6. 卸载完成后运行：
 
    ```powershell
-   Test-Path -LiteralPath $rootB
-   Test-Path -LiteralPath $pointer
-   Test-Path -LiteralPath $rootA
-   Get-Content -LiteralPath (Join-Path $outside '保留检查.txt')
+   Test-Path -LiteralPath $tf080RootB
+   Test-Path -LiteralPath $tf080Pointer
+   Test-Path -LiteralPath $tf080RootA
+   Get-Content -LiteralPath (Join-Path $tf080Outside '保留检查.txt')
    ```
 
 **通过要求：** 前三行依次输出 `False`、`False`、`True`；最后一行仍显示
@@ -241,7 +253,7 @@ Write-Output "独立测试配置：$env:LOCALAPPDATA"
 
 完成 M05 后，需要重新安装程序才能做这一项。
 
-1. 用同一个安装包安装到 `$program` 指定的位置，不自动启动。
+1. 用同一个安装包安装到 `$tf080Program` 指定的位置，不自动启动。
 2. 从 PowerShell 启动程序，选择“打开已有数据目录”，打开保留下来的 A。
 3. 保持程序窗口打开，回到 PowerShell 启动卸载器。
 4. 删除数据选项应无法勾选，窗口应说明数据正在使用或不能安全删除。

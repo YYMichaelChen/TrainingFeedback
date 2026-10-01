@@ -22,9 +22,10 @@ AppName={#MyAppName}
 AppVersion={#AppVersion}
 AppVerName={#MyAppName} {#AppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={localappdata}\Programs\{#MyAppName}
+DefaultDirName={code:GetDefaultProgramDirectory}
 DisableDirPage=no
-UsePreviousAppDir=yes
+; Reuse only the directory checked by our helper, not Inno's unchecked history.
+UsePreviousAppDir=no
 AlwaysShowDirOnReadyPage=yes
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
@@ -73,6 +74,7 @@ var
   HelperSequence: Integer;
   PreviousDirectory: String;
   PreviousUninstaller: String;
+  PreferredProgramDirectory: String;
   DeleteDataRequested: Boolean;
   CleanupOfferFile: String;
   CleanupRoot: String;
@@ -234,16 +236,54 @@ begin
   end;
 end;
 
-function InitializeSetup(): Boolean;
+function CheckPreviousInstallation(): String;
 begin
-  RegQueryStringValue(HKCU64,
+  Result := '';
+  if PreviousDirectory = '' then Exit;
+  // Validate the local path and root boundaries before probing directory existence.
+  Result := RunHelper('validate', PreviousDirectory, '');
+  if Result <> '' then Exit;
+  if not DirExists(PreviousDirectory) then
+  begin
+    Log('TrainingFeedback: discard missing previous program directory: ' + PreviousDirectory);
+    PreviousDirectory := '';
+    PreviousUninstaller := '';
+    Exit;
+  end;
+  Result := RunHelper('validate', PreviousDirectory,
+    ' --uninstaller ' + AddQuotes(PreviousUninstaller));
+end;
+
+function GetDefaultProgramDirectory(Param: String): String;
+begin
+  Result := PreferredProgramDirectory;
+  if Result = '' then
+    Result := ExpandConstant('{localappdata}\Programs\{#MyAppName}');
+end;
+
+function InitializeSetup(): Boolean;
+var
+  ErrorText: String;
+begin
+  PreviousDirectory := '';
+  PreviousUninstaller := '';
+  PreferredProgramDirectory := ExpandConstant('{localappdata}\Programs\{#MyAppName}');
+  if not RegQueryStringValue(HKCU64,
     'Software\Microsoft\Windows\CurrentVersion\Uninstall\{A5D9D2A7-9C93-4F13-9F1A-7C1C2E1D8D60}_is1',
-    'InstallLocation', PreviousDirectory);
-  RegQueryStringValue(HKCU64,
+    'InstallLocation', PreviousDirectory) then PreviousDirectory := '';
+  if not RegQueryStringValue(HKCU64,
     'Software\Microsoft\Windows\CurrentVersion\Uninstall\{A5D9D2A7-9C93-4F13-9F1A-7C1C2E1D8D60}_is1',
-    'UninstallString', PreviousUninstaller);
+    'UninstallString', PreviousUninstaller) then PreviousUninstaller := '';
   PreviousDirectory := RemoveBackslashUnlessRoot(PreviousDirectory);
   PreviousUninstaller := RemoveQuotes(PreviousUninstaller);
+  Log('TrainingFeedback: registered previous program directory: ' + PreviousDirectory);
+  Log('TrainingFeedback: registered previous uninstaller: ' + PreviousUninstaller);
+  ErrorText := CheckPreviousInstallation();
+  if (ErrorText = '') and (PreviousDirectory <> '') then
+    PreferredProgramDirectory := PreviousDirectory;
+  if ErrorText <> '' then
+    Log('TrainingFeedback: previous directory is not eligible for reuse: ' + ErrorText);
+  Log('TrainingFeedback: resolved default program directory: ' + PreferredProgramDirectory);
   Result := True;
 end;
 
@@ -253,6 +293,15 @@ var
 begin
   Result := True;
   if CurPageID <> wpSelectDir then Exit;
+  // Recheck registrations removed after startup; missing programs are not relocations.
+  ErrorText := CheckPreviousInstallation();
+  if ErrorText <> '' then
+  begin
+    MsgBox(ErrorText, mbError, MB_OK);
+    Result := False;
+    Exit;
+  end;
+  Log('TrainingFeedback: selected program directory: ' + WizardDirValue);
   Extra := '';
   if PreviousDirectory <> '' then
     Extra := ' --previous-directory ' + AddQuotes(PreviousDirectory);
@@ -269,6 +318,10 @@ var
   ResultCode: Integer;
   Extra: String;
 begin
+  Result := CheckPreviousInstallation();
+  if Result <> '' then Exit;
+  Log('TrainingFeedback: preparing selected program directory: ' + WizardDirValue);
+  Log('TrainingFeedback: preparing previous program directory: ' + PreviousDirectory);
   Extra := '';
   if PreviousDirectory <> '' then
     Extra := ' --previous-directory ' + AddQuotes(PreviousDirectory);
@@ -276,9 +329,6 @@ begin
   if Result <> '' then Exit;
   if (PreviousDirectory <> '') and not PathSame(PreviousDirectory, WizardDirValue) then
   begin
-    Result := RunHelper('validate', PreviousDirectory,
-      ' --uninstaller ' + AddQuotes(PreviousUninstaller));
-    if Result <> '' then Exit;
     if not WizardSilent then
       if MsgBox('Move the program from:' + #13#10 + PreviousDirectory + #13#10 +
         'to:' + #13#10 + WizardDirValue + #13#10#13#10 +
