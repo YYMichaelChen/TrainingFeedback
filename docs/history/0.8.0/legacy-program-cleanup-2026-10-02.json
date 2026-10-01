@@ -1,0 +1,143 @@
+{
+  "event": "User-authorized old program maintenance, not installed acceptance",
+  "date": "2026-10-02",
+  "authorized_scope": "Old TrainingFeedback programs, install registrations, shortcuts and obsolete dist installers; retain roots and backups",
+  "uninstalls": [
+    {
+      "directory": "E:\\Github\\TrainingFeedback\\.tmp\\acceptance-075\\c2\\program",
+      "version": "0.7.7",
+      "uninstaller_sha256": "ddbb4f310123d24c3a683509e660be7edd63a622fb924a3efcac55ada4346538",
+      "exit_code": 0,
+      "program_executable_remaining": false,
+      "uninstaller_remaining": false,
+      "log": "E:\\Github\\TrainingFeedback\\.tmp\\legacy-program-cleanup-2026-10-02\\uninstall-0.7.7.log"
+    },
+    {
+      "directory": "C:\\Users\\41315\\AppData\\Local\\Programs\\TrainingFeedback",
+      "version": "0.7.5",
+      "uninstaller_sha256": "ce397537eec33add4d4aa311b7e6bd8f2621652df55dd4cc5e8888593634e73a",
+      "exit_code": 0,
+      "program_executable_remaining": false,
+      "uninstaller_remaining": false,
+      "log": "E:\\Github\\TrainingFeedback\\.tmp\\legacy-program-cleanup-2026-10-02\\uninstall-0.7.5.log"
+    }
+  ],
+  "program_directories_remaining": [
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\acceptance-075\\c2\\program",
+      "exists": false
+    },
+    {
+      "path": "C:\\Users\\41315\\AppData\\Local\\Programs\\TrainingFeedback",
+      "exists": false
+    }
+  ],
+  "install_registration_remaining_32_and_64": false,
+  "expected_shortcuts_remaining": false,
+  "logged_deletion_operations": 670,
+  "unexpected_logged_deletion_paths": [],
+  "retired_installer_files": [
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.6.1-Setup.exe",
+      "bytes": 34289899,
+      "sha256": "f2770fbdb0727576ee4bcf1a898869e82a8002b390e23425bcff533a158936f4",
+      "source_revision": "072c931399561fdcdbc008a97cceca6b8c2268c7"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.6.1-Setup.build-manifest.json",
+      "bytes": 41895,
+      "sha256": "4df496c0f4dc934fb58dbb0b6afdb41807464c866360e3beb57c2ec419c020ae",
+      "source_revision": "072c931399561fdcdbc008a97cceca6b8c2268c7"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.0-Setup.exe",
+      "bytes": 85559155,
+      "sha256": "d19eddceccb1bf8bdd3bf1d21466c3eb792477c508f6220ce1ea68452178279d",
+      "source_revision": "b88feba66cdd60891cc169568187420183590913"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.0-Setup.build-manifest.json",
+      "bytes": 59663,
+      "sha256": "ebece21361714b33397a1de653b4a2bbc2fb149d2337964d7e3be0bf8fbef9fb",
+      "source_revision": "b88feba66cdd60891cc169568187420183590913"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.1-Setup.exe",
+      "bytes": 85559780,
+      "sha256": "286b7a6356056e2eb0e866a4272d4e93728504e3953f74c492dd9c738e1aec29",
+      "source_revision": "196fa5b1d3bf3d9793b979560a6125311481794d"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.1-Setup.build-manifest.json",
+      "bytes": 59662,
+      "sha256": "09d0aab44af123be85f41d1754ec7012119580cb776ef472a76370dac834e171",
+      "source_revision": "196fa5b1d3bf3d9793b979560a6125311481794d"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.2-Setup.exe",
+      "bytes": 85517219,
+      "sha256": "fc2870ed5c25dd07802dafa18ebdf49c00ad204e3cd942cf50043d0ad253f95b",
+      "source_revision": "8c1b183caf64d301fc520986165c16aa0532d020"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.2-Setup.build-manifest.json",
+      "bytes": 59862,
+      "sha256": "8e19793c6c6e2a3155ab5a79d3c69efcf9c8f50934b8b55488a1bc9ab0029758",
+      "source_revision": "8c1b183caf64d301fc520986165c16aa0532d020"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.3-Setup.exe",
+      "bytes": 85519490,
+      "sha256": "529311f885d6ff694619fc6e31dc05f283c0fed11b045476d376f85b242640bf",
+      "source_revision": "acadd9dc594bee58ef74f26e3ba167b83c3bfe13"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.3-Setup.build-manifest.json",
+      "bytes": 59862,
+      "sha256": "93d533adec8f0ea09ab1619d2ee13cf03c2577f59520f629e608c4f58da8700c",
+      "source_revision": "acadd9dc594bee58ef74f26e3ba167b83c3bfe13"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.4-Setup.exe",
+      "bytes": 85528061,
+      "sha256": "253c5b069403fb5c8e61f9a0c2af33916cd945f76671944cc0c193ba43733a11",
+      "source_revision": "0d3653f22443550d00d99fc7b3d6c994809523d0"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.4-Setup.build-manifest.json",
+      "bytes": 59862,
+      "sha256": "358790ae469435afa5140ac34f063462765c100b41259ae0544cf629e38488e2",
+      "source_revision": "0d3653f22443550d00d99fc7b3d6c994809523d0"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.5-Setup.exe",
+      "bytes": 85547966,
+      "sha256": "1d5843c4958cb3d540ab94af2a7dd5c2c24697b641213d555d1d522be57ffb3d",
+      "source_revision": "afabe02794f6ebba50d97f380d8c17b10ef1bfc0"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.5-Setup.build-manifest.json",
+      "bytes": 60271,
+      "sha256": "1d7e572d6fa09dfb16c75e94764d65a28eb88b11820d92e0780f24cfdcb93f35",
+      "source_revision": "afabe02794f6ebba50d97f380d8c17b10ef1bfc0"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.7-Setup.exe",
+      "bytes": 85540659,
+      "sha256": "b3b8573274bb95b0b71056a0504dd3e5a5de5493a21f58484906e425ae093279",
+      "source_revision": "831f7edf2f80a062f5919223b10cada4037f577b"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\dist\\installer\\TrainingFeedback-0.7.7-Setup.build-manifest.json",
+      "bytes": 60072,
+      "sha256": "bc34c6958d91dd04ca53f9972ee1bd0eaeff72daa4f1868bc61295621bc3e512",
+      "source_revision": "831f7edf2f80a062f5919223b10cada4037f577b"
+    }
+  ],
+  "retired_installer_bytes": 633523378.0,
+  "active_candidate_setup_sha256": "8b5fd69ac7babe7da6ebbf9a5eea2e3926e779b93d6bdf5ee52b655b2cb59575",
+  "subsequent_screenshot_sha256": "b8ea67d2fd6983ff635d9ae7b0e9f88d1ac7a09aed2255274045dcd7ba8144c8",
+  "manual_installation_after_cleanup": "not run",
+  "app_schema_catalog_contract": "0.8.0 / 23 / 070-illustrated-3 / 3 unchanged",
+  "data_root_inspection": "not performed; deletion log paths audited, no byte-for-byte root certificate claimed"
+}
