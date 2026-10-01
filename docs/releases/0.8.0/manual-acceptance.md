@@ -8,11 +8,11 @@
 [旧程序清理记录](../../history/0.8.0/legacy-program-cleanup-2026-10-02.md)。
 先完成 M01～M05，再做后面的检查。某一步失败就记录现象，不必硬做后续步骤。
 
-本次安装包和校验记录见 [10 月 2 日新候选记录](../../history/0.8.0/local-candidate-2026-10-02.md)。
+本次安装包和校验记录见 [10 月 2 日路径修复候选记录](../../history/0.8.0/local-candidate-2026-10-02-path-fix.md)。
 安装包已重建；不要继续运行之前打开的旧安装器。新包 SHA-256
 （用于确认文件没有换过）是：
 
-`8b5fd69ac7babe7da6ebbf9a5eea2e3926e779b93d6bdf5ee52b655b2cb59575`
+`7b708a7cb19a75b0478ffc1cd8c7d56e3b4d45eb90f8773e76b0a39de1665a36`
 
 ## 旧程序已清理，先退出并重新打开安装器
 
@@ -49,6 +49,7 @@ $tf080AcceptanceDirectory = 'E:\TrainingFeedback-080-PathFix'
 if (Test-Path -LiteralPath $tf080AcceptanceDirectory) { throw '测试目录已存在，请换一个新目录名。' }
 $tf080Setup = 'E:\Github\TrainingFeedback\dist\installer\TrainingFeedback-0.8.0-Setup.exe'
 if (-not (Test-Path -LiteralPath $tf080Setup)) { throw '找不到安装包，请先确认安装包路径。' }
+if ((Get-FileHash -LiteralPath $tf080Setup -Algorithm SHA256).Hash -ne '7b708a7cb19a75b0478ffc1cd8c7d56e3b4d45eb90f8773e76b0a39de1665a36') { throw '安装包不是本次路径修复包，请使用更新后的文件。' }
 $env:LOCALAPPDATA = Join-Path $tf080AcceptanceDirectory '测试配置'
 $tf080Program = Join-Path $tf080AcceptanceDirectory '程序 甲'
 $tf080ProgramNext = Join-Path $tf080AcceptanceDirectory '程序 乙'
@@ -254,8 +255,11 @@ Write-Output "独立测试配置：$env:LOCALAPPDATA"
 完成 M05 后，需要重新安装程序才能做这一项。
 
 1. 用同一个安装包安装到 `$tf080Program` 指定的位置，不自动启动。
-2. 从 PowerShell 启动程序，选择“打开已有数据目录”，打开保留下来的 A。
-3. 保持程序窗口打开，回到 PowerShell 启动卸载器。
+2. 在 PowerShell 运行 `Start-Process -FilePath (Join-Path $tf080Program 'TrainingFeedback.exe')`，
+   本次不加 `-Wait`，这样程序打开后还能继续在 PowerShell 输入命令。
+   选择“打开已有数据目录”，打开保留下来的 A。
+3. 保持程序窗口打开，回到 PowerShell，运行
+   `Start-Process -FilePath (Join-Path $tf080Program 'unins000.exe') -Wait` 启动卸载器。
 4. 删除数据选项应无法勾选，窗口应说明数据正在使用或不能安全删除。
 5. 点击取消卸载，回到程序检查 A 的标记文字仍在，然后关闭程序。
 

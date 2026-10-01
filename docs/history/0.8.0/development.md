@@ -36,3 +36,13 @@ release scope (now 100/100 unique). Unaffected prior results are reused.
 The [rebuilt exact candidate](local-candidate-2026-10-02.md) has clean source
 `b55e746`; its manual retest is not run. The screenshot's prompt result is failed,
 with exact artifact identity unavailable; no training data status is inferred.
+
+A new Setup log proved that an installer opened after cleanup still referenced
+the old test directory. The blind Inno previous-directory default is now disabled;
+only helper-verified current installation paths can be reused, and a nonexistent
+previous program no longer triggers relocation. Path-source logging was added.
+Manual commands now use dedicated tf080 variables, verify the exact installer,
+and pass the intended DIR explicitly. Existing helper tests passed again
+(26/0.39s; same scope, still100 unique). The [path-fix candidate](local-candidate-2026-10-02-path-fix.md)
+was built from clean1abf07d and statically verified; its actual client/installer
+checks remain not run. No application/schema/catalog/contract change occurred.

@@ -22,7 +22,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.0 | 23 | Current development version: [installation, cleanup and response work](0.8.0/development.md) | [October 2 rebuilt candidate; manual retest not run](0.8.0/local-candidate-2026-10-02.md) |
+| 0.8.0 | 23 | Current development version: [installation, cleanup and response work](0.8.0/development.md) | [October 2 path-fix candidate; manual retest not run](0.8.0/local-candidate-2026-10-02-path-fix.md) |
 | 0.7.8 | 23 | Historical development version: [documentation and knowledge governance](0.7.8/development.md) | No installer candidate; documentation/identity verification only |
 | 0.7.7 | 23 | Historical development version: [new-root creation](0.7.7/development.md) | [User-approved partial closeout; full installed acceptance incomplete](0.7.7/local-candidate.md#2026-09-29-部分验收收尾) |
 | 0.7.6 | 23 | Historical development version: [documentation ownership and routing](0.7.6/development.md) | No installer candidate; development verification only |
@@ -33,10 +33,12 @@ identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
 
-The [October 2 rebuilt 0.8.0 candidate](0.8.0/local-candidate-2026-10-02.md) is built
-and statically verified. A developer screenshot reported the prior directory
-error prompt as failed, without an exact candidate hash. The prompt is repaired;
-manual retest, installed and response acceptance of the new candidate remain not run.
+The [October 2 path-fix candidate](0.8.0/local-candidate-2026-10-02-path-fix.md) is
+built and statically verified. A new launch after cleanup still failed with the
+old directory; the default/previous-path orchestration and manual commands are
+repaired. Manual retest, installed and response acceptance of the new candidate
+remain not run. The [earlier October 2 candidate](0.8.0/local-candidate-2026-10-02.md)
+retains its exact identity and evidence.
 The [September 30 candidate](0.8.0/local-candidate.md) retains its original evidence.
 No 0.7.8 installer candidate was built or accepted. The latest historical
 locally accepted candidate was 0.7.3 and is outside the current tracked history
