@@ -79,7 +79,7 @@ var
 
 function RunHelper(Operation, Directory, Extra: String): String;
 var
-  ResultCode: Integer;
+  ResultCode, Index: Integer;
   ResultFile, Parameters: String;
   MessageLines: TArrayOfString;
 begin
@@ -105,7 +105,11 @@ begin
     Exit;
   end;
   if ResultCode <> 0 then
+  begin
     Result := MessageLines[0];
+    for Index := 1 to GetArrayLength(MessageLines) - 1 do
+      Result := Result + #13#10 + MessageLines[Index];
+  end;
 end;
 
 function RunCleanupHelper(Operation: String; var Lines: TArrayOfString): Boolean;

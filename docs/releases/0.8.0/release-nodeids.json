@@ -96,5 +96,7 @@
   "tests/test_root_cleanup.py::test_process_crash_releases_handles_and_same_root_recovers",
   "tests/test_root_cleanup.py::test_readonly_file_refuses_without_changing_attributes",
   "tests/test_root_cleanup.py::test_retry_never_deletes_replacement_remaining_file",
-  "tests/test_root_cleanup.py::test_unknown_recovery_record_is_refused_without_root_changes"
+  "tests/test_root_cleanup.py::test_unknown_recovery_record_is_refused_without_root_changes",
+  "tests/test_installation.py::test_missing_program_ownership_reports_chinese_recovery_without_writes",
+  "tests/test_installation.py::test_missing_install_receipt_reports_chinese_recovery_without_writes"
 ]

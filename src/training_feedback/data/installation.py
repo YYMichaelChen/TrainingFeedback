@@ -21,6 +21,16 @@ class InstallPathError(ValueError):
     pass
 
 
+def missing_ownership_message(directory: Path, filename: str) -> str:
+    return (
+        f"程序目录缺少归属记录（{filename}），无法安全覆盖：{directory}\n"
+        "如果这里是以前安装的 TrainingFeedback，请取消本次安装，"
+        "使用旧程序的卸载器仅卸载程序并保留数据，然后重新运行安装器。\n"
+        "如果这里存放的是其它文件，请保留这些文件，并选择新的空目录。"
+        "本次检查不会删除程序目录或训练数据。"
+    )
+
+
 def local_path(value: str) -> Path:
     """Accept an absolute drive path without following aliases or trimming names."""
     if not isinstance(value, str) or not value or "\x00" in value:
@@ -110,9 +120,15 @@ def enumerate_files(directory: Path) -> set[str]:
 
 
 def installed_files(directory: Path) -> dict[str, str]:
-    files = read_manifest(directory)
+    try:
+        files = read_manifest(directory)
+    except FileNotFoundError as exc:
+        raise InstallPathError(missing_ownership_message(directory, PROGRAM_MANIFEST)) from exc
     receipt_path = relative_file(directory, INSTALL_RECEIPT)
-    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    try:
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise InstallPathError(missing_ownership_message(directory, INSTALL_RECEIPT)) from exc
     if (not isinstance(receipt, dict) or receipt.get("app_id") != APP_ID
             or receipt.get("format") != "training_feedback.install"
             or type(receipt.get("version")) is not int or receipt["version"] != 1

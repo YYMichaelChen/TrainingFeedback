@@ -176,6 +176,39 @@ def test_cli_failure_reports_error_and_preserves_target(tmp_path, policy, monkey
     assert not target.exists()
 
 
+def test_missing_program_ownership_reports_chinese_recovery_without_writes(
+    tmp_path, policy, monkeypatch,
+):
+    monkeypatch.setattr(installer_cli, "system_policy", lambda: policy)
+    target = tmp_path / "unowned-program"
+    target.mkdir()
+    executable = target / "TrainingFeedback.exe"
+    executable.write_bytes(b"synthetic unowned program, never launched")
+    result = tmp_path / "missing-program-result.txt"
+    assert installer_cli.main([
+        "validate", "--directory", str(target), "--result", str(result),
+    ]) == 1
+    message = result.read_text(encoding="utf-8")
+    assert "程序目录缺少归属记录" in message
+    assert "仅卸载程序并保留数据" in message
+    assert "新的空目录" in message and str(target) in message
+    assert "Errno" not in message and "No such file" not in message
+    assert list(target.iterdir()) == [executable]
+    assert executable.read_bytes() == b"synthetic unowned program, never launched"
+
+
+def test_missing_install_receipt_reports_chinese_recovery_without_writes(tmp_path, policy):
+    target = installed(tmp_path / "program")
+    (target / INSTALL_RECEIPT).unlink()
+    before = {p.relative_to(target): p.read_bytes() for p in target.rglob("*") if p.is_file()}
+    with pytest.raises(InstallPathError, match="仅卸载程序并保留数据") as error:
+        validate_install_target(str(target), policy)
+    assert INSTALL_RECEIPT in str(error.value) and str(target) in str(error.value)
+    assert "Errno" not in str(error.value)
+    after = {p.relative_to(target): p.read_bytes() for p in target.rglob("*") if p.is_file()}
+    assert after == before
+
+
 def test_main_helper_dispatch_does_not_import_qt_or_open_locator(tmp_path):
     result = tmp_path / "result.txt"
     script = (
