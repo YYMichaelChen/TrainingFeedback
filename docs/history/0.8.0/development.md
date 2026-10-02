@@ -60,3 +60,14 @@ The [new dialog candidate](local-candidate-2026-10-02-uninstall-dialog.md) built
 from clean8ac2c89 in66.01s, with296 files and exact hashes verified. Its manual
 checks remain not run. Versions and formats are unchanged; no real user data or
 ACLs were modified and no public/formal/personal-use status is established.
+
+A second developer screenshot showed that size constraints did not solve the
+custom uninstall form: it still covered the work area and clipped bottom controls.
+The manually sized form and controls are now removed. Inno's supported task-dialog
+layout supplies retention, explicit deletion and cancellation choices. Deletion
+still requires a second exact-path confirmation defaulting to No; rejecting it
+cancels uninstall. Default retention and the strict ownership boundary remain.
+The [task-dialog candidate](local-candidate-2026-10-02-task-dialog.md) was built
+from clean1bef967 in59.57s;296 files and exact installer hashes were verified.
+The same3 existing boundary tests passed in0.17s under the original100-case scope.
+New installed/size/button checks remain not run. Versions/formats are unchanged.

@@ -22,7 +22,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.0 | 23 | Current development version: [installation, cleanup and response work](0.8.0/development.md) | [October 2 uninstall-dialog candidate; manual retest not run](0.8.0/local-candidate-2026-10-02-uninstall-dialog.md) |
+| 0.8.0 | 23 | Current development version: [installation, cleanup and response work](0.8.0/development.md) | [October 2 task-dialog candidate; manual retest not run](0.8.0/local-candidate-2026-10-02-task-dialog.md) |
 | 0.7.8 | 23 | Historical development version: [documentation and knowledge governance](0.7.8/development.md) | No installer candidate; documentation/identity verification only |
 | 0.7.7 | 23 | Historical development version: [new-root creation](0.7.7/development.md) | [User-approved partial closeout; full installed acceptance incomplete](0.7.7/local-candidate.md#2026-09-29-部分验收收尾) |
 | 0.7.6 | 23 | Historical development version: [documentation ownership and routing](0.7.6/development.md) | No installer candidate; development verification only |
@@ -33,8 +33,12 @@ identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
 
-The [October 2 uninstall-dialog candidate](0.8.0/local-candidate-2026-10-02-uninstall-dialog.md)
+The [October 2 task-dialog candidate](0.8.0/local-candidate-2026-10-02-task-dialog.md)
 is built and statically verified; its installed and client checks remain not run.
+The [preceding dialog candidate](0.8.0/local-candidate-2026-10-02-uninstall-dialog.md)
+received a second failed size retest: Chinese text was visible, but the form
+remained oversized and bottom controls were clipped. It is replaced by Inno's
+supported task-dialog layout, with the data-retention and confirmation boundaries retained.
 The [path-fix candidate](0.8.0/local-candidate-2026-10-02-path-fix.md) retains
 developer-confirmed creation, restart, data isolation, reinstall and relocation
 checks. Its uninstall screenshot exposed poor layout and unclear ownership

@@ -151,9 +151,9 @@ end;
 function CleanupReasonText(Reason: String): String;
 begin
   if Reason = 'Selected data does not belong to the current user.' then
-    Result := '测试目录或配置文件的 Windows 所有者与当前账号不一致（例如属于管理员组）。' +
+    Result := '数据目录或配置文件的 Windows 所有者与当前账号不一致（例如属于管理员组）。' +
       '' + #13#10 + '为避免删除归属不明确的数据，本次只能卸载程序并保留数据。' +
-      '' + #13#10 + '不会取得所有权或修改目录权限。删除验收应在普通测试账号下创建新的测试数据。'
+      '' + #13#10 + '本次保留这些数据，不会取得所有权或修改目录权限。'
   else if Reason = 'A selected file is in use or access is denied.' then
     Result := '数据文件正在使用，或当前账号没有所需权限。请关闭程序后重试；本次可以仅卸载程序并保留数据。'
   else if Pos('requires the Windows safety backend', Reason) > 0 then
