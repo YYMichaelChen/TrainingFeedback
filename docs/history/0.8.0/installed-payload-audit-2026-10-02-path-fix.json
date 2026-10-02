@@ -1,0 +1,17 @@
+{
+  "event": "Static inspection after developer-operated installation; no client launch",
+  "date": "2026-10-02",
+  "source_revision": "1abf07daedd87272773dd1cce0fbaaa93d806945",
+  "setup_sha256": "7b708a7cb19a75b0478ffc1cd8c7d56e3b4d45eb90f8773e76b0a39de1665a36",
+  "program_directory": "E:\\TrainingFeedback-080-PathFix\\程序 甲",
+  "payload_files_verified": 296,
+  "owned_files_verified": 299,
+  "extra_files": [
+    ".training-feedback-install.json",
+    "unins000.dat",
+    "unins000.exe"
+  ],
+  "result": "pass: installed payload paths/sizes/hashes, exact receipt directory and uninstaller hashes",
+  "training_database_or_locator_access": "not performed",
+  "first_start_and_cancel": "not run / no developer result provided"
+}

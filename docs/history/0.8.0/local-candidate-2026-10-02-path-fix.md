@@ -71,3 +71,22 @@ Planscope保持v0.8.0/P5/T-014进行中，不关闭版本。
 认证删除验收环境。此输出尚未执行 M01 启动命令，因此 `/DIR` 预填、安装、
 EXE/receipt、首次启动取消、卸载和响应仍 not run。
 下一步使用当前 PowerShell 的 `tf080` 变量执行 M01，不重复准备命令。
+
+## 2026-10-02 开发者安装与静态文件检查结果
+
+开发者在同一窗口执行带 `/DIR` 的新版启动命令，随后对
+`E:\TrainingFeedback-080-PathFix\程序 甲\TrainingFeedback.exe` 和
+`.training-feedback-install.json` 的两项 `Test-Path` 均输出 `True`。
+**M01 自定义目录安装后的两项存在检查 pass**。未提供安装器退出码、目录页
+视觉、桌面快捷方式或完成页取消自动启动的单独结果，不补填这些检查为通过。
+
+随后 agent 仅静态检查该已知合成程序目录：完整296个候选payload文件的路径、
+大小、SHA-256与构建清单一致；总299个归属文件包含精确安装记录以及
+`unins000.exe`/`unins000.dat`。归属、receipt绑定目录和卸载器hash校验通过，
+无无关文件。结果见 [安装后静态审计](installed-payload-audit-2026-10-02-path-fix.json)。
+没有执行程序或卸载器，没有读取locator、训练数据根或训练数据库。
+
+这证明本次指定新目录已安装匹配的程序文件，不证明无参数默认目录或整个M01
+通过。首次启动选择数据目录后取消、locator/数据A不创建，以及M02后续客户端、
+搬迁、卸载和响应尚无开发者结果，保持not run。下一步在原PowerShell窗口启动
+该EXE，取消数据目录选择，确认pointer和rootA两项均为False。
