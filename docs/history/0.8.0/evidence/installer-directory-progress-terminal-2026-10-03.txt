@@ -1,0 +1,59 @@
+PS C:\Users\41315> . {
+>>     $ErrorActionPreference = 'Stop'
+>>     $tf080ProgressPrepared = $false
+>>     if ([Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw '当前是管理员权限，请停止。' }
+>>     $tf080ProgressBase = 'C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609'
+>>     $tf080ProgressConfig = Join-Path $tf080ProgressBase '独立测试配置'
+>>     if ($env:LOCALAPPDATA -ne $tf080ProgressConfig) { throw '当前不是原独立配置，请停止。' }
+>>     $tf080ProgressRoot = Join-Path $tf080ProgressBase 'TrainingFeedbackData'
+>>     $tf080ProgressPointer = Join-Path $tf080ProgressConfig 'TrainingFeedback\locator.json'
+>>     if ((Test-Path -LiteralPath $tf080ProgressRoot) -or (Test-Path -LiteralPath $tf080ProgressPointer)) { throw 'D或目录记录已出现，请停止并反馈。' }
+>>     $tf080ProgressSetup = 'E:\Github\TrainingFeedback\dist\installer\TrainingFeedback-0.8.0-Setup.exe'
+>>     $tf080ProgressProgram = 'E:\TrainingFeedback-080-PathFix\程序 乙'
+>>     if ((Get-FileHash -LiteralPath $tf080ProgressSetup -Algorithm SHA256).Hash -ne '49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad') { throw '安装包不是本次目录页修复包，请停止。' }
+>>     if ((Get-FileHash -LiteralPath (Join-Path $tf080ProgressProgram 'TrainingFeedback.exe') -Algorithm SHA256).Hash -ne '20a06f04af9b42ff828b7e5285ce2167d87b4796c23b1df7e154e0b9a5291e1d') { throw '程序乙不是刚才重装的旧候选，请停止。' }
+>>     $tf080ProgressProtected = @('E:\TrainingFeedback-080-PathFix\测试数据 A', 'E:\TrainingFeedback-080-PathFix\测试数据 B', 'E:\TrainingFeedback-080-PathFix\测试配置', (Join-Path $tf080ProgressBase '根外保留文件'))
+>>     function Get-Tf080ProgressFileState {
+>>         foreach ($tf080ProgressDirectory in $tf080ProgressProtected) {
+>>             if (-not (Test-Path -LiteralPath $tf080ProgressDirectory -PathType Container)) { throw ('应保留目录不存在：' + $tf080ProgressDirectory) }
+>>             Get-ChildItem -LiteralPath $tf080ProgressDirectory -Recurse -Force -File -ErrorAction Stop | ForEach-Object {
+>>                 $_.FullName + '|' + (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256 -ErrorAction Stop).Hash
+>>             }
+>>         }
+>>     }
+>>     $tf080ProgressBefore = @(Get-Tf080ProgressFileState | Sort-Object)
+>>     if ($tf080ProgressBefore.Count -eq 0) { throw '未取得保留文件校验值，请停止。' }
+>>     $tf080ProgressTestDirectory = Join-Path $tf080ProgressBase ('安装页复测-' + [guid]::NewGuid().ToString('N'))
+>>     $tf080ProgressOccupied = Join-Path $tf080ProgressTestDirectory '误选目录'
+>>     New-Item -ItemType Directory -Path $tf080ProgressOccupied | Out-Null
+>>     $tf080ProgressSentinel = Join-Path $tf080ProgressOccupied '保留检查.txt'
+>>     Set-Content -LiteralPath $tf080ProgressSentinel -Value '误选此目录时不得覆盖或删除这个测试文件' -Encoding utf8
+>>     $tf080ProgressSentinelBefore = (Get-FileHash -LiteralPath $tf080ProgressSentinel -Algorithm SHA256).Hash
+>>     $tf080ProgressLog = Join-Path $tf080ProgressTestDirectory '安装日志.log'
+>>     $tf080ProgressPrepared = $true
+>>     Write-Output ('实际安装位置：' + $tf080ProgressProgram)
+>>     Write-Output ('只用于检查错误返回的目录：' + $tf080ProgressOccupied)
+>>     Write-Output ('日志位置：' + $tf080ProgressLog)
+>>     Start-Process -FilePath $tf080ProgressSetup -ArgumentList ('/DIR="' + $tf080ProgressOccupied + '" /LOG="' + $tf080ProgressLog + '"') -Wait
+>> }
+实际安装位置：E:\TrainingFeedback-080-PathFix\程序 乙
+只用于检查错误返回的目录：C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609\安装页复测-272ac0cfb79b4cae82f8a3b1fd9637b4\误选目录
+日志位置：C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609\安装页复测-272ac0cfb79b4cae82f8a3b1fd9637b4\安装日志.log
+PS C:\Users\41315> . {
+>>     $ErrorActionPreference = 'Stop'
+>>     if (-not $tf080ProgressPrepared) { throw '第1步未成功，请停止。' }
+>>     if ((Get-FileHash -LiteralPath (Join-Path $tf080ProgressProgram 'TrainingFeedback.exe') -Algorithm SHA256).Hash -ne '1d2f09f781a8a2217921946f48ffc187c9cdb94e716cafa124880dd2cc9a8961') { throw '未安装本次完整新程序，请停止并反馈。' }
+>>     if ((Test-Path -LiteralPath $tf080ProgressRoot) -or (Test-Path -LiteralPath $tf080ProgressPointer)) { throw '安装后D或目录记录被重建，请停止。' }
+>>     if ((Get-FileHash -LiteralPath $tf080ProgressSentinel -Algorithm SHA256).Hash -ne $tf080ProgressSentinelBefore) { throw '误选目录的检查文件有变化，请停止。' }
+>>     if (@(Get-ChildItem -LiteralPath $tf080ProgressOccupied -Force).Count -ne 1) { throw '误选目录出现其它文件，请停止。' }
+>>     $tf080ProgressDifference = @(Compare-Object $tf080ProgressBefore @(Get-Tf080ProgressFileState | Sort-Object))
+>>     if ($tf080ProgressDifference.Count -ne 0) { $tf080ProgressDifference; throw '根外保留文件有变化，请停止。' }
+>>     Write-Output '安装文件核对通过：新程序hash匹配，测试文件未变，D和目录记录未重建。'
+>>     Select-String -LiteralPath $tf080ProgressLog -SimpleMatch -Pattern 'directory-page check', 'selected target already checked' | ForEach-Object Line
+>> }
+安装文件核对通过：新程序hash匹配，测试文件未变，D和目录记录未重建。
+2026-10-03 00:01:15.818   TrainingFeedback: directory-page check started: C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609\安装页复测-272ac0cfb79b4cae82f8a3b1fd9637b4\误选目录
+2026-10-03 00:01:17.223   TrainingFeedback: directory-page check finished: C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609\安装页复测-272ac0cfb79b4cae82f8a3b1fd9637b4\误选目录
+2026-10-03 00:01:43.114   TrainingFeedback: directory-page check started: E:\TrainingFeedback-080-PathFix\程序 乙
+2026-10-03 00:01:44.359   TrainingFeedback: selected target already checked in this directory-page action.
+2026-10-03 00:01:44.359   TrainingFeedback: directory-page check finished: E:\TrainingFeedback-080-PathFix\程序 乙
