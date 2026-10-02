@@ -1,7 +1,8 @@
 # 0.8.0 删除验收：使用全新的测试数据D
 
 对应 [408df076标准对话框候选](../../history/0.8.0/local-candidate-2026-10-02-task-dialog-final.md)。
-这份材料已准备，所有新步骤均未运行。先只做第1步确认环境，再继续后面的步骤。
+开发者第1步权限检查已输出False，普通权限环境确认通过。现在从第2步按顺序
+继续准备新配置、创建D及后续检查；这些步骤尚未运行，不重复第1步。
 原A/B和原测试配置保留，不改权限。删除目标只有本清单新建的“待删除数据 D”
 及新配置中的目录记录；最后确认删除时程序乙也会卸载。根外检查文件、原A/B
 与原目录记录必须保留。不要选择任何其它数据目录。
@@ -29,6 +30,8 @@ $tf080DeletePrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administ
 第1步为False后，在同一个新窗口运行。路径由命令生成，不需要修改：
 
 ```powershell
+$tf080DeleteIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$tf080DeletePrincipal = [Security.Principal.WindowsPrincipal]::new($tf080DeleteIdentity)
 if ($tf080DeletePrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw '当前仍是管理员权限，请停止。' }
 $tf080DeleteSetup = 'E:\Github\TrainingFeedback\dist\installer\TrainingFeedback-0.8.0-Setup.exe'
 $tf080DeleteProgram = 'E:\TrainingFeedback-080-PathFix\程序 乙'
