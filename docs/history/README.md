@@ -22,7 +22,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.0 | 23 | Current development version: [installation, cleanup and response work](0.8.0/development.md) | [October 2 path-fix candidate; manual retest not run](0.8.0/local-candidate-2026-10-02-path-fix.md) |
+| 0.8.0 | 23 | Current development version: [installation, cleanup and response work](0.8.0/development.md) | [October 2 uninstall-dialog candidate; manual retest not run](0.8.0/local-candidate-2026-10-02-uninstall-dialog.md) |
 | 0.7.8 | 23 | Historical development version: [documentation and knowledge governance](0.7.8/development.md) | No installer candidate; documentation/identity verification only |
 | 0.7.7 | 23 | Historical development version: [new-root creation](0.7.7/development.md) | [User-approved partial closeout; full installed acceptance incomplete](0.7.7/local-candidate.md#2026-09-29-部分验收收尾) |
 | 0.7.6 | 23 | Historical development version: [documentation ownership and routing](0.7.6/development.md) | No installer candidate; development verification only |
@@ -33,11 +33,14 @@ identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
 
-The [October 2 path-fix candidate](0.8.0/local-candidate-2026-10-02-path-fix.md) is
-built and statically verified. A new launch after cleanup still failed with the
-old directory; the default/previous-path orchestration and manual commands are
-repaired. Manual retest, installed and response acceptance of the new candidate
-remain not run. The [earlier October 2 candidate](0.8.0/local-candidate-2026-10-02.md)
+The [October 2 uninstall-dialog candidate](0.8.0/local-candidate-2026-10-02-uninstall-dialog.md)
+is built and statically verified; its installed and client checks remain not run.
+The [path-fix candidate](0.8.0/local-candidate-2026-10-02-path-fix.md) retains
+developer-confirmed creation, restart, data isolation, reinstall and relocation
+checks. Its uninstall screenshot exposed poor layout and unclear ownership
+refusal; program removal with root B and locator retained was observed, while
+cancellation was not established. These results do not certify the new build.
+The [earlier October 2 candidate](0.8.0/local-candidate-2026-10-02.md)
 retains its exact identity and evidence.
 The [September 30 candidate](0.8.0/local-candidate.md) retains its original evidence.
 No 0.7.8 installer candidate was built or accepted. The latest historical

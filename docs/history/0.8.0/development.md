@@ -46,3 +46,17 @@ and pass the intended DIR explicitly. Existing helper tests passed again
 (26/0.39s; same scope, still100 unique). The [path-fix candidate](local-candidate-2026-10-02-path-fix.md)
 was built from clean1abf07d and statically verified; its actual client/installer
 checks remain not run. No application/schema/catalog/contract change occurred.
+
+The path-fix candidate subsequently received developer-confirmed synthetic
+A/B creation, pictures, saves, two restarts, isolation, reinstall and relocation
+checks. Its uninstall screenshot showed an oversized window and unclear English
+ownership refusal; EXE removal with B and locator still present was observed,
+not cancellation. A read-only ACL inspection found Administrators ownership on
+the explicit synthetic A/B and locator, so strict user-ownership refusal remains.
+The custom dialog now has explicit fixed dialog bounds, Chinese choices and
+default cancellation. Three existing cleanup boundary cases passed (0.35s),
+still within the same 100/100 minor scope; unaffected results are reused.
+The [new dialog candidate](local-candidate-2026-10-02-uninstall-dialog.md) built
+from clean8ac2c89 in66.01s, with296 files and exact hashes verified. Its manual
+checks remain not run. Versions and formats are unchanged; no real user data or
+ACLs were modified and no public/formal/personal-use status is established.

@@ -3,8 +3,9 @@
 这份清单用于检查 0.8.0 安装包是否能正常安装、使用和卸载。
 **当前先不继续M04/M05：** 最新卸载窗口截图存在布局与说明问题，程序乙已卸载，
 B和目录记录仍存在，但取消卸载并未通过。A/B与目录记录归属为Windows管理员组，
-当前删除选项按规则不可用。不要改这些目录的权限或删除它们；修复包与具体重试
-步骤准备完成后再继续。此前A/B、重装和搬迁结果保留在原候选记录中。
+当前删除选项按规则不可用。不要改这些目录的权限或删除它们；先执行
+[修复包安装、显示和取消重试](uninstall-dialog-recheck.md)。此前A/B、重装和搬迁
+结果保留在原候选记录中。新的可删除场景需普通测试账号下的新测试数据。
 清理旧程序后的完整安装、使用和卸载检查尚未全部完成，已执行项目见下面的
 最新进度；其它项目实际操作后才能记录为“通过”或“失败”。第一张截图的英文错误提示记为失败；第二张截图
 已看到完整中文说明，但安装仍被旧程序阻塞。两张截图未提供安装包 hash，
@@ -18,17 +19,17 @@ B和目录记录仍存在，但取消卸载并未通过。A/B与目录记录归�
 两次重启保留均通过。B创建、保存和A/B来回切换、标记互不混入也已通过。
 同目录重装后的文件比较没有输出，A/B与目录记录的文件内容不变，这项已通过。
 搬迁后比较同样无输出，旧程序EXE为False、新程序EXE为True，标记保留，
-这些检查已通过；启动变量已更新为程序乙。接下来从 M04 第1～4步开始：
-确认当前目录为B并关闭程序，用原PowerShell检查直接取消卸载和拒绝永久删除
-确认，程序与数据应保留。不要重复准备或M02检查。首次选择窗口和取消操作、
+这些检查已通过；启动变量已更新为程序乙。之后卸载截图显示窗口和说明问题，
+程序已卸载，B与目录记录仍存在，不能把取消卸载记为通过。先按顶部的修复包
+重试链接检查新窗口和取消，不重复准备或M02检查。首次选择窗口和取消操作、
 安装目录页、快捷方式目标与搬迁后初始当前B等还缺明确反馈；M01/M03整体不补填通过。
 新目录训练/审核记录检查未单独反馈，卸载及后续检查尚未运行。
 
-本次安装包和校验记录见 [10 月 2 日路径修复候选记录](../../history/0.8.0/local-candidate-2026-10-02-path-fix.md)。
+本次安装包和校验记录见 [10 月 2 日卸载窗口修复候选记录](../../history/0.8.0/local-candidate-2026-10-02-uninstall-dialog.md)。
 安装包已重建；不要继续运行之前打开的旧安装器。新包 SHA-256
 （用于确认文件没有换过）是：
 
-`7b708a7cb19a75b0478ffc1cd8c7d56e3b4d45eb90f8773e76b0a39de1665a36`
+`04a943dd3d3a88cc341dbe8ed1b7b646ef1194917ad5d4a0d710852613f6d90e`
 
 ## 旧程序已清理，先退出并重新打开安装器
 
@@ -65,7 +66,7 @@ $tf080AcceptanceDirectory = 'E:\TrainingFeedback-080-PathFix'
 if (Test-Path -LiteralPath $tf080AcceptanceDirectory) { throw '测试目录已存在，请换一个新目录名。' }
 $tf080Setup = 'E:\Github\TrainingFeedback\dist\installer\TrainingFeedback-0.8.0-Setup.exe'
 if (-not (Test-Path -LiteralPath $tf080Setup)) { throw '找不到安装包，请先确认安装包路径。' }
-if ((Get-FileHash -LiteralPath $tf080Setup -Algorithm SHA256).Hash -ne '7b708a7cb19a75b0478ffc1cd8c7d56e3b4d45eb90f8773e76b0a39de1665a36') { throw '安装包不是本次路径修复包，请使用更新后的文件。' }
+if ((Get-FileHash -LiteralPath $tf080Setup -Algorithm SHA256).Hash -ne '04a943dd3d3a88cc341dbe8ed1b7b646ef1194917ad5d4a0d710852613f6d90e') { throw '安装包不是本次卸载窗口修复包，请使用更新后的文件。' }
 $env:LOCALAPPDATA = Join-Path $tf080AcceptanceDirectory '测试配置'
 $tf080Program = Join-Path $tf080AcceptanceDirectory '程序 甲'
 $tf080ProgramNext = Join-Path $tf080AcceptanceDirectory '程序 乙'
