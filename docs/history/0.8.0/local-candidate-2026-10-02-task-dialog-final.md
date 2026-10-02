@@ -156,3 +156,35 @@ locator指向该确切根，而非“待删除数据 D”。未打开SQLite数�
 只读检查块，以本轮不存在的“待删除数据 D”路径验证：立即抛出预期错误、
 就绪状态为False且无成功输出。没有启动客户端或修改测试文件，不替代开发者
 对实际根的恢复检查或删除验收；未新增应用pytest范围或重新构建。
+
+## 2026-10-02 实际D恢复检查通过，关闭后卸载仍拒绝
+
+开发者完整运行修复检查，输出实际TrainingFeedbackData完整路径与归属通过，
+无报错；**本轮实际D存在、locator确切指向与文件归属恢复检查 pass**。
+随后 [卸载截图](evidence/uninstall-closed-owned-root-refused-2026-10-02.png) 显示
+紧凑对话框，只提供仅卸载和取消，提示文件正在使用或权限不足。开发者进一步
+明确主程序“没开”、打开卸载器时Windows权限确认“无”。因此记录关闭状态
+预期可用的删除选项未出现，**安装验收的删除就绪场景 fail，原因待诊断**；
+不能当作M06使用中拒绝通过，二次确认/删除/重装不重建仍not run。
+截图SHA-256：6852a7df8db1ee2dc7cb233002ceae0c9e7a5b03335f9feed667ed0780abcbc0。
+
+只读辅助检查未发现TrainingFeedback.exe进程；已安装EXE仍为20a06f04完整hash，
+其清单执行级别asInvoker。实际新根及文件对本账号有FullControl；22次单独及
+同时持有的Win32文件元数据句柄访问均成功。未读取数据库内容、执行删除或
+自动操作客户端。这些当前检查不能重现或解释截图当时的拒绝。
+同一release-0.8.0 minor scope复用既有取消测试，改用新的C盘临时合成根，
+1 passed/0.10s，仍100/100 unique；不将此代码级检查转为安装验收通过。
+
+进程信息显示卸载器多阶段启动，其中部分子进程无法查询路径，不能单凭这一点
+判定提升权限。根据 [Inno非管理员安装说明](https://jrsoftware.org/ishelp/topic_admininstallmode.htm)
+及 [6.7.3卸载启动源码](https://github.com/jrsoftware/issrc/blob/is-6_7_3/Projects/Src/Setup.Uninstall.pas)，
+安装时已有管理员权限仍可能使卸载器需要该权限；
+[Microsoft环境继承说明](https://devblogs.microsoft.com/oldnewthing/20130703-00/?p=3903)
+说明权限提升时环境可能重建。这只是核对卸载进程配置的排查方向，尚未认证本次
+提升或配置丢失；没有读取真实默认locator或任何旧数据库。
+
+下一步按 [只读预检诊断](../../releases/0.8.0/uninstall-preflight-diagnostic.md)
+由开发者在同一普通PowerShell取消卸载后运行相同EXE的内部probe，取得退出码
+和READY/REFUSED结果。命令在启动前绑定并核对这套隔离配置与实际D，日志只写
+D外；不执行commit或删数据。删除清单第4～7步暂停，不改ACL或重复建根。
+本轮只更新证据、诊断清单和Planscope，代码、候选及四项版本身份未变。
