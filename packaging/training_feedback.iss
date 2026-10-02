@@ -148,6 +148,20 @@ begin
     if CompareText(ParamStr(Index), '/KEEPDATA') = 0 then Result := True;
 end;
 
+function CleanupReasonText(Reason: String): String;
+begin
+  if Reason = 'Selected data does not belong to the current user.' then
+    Result := '测试目录或配置文件的 Windows 所有者与当前账号不一致（例如属于管理员组）。' +
+      '' + #13#10 + '为避免删除归属不明确的数据，本次只能卸载程序并保留数据。' +
+      '' + #13#10 + '不会取得所有权或修改目录权限。删除验收应在普通测试账号下创建新的测试数据。'
+  else if Reason = 'A selected file is in use or access is denied.' then
+    Result := '数据文件正在使用，或当前账号没有所需权限。请关闭程序后重试；本次可以仅卸载程序并保留数据。'
+  else if Pos('requires the Windows safety backend', Reason) > 0 then
+    Result := '当前环境不支持安全删除数据，本次可以仅卸载程序并保留数据。'
+  else
+    Result := '安全检查未通过，本次保留数据。检查详情：' + #13#10 + Reason;
+end;
+
 function InitializeUninstall(): Boolean;
 var
   Form: TSetupForm;
@@ -156,6 +170,7 @@ var
   ContinueButton, CancelButton: TNewButton;
   Lines: TArrayOfString;
   Ready: Boolean;
+  Summary, Detail: String;
 begin
   DeleteDataRequested := False;
   Result := True;
@@ -163,53 +178,74 @@ begin
   CleanupOfferFile := ExpandConstant('{tmp}\cleanup-offer.json');
   RunCleanupHelper('probe', Lines);
   Ready := (Lines[0] = 'READY') and (GetArrayLength(Lines) >= 4);
-  Form := CreateCustomForm(ScaleX(600), ScaleY(330), False, False);
+  Form := CreateCustomForm(ScaleX(620), ScaleY(360), True, True);
   try
-    Form.Caption := 'TrainingFeedback uninstall';
+    Form.Caption := '卸载 TrainingFeedback';
+    Form.BorderStyle := bsDialog;
+    Form.BorderIcons := [biSystemMenu];
+    Form.Position := poScreenCenter;
+    Form.CenterOnShow := True;
+    Form.Constraints.MaxWidth := Form.Width;
+    Form.Constraints.MaxHeight := Form.Height;
+    Form.Constraints.MinWidth := Form.Width;
+    Form.Constraints.MinHeight := Form.Height;
     Information := TNewMemo.Create(Form);
     Information.Parent := Form;
-    Information.SetBounds(ScaleX(16), ScaleY(16), ScaleX(568), ScaleY(220));
+    Information.SetBounds(ScaleX(16), ScaleY(16), Form.ClientWidth - ScaleX(32),
+      Form.ClientHeight - ScaleY(116));
     Information.ReadOnly := True;
     Information.ScrollBars := ssVertical;
     Information.WordWrap := True;
     if Ready then
     begin
       CleanupRoot := Lines[1];
-      Information.Text := 'Program files will be removed. Data is retained unless you explicitly choose deletion.' +
-        '' + #13#10#13#10 + 'Exact current data root:' + #13#10 + CleanupRoot + #13#10 + Lines[2] +
-        '' + #13#10 + Lines[3] + #13#10#13#10 +
-        'Deleting data removes all root files, including pictures, backups and exports inside this root. ' +
-        'Other roots and external backups are retained. This cannot be undone.';
+      Summary := Lines[2];
+      StringChangeEx(Summary, 'Files:', '文件数：', True);
+      StringChangeEx(Summary, 'bytes:', '字节数：', True);
+      if Lines[3] = 'Retry interrupted cleanup.' then
+        Detail := '这是上次中断的清理；再次确认后仅继续清理已经核对的剩余文件。'
+      else
+        Detail := '范围包括此数据目录内的数据库和全部文件。';
+      Information.Text := '默认仅卸载程序，保留训练数据。点击“取消”则不进行卸载。' +
+        '' + #13#10#13#10 + '当前数据目录：' + #13#10 + CleanupRoot + #13#10 + Summary +
+        '' + #13#10 + Detail + #13#10#13#10 +
+        '只有勾选下方选项并再次确认，才会永久删除此目录内的全部文件，包括图片、备份和导出。' +
+        '其它数据目录和目录外备份保留；删除无法撤销。';
     end else
-      Information.Text := 'Data deletion is disabled. You can still uninstall the program and retain data.' +
-        '' + #13#10#13#10 + Lines[1];
+      Information.Text := '当前不能删除数据。点击“仅卸载程序”会移除程序并保留数据；点击“取消”不进行卸载。' +
+        '' + #13#10#13#10 + CleanupReasonText(Lines[1]);
     DeleteChoice := TNewCheckBox.Create(Form);
     DeleteChoice.Parent := Form;
-    DeleteChoice.SetBounds(ScaleX(16), ScaleY(244), ScaleX(568), ScaleY(24));
-    DeleteChoice.Caption := 'Delete my data at the exact path above';
+    DeleteChoice.SetBounds(ScaleX(16), Form.ClientHeight - ScaleY(92),
+      Form.ClientWidth - ScaleX(32), ScaleY(24));
+    DeleteChoice.Caption := '同时永久删除上方数据目录内的全部数据（默认保留）';
     DeleteChoice.Checked := False;
     DeleteChoice.Enabled := Ready;
     ContinueButton := TNewButton.Create(Form);
     ContinueButton.Parent := Form;
-    ContinueButton.SetBounds(ScaleX(356), ScaleY(284), ScaleX(108), ScaleY(28));
-    ContinueButton.Caption := 'Continue';
+    ContinueButton.SetBounds(Form.ClientWidth - ScaleX(260), Form.ClientHeight - ScaleY(44),
+      ScaleX(124), ScaleY(28));
+    if Ready then ContinueButton.Caption := '继续卸载…'
+    else ContinueButton.Caption := '仅卸载程序';
     ContinueButton.ModalResult := mrOk;
-    ContinueButton.Default := True;
+    ContinueButton.Default := False;
     CancelButton := TNewButton.Create(Form);
     CancelButton.Parent := Form;
-    CancelButton.SetBounds(ScaleX(476), ScaleY(284), ScaleX(108), ScaleY(28));
-    CancelButton.Caption := 'Cancel';
+    CancelButton.SetBounds(Form.ClientWidth - ScaleX(124), Form.ClientHeight - ScaleY(44),
+      ScaleX(108), ScaleY(28));
+    CancelButton.Caption := '取消';
     CancelButton.ModalResult := mrCancel;
     CancelButton.Cancel := True;
+    CancelButton.Default := True;
     if Form.ShowModal <> mrOk then
     begin
       Result := False;
       Exit;
     end;
     if Ready and DeleteChoice.Checked then
-      DeleteDataRequested := MsgBox('Permanently delete all data at this exact path?' +
+      DeleteDataRequested := MsgBox('是否永久删除下面这个数据目录内的全部数据？' +
         '' + #13#10#13#10 + CleanupRoot + #13#10#13#10 +
-        'This cannot be undone. External backups are retained.', mbConfirmation, MB_YESNO) = IDYES;
+        '删除无法撤销。其它数据目录和目录外备份会保留。', mbConfirmation, MB_YESNO) = IDYES;
   finally
     Form.Free;
   end;
@@ -226,13 +262,13 @@ begin
   RunCleanupHelper('commit', Lines);
   if Lines[0] <> 'complete' then
   begin
-    MessageText := 'Data cleanup did not complete. Retained paths and state:';
+    MessageText := '数据清理未完成。保留的路径与状态：';
     for Index := 1 to GetArrayLength(Lines) - 1 do
       MessageText := MessageText + #13#10 + Lines[Index];
     MessageText := MessageText + #13#10#13#10 +
-      'Continue removing only the program? Choose No to keep the helper for retry.';
+      '是否继续仅卸载程序？选择“否”保留程序，便于稍后重试清理。';
     if MsgBox(MessageText, mbError, MB_YESNO) <> IDYES then
-      RaiseException('Uninstall stopped. Remaining data and recovery information are retained.');
+      RaiseException('卸载已停止。剩余数据和恢复记录均已保留。');
   end;
 end;
 
