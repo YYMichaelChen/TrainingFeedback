@@ -71,3 +71,8 @@ The [task-dialog candidate](local-candidate-2026-10-02-task-dialog.md) was built
 from clean1bef967 in59.57s;296 files and exact installer hashes were verified.
 The same3 existing boundary tests passed in0.17s under the original100-case scope.
 New installed/size/button checks remain not run. Versions/formats are unchanged.
+
+After removing test-only wording from the product's ownership explanation, the
+[delivery task-dialog candidate](local-candidate-2026-10-02-task-dialog-final.md)
+was rebuilt from cleanb5bf5c8 in60.17s and statically audited. The initial1bef967
+build retains its own evidence; neither has developer client results yet.

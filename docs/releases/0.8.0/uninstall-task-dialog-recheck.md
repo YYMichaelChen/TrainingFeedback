@@ -1,6 +1,6 @@
 # 标准卸载对话框包：只查看并取消
 
-本次对应 [69a5c0f0候选](../../history/0.8.0/local-candidate-2026-10-02-task-dialog.md)。
+本次对应 [408df076候选](../../history/0.8.0/local-candidate-2026-10-02-task-dialog-final.md)。
 不用重新创建或修改A/B；只更新程序乙，再查看标准卸载选择对话框并取消。
 取消保留、显示和恢复打开都还未运行，需要你实际操作反馈。
 
@@ -14,7 +14,7 @@
    $tf080RootB = 'E:\TrainingFeedback-080-PathFix\测试数据 B'
    $env:LOCALAPPDATA = 'E:\TrainingFeedback-080-PathFix\测试配置'
    $tf080Pointer = Join-Path $env:LOCALAPPDATA 'TrainingFeedback/locator.json'
-   if ((Get-FileHash -LiteralPath $tf080Setup -Algorithm SHA256).Hash -ne '69a5c0f04ac189a6ced6bc52087402c62d5a06b29dcd4ff5f18c3f6c26dac756') { throw '不是本次标准对话框包，请停止。' }
+   if ((Get-FileHash -LiteralPath $tf080Setup -Algorithm SHA256).Hash -ne '408df0767146fcaf6d8324da88e15928d07da86969da1026fc4e6b426976fb28') { throw '不是本次标准对话框包，请停止。' }
    Start-Process -FilePath $tf080Setup -ArgumentList ('/DIR="' + $tf080Program + '"') -Wait
    ```
 

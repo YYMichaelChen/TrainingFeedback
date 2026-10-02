@@ -26,11 +26,11 @@ uninstall-dialog重试材料不再用于继续验收。不要改这些目录的�
 安装目录页、快捷方式目标与搬迁后初始当前B等还缺明确反馈；M01/M03整体不补填通过。
 新目录训练/审核记录检查未单独反馈，卸载及后续检查尚未运行。
 
-本次安装包和校验记录见 [10 月 2 日标准对话框候选记录](../../history/0.8.0/local-candidate-2026-10-02-task-dialog.md)。
+本次安装包和校验记录见 [10 月 2 日标准对话框交付候选记录](../../history/0.8.0/local-candidate-2026-10-02-task-dialog-final.md)。
 安装包已重建；不要继续运行之前打开的旧安装器。新包 SHA-256
 （用于确认文件没有换过）是：
 
-`69a5c0f04ac189a6ced6bc52087402c62d5a06b29dcd4ff5f18c3f6c26dac756`
+`408df0767146fcaf6d8324da88e15928d07da86969da1026fc4e6b426976fb28`
 
 ## 旧程序已清理，先退出并重新打开安装器
 
@@ -67,7 +67,7 @@ $tf080AcceptanceDirectory = 'E:\TrainingFeedback-080-PathFix'
 if (Test-Path -LiteralPath $tf080AcceptanceDirectory) { throw '测试目录已存在，请换一个新目录名。' }
 $tf080Setup = 'E:\Github\TrainingFeedback\dist\installer\TrainingFeedback-0.8.0-Setup.exe'
 if (-not (Test-Path -LiteralPath $tf080Setup)) { throw '找不到安装包，请先确认安装包路径。' }
-if ((Get-FileHash -LiteralPath $tf080Setup -Algorithm SHA256).Hash -ne '69a5c0f04ac189a6ced6bc52087402c62d5a06b29dcd4ff5f18c3f6c26dac756') { throw '安装包不是本次标准对话框包，请使用更新后的文件。' }
+if ((Get-FileHash -LiteralPath $tf080Setup -Algorithm SHA256).Hash -ne '408df0767146fcaf6d8324da88e15928d07da86969da1026fc4e6b426976fb28') { throw '安装包不是本次标准对话框包，请使用更新后的文件。' }
 $env:LOCALAPPDATA = Join-Path $tf080AcceptanceDirectory '测试配置'
 $tf080Program = Join-Path $tf080AcceptanceDirectory '程序 甲'
 $tf080ProgramNext = Join-Path $tf080AcceptanceDirectory '程序 乙'
