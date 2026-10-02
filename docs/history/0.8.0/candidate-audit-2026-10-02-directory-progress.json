@@ -1,0 +1,33 @@
+{
+  "application_version": "0.8.0",
+  "schema": 23,
+  "catalog": "070-illustrated-3",
+  "wire_contract": 3,
+  "source_revision": "89f7981c8e1eaf4d7ca821528c7b452529917fe3",
+  "source_dirty": false,
+  "built_at": "2026-10-02T15:46:53Z",
+  "build_seconds": 66.3,
+  "payload_files": 296,
+  "payload_bytes": 176808893,
+  "executable_sha256": "1d2f09f781a8a2217921946f48ffc187c9cdb94e716cafa124880dd2cc9a8961",
+  "setup_sha256": "49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad",
+  "setup_bytes": 85600545,
+  "payload_manifest_sha256": "0c728983b6f184b0529e38b40cd680089b947e8b52f16165fb8258eb877ce41b",
+  "setup_manifest_sha256": "d676e1dbe4803e5e9bd6f8d8a4a06c987bb9d970a086569231e86cbfffab5841",
+  "ownership_manifest_sha256": "67b6319318a6797246caa9de6e2e117aa06637ee453d302169bf3e51f4878d5e",
+  "authenticode": "NotSigned",
+  "static_payload": "pass: exact paths, lengths, hashes, ownership and embedded manifest",
+  "release_scope": "release-0.8.0",
+  "release_unique_cases": 100,
+  "affected_tests": "26 existing installation cases passed in 0.52s",
+  "payload_changes_from_408df076": [
+    ".training-feedback-program.json",
+    "TrainingFeedback.exe",
+    "_internal/base_library.zip"
+  ],
+  "installed_acceptance": "not run",
+  "directory_page_wait": "not run",
+  "prior_manual_delete_and_reinstall": "pass: developer declaration for 408df076 only",
+  "prior_directory_page_wait": "fail: developer reports several seconds without feedback; no exact duration",
+  "screenshot_sha256": "e3114413968f39fe7c8bc253a1d12fa2e355c14eecb00b65917ca9cbde4aabe1"
+}

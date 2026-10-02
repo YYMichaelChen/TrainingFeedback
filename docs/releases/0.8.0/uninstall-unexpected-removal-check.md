@@ -2,8 +2,9 @@
 
 本轮仍对应 [408df076候选](../../history/0.8.0/local-candidate-2026-10-02-task-dialog-final.md)。
 **本清单已由开发者执行并声明“流程验收完毕，没有问题”，不再重复。**
-根外校验和同包重装取消不重建D通过；当前正在修复安装目录页点击Next时的
-等待反馈，见 [修复记录](../../history/0.8.0/installer-directory-progress-2026-10-02.md)。
+根外校验和同包重装取消不重建D通过；新候选49de95af现在按
+[目录页等待复测](installer-directory-progress-recheck.md) 继续，见
+[修复记录](../../history/0.8.0/installer-directory-progress-2026-10-02.md)。
 二次确认取消和使用中拒绝仍需新合成根补验，暂不自行创建新根。
 开发者第4步检查得到程序、D、目录记录三个False，随后因EXE不存在而报错，
 原文件比较未执行。开发者已确认点击永久删除选项，并在二次确认选择“是”。
