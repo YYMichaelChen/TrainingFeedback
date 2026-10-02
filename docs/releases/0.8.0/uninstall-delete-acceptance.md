@@ -1,14 +1,53 @@
 # 0.8.0 删除验收：使用全新的测试数据D
 
 对应 [408df076标准对话框候选](../../history/0.8.0/local-candidate-2026-10-02-task-dialog-final.md)。
-开发者第1步权限检查已输出False，普通权限环境确认通过。现在从第2步按顺序
-继续准备新配置、创建D及后续检查；这些步骤尚未运行，不重复第1步。
-原A/B和原测试配置保留，不改权限。删除目标只有本清单新建的“待删除数据 D”
+开发者第1步权限检查False、第2步路径准备与父目录归属检查已通过。本轮实际
+创建的是默认名称TrainingFeedbackData，原“待删除数据 D”路径不存在。
+继续使用这个已创建的合成根作为D，不重建或改名，先做下方的恢复检查。
+原A/B和原测试配置保留，不改权限。删除目标只有本轮新建的TrainingFeedbackData（D）
 及新配置中的目录记录；最后确认删除时程序乙也会卸载。根外检查文件、原A/B
 与原目录记录必须保留。不要选择任何其它数据目录。
 
 命令在PowerShell 7运行。只复制代码块里的命令，不复制开头或结尾的三个反引号。
 每步出现报错就停下反馈完整输出，不自己清理、修改权限或重做全部步骤。
+
+## 本轮从这里继续：绑定实际D并重新检查
+
+本轮唯一允许删除的数据根改为：
+`C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609\TrainingFeedbackData`。
+它不是父目录本身，也不是独立配置或根外保留文件。原A/B仍必须保留。
+原检查的“通过”文字无效：前面已报不存在，不能据此继续删除。
+
+在刚才同一个普通权限PowerShell复制运行整个代码块。最外面的点和花括号也要
+复制；它使报错立即结束这次检查，只有全部检查成功才打印“通过”。本段只读
+现有文件并绑定测试变量，不创建、改名或删除任何目录。
+
+```powershell
+. {
+    $ErrorActionPreference = 'Stop'
+    $tf080DeleteDataReady = $false
+    $tf080DeleteBase = 'C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609'
+    $tf080DeleteRoot = Join-Path $tf080DeleteBase 'TrainingFeedbackData'
+    $tf080DeleteConfig = Join-Path $tf080DeleteBase '独立测试配置'
+    $tf080DeletePointer = Join-Path $tf080DeleteConfig 'TrainingFeedback\locator.json'
+    if ($env:LOCALAPPDATA -ne $tf080DeleteConfig) { throw '当前窗口不是这套独立测试配置，请停止。' }
+    if (-not (Test-Path -LiteralPath $tf080DeleteRoot -PathType Container) -or -not (Test-Path -LiteralPath $tf080DeletePointer -PathType Leaf)) { throw '实际D或目录记录不存在，请停止。' }
+    $tf080DeleteRecordedRoot = (Get-Content -LiteralPath $tf080DeletePointer -Raw | ConvertFrom-Json).data_root
+    if ([IO.Path]::GetFullPath($tf080DeleteRecordedRoot) -ne [IO.Path]::GetFullPath($tf080DeleteRoot)) { throw '目录记录未指向本轮实际D，请停止。' }
+    $tf080DeleteSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    $tf080DeleteOwnedItems = @($tf080DeleteRoot, $tf080DeletePointer) + @(Get-ChildItem -LiteralPath $tf080DeleteRoot -Recurse -Force | ForEach-Object FullName)
+    foreach ($tf080DeleteOwnedPath in $tf080DeleteOwnedItems) {
+        if ((Get-Acl -LiteralPath $tf080DeleteOwnedPath).GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $tf080DeleteSid) { throw ('新数据归属不符，请停止：' + $tf080DeleteOwnedPath) }
+    }
+    $tf080DeleteDataReady = $true
+    Write-Output ('实际D：' + $tf080DeleteRoot)
+    Write-Output '新数据D及目录记录归属检查通过'
+}
+```
+
+预期打印上述实际D完整路径和归属检查通过。报错则不做第4～7步，反馈完整输出。
+成功后从第4步继续，所有D都指TrainingFeedbackData，不再指“待删除数据 D”；
+卸载窗口与二次确认也必须显示这个完整实际路径。第1～3步仅保留作追溯，不重复。
 
 ## 1. 先确认PowerShell不是以管理员身份运行
 
@@ -30,6 +69,9 @@ $tf080DeletePrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administ
 第1步为False后，在同一个新窗口运行。路径由命令生成，不需要修改：
 
 ```powershell
+. {
+$ErrorActionPreference = 'Stop'
+$tf080DeleteDataReady = $false
 $tf080DeleteIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $tf080DeletePrincipal = [Security.Principal.WindowsPrincipal]::new($tf080DeleteIdentity)
 if ($tf080DeletePrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw '当前仍是管理员权限，请停止。' }
@@ -56,6 +98,7 @@ $env:LOCALAPPDATA = $tf080DeleteConfig
 Write-Output ('新测试父目录：' + $tf080DeleteBase)
 Write-Output ('唯一待删除数据目录：' + $tf080DeleteRoot)
 Write-Output ('独立目录记录：' + $tf080DeletePointer)
+}
 ```
 
 预期打印三个新路径，D和新的目录记录此时还不存在。命令只设置当前新窗口的
@@ -76,12 +119,19 @@ Start-Process -FilePath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe') -
 回到同一PowerShell运行：
 
 ```powershell
+. {
+$ErrorActionPreference = 'Stop'
+$tf080DeleteDataReady = $false
 if (-not (Test-Path -LiteralPath $tf080DeleteRoot) -or -not (Test-Path -LiteralPath $tf080DeletePointer)) { throw '新数据D或目录记录未创建，请停止。' }
+$tf080DeleteRecordedRoot = (Get-Content -LiteralPath $tf080DeletePointer -Raw | ConvertFrom-Json).data_root
+if ([IO.Path]::GetFullPath($tf080DeleteRecordedRoot) -ne [IO.Path]::GetFullPath($tf080DeleteRoot)) { throw '目录记录指向了其它数据根，请停止。' }
 $tf080DeleteOwnedItems = @($tf080DeleteRoot, $tf080DeletePointer) + @(Get-ChildItem -LiteralPath $tf080DeleteRoot -Recurse -Force -ErrorAction Stop | ForEach-Object FullName)
 foreach ($tf080DeleteOwnedPath in $tf080DeleteOwnedItems) {
     if ((Get-Acl -LiteralPath $tf080DeleteOwnedPath -ErrorAction Stop).GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $tf080DeleteSid) { throw ('新数据归属不符，请停止：' + $tf080DeleteOwnedPath) }
 }
+$tf080DeleteDataReady = $true
 Write-Output '新数据D及目录记录归属检查通过'
+}
 ```
 
 预期输出归属检查通过。目录错误、打不开或归属报错算异常，反馈路径和提示，
@@ -92,6 +142,9 @@ Write-Output '新数据D及目录记录归属检查通过'
 程序已关闭后，运行以下命令记录文件校验值并打开卸载器：
 
 ```powershell
+. {
+$ErrorActionPreference = 'Stop'
+if (-not $tf080DeleteDataReady) { throw '新数据归属检查尚未成功，请停止，不打开卸载器。' }
 function Get-Tf080DeleteFileState {
     param([string[]]$Directories, [string]$Locator = '')
     foreach ($tf080DeleteDirectory in $Directories) {
@@ -105,6 +158,7 @@ $tf080DeleteProtected = @($tf080DeleteOriginalA, $tf080DeleteOriginalB, $tf080De
 $tf080DeleteProtectedBefore = @(Get-Tf080DeleteFileState -Directories $tf080DeleteProtected | Sort-Object)
 $tf080DeleteAllBefore = @(Get-Tf080DeleteFileState -Directories ($tf080DeleteProtected + @($tf080DeleteRoot)) -Locator $tf080DeletePointer | Sort-Object)
 Start-Process -FilePath (Join-Path $tf080DeleteProgram 'unins000.exe') -Wait
+}
 ```
 
 窗口应提供“同时永久删除当前数据…”，显示的确切目录必须是新D。如果仍不能
