@@ -1,0 +1,127 @@
+PS C:\Users\41315> . {
+>>     $ErrorActionPreference = 'Stop'
+>>     $tf080CancelPrepared = $false
+>>     $tf080CancelReady = $false
+>>     $tf080CancelPassed = $false
+>>     $tf080CancelIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+>>     if ([Security.Principal.WindowsPrincipal]::new($tf080CancelIdentity).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw '当前是管理员权限，请停止。' }
+>>     $tf080CancelProgram = 'E:\TrainingFeedback-080-PathFix\程序 乙'
+>>     $tf080CancelExe = Join-Path $tf080CancelProgram 'TrainingFeedback.exe'
+>>     $tf080CancelExeHash = '1d2f09f781a8a2217921946f48ffc187c9cdb94e716cafa124880dd2cc9a8961'
+>>     if ((Get-FileHash -LiteralPath $tf080CancelExe -Algorithm SHA256).Hash -ne $tf080CancelExeHash) { throw '已安装程序不是本次目录页候选，请停止。' }
+>>     if (-not (Test-Path -LiteralPath (Join-Path $tf080CancelProgram 'unins000.exe') -PathType Leaf)) { throw '卸载器不存在，请停止。' }
+>>     $tf080CancelBase = Join-Path $env:USERPROFILE ('TrainingFeedback-080-Cancel-' + [guid]::NewGuid().ToString('N'))
+>>     if (Test-Path -LiteralPath $tf080CancelBase) { throw '新测试父目录已存在，请停止。' }
+>>     $tf080CancelConfig = Join-Path $tf080CancelBase '独立测试配置'
+>>     $tf080CancelRoot = Join-Path $tf080CancelBase 'TrainingFeedbackData'
+>>     $tf080CancelPointer = Join-Path $tf080CancelConfig 'TrainingFeedback\locator.json'
+>>     $tf080CancelOutside = Join-Path $tf080CancelBase '根外保留文件'
+>>     $tf080CancelOldBase = 'C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609'
+>>     $tf080CancelProtected = @('E:\TrainingFeedback-080-PathFix\测试数据 A', 'E:\TrainingFeedback-080-PathFix\测试数据 B', 'E:\TrainingFeedback-080-PathFix\测试配置', (Join-Path $tf080CancelOldBase '根外保留文件'), $tf080CancelOutside)
+>>     New-Item -ItemType Directory -Path $tf080CancelConfig, $tf080CancelOutside | Out-Null
+>>     Set-Content -LiteralPath (Join-Path $tf080CancelOutside '保留检查.txt') -Value '取消卸载后这份测试文件必须保留' -Encoding utf8
+>>     $tf080CancelSid = $tf080CancelIdentity.User.Value
+>>     foreach ($tf080CancelOwnedPath in @($tf080CancelBase, $tf080CancelConfig, $tf080CancelOutside)) {
+>>         if ((Get-Acl -LiteralPath $tf080CancelOwnedPath).GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $tf080CancelSid) { throw ('测试目录归属不符，请停止：' + $tf080CancelOwnedPath) }
+>>     }
+>>     function Get-Tf080CancelFileState {
+>>         param([string[]]$Directories, [string]$Locator = '')
+>>         foreach ($tf080CancelDirectory in $Directories) {
+>>             if (-not (Test-Path -LiteralPath $tf080CancelDirectory -PathType Container)) { throw ('应保留目录不存在：' + $tf080CancelDirectory) }
+>>             Get-ChildItem -LiteralPath $tf080CancelDirectory -Recurse -Force -File | ForEach-Object {
+>>                 $_.FullName + '|' + (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash
+>>             }
+>>         }
+>>         if ($Locator) { $Locator + '|' + (Get-FileHash -LiteralPath $Locator -Algorithm SHA256).Hash }
+>>     }
+>>     $tf080CancelProtectedBefore = @(Get-Tf080CancelFileState -Directories $tf080CancelProtected | Sort-Object)
+>>     if ($tf080CancelProtectedBefore.Count -eq 0) { throw '未取得保留文件校验值，请停止。' }
+>>     $env:LOCALAPPDATA = $tf080CancelConfig
+>>     $tf080CancelPrepared = $true
+>>     Write-Output ('新测试父目录：' + $tf080CancelBase)
+>>     Write-Output ('本轮数据E完整路径：' + $tf080CancelRoot)
+>>     Write-Output ('新独立配置：' + $tf080CancelConfig)
+>>     Write-Output '准备通过。下一步手动创建E，不打开原A/B。'
+>> }
+新测试父目录：C:\Users\41315\TrainingFeedback-080-Cancel-bbcd4e807b4d491aac2d923fb2e1786a
+本轮数据E完整路径：C:\Users\41315\TrainingFeedback-080-Cancel-bbcd4e807b4d491aac2d923fb2e1786a\TrainingFeedbackData
+新独立配置：C:\Users\41315\TrainingFeedback-080-Cancel-bbcd4e807b4d491aac2d923fb2e1786a\独立测试配置
+准备通过。下一步手动创建E，不打开原A/B。
+PS C:\Users\41315> . {
+>>     $ErrorActionPreference = 'Stop'
+>>     if (-not $tf080CancelPrepared -or $env:LOCALAPPDATA -ne $tf080CancelConfig) { throw '第1步未成功或配置已变化，请停止。' }
+>>     if ((Test-Path -LiteralPath $tf080CancelRoot) -or (Test-Path -LiteralPath $tf080CancelPointer)) { throw '本轮E或目录记录已存在，请停止。' }
+>>     if ((Get-FileHash -LiteralPath $tf080CancelExe -Algorithm SHA256).Hash -ne $tf080CancelExeHash) { throw '程序已变化，请停止。' }
+>>     Start-Process -FilePath $tf080CancelExe -Wait
+>> }
+PS C:\Users\41315> . {
+>>     $ErrorActionPreference = 'Stop'
+>>     $tf080CancelReady = $false
+>>     $tf080CancelPassed = $false
+>>     function Assert-Tf080CancelContext {
+>>         if (-not $tf080CancelPrepared) { throw '第1步未成功，请停止。' }
+>>         if ([Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw '当前是管理员权限，请停止。' }
+>>         if ($env:LOCALAPPDATA -ne $tf080CancelConfig) { throw '新独立配置已变化，请停止。' }
+>>         if ((Get-FileHash -LiteralPath $tf080CancelExe -Algorithm SHA256).Hash -ne $tf080CancelExeHash) { throw '程序已变化，请停止。' }
+>>         if (-not (Test-Path -LiteralPath $tf080CancelRoot -PathType Container) -or -not (Test-Path -LiteralPath $tf080CancelPointer -PathType Leaf)) { throw 'E或目录记录不存在，请停止。' }
+>>         $tf080CancelRecordedRoot = (Get-Content -LiteralPath $tf080CancelPointer -Raw | ConvertFrom-Json).data_root
+>>         if (-not $tf080CancelRecordedRoot -or [IO.Path]::GetFullPath($tf080CancelRecordedRoot) -ne [IO.Path]::GetFullPath($tf080CancelRoot)) { throw '目录记录未指向本轮E，请停止。' }
+>>         if ((Test-Path -LiteralPath (Join-Path $tf080CancelOldBase 'TrainingFeedbackData')) -or (Test-Path -LiteralPath (Join-Path $tf080CancelOldBase '独立测试配置\TrainingFeedback\locator.json'))) { throw '已删除的D或旧记录被重建，请停止。' }
+>>     }
+>>     Assert-Tf080CancelContext
+>>     $tf080CancelOwnedItems = @($tf080CancelRoot, $tf080CancelPointer) + @(Get-ChildItem -LiteralPath $tf080CancelRoot -Recurse -Force | ForEach-Object FullName)
+>>     foreach ($tf080CancelOwnedPath in $tf080CancelOwnedItems) {
+>>         if ((Get-Acl -LiteralPath $tf080CancelOwnedPath).GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $tf080CancelSid) { throw ('E归属不符，请停止：' + $tf080CancelOwnedPath) }
+>>     }
+>>     $tf080CancelDifference = @(Compare-Object $tf080CancelProtectedBefore @(Get-Tf080CancelFileState -Directories $tf080CancelProtected | Sort-Object))
+>>     if ($tf080CancelDifference.Count -ne 0) { $tf080CancelDifference; throw '创建E时原文件有变化，请停止。' }
+>>     $tf080CancelAllBefore = @(Get-Tf080CancelFileState -Directories ($tf080CancelProtected + @($tf080CancelRoot)) -Locator $tf080CancelPointer | Sort-Object)
+>>     $tf080CancelReady = $true
+>>     Write-Output ('E归属和文件核对通过：' + $tf080CancelRoot)
+>>     Start-Process -FilePath (Join-Path $tf080CancelProgram 'unins000.exe') -Wait
+>> }
+E归属和文件核对通过：C:\Users\41315\TrainingFeedback-080-Cancel-bbcd4e807b4d491aac2d923fb2e1786a\TrainingFeedbackData
+PS C:\Users\41315> . {
+>>     $ErrorActionPreference = 'Stop'
+>>     $tf080CancelPassed = $false
+>>     if (-not $tf080CancelReady) { throw '第3步未成功，请停止。' }
+>>     Test-Path -LiteralPath $tf080CancelExe
+>>     Test-Path -LiteralPath $tf080CancelRoot
+>>     Test-Path -LiteralPath $tf080CancelPointer
+>>     Assert-Tf080CancelContext
+>>     $tf080CancelDifference = @(Compare-Object $tf080CancelAllBefore @(Get-Tf080CancelFileState -Directories ($tf080CancelProtected + @($tf080CancelRoot)) -Locator $tf080CancelPointer | Sort-Object))
+>>     if ($tf080CancelDifference.Count -ne 0) { $tf080CancelDifference; throw '点否后测试文件有变化，请停止。' }
+>>     $tf080CancelPassed = $true
+>>     Write-Output '点否后程序、E和目录记录保留，全部测试文件校验值未变。'
+>> }
+True
+True
+True
+点否后程序、E和目录记录保留，全部测试文件校验值未变。
+PS C:\Users\41315> . {
+>>     $ErrorActionPreference = 'Stop'
+>>     if (-not $tf080CancelPassed) { throw '第4步文件检查未通过，请停止。' }
+>>     Assert-Tf080CancelContext
+>>     $tf080CancelClientProcess = Start-Process -FilePath $tf080CancelExe -PassThru
+>> }
+PS C:\Users\41315> . {
+>>     $ErrorActionPreference = 'Stop'
+>>     if (-not $tf080CancelPassed -or -not $tf080CancelClientProcess -or $tf080CancelClientProcess.HasExited) { throw '第4步未通过或主程序已关闭，请停止。' }
+>>     Assert-Tf080CancelContext
+>>     Start-Process -FilePath (Join-Path $tf080CancelProgram 'unins000.exe') -Wait
+>> }
+PS C:\Users\41315> . {
+>>     $ErrorActionPreference = 'Stop'
+>>     if (-not $tf080CancelPassed) { throw '第4步文件检查未通过，请停止。' }
+>>     Test-Path -LiteralPath $tf080CancelExe
+>>     Test-Path -LiteralPath $tf080CancelRoot
+>>     Test-Path -LiteralPath $tf080CancelPointer
+>>     Assert-Tf080CancelContext
+>>     $tf080CancelDifference = @(Compare-Object $tf080CancelProtectedBefore @(Get-Tf080CancelFileState -Directories $tf080CancelProtected | Sort-Object))
+>>     if ($tf080CancelDifference.Count -ne 0) { $tf080CancelDifference; throw '原A/B、原配置或根外文件有变化，请停止。' }
+>>     Write-Output '程序、E和目录记录存在，原A/B、原配置和根外文件未变。'
+>> }
+True
+True
+True
+程序、E和目录记录存在，原A/B、原配置和根外文件未变。
