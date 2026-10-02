@@ -1287,7 +1287,7 @@ message such as:
 Reinstalling program files does not recreate the independent root. The user must
 explicitly choose a new empty directory for a new root. Ordinary uninstall
 preserves the root and locator. Starting with 0.8.0, an interactive uninstaller
-may offer a separate, default-unchecked deletion of only the locator's exact
+may offer a separate, default-unselected deletion of only the locator's exact
 current root, after ownership, version, path, exclusive-handle and confirmation
 checks. Silent uninstall retains data. Historical roots and external backups
 are excluded. Interrupted deletion retains a recovery record and prevents opening

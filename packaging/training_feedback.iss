@@ -164,13 +164,10 @@ end;
 
 function InitializeUninstall(): Boolean;
 var
-  Form: TSetupForm;
-  Information: TNewMemo;
-  DeleteChoice: TNewCheckBox;
-  ContinueButton, CancelButton: TNewButton;
   Lines: TArrayOfString;
   Ready: Boolean;
-  Summary, Detail: String;
+  Summary, Detail, Information: String;
+  Choice: Integer;
 begin
   DeleteDataRequested := False;
   Result := True;
@@ -178,76 +175,43 @@ begin
   CleanupOfferFile := ExpandConstant('{tmp}\cleanup-offer.json');
   RunCleanupHelper('probe', Lines);
   Ready := (Lines[0] = 'READY') and (GetArrayLength(Lines) >= 4);
-  Form := CreateCustomForm(ScaleX(620), ScaleY(360), True, True);
-  try
-    Form.Caption := '卸载 TrainingFeedback';
-    Form.BorderStyle := bsDialog;
-    Form.BorderIcons := [biSystemMenu];
-    Form.Position := poScreenCenter;
-    Form.CenterOnShow := True;
-    Form.Constraints.MaxWidth := Form.Width;
-    Form.Constraints.MaxHeight := Form.Height;
-    Form.Constraints.MinWidth := Form.Width;
-    Form.Constraints.MinHeight := Form.Height;
-    Information := TNewMemo.Create(Form);
-    Information.Parent := Form;
-    Information.SetBounds(ScaleX(16), ScaleY(16), Form.ClientWidth - ScaleX(32),
-      Form.ClientHeight - ScaleY(116));
-    Information.ReadOnly := True;
-    Information.ScrollBars := ssVertical;
-    Information.WordWrap := True;
-    if Ready then
-    begin
-      CleanupRoot := Lines[1];
-      Summary := Lines[2];
-      StringChangeEx(Summary, 'Files:', '文件数：', True);
-      StringChangeEx(Summary, 'bytes:', '字节数：', True);
-      if Lines[3] = 'Retry interrupted cleanup.' then
-        Detail := '这是上次中断的清理；再次确认后仅继续清理已经核对的剩余文件。'
-      else
-        Detail := '范围包括此数据目录内的数据库和全部文件。';
-      Information.Text := '默认仅卸载程序，保留训练数据。点击“取消”则不进行卸载。' +
-        '' + #13#10#13#10 + '当前数据目录：' + #13#10 + CleanupRoot + #13#10 + Summary +
-        '' + #13#10 + Detail + #13#10#13#10 +
-        '只有勾选下方选项并再次确认，才会永久删除此目录内的全部文件，包括图片、备份和导出。' +
-        '其它数据目录和目录外备份保留；删除无法撤销。';
-    end else
-      Information.Text := '当前不能删除数据。点击“仅卸载程序”会移除程序并保留数据；点击“取消”不进行卸载。' +
-        '' + #13#10#13#10 + CleanupReasonText(Lines[1]);
-    DeleteChoice := TNewCheckBox.Create(Form);
-    DeleteChoice.Parent := Form;
-    DeleteChoice.SetBounds(ScaleX(16), Form.ClientHeight - ScaleY(92),
-      Form.ClientWidth - ScaleX(32), ScaleY(24));
-    DeleteChoice.Caption := '同时永久删除上方数据目录内的全部数据（默认保留）';
-    DeleteChoice.Checked := False;
-    DeleteChoice.Enabled := Ready;
-    ContinueButton := TNewButton.Create(Form);
-    ContinueButton.Parent := Form;
-    ContinueButton.SetBounds(Form.ClientWidth - ScaleX(260), Form.ClientHeight - ScaleY(44),
-      ScaleX(124), ScaleY(28));
-    if Ready then ContinueButton.Caption := '继续卸载…'
-    else ContinueButton.Caption := '仅卸载程序';
-    ContinueButton.ModalResult := mrOk;
-    ContinueButton.Default := False;
-    CancelButton := TNewButton.Create(Form);
-    CancelButton.Parent := Form;
-    CancelButton.SetBounds(Form.ClientWidth - ScaleX(124), Form.ClientHeight - ScaleY(44),
-      ScaleX(108), ScaleY(28));
-    CancelButton.Caption := '取消';
-    CancelButton.ModalResult := mrCancel;
-    CancelButton.Cancel := True;
-    CancelButton.Default := True;
-    if Form.ShowModal <> mrOk then
-    begin
-      Result := False;
-      Exit;
-    end;
-    if Ready and DeleteChoice.Checked then
-      DeleteDataRequested := MsgBox('是否永久删除下面这个数据目录内的全部数据？' +
-        '' + #13#10#13#10 + CleanupRoot + #13#10#13#10 +
-        '删除无法撤销。其它数据目录和目录外备份会保留。', mbConfirmation, MB_YESNO) = IDYES;
-  finally
-    Form.Free;
+  // Use Inno's supported task dialog layout, not manually sized forms/controls.
+  // It accepts button types only, not MsgBox's MB_DEFBUTTON flags.
+  if not Ready then
+  begin
+    Information := '当前不能删除数据。点击“仅卸载程序”会移除程序并保留数据；点击“取消”不进行卸载。' +
+      '' + #13#10#13#10 + CleanupReasonText(Lines[1]);
+    Result := TaskDialogMsgBox('卸载 TrainingFeedback', Information, mbInformation,
+      MB_OKCANCEL, ['仅卸载程序', '取消'], 0) = IDOK;
+    Exit;
+  end;
+  CleanupRoot := Lines[1];
+  Summary := Lines[2];
+  StringChangeEx(Summary, 'Files:', '文件数：', True);
+  StringChangeEx(Summary, 'bytes:', '字节数：', True);
+  if Lines[3] = 'Retry interrupted cleanup.' then
+    Detail := '这是上次中断的清理；再次确认后仅继续清理已经核对的剩余文件。'
+  else
+    Detail := '范围包括此数据目录内的数据库和全部文件。';
+  Information := '默认保留训练数据。请选择卸载方式，或点击“取消”。' +
+    '' + #13#10#13#10 + '当前数据目录：' + #13#10 + CleanupRoot + #13#10 + Summary +
+    '' + #13#10 + Detail + #13#10#13#10 +
+    '只有明确选择永久删除并再次确认，才会删除此目录内的全部文件，包括图片、备份和导出。' +
+    '其它数据目录和目录外备份保留；删除无法撤销。';
+  Choice := TaskDialogMsgBox('卸载 TrainingFeedback', Information, mbConfirmation,
+    MB_YESNOCANCEL, ['仅卸载程序，保留数据', '同时永久删除当前数据…', '取消'], 0);
+  case Choice of
+    IDYES: Result := True;  // First/default choice always retains data.
+    IDNO:
+      begin
+        DeleteDataRequested := MsgBox('是否永久删除下面这个数据目录内的全部数据？' +
+          '' + #13#10#13#10 + CleanupRoot + #13#10#13#10 +
+          '删除无法撤销。其它数据目录和目录外备份会保留。',
+          mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES;
+        Result := DeleteDataRequested;  // Rejecting deletion cancels the whole uninstall.
+      end;
+  else
+    Result := False;  // Cancel, window close, Escape and dialog failure never delete.
   end;
 end;
 
