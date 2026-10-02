@@ -60,6 +60,13 @@ before changing `%LOCALAPPDATA%`; suppress automatic post-install launch until
 the isolated profile is active. Keep one profile for restart checks and fresh
 named profiles for independent inputs. Close the app before copying a root.
 
+普通权限要求同时适用于安装程序和创建测试数据。不要仅用新PowerShell的False
+结果认证借用的旧程序安装：Inno即使设置`PrivilegesRequired=lowest`，安装时
+已有管理员权限也会留下需要管理员权限卸载的记录，同目录覆盖安装可能沿用
+该记录。遇到此情况先用`/KEEPDATA`仅卸载程序、记录测试数据未变，再在普通权限
+窗口重新安装并检查新记录；不要靠修改数据所有权或读取真实默认配置解决。
+详见 [Inno安装权限说明](https://jrsoftware.org/ishelp/topic_admininstallmode.htm)。
+
 | Check | Required observation |
 | --- | --- |
 | Installed payload | Setup succeeds; installed files equal the complete payload manifest; program replacement leaves the closed isolated locator/root unchanged. |

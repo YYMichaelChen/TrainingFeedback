@@ -188,3 +188,32 @@ locator指向该确切根，而非“待删除数据 D”。未打开SQLite数�
 和READY/REFUSED结果。命令在启动前绑定并核对这套隔离配置与实际D，日志只写
 D外；不执行commit或删数据。删除清单第4～7步暂停，不改ACL或重复建根。
 本轮只更新证据、诊断清单和Planscope，代码、候选及四项版本身份未变。
+
+## 2026-10-02 直接预检通过，确认旧安装的管理员标记
+
+开发者在同一普通PowerShell完整运行只读诊断，退出码0，结果为READY、
+确切实际D、Files: 4; bytes: 475345、Database and all files inside this exact root.。
+结果目录为`C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609\只读诊断-8edb15c565df400aba33ae7411a2dce9`。
+**当前候选直接预检 pass**；这不把此前卸载窗口的就绪场景fail改成pass，
+也不认证二次确认、实际删除、使用中拒绝或删除后重装。
+
+卸载窗口已关闭后，只读解析程序乙的`unins000.dat`前448字节。头ID是Inno
+64位卸载日志、版本1054，CRC32核对有效；Flags为0x2021，ufAdminInstalled为True，
+ufPowerUserInstalled与ufAdminInstallMode为False。完整dat SHA-256仍为
+0df5399b5ddf237f175afe9df944ceec5bb99f3c929d146d7fd09afe28470ef0。
+根据 [Inno 6.7.3记录定义](https://github.com/jrsoftware/issrc/blob/is-6_7_3/Projects/Src/Setup.UninstallLog.pas)
+及 [启动源码](https://github.com/jrsoftware/issrc/blob/is-6_7_3/Projects/Src/Setup.Uninstall.pas)，
+此标记会使卸载器要求管理员权限；同目录追加记录保留旧标记。
+已确认安装上下文与新普通PowerShell不同，仍未读取或认证卸载时实际配置，
+不能声称已经证明其选中了其它根。此前清单只核对新数据的普通权限、借用程序
+乙，却未排除旧安装的管理员标记；现修正这处验收准备遗漏。
+
+下一步 [保留数据重置程序安装](../../releases/0.8.0/uninstall-install-context-reset.md)：
+开发者记录原A/B、原配置、新D/locator及根外文件校验值，以KEEPDATA仅卸载
+程序乙，确认旧EXE/dat消失和数据未变，再由同一普通PowerShell安装同一候选。
+取消自动启动，检查新权限标记为False，再仅查看卸载入口并取消。全部手动步骤
+仍not run，原删除清单第4～7步暂停；不修改数据ACL、创建新根或自动操作客户端。
+本次仅文档与执行状态更新，无程序/schema/catalog/contract或候选变更，无新增pytest案例。
+实际检查：48份Markdown文档检查、重置清单3个PowerShell代码块语法解析、
+git diff --check通过；Planscope sync后doctor为0错误/0警告。未执行清单中的
+客户端命令，未重跑无变更的应用pytest，原release-0.8.0 minor仍100/100 unique。
