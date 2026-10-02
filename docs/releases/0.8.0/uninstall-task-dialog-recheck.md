@@ -13,8 +13,9 @@ False/True/True/True；两次文件比较没有输出；408df076同包重装后E
 原A/B归属不符，不用于删除；[新的删除验收清单](uninstall-delete-acceptance.md)
 第1步普通权限检查、第2步新隔离配置准备已通过。
 实际新D的恢复归属检查、[直接只读预检](uninstall-preflight-diagnostic.md) 已通过，
-主程序关闭时卸载仍拒绝。现有程序乙的卸载记录仍有管理员安装标记，删除相关
-检查暂停，先按 [保留数据重置程序安装](uninstall-install-context-reset.md) 继续。
+此前主程序关闭时卸载拒绝。[保留数据重置程序安装](uninstall-install-context-reset.md)
+现已通过：新管理员标记False，正确D的删除入口与首屏取消检查通过。
+当前从删除清单第4步继续，二次确认取消和真正删除尚未运行，不重复准备。
 
 复制命令时只复制代码块内的命令行，不要复制开头的三个反引号及powershell
 文字，也不要复制结尾的三个反引号。误复制标记报“术语不被识别”不代表程序

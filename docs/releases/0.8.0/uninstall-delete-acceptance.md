@@ -4,11 +4,11 @@
 开发者第1步权限检查False、第2步路径准备与父目录归属检查已通过。本轮实际
 创建的是默认名称TrainingFeedbackData，原“待删除数据 D”路径不存在。
 继续使用这个已创建的合成根作为D，不重建或改名；下方恢复检查已由开发者
-执行通过。主程序关闭时卸载仍不提供删除入口，**暂停第4～7步**。
-[只读预检诊断](uninstall-preflight-diagnostic.md) 已通过READY和确切D；程序乙的
-旧卸载记录仍有管理员安装标记。现在按 [保留数据重置程序安装](uninstall-install-context-reset.md)
-仅卸载并用普通权限重新安装程序乙，然后只查看删除入口并取消。
-不重复恢复检查、创建目录或更改数据权限；卸载器当时实际配置仍未确认。
+执行通过。[只读预检诊断](uninstall-preflight-diagnostic.md) 和
+[保留数据重置程序安装](uninstall-install-context-reset.md) 均已通过：旧安装记录移除，
+同包普通权限重装后管理员标记False，正确D的删除入口显示，首屏取消后文件未变。
+**现在保留刚才的普通PowerShell，从第4步继续；恢复检查、第1～3步和重装准备不再执行。**
+原管理员安装环境下的拒绝保留在历史记录，不能当使用中拒绝通过。
 原A/B和原测试配置保留，不改权限。删除目标只有本轮新建的TrainingFeedbackData（D）
 及新配置中的目录记录；最后确认删除时程序乙也会卸载。根外检查文件、原A/B
 与原目录记录必须保留。不要选择任何其它数据目录。
@@ -51,7 +51,7 @@
 ```
 
 预期打印上述实际D完整路径和归属检查通过。报错则不做第4～7步，反馈完整输出。
-本段和直接只读预检已成功，先执行顶部的程序安装环境重置，暂不做第4～7步。
+本段、直接只读预检和程序安装环境重置已成功，当前从第4步继续。
 恢复验收后所有D都指TrainingFeedbackData，不再指“待删除数据 D”；
 卸载窗口与二次确认也必须显示这个完整实际路径。第1～3步仅保留作追溯，不重复。
 
@@ -145,12 +145,24 @@ Write-Output '新数据D及目录记录归属检查通过'
 
 ## 4. 拒绝永久删除确认，程序和数据应保留
 
-程序已关闭后，运行以下命令记录文件校验值并打开卸载器：
+准备：保持刚才通过普通权限重装检查的PowerShell窗口，主程序和卸载窗口均已
+关闭。运行以下完整命令，记录本轮文件校验值并打开卸载器。报错立即停止反馈。
 
 ```powershell
 . {
 $ErrorActionPreference = 'Stop'
 if (-not $tf080DeleteDataReady) { throw '新数据归属检查尚未成功，请停止，不打开卸载器。' }
+if (-not $tf080ContextInstalled) { throw '普通权限重装检查尚未成功，请停止。' }
+function Assert-Tf080DeleteContext {
+    if ([Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw '当前是管理员权限，请停止。' }
+    if ($env:LOCALAPPDATA -ne 'C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609\独立测试配置') { throw '独立配置已变化，请停止。' }
+    if ($tf080DeleteRoot -ne 'C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609\TrainingFeedbackData' -or $tf080DeleteProgram -ne 'E:\TrainingFeedback-080-PathFix\程序 乙' -or $tf080DeletePointer -ne (Join-Path $env:LOCALAPPDATA 'TrainingFeedback\locator.json')) { throw '本轮路径已变化，请停止。' }
+    if ((Get-FileHash -LiteralPath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe') -Algorithm SHA256).Hash -ne '20a06f04af9b42ff828b7e5285ce2167d87b4796c23b1df7e154e0b9a5291e1d') { throw '程序不是本次候选，请停止。' }
+    if (-not (Test-Path -LiteralPath $tf080DeleteRoot -PathType Container)) { throw 'D不存在，请停止。' }
+    $tf080DeleteRecordedRoot = (Get-Content -LiteralPath $tf080DeletePointer -Raw | ConvertFrom-Json).data_root
+    if ([IO.Path]::GetFullPath($tf080DeleteRecordedRoot) -ne [IO.Path]::GetFullPath($tf080DeleteRoot)) { throw '目录记录未指向本轮D，请停止。' }
+}
+Assert-Tf080DeleteContext
 function Get-Tf080DeleteFileState {
     param([string[]]$Directories, [string]$Locator = '')
     foreach ($tf080DeleteDirectory in $Directories) {
@@ -163,6 +175,7 @@ function Get-Tf080DeleteFileState {
 $tf080DeleteProtected = @($tf080DeleteOriginalA, $tf080DeleteOriginalB, $tf080DeleteOriginalConfig, $tf080DeleteOutside)
 $tf080DeleteProtectedBefore = @(Get-Tf080DeleteFileState -Directories $tf080DeleteProtected | Sort-Object)
 $tf080DeleteAllBefore = @(Get-Tf080DeleteFileState -Directories ($tf080DeleteProtected + @($tf080DeleteRoot)) -Locator $tf080DeletePointer | Sort-Object)
+if ($tf080DeleteProtectedBefore.Count -eq 0 -or $tf080DeleteAllBefore.Count -eq 0) { throw '未取得完整测试文件校验值，请停止。' }
 Start-Process -FilePath (Join-Path $tf080DeleteProgram 'unins000.exe') -Wait
 }
 ```
@@ -173,14 +186,21 @@ Start-Process -FilePath (Join-Path $tf080DeleteProgram 'unins000.exe') -Wait
 整个卸载应取消，不确认任何删除或卸载。回到PowerShell运行：
 
 ```powershell
-Test-Path -LiteralPath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe')
-Test-Path -LiteralPath $tf080DeleteRoot
-Test-Path -LiteralPath $tf080DeletePointer
-Compare-Object $tf080DeleteAllBefore @(Get-Tf080DeleteFileState -Directories ($tf080DeleteProtected + @($tf080DeleteRoot)) -Locator $tf080DeletePointer | Sort-Object)
+. {
+    $ErrorActionPreference = 'Stop'
+    Test-Path -LiteralPath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe')
+    Test-Path -LiteralPath $tf080DeleteRoot
+    Test-Path -LiteralPath $tf080DeletePointer
+    Assert-Tf080DeleteContext
+    $tf080DeleteDifference = @(Compare-Object $tf080DeleteAllBefore @(Get-Tf080DeleteFileState -Directories ($tf080DeleteProtected + @($tf080DeleteRoot)) -Locator $tf080DeletePointer | Sort-Object))
+    if ($tf080DeleteDifference.Count -ne 0) { $tf080DeleteDifference; throw '二次确认取消后文件有变化，请停止。' }
+    Write-Output '二次确认取消后程序保留，所有测试文件校验值未变。'
+}
 ```
 
-预期三项True，比较没有输出。文件消失、比较有差异或未经确认就删除，记失败，
-停下反馈输出和窗口提示，保留剩余文件。
+预期三项True，随后打印二次确认取消后文件未变，无差异或报错。
+反馈二次确认窗口截图、是否选择了No（否）以及完整输出。文件消失、比较有
+差异或未经确认就删除，记失败，停下反馈，保留剩余文件。
 
 ## 5. D正在使用时，不能删除
 
@@ -188,11 +208,19 @@ Compare-Object $tf080DeleteAllBefore @(Get-Tf080DeleteFileState -Directories ($t
 在“设置”确认确实是新D，再运行第二条：
 
 ```powershell
-Start-Process -FilePath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe')
+. {
+    $ErrorActionPreference = 'Stop'
+    Assert-Tf080DeleteContext
+    Start-Process -FilePath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe')
+}
 ```
 
 ```powershell
-Start-Process -FilePath (Join-Path $tf080DeleteProgram 'unins000.exe') -Wait
+. {
+    $ErrorActionPreference = 'Stop'
+    Assert-Tf080DeleteContext
+    Start-Process -FilePath (Join-Path $tf080DeleteProgram 'unins000.exe') -Wait
+}
 ```
 
 卸载窗口应不提供删除选项，说明数据正在使用或不能安全删除。点击“取消”，
@@ -202,30 +230,48 @@ Start-Process -FilePath (Join-Path $tf080DeleteProgram 'unins000.exe') -Wait
 
 ## 6. 明确确认删除，只删除D和新目录记录
 
-客户端已关闭，再从同一窗口启动卸载器：
+只有第4步二次确认取消、第5步使用中拒绝均符合预期才继续。客户端已关闭，
+再从同一普通权限窗口启动卸载器：
 
 ```powershell
-Start-Process -FilePath (Join-Path $tf080DeleteProgram 'unins000.exe') -Wait
+. {
+    $ErrorActionPreference = 'Stop'
+    Assert-Tf080DeleteContext
+    if ($tf080DeleteProtectedBefore.Count -eq 0) { throw '根外保留文件校验值缺失，请停止。' }
+    Start-Process -FilePath (Join-Path $tf080DeleteProgram 'unins000.exe') -Wait
+}
 ```
 
 这一步会删除新D内全部合成测试文件、新配置中的目录记录，并卸载程序乙。
-核对显示的待删除路径完整等于第2步的D，再点击“同时永久删除当前数据…”。
+核对显示的待删除路径完整等于
+`C:\Users\41315\TrainingFeedback-080-Delete-20261002-153609\TrainingFeedbackData`，
+再点击“同时永久删除当前数据…”。
 二次确认仍为D时选择Yes（是）；随后普通卸载确认也确认继续。任一窗口显示
 其它数据路径就取消，反馈，不继续。退出后运行：
 
 ```powershell
-Test-Path -LiteralPath $tf080DeleteRoot
-Test-Path -LiteralPath $tf080DeletePointer
-Test-Path -LiteralPath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe')
-Test-Path -LiteralPath $tf080DeleteOriginalA
-Test-Path -LiteralPath $tf080DeleteOriginalB
-Get-Content -LiteralPath (Join-Path $tf080DeleteOutside '保留检查.txt')
-Compare-Object $tf080DeleteProtectedBefore @(Get-Tf080DeleteFileState -Directories $tf080DeleteProtected | Sort-Object)
+. {
+    $ErrorActionPreference = 'Stop'
+    $tf080DeleteCompleted = $false
+    Test-Path -LiteralPath $tf080DeleteRoot
+    Test-Path -LiteralPath $tf080DeletePointer
+    Test-Path -LiteralPath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe')
+    Test-Path -LiteralPath $tf080DeleteOriginalA
+    Test-Path -LiteralPath $tf080DeleteOriginalB
+    Get-Content -LiteralPath (Join-Path $tf080DeleteOutside '保留检查.txt')
+    foreach ($tf080DeleteRemovedPath in @($tf080DeleteRoot, $tf080DeletePointer, (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe'))) {
+        if (Test-Path -LiteralPath $tf080DeleteRemovedPath) { throw ('目标仍存在，请停止：' + $tf080DeleteRemovedPath) }
+    }
+    $tf080DeleteDifference = @(Compare-Object $tf080DeleteProtectedBefore @(Get-Tf080DeleteFileState -Directories $tf080DeleteProtected | Sort-Object))
+    if ($tf080DeleteDifference.Count -ne 0) { $tf080DeleteDifference; throw '根外保留文件有变化，请停止。' }
+    $tf080DeleteCompleted = $true
+    Write-Output '删除后检查通过：D、目录记录和程序已移除，根外保留文件校验值未变。'
+}
 ```
 
 预期前五项False、False、False、True、True；检查文件内容仍为
-“删除D后这份文件仍应保留”；最后比较没有输出，原A/B、原配置和根外文件
-内容未变。D残留却显示完成、其它文件消失或比较有变化都记失败，停下反馈，
+“删除D后这份文件仍应保留”；随后打印删除后检查通过，无差异或报错。
+原A/B、原配置和根外文件内容未变。D残留却显示完成、其它文件消失或比较有变化都记失败，停下反馈，
 不自行删除残留或恢复记录。
 
 ## 7. 重装后不会偷偷重建D
@@ -233,22 +279,36 @@ Compare-Object $tf080DeleteProtectedBefore @(Get-Tf080DeleteFileState -Directori
 在同一新PowerShell用同一候选重新安装程序乙，完成页取消勾选自动启动：
 
 ```powershell
-if ((Get-FileHash -LiteralPath $tf080DeleteSetup -Algorithm SHA256).Hash -ne '408df0767146fcaf6d8324da88e15928d07da86969da1026fc4e6b426976fb28') { throw '安装包不是本次候选，请停止。' }
-Start-Process -FilePath $tf080DeleteSetup -ArgumentList ('/DIR="' + $tf080DeleteProgram + '"') -Wait
-Start-Process -FilePath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe') -Wait
+. {
+    $ErrorActionPreference = 'Stop'
+    if (-not $tf080DeleteCompleted) { throw '第6步删除后的检查尚未通过，请停止。' }
+    if ([Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw '当前是管理员权限，请停止。' }
+    if ($env:LOCALAPPDATA -ne $tf080DeleteConfig) { throw '独立配置已变化，请停止。' }
+    if ((Get-FileHash -LiteralPath $tf080DeleteSetup -Algorithm SHA256).Hash -ne '408df0767146fcaf6d8324da88e15928d07da86969da1026fc4e6b426976fb28') { throw '安装包不是本次候选，请停止。' }
+    Start-Process -FilePath $tf080DeleteSetup -ArgumentList ('/DIR="' + $tf080DeleteProgram + '"') -Wait
+    if ((Get-FileHash -LiteralPath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe') -Algorithm SHA256).Hash -ne '20a06f04af9b42ff828b7e5285ce2167d87b4796c23b1df7e154e0b9a5291e1d') { throw '重装程序不是本次候选，请停止。' }
+    if ((Test-Path -LiteralPath $tf080DeleteRoot) -or (Test-Path -LiteralPath $tf080DeletePointer)) { throw '安装后D或目录记录被重建，请停止。' }
+    Start-Process -FilePath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe') -Wait
+}
 ```
 
 启动后应回到数据目录选择，因为新配置的目录记录已删除。只点击取消，退出
 程序，不创建新目录，也不在这个新窗口打开原A/B。然后运行：
 
 ```powershell
-Test-Path -LiteralPath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe')
-Test-Path -LiteralPath $tf080DeleteRoot
-Test-Path -LiteralPath $tf080DeletePointer
-Compare-Object $tf080DeleteProtectedBefore @(Get-Tf080DeleteFileState -Directories $tf080DeleteProtected | Sort-Object)
+. {
+    $ErrorActionPreference = 'Stop'
+    Test-Path -LiteralPath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe')
+    Test-Path -LiteralPath $tf080DeleteRoot
+    Test-Path -LiteralPath $tf080DeletePointer
+    if (-not (Test-Path -LiteralPath (Join-Path $tf080DeleteProgram 'TrainingFeedback.exe')) -or (Test-Path -LiteralPath $tf080DeleteRoot) -or (Test-Path -LiteralPath $tf080DeletePointer)) { throw '重装取消后的存在检查不符，请停止。' }
+    $tf080DeleteDifference = @(Compare-Object $tf080DeleteProtectedBefore @(Get-Tf080DeleteFileState -Directories $tf080DeleteProtected | Sort-Object))
+    if ($tf080DeleteDifference.Count -ne 0) { $tf080DeleteDifference; throw '重装后根外保留文件有变化，请停止。' }
+    Write-Output '重装后检查通过：取消没有重建D或目录记录，根外文件校验值未变。'
+}
 ```
 
-预期True、False、False，比较没有输出。自动打开或重建D、取消后新建目录记录
+预期True、False、False，随后打印重装后检查通过，无差异或报错。自动打开或重建D、取消后新建目录记录
 算失败，反馈提示和输出。全部检查后关闭这个新PowerShell；原PowerShell仍用
 原隔离配置，原A/B可以继续使用。不要删除新测试父目录，它留作证据。
 

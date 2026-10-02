@@ -217,3 +217,29 @@ ufPowerUserInstalled与ufAdminInstallMode为False。完整dat SHA-256仍为
 实际检查：48份Markdown文档检查、重置清单3个PowerShell代码块语法解析、
 git diff --check通过；Planscope sync后doctor为0错误/0警告。未执行清单中的
 客户端命令，未重跑无变更的应用pytest，原release-0.8.0 minor仍100/100 unique。
+
+## 2026-10-02 普通权限重装后删除入口与首屏取消通过
+
+开发者完整执行安装环境重置清单第1～3步，并反馈“流程验收通过”。准备校验
+成功；KEEPDATA卸载后旧EXE/unins.exe/dat均移除，原A/B、原配置、新D/locator
+和根外文件校验值全部未变；同一408df076候选在普通PowerShell重装，已装EXE
+hash匹配，新卸载记录管理员标记False，文件比较未变。以上各项 **pass**。
+
+[新卸载截图](evidence/uninstall-owned-root-ready-after-reinstall-2026-10-02.png)
+显示完整实际D路径、文件数4、字节数475345，紧凑中文说明以及保留数据、永久
+删除当前数据、取消三个完整可见选项；此删除就绪场景及当前截图的显示 **pass**。
+截图SHA-256：d55f12f6b5c73e750a0570d3506287efd1c0c1bd3499053ca31ecdfe82b38e5a。
+开发者随后首屏取消，脚本确认程序保留、全部测试文件校验值未变，**pass**。
+这次取消发生在首屏，不等于选择删除后拒绝二次确认。未补全DPI或多显示器验收。
+
+移除旧管理员安装记录后，同一程序候选已在正确隔离配置下恢复删除入口；
+此前管理员安装环境下的拒绝保留历史，不断言旧卸载器实际读取的配置或根。
+二次确认No取消、应用打开D时拒绝、明确删除D和新locator、删除后重装选择器
+取消仍 **not run**。现在从删除清单第4步继续，不重复准备、重装或直接probe，
+不改ACL。续验命令追加固定路径/普通权限/候选检查，并将报错停止与后置校验
+包在完整PowerShell块中；第7步只在第6步删除后检查成功时启动重装。
+本次无程序或四项版本身份变更，候选及原release pytest预算未变，仅更新证据、
+清单和Planscope；开发者提供的流程通过不代表整个0.8.0验收或发布通过。
+实际检查：48份Markdown文档检查、删除清单13个PowerShell代码块语法解析和
+git diff --check通过，Planscope sync/doctor为0错误/0警告。未运行续验客户端命令，
+未重跑无程序变更的pytest；同一release-0.8.0 minor预算仍100/100 unique。
