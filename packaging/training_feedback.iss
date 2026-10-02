@@ -78,6 +78,7 @@ var
   DeleteDataRequested: Boolean;
   CleanupOfferFile: String;
   CleanupRoot: String;
+  DirectoryCheckPage: TOutputMarqueeProgressWizardPage;
 
 function RunHelper(Operation, Directory, Extra: String): String;
 var
@@ -287,25 +288,46 @@ begin
   Result := True;
 end;
 
+procedure InitializeWizard();
+begin
+  DirectoryCheckPage := CreateOutputMarqueeProgressPage(
+    '正在检查安装目录', '请稍候，检查完成后会继续安装。');
+end;
+
 function NextButtonClick(CurPageID: Integer): Boolean;
 var
   ErrorText, Extra: String;
 begin
   Result := True;
   if CurPageID <> wpSelectDir then Exit;
-  // Recheck registrations removed after startup; missing programs are not relocations.
-  ErrorText := CheckPreviousInstallation();
-  if ErrorText <> '' then
+  if not WizardSilent then
   begin
-    MsgBox(ErrorText, mbError, MB_OK);
-    Result := False;
-    Exit;
+    DirectoryCheckPage.SetText('正在核对安装位置和已有程序，请稍候。', WizardDirValue);
+    DirectoryCheckPage.Show;
   end;
-  Log('TrainingFeedback: selected program directory: ' + WizardDirValue);
-  Extra := '';
-  if PreviousDirectory <> '' then
-    Extra := ' --previous-directory ' + AddQuotes(PreviousDirectory);
-  ErrorText := RunHelper('validate', WizardDirValue, Extra);
+  try
+    if not WizardSilent then DirectoryCheckPage.Animate;
+    Log('TrainingFeedback: directory-page check started: ' + WizardDirValue);
+    // Recheck registrations removed after startup; missing programs are not relocations.
+    ErrorText := CheckPreviousInstallation();
+    if ErrorText = '' then
+    begin
+      if (PreviousDirectory <> '') and PathSame(PreviousDirectory, WizardDirValue) then
+        // This exact target and its uninstaller have just passed the full check.
+        // PrepareToInstall still revalidates before any program removal or writes.
+        Log('TrainingFeedback: selected target already checked in this directory-page action.')
+      else
+      begin
+        Extra := '';
+        if PreviousDirectory <> '' then
+          Extra := ' --previous-directory ' + AddQuotes(PreviousDirectory);
+        ErrorText := RunHelper('validate', WizardDirValue, Extra);
+      end;
+    end;
+    Log('TrainingFeedback: directory-page check finished: ' + WizardDirValue);
+  finally
+    if not WizardSilent then DirectoryCheckPage.Hide;
+  end;
   if ErrorText <> '' then
   begin
     MsgBox(ErrorText, mbError, MB_OK);
