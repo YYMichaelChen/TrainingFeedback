@@ -279,7 +279,7 @@ LIBRARY_TEXT = {
     "standalone": "独立动作", "name": "动作 / 动作族", "source": "来源", "position": "起始体位",
     "readiness": "图片资格", "review": "审核", "enabled": "启用状态", "bundled": "程序内置",
     "custom": "自定义", "ready": "可用", "draft": "草稿", "checking": "校验中…", "none": "无",
-    "details": "完整指导",
+    "details": "完整指导", "images_tab": "动作示意图",
     "select": "使用当前内容", "enable": "启用动作",
     "disable": "停用动作", "edit": "编辑动作内容…", "copy": "复制为自定义…",
     "image": "替换为本地示意图…", "record_review": "记录外部审核…",
