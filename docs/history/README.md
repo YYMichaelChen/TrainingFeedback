@@ -11,7 +11,7 @@ the [development workflow](../development-workflow.md) owns version rotation.
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
-- GitHub distribution: **v0.8.2**
+- GitHub distribution: **v0.8.3**
 - Formal compatibility baseline declared: **no**
 - Current development version: [0.8.3](../releases/0.8.3/design.md)
 
@@ -23,7 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.3 | 24 | Current emergency update: verified in-app Setup download and previous-directory installer reuse | Clean local Setup SHA-256 `a7dcb23536c43422355d6113df926fef2f05cbeaaea383310e9630f50a381009`; unsigned; not yet published |
+| 0.8.3 | 24 | Current emergency update: verified in-app Setup download and previous-directory installer reuse | GitHub Release `v0.8.3`; Setup SHA-256 `a7dcb23536c43422355d6113df926fef2f05cbeaaea383310e9630f50a381009`; unsigned |
 | 0.8.2 | 24 | Current personal-use update: remove training-day names, improve illustration views and set the application icon | GitHub Release `v0.8.2`; Setup SHA-256 `c04ba484d6d6cbf9a7c3347a0728ad4859e11a51cb131641465b5c18ab568d97`; unsigned |
 | 0.8.1 | 23 | Previous personal-use update: [GitHub update discovery](../releases/0.8.1/design.md) | GitHub Release `v0.8.1`; Setup SHA-256 `5e9299066ad13c6ef78a2e6e8fb07b013595b57f240c64be54f388c8a219b0cf`; unsigned |
 | 0.8.0 | 23 | Historical personal-use update: [installation, cleanup and response work](0.8.0/development.md) | GitHub Release `v0.8.0`; Setup SHA-256 `49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad`; unsigned |
@@ -37,13 +37,14 @@ identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
 
-The [0.8.3 development record](0.8.3/development.md) identifies the clean local
-installer built after the updater and installer fixes. Its
-payload and installer manifests are tracked beside that record. The build and
-one isolated startup check succeeded, but application-managed download,
-installer launch, directory selection and installed-client behavior were not
-run and are not passes. The candidate has not been published to GitHub; current
-GitHub distribution remains `v0.8.2` until the separate publish event.
+The [0.8.3 development record](0.8.3/development.md) identifies the clean
+candidate built after the updater and installer fixes. Its payload and installer
+manifests are tracked beside that record. The identified Setup was distributed
+unchanged through GitHub Release `v0.8.3`; the
+[public release record](0.8.3/github-release-2026-10-03.md) preserves the
+GitHub-reported asset identity. The build and one isolated startup check
+succeeded, but application-managed download, installer launch, directory
+selection and installed-client behavior were not run and are not passes.
 
 The [0.8.2 development record](0.8.2/development.md) preserves the exact clean
 candidate identity and the two selected startup-risk results. The identified
@@ -89,6 +90,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.3 GitHub Release record](0.8.3/github-release-2026-10-03.md)
 - [0.8.3 development and local candidate record](0.8.3/development.md)
 - [0.8.2 GitHub Release record](0.8.2/github-release-2026-10-03.md)
 - [0.8.2 development and candidate record](0.8.2/development.md)

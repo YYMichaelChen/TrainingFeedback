@@ -9,9 +9,9 @@
 - Previous distributed version: `0.8.2` / schema `24` / contract `4`
 
 Implementation and candidate evidence belong in the
-[0.8.3 development record](../../history/0.8.3/development.md). GitHub Release
-distribution is a separate event and does not declare a formal compatibility
-baseline or public-support scope.
+[0.8.3 development record](../../history/0.8.3/development.md), and the Setup is
+distributed through [GitHub Release v0.8.3](../../history/0.8.3/github-release-2026-10-03.md).
+This does not declare a formal compatibility baseline or public-support scope.
 
 ## Scope
 

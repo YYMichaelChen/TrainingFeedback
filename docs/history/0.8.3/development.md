@@ -77,4 +77,6 @@ Download, digest-failure handling, Setup launch, directory-page selection,
 overwrite installation and all other client behavior were not run. No GUI
 automation or scripted client operation was used. Those unobserved behaviors
 are not passes and are not outstanding bulk-test requirements under the current
-personal-use policy. GitHub Release distribution was not performed.
+personal-use policy. Subsequent GitHub distribution is recorded separately in
+[the public release record](github-release-2026-10-03.md) and does not change
+these verification limits.
