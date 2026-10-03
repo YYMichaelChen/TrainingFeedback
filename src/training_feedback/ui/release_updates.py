@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import threading
 from pathlib import Path
 
 from PySide6.QtCore import (
@@ -11,7 +12,6 @@ from PySide6.QtCore import (
     QObject,
     QProcess,
     QProcessEnvironment,
-    QTimer,
     QUrl,
     Signal,
 )
@@ -54,6 +54,19 @@ def _force_quit() -> None:
     os._exit(0)
 
 
+def _request_application_exit() -> None:
+    """Close visible windows before asking the application event loop to stop."""
+    application = QCoreApplication.instance()
+    if application is None:
+        return
+    try:
+        close_all_windows = getattr(application, "closeAllWindows", None)
+        if close_all_windows is not None:
+            close_all_windows()
+    finally:
+        application.quit()
+
+
 class ReleaseUpdateCoordinator(QObject):
     """Own the process-scoped release check and verified Setup download."""
 
@@ -81,6 +94,7 @@ class ReleaseUpdateCoordinator(QObject):
         self._download_target: Path | None = None
         self._download_error = ""
         self._detached_launcher: QProcess | None = None
+        self._force_quit_timer: threading.Timer | None = None
         self._automatic_started = False
 
     @property
@@ -297,14 +311,21 @@ class ReleaseUpdateCoordinator(QObject):
             self.download_failed.emit(self._download_error)
             return
         self._detached_launcher = process
-        # 先安排退出再发通知：通知链路（含对话框槽）的任何异常都不得让退出落空。
-        QTimer.singleShot(0, QCoreApplication.quit)
-        QTimer.singleShot(_FORCE_QUIT_FALLBACK_MS, _force_quit)
+        # 硬退出不能依赖 Qt 事件循环：正是事件循环未继续推进时，
+        # 先前的 QTimer 兜底也会一起失效。
+        timer = threading.Timer(_FORCE_QUIT_FALLBACK_MS / 1000, _force_quit)
+        timer.daemon = True
+        self._force_quit_timer = timer
+        timer.start()
         try:
             self.installer_handoff_started.emit(str(target))
         except Exception:
-            # 启动器已在等待本进程退出；通知失败不改变已安排的退出。
+            # 启动器已在等待本进程；可视通知失败不影响退出。
             pass
+        finally:
+            # 先关闭可见窗口，再退出主事件循环；两步都不依赖
+            # 对话框通知槽成功。若 Qt 关闭链路卡住，后台计时器最后兜底。
+            _request_application_exit()
 
     def _discard_download(self) -> None:
         directory = self._download_directory

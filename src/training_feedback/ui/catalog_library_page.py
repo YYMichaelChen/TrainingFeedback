@@ -63,8 +63,11 @@ def buttons(parent, save, cancel):
 
 def show_images(layout, service, target):
     while layout.count():
-        widget = layout.takeAt(0).widget()
-        widget.deleteLater()
+        item = layout.takeAt(0)
+        widget = item.widget()
+        if widget is not None:
+            widget.deleteLater()
+    layout.setAlignment(Qt.AlignmentFlag.AlignTop)
     if target is None:
         return
     entry = service.target_entry(target)
@@ -82,11 +85,21 @@ def show_images(layout, service, target):
             label = QLabel()
             label.setText(LIBRARY_REASON_LABELS.get(check.reason, check.reason))
         label.setWordWrap(True)
-        layout.addWidget(label)
+        layout.addWidget(
+            label,
+            0,
+            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
+        )
         caption = QLabel(entry["content"]["guidance"]["images"][check.index].get("caption", ""))
         caption.setWordWrap(True)
         caption.setTextFormat(Qt.TextFormat.PlainText)
-        layout.addWidget(caption)
+        caption.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        caption.setMaximumWidth(getattr(label, "max_width", 760))
+        layout.addWidget(
+            caption,
+            0,
+            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
+        )
 
 
 def card_icon(service, target, status, cache=None):
@@ -337,6 +350,7 @@ class CatalogLibraryPage(QWidget):
         self.cards.setFlow(QListView.Flow.LeftToRight)
         self.cards.setWrapping(True)
         self.cards.setWordWrap(True)
+        self.cards.setUniformItemSizes(True)
         self.cards.setIconSize(QSize(208, 144))
         self.cards.setGridSize(QSize(236, 226))
         self.cards.setSpacing(10)
@@ -546,6 +560,7 @@ class CatalogLibraryPage(QWidget):
         )
         for row in rows:
             item = QListWidgetItem()
+            item.setSizeHint(self.cards.gridSize())
             self._set_card(item, row, row["eligibility"])
             self.cards.addItem(item)
             if progressive:

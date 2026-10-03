@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.9**
+- Application: **0.8.10**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
-- GitHub distribution: **v0.8.9**
+- GitHub distribution: **v0.8.9**; v0.8.10 candidate pending
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.9](../releases/0.8.9/design.md)
+- Current development version: [0.8.10](../releases/0.8.10/design.md)
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,6 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.10 | 24 | Current illustration-layout and updater-exit correction: align stable cards and captions, scale previews from source proportions, and use an event-loop-independent exit fallback | Candidate build pending |
 | 0.8.9 | 24 | Current action-library construction fix: restore the missing illustration-tab label used by the page and review dialog | GitHub Release `v0.8.9`; Setup SHA-256 `e0030b4c15be767b46fafb7e0da652bd27ce647207779eb2e5163a873accd722`; unsigned |
 | 0.8.8 | 24 | Current updater exit-hardening update: make the post-handoff application exit unskippable with a contained emit and a hard-exit watchdog | GitHub Release `v0.8.8`; Setup SHA-256 `bfbf1789b53d10f6aada0875c7395dcaf0493868a8a8f03b89b5119632c17207`; unsigned |
 | 0.8.7 | 24 | Current navigation reliability update: contain page-creation failure into a visible retryable message and paint the library loading state before its first read | GitHub Release `v0.8.7`; Setup SHA-256 `48c4dae577a17428760c135c5713f1e87608cbc9e0b89b0ff5b4e2f955a62ee0`; unsigned |
@@ -42,6 +43,12 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.10 development record](0.8.10/development.md) records the user-reported
+illustration layout/size problems and the repeated updater-exit failure. One
+isolated startup construction scenario passed; visual layout, update handoff,
+process exit, installer launch and installed-client behavior remain unobserved
+and are not passes. Candidate build and GitHub distribution are pending.
 
 The [0.8.9 development record](0.8.9/development.md) identifies the clean
 candidate built from application source `eec2390`. Its payload and installer
@@ -151,6 +158,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.10 development and candidate record](0.8.10/development.md)
 - [0.8.9 GitHub Release record](0.8.9/github-release-2026-10-03.md)
 - [0.8.9 development and local candidate record](0.8.9/development.md)
 - [0.8.8 GitHub Release record](0.8.8/github-release-2026-10-03.md)

@@ -1,6 +1,6 @@
 """Illustration preview with access to the original pixels."""
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QScrollArea, QSizePolicy, QVBoxLayout
 
@@ -12,10 +12,31 @@ class IllustrationLabel(QLabel):
         self.max_width = width
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setMinimumSize(1, 1)
-        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
+        policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        policy.setHeightForWidth(True)
+        self.setSizePolicy(policy)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("单击查看原图")
         self._scale_to_viewport()
+
+    def _source_size(self) -> QSize:
+        dpr = self.source.devicePixelRatio() or 1.0
+        return QSize(
+            max(1, round(self.source.width() / dpr)),
+            max(1, round(self.source.height() / dpr)),
+        )
+
+    def heightForWidth(self, width: int) -> int:
+        source = self._source_size()
+        display_width = min(self.max_width, max(1, width))
+        return max(1, round(display_width * source.height() / source.width()))
+
+    def sizeHint(self) -> QSize:
+        return QSize(self.max_width, self.heightForWidth(self.max_width))
+
+    def minimumSizeHint(self) -> QSize:
+        width = min(360, self.max_width)
+        return QSize(width, self.heightForWidth(width))
 
     def _scale_to_viewport(self):
         area = self.contentsRect()
@@ -23,7 +44,7 @@ class IllustrationLabel(QLabel):
             return
         screen = self.screen() or QApplication.primaryScreen()
         dpr = screen.devicePixelRatio() if screen is not None else 1.0
-        logical_bounds = area.size().scaled(
+        logical_bounds = self._source_size().scaled(
             min(self.max_width, area.width()), area.height(),
             Qt.AspectRatioMode.KeepAspectRatio,
         )
