@@ -54,6 +54,11 @@ POSITION_LABELS = {
     "seated": "坐姿", "kneeling": "跪姿", "standing": "站姿", "mixed": "混合体位",
     "unknown": "未分类",
 }
+
+MAIN_WINDOW_TEXT = {
+    "page_open_failed": "「{name}」页面无法打开：{message}",
+    "page_open_retry": "请保留当前数据并反馈以上信息；切换到其他页面后再回来会重试打开。",
+}
 GROUP_PLAN_TEXT = {
     "title": "训练计划 · 动作组", "new": "新建计划", "edit": "编辑草稿", "clone": "复制为独立计划",
     "upgrade": "升级所选计划",

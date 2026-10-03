@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.6**
+- Application: **0.8.7**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.6**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.6](../releases/0.8.6/design.md)
+- Current development version: [0.8.7](../releases/0.8.7/design.md)
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,6 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.7 | 24 | Current navigation reliability update: contain page-creation failure into a visible retryable message and paint the library loading state before its first read | Development in progress |
 | 0.8.6 | 24 | Current updater cleanup follow-up: remove verified Setup temporaries after use and safely recover owned leftovers | GitHub Release `v0.8.6`; Setup SHA-256 `06120b97244ab24a745a429617e04abdbe50f7b0057086cf050f64158b89e61c`; unsigned |
 | 0.8.5 | 24 | Current emergency updater correction: show complete download progress and exit before Setup starts | GitHub Release `v0.8.5`; Setup SHA-256 `37658f63ce49535f73ac56fef7d186495982aeecd38e5d559afe3b26cd5dc9e0`; unsigned |
 | 0.8.4 | 24 | Current UI reliability update: restore owned window icons, make action-library loading visible and clarify plan-file wording | GitHub Release `v0.8.4`; Setup SHA-256 `832e958df99c3707d85065f715787d4035d69f85fe1830ec8f4116c47c8497b7`; unsigned |

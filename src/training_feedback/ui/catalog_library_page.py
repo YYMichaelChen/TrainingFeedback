@@ -301,6 +301,7 @@ class CatalogLibraryPage(QWidget):
         self.dialog = None
         self._icon_cache = {}
         self._progressive = progressive
+        self._first_load_started = False
         self._first_load_complete = False
         self._load_generation = 0
         layout = QVBoxLayout(self)
@@ -411,9 +412,16 @@ class CatalogLibraryPage(QWidget):
         self.batch_toggle.toggled.connect(self._toggle_batch_mode)
         if progressive:
             self.gallery_count.setText(T["loading"])
-            QTimer.singleShot(0, self._refresh_with_feedback)
+            # 首次读取在页面第一次绘制之后再安排：直接 singleShot(0) 可能先于
+            # 绘制执行，加载提示从未可见，重负载下用户看到的仍是上一个页面。
         else:
             self._refresh_with_feedback()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self._progressive and not self._first_load_started:
+            self._first_load_started = True
+            QTimer.singleShot(0, self._refresh_with_feedback)
 
     def _refresh_with_feedback(self):
         try:

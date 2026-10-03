@@ -1,6 +1,6 @@
 """主窗口：左侧导航、更新提示与按需创建的页面堆栈。"""
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -15,9 +15,28 @@ from PySide6.QtWidgets import (
 
 from ..app import LibraryContext
 from ..application.release_updates import UpdateStatus
+from .labels import MAIN_WINDOW_TEXT, user_message
 from .release_updates import show_release_details
 from .settings_page import SettingsPage
 from .window_icon import apply_window_icon
+
+
+class _PageOpenError(QWidget):
+    """页面创建失败时的可见占位：展示可反馈的错误信息，不读写任何数据。"""
+
+    def __init__(self, name, exc, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        detail = user_message(str(exc)).strip() or type(exc).__name__
+        message = QLabel(MAIN_WINDOW_TEXT["page_open_failed"].format(name=name, message=detail))
+        message.setWordWrap(True)
+        message.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(message)
+        hint = QLabel(MAIN_WINDOW_TEXT["page_open_retry"])
+        hint.setWordWrap(True)
+        hint.setObjectName("muted")
+        layout.addWidget(hint)
+        layout.addStretch(1)
 
 
 class MainWindow(QMainWindow):
@@ -76,7 +95,8 @@ class MainWindow(QMainWindow):
             ),
         )
         self._built_pages = {0}
-        for index, name in enumerate(("训练", "动作库", "训练计划", "设置")):
+        self._page_names = ("训练", "动作库", "训练计划", "设置")
+        for index, name in enumerate(self._page_names):
             self.navigation.addItem(name)
             self.pages.addWidget(self._page_factories[index]() if index == 0 else QWidget())
         self.navigation.setCurrentRow(0)
@@ -117,19 +137,25 @@ class MainWindow(QMainWindow):
             cancel = getattr(current, "cancel_loading", None)
             if cancel is not None:
                 cancel()
-        page = self.pages.widget(index)
         created = index not in self._built_pages
         if created:
-            self.pages.insertWidget(index, self._page_factories[index]())
-            self.pages.removeWidget(page)
-            page.deleteLater()
-            self._built_pages.add(index)
+            try:
+                page = self._page_factories[index]()
+            except Exception as exc:
+                # 创建失败也必须切换到与导航一致的可见页面并给出信息；
+                # 不登记为已构建，下次进入该页时重试创建。
+                page = _PageOpenError(self._page_names[index], exc, self)
+            else:
+                self._built_pages.add(index)
+            placeholder = self.pages.widget(index)
+            self.pages.insertWidget(index, page)
+            self.pages.removeWidget(placeholder)
+            placeholder.deleteLater()
         self.pages.setCurrentIndex(index)
-        page = self.pages.currentWidget()
         # Newly created pages populate themselves in their constructor.
         if created:
             return
-        refresh = getattr(page, "refresh", None)
+        refresh = getattr(self.pages.currentWidget(), "refresh", None)
         if refresh is not None:
             refresh()
 
