@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
             return
         result = self.update_coordinator.result
         if result.status == UpdateStatus.AVAILABLE and result.release is not None:
-            show_release_details(result, self)
+            show_release_details(self.update_coordinator, self)
 
     def _show_page(self, index: int) -> None:
         if index < 0:

@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.2**
+- Application: **0.8.3**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.2**
 - Formal compatibility baseline declared: **no**
-- Current delivered version: [0.8.2](../releases/0.8.2/design.md)
+- Current development version: [0.8.3](../releases/0.8.3/design.md)
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,6 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.3 | 24 | Current emergency update: verified in-app Setup download and previous-directory installer reuse | Local dirty-snapshot Setup SHA-256 `d996cec129c427a92d97f2aafb58f8b68a4ed774de95dfb6f089bd03a1b87fa7`; unsigned; not published |
 | 0.8.2 | 24 | Current personal-use update: remove training-day names, improve illustration views and set the application icon | GitHub Release `v0.8.2`; Setup SHA-256 `c04ba484d6d6cbf9a7c3347a0728ad4859e11a51cb131641465b5c18ab568d97`; unsigned |
 | 0.8.1 | 23 | Previous personal-use update: [GitHub update discovery](../releases/0.8.1/design.md) | GitHub Release `v0.8.1`; Setup SHA-256 `5e9299066ad13c6ef78a2e6e8fb07b013595b57f240c64be54f388c8a219b0cf`; unsigned |
 | 0.8.0 | 23 | Historical personal-use update: [installation, cleanup and response work](0.8.0/development.md) | GitHub Release `v0.8.0`; Setup SHA-256 `49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad`; unsigned |
@@ -35,6 +36,14 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.3 development record](0.8.3/development.md) identifies the local
+dirty-snapshot installer built after the updater and installer fixes. Its
+payload and installer manifests are tracked beside that record. The build and
+one isolated startup check succeeded, but application-managed download,
+installer launch, directory selection and installed-client behavior were not
+run and are not passes. The candidate has not been published to GitHub; current
+GitHub distribution remains `v0.8.2`.
 
 The [0.8.2 development record](0.8.2/development.md) preserves the exact clean
 candidate identity and the two selected startup-risk results. The identified
@@ -80,6 +89,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.3 development and local candidate record](0.8.3/development.md)
 - [0.8.2 GitHub Release record](0.8.2/github-release-2026-10-03.md)
 - [0.8.2 development and candidate record](0.8.2/development.md)
 - [0.8.1 GitHub Release record](0.8.1/github-release-2026-10-03.md)

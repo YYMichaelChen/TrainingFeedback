@@ -22,10 +22,11 @@ AppName={#MyAppName}
 AppVersion={#AppVersion}
 AppVerName={#MyAppName} {#AppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={code:GetDefaultProgramDirectory}
+DefaultDirName={localappdata}\Programs\{#MyAppName}
 DisableDirPage=no
-; Reuse only the directory checked by our helper, not Inno's unchecked history.
-UsePreviousAppDir=no
+; Inno resolves the stable AppId's previous directory before falling back to
+; DefaultDirName. Our helper still validates that selection before any write.
+UsePreviousAppDir=yes
 AlwaysShowDirOnReadyPage=yes
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
@@ -74,7 +75,6 @@ var
   HelperSequence: Integer;
   PreviousDirectory: String;
   PreviousUninstaller: String;
-  PreferredProgramDirectory: String;
   DeleteDataRequested: Boolean;
   CleanupOfferFile: String;
   CleanupRoot: String;
@@ -255,11 +255,34 @@ begin
     ' --uninstaller ' + AddQuotes(PreviousUninstaller));
 end;
 
-function GetDefaultProgramDirectory(Param: String): String;
+function ReadPreviousInstallation(RootKey: Integer; RegistryView: String): Boolean;
+var
+  Directory, Uninstaller: String;
 begin
-  Result := PreferredProgramDirectory;
-  if Result = '' then
-    Result := ExpandConstant('{localappdata}\Programs\{#MyAppName}');
+  Result := False;
+  Directory := '';
+  Uninstaller := '';
+  if not RegQueryStringValue(RootKey,
+    'Software\Microsoft\Windows\CurrentVersion\Uninstall\{A5D9D2A7-9C93-4F13-9F1A-7C1C2E1D8D60}_is1',
+    'InstallLocation', Directory) then Exit;
+  if not RegQueryStringValue(RootKey,
+    'Software\Microsoft\Windows\CurrentVersion\Uninstall\{A5D9D2A7-9C93-4F13-9F1A-7C1C2E1D8D60}_is1',
+    'UninstallString', Uninstaller) then Exit;
+  PreviousDirectory := RemoveBackslashUnlessRoot(Directory);
+  PreviousUninstaller := RemoveQuotes(Uninstaller);
+  Log('TrainingFeedback: found previous installation in ' + RegistryView + '.');
+  Result := True;
+end;
+
+function FindPreviousInstallation(): Boolean;
+begin
+  Result := False;
+  if IsWin64 then
+  begin
+    Result := ReadPreviousInstallation(HKCU64, 'HKCU64');
+    if Result then Exit;
+  end;
+  Result := ReadPreviousInstallation(HKCU32, 'HKCU32');
 end;
 
 function InitializeSetup(): Boolean;
@@ -268,23 +291,12 @@ var
 begin
   PreviousDirectory := '';
   PreviousUninstaller := '';
-  PreferredProgramDirectory := ExpandConstant('{localappdata}\Programs\{#MyAppName}');
-  if not RegQueryStringValue(HKCU64,
-    'Software\Microsoft\Windows\CurrentVersion\Uninstall\{A5D9D2A7-9C93-4F13-9F1A-7C1C2E1D8D60}_is1',
-    'InstallLocation', PreviousDirectory) then PreviousDirectory := '';
-  if not RegQueryStringValue(HKCU64,
-    'Software\Microsoft\Windows\CurrentVersion\Uninstall\{A5D9D2A7-9C93-4F13-9F1A-7C1C2E1D8D60}_is1',
-    'UninstallString', PreviousUninstaller) then PreviousUninstaller := '';
-  PreviousDirectory := RemoveBackslashUnlessRoot(PreviousDirectory);
-  PreviousUninstaller := RemoveQuotes(PreviousUninstaller);
+  FindPreviousInstallation();
   Log('TrainingFeedback: registered previous program directory: ' + PreviousDirectory);
   Log('TrainingFeedback: registered previous uninstaller: ' + PreviousUninstaller);
   ErrorText := CheckPreviousInstallation();
-  if (ErrorText = '') and (PreviousDirectory <> '') then
-    PreferredProgramDirectory := PreviousDirectory;
   if ErrorText <> '' then
     Log('TrainingFeedback: previous directory is not eligible for reuse: ' + ErrorText);
-  Log('TrainingFeedback: resolved default program directory: ' + PreferredProgramDirectory);
   Result := True;
 end;
 

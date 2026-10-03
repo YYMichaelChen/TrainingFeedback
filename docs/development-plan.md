@@ -538,11 +538,13 @@ Section 13.4; installing program files alone does not perform it.
 Windows distribution uses a directory payload with `icon/TrainingFeedback.ico`
 and a per-user Inno Setup installer with stable application identity, normal
 shortcuts and an uninstaller. The default installation directory is
-`%LocalAppData%\Programs\TrainingFeedback`. Installation and upgrade never own
-the locator or data root. Normal uninstall removes program files only. The
-[v0.8.0 design](releases/0.8.0/design.md) proposes selectable installation and
-an explicit, path-verified data-deletion option; that design is not current
-behavior until implemented and accepted.
+`%LocalAppData%\Programs\TrainingFeedback`. When the stable application identity
+has an existing installation, Setup selects that previous program directory
+before considering the default. The selected old or new directory is still
+validated before any write. Installation and upgrade never own the locator or
+data root. Normal uninstall removes program files only; the optional data-removal
+path requires the separate path and ownership checks defined by the
+[v0.8.0 design](releases/0.8.0/design.md).
 
 ### 7.1 New-Root Directory Creation
 
@@ -677,7 +679,7 @@ a baseline; later formal releases select one or two predecessor formal versions
 under Section 13. A formal declaration alone does not authorize bulk testing.
 Future formal/public verification scope must be explicitly settled at that time.
 
-#### GitHub update discovery
+#### GitHub update discovery and installation
 
 Starting with application 0.8.1, each process that successfully opens a main
 window checks this repository's latest stable GitHub Release once, after the
@@ -691,17 +693,25 @@ startup. Failures remain quiet outside Settings and are not retried automaticall
 An equal or older published version does not display an update notice.
 
 A newer version displays a clickable hollow-circle exclamation mark in the main
-sidebar. Release text is shown as untrusted plain text. The application may offer
-the exact `TrainingFeedback-<version>-Setup.exe` browser URL only when the asset
-is uniquely present, uploaded, has a valid GitHub repository URL and supplies a
-SHA-256 digest. Otherwise the notice remains available but only the Release page
-can be opened. Both actions use the system browser: the application does not save,
-verify, execute or silently install the Setup file. The user decides whether to
-download and run it. Existing installer ownership, directory validation and
-data-root separation continue to govern an overwrite update.
+sidebar. Release text is shown as untrusted plain text. An installable update
+requires exactly one uploaded `TrainingFeedback-<version>-Setup.exe`, a valid
+GitHub repository download URL, a positive byte size and a SHA-256 digest.
+Otherwise the notice remains available but only the Release page can be opened.
 
-The 0.8.1 updater is itself bootstrapped by one final manual installation from
-0.8.0. GitHub distribution remains distinct from a formal compatibility or
+After the user chooses **download and install**, the application streams the
+Setup into a unique temporary directory without touching the selected data root.
+It must match both the declared byte size and SHA-256 before execution. A
+download, write, size, digest or launch failure never executes the file and
+keeps retry and browser-download choices available. On successful validation,
+the application starts Setup and exits. Opening the GitHub Release or downloading
+through the system browser remains an explicit secondary choice, not the default
+path. The installer is still interactive: existing installer ownership,
+directory validation and data-root separation govern the overwrite update.
+
+The 0.8.1 discovery feature was itself bootstrapped by one final manual
+installation from 0.8.0. Likewise, an existing 0.8.2 process still uses its
+browser path to obtain 0.8.3; application-managed download begins after 0.8.3 is
+installed. GitHub distribution remains distinct from a formal compatibility or
 public-support declaration, external content review, personal-data transition
 and W4.
 
@@ -810,10 +820,9 @@ use resolves them:
   condition under Section 12.4; missing illustrations are not deferred for
   actions offered as usable.
 
-Clipboard import, provider-specific adapters, advanced trend analysis, and
-automatic updates are optional later scope, not unresolved
-first-version requirements. The current application-owned JSON/file contract
-is defined in Section 4.6.
+Clipboard import, provider-specific adapters and advanced trend analysis are
+optional later scope, not unresolved first-version requirements. The current
+application-owned JSON/file contract is defined in Section 4.6.
 
 <a id="12-070-development-contract-planned"></a>
 

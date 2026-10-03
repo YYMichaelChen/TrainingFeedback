@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import re
 from dataclasses import dataclass
@@ -18,6 +20,10 @@ _DIGEST = re.compile(r"^sha256:([0-9a-fA-F]{64})$")
 
 class ReleasePayloadError(ValueError):
     """The remote response is not a release this application can trust."""
+
+
+class SetupDownloadError(ValueError):
+    """The downloaded Setup does not match the selected release asset."""
 
 
 class UpdateStatus(str, Enum):
@@ -53,6 +59,27 @@ class UpdateCheckResult:
     status: UpdateStatus
     current_version: str
     release: ReleaseInfo | None = None
+
+
+class SetupDownloadVerifier:
+    """Incrementally verify the exact size and digest of one Setup asset."""
+
+    def __init__(self, asset: SetupAsset):
+        self.asset = asset
+        self.received = 0
+        self._digest = hashlib.sha256()
+
+    def add(self, chunk: bytes) -> None:
+        self.received += len(chunk)
+        if self.received > self.asset.size:
+            raise SetupDownloadError("安装包大小超过发布记录。")
+        self._digest.update(chunk)
+
+    def finish(self) -> None:
+        if self.received != self.asset.size:
+            raise SetupDownloadError("安装包大小与发布记录不一致。")
+        if not hmac.compare_digest(self._digest.hexdigest(), self.asset.sha256):
+            raise SetupDownloadError("安装包 SHA-256 与发布记录不一致。")
 
 
 def checking_result(current_version: str) -> UpdateCheckResult:
