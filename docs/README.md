@@ -5,11 +5,11 @@ routes current execution work; this file routes tracked project authority.
 
 ## Current state
 
-- Current application: `0.8.7`
+- Current application: `0.8.8`
 - Current database schema: `24`
 - Current plan/evidence contract: `4`
 - Current catalog: `070-illustrated-3`
-- Current release: [`0.8.7`](releases/0.8.7/design.md)
+- Current release: [`0.8.8`](releases/0.8.8/design.md)
 - GitHub distribution: `v0.8.7`
 - Formal compatibility baseline declared: no
 

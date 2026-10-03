@@ -42,6 +42,17 @@ from ..application.release_updates import (
     idle_result,
 )
 
+# 常规退出未生效时的硬退出兜底：启动器检测到本进程结束后才会打开安装程序。
+_FORCE_QUIT_FALLBACK_MS = 10_000
+
+
+def _force_quit() -> None:
+    """最后兜底：常规退出未在限定时间内结束进程时硬退出。
+
+    只在已校验下载完成、无用户数据写入进行时武装；SQLite WAL 可安全恢复。
+    """
+    os._exit(0)
+
 
 class ReleaseUpdateCoordinator(QObject):
     """Own the process-scoped release check and verified Setup download."""
@@ -286,8 +297,14 @@ class ReleaseUpdateCoordinator(QObject):
             self.download_failed.emit(self._download_error)
             return
         self._detached_launcher = process
-        self.installer_handoff_started.emit(str(target))
+        # 先安排退出再发通知：通知链路（含对话框槽）的任何异常都不得让退出落空。
         QTimer.singleShot(0, QCoreApplication.quit)
+        QTimer.singleShot(_FORCE_QUIT_FALLBACK_MS, _force_quit)
+        try:
+            self.installer_handoff_started.emit(str(target))
+        except Exception:
+            # 启动器已在等待本进程退出；通知失败不改变已安排的退出。
+            pass
 
     def _discard_download(self) -> None:
         directory = self._download_directory
@@ -418,7 +435,10 @@ class ReleaseDetailsDialog(QDialog):
         QMessageBox.warning(self, "更新失败", message)
 
     def _installer_handoff_started(self, _path: str) -> None:
-        self.instruction.setText("安装包已校验，正在退出当前应用；退出后会自动打开安装程序。")
+        self.instruction.setText(
+            "安装包已校验，正在退出当前应用；退出后会自动打开安装程序。"
+            "若长时间没有退出，请直接手动关闭本应用，安装程序同样会自动打开。"
+        )
         self.accept()
 
     def _open(self, url: str) -> None:
