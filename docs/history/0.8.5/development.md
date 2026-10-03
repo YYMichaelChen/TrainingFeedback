@@ -52,7 +52,24 @@ behavior were not run and are not passes. Manual checks: **0**.
 
 ## Candidate
 
-No candidate has been built yet. This section will identify the exact clean
-source commit, toolchain, payload and Setup after construction. A future
-candidate will certify only its recorded build/static evidence, not the unrun
-client behavior above.
+The clean implementation commit `749b6a306572eed191d268ca1cfa54169842a60e`
+was built on 2026-10-03 with Python 3.12.14 AMD64, PySide6 6.11.2,
+PyInstaller 6.22.2, hooks 2026.7 and Inno Setup 6.7.3.
+
+- Setup: `dist/installer/TrainingFeedback-0.8.5-Setup.exe`
+- Bytes: `85,665,376`
+- SHA-256: `37658f63ce49535f73ac56fef7d186495982aeecd38e5d559afe3b26cd5dc9e0`
+- Signature: unsigned (`NotSigned`); payload EXE also `NotSigned`
+- Payload files: `298`
+- Payload executable SHA-256:
+  `ccc7c7e1cad8b7bd0f4348dde6dd2e695b3e81e08f3d1926b6c34c361102593d`
+- Source dirty: `false`
+- Manifests: [installer](installer-build-manifest.json) and
+  [payload](payload-build-manifest.json)
+
+The build verified the catalog and required packaged schema, contract and icon
+resources, and found no user data in the payload. Building and manifest
+inspection do not certify visible progress, updater handoff, process exit,
+installer launch or installed behavior. GitHub distribution remains a separate
+event and does not declare a formal compatibility baseline, public support,
+external content review, personal-data transition or W4.
