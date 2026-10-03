@@ -9,8 +9,9 @@
 - Previous distributed version: `0.8.1` / schema `23` / contract `3`
 
 The implementation and identified candidate are recorded in the
-[0.8.2 development record](../../history/0.8.2/development.md). No formal
-compatibility claim or public release is recorded here.
+[0.8.2 development record](../../history/0.8.2/development.md), and the Setup is
+distributed through [GitHub Release v0.8.2](../../history/0.8.2/github-release-2026-10-03.md).
+This does not declare a formal compatibility baseline or public-support scope.
 
 ## Scope
 
