@@ -1,5 +1,7 @@
 # 0.8.1 GitHub Update Discovery
 
+Status: implemented and packaged for GitHub Release distribution on 2026-10-03.
+
 ## Goal
 
 Add a non-blocking check of the repository's latest stable GitHub Release. A
@@ -26,3 +28,6 @@ The new startup imports and coordinator construction create one concrete opening
 risk. At most one isolated synthetic-root startup scenario is selected. Manual
 testing remains zero; parsing, interaction, browser download and installer
 behavior are not expanded into functional regression requirements.
+
+Actual candidate identity and checks are recorded in the
+[version history](../../history/0.8.1/development.md).

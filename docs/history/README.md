@@ -11,9 +11,9 @@ the [development workflow](../development-workflow.md) owns version rotation.
 - Database schema: **23**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **3**
-- GitHub distribution: **v0.8.0**; v0.8.1 pending
+- GitHub distribution: **v0.8.1**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.1](../releases/0.8.1/design.md)
+- Current delivered version: [0.8.1](../releases/0.8.1/design.md)
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,8 +23,8 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.1 | 23 | Current update: [GitHub update discovery](../releases/0.8.1/design.md) | Implementation in progress; no candidate or GitHub Release yet |
-| 0.8.0 | 23 | Current personal-use update: [installation, cleanup and response work](0.8.0/development.md) | GitHub Release `v0.8.0`; Setup SHA-256 `49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad`; unsigned |
+| 0.8.1 | 23 | Current personal-use update: [GitHub update discovery](../releases/0.8.1/design.md) | GitHub Release `v0.8.1`; Setup SHA-256 `5e9299066ad13c6ef78a2e6e8fb07b013595b57f240c64be54f388c8a219b0cf`; unsigned |
+| 0.8.0 | 23 | Historical personal-use update: [installation, cleanup and response work](0.8.0/development.md) | GitHub Release `v0.8.0`; Setup SHA-256 `49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad`; unsigned |
 | 0.7.8 | 23 | Historical development version: [documentation and knowledge governance](0.7.8/development.md) | No installer candidate; documentation/identity verification only |
 | 0.7.7 | 23 | Historical development version: [new-root creation](0.7.7/development.md) | [User-approved partial closeout; full installed acceptance incomplete](0.7.7/local-candidate.md#2026-09-29-部分验收收尾) |
 | 0.7.6 | 23 | Historical development version: [documentation ownership and routing](0.7.6/development.md) | No installer candidate; development verification only |
@@ -72,6 +72,8 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.1 GitHub Release record](0.8.1/github-release-2026-10-03.md)
+- [0.8.1 development record](0.8.1/development.md)
 - [0.8.0 GitHub Release record](0.8.0/github-release-2026-10-03.md)
 - [0.8.0 development record](0.8.0/development.md)
 - [0.7.8 documentation-governance development record](0.7.8/development.md)

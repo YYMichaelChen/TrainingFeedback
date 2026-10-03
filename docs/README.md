@@ -9,8 +9,8 @@ routes current execution work; this file routes tracked project authority.
 - Current database schema: `23`
 - Current plan/evidence contract: `3`
 - Current catalog: `070-illustrated-3`
-- Current planned release: [`0.8.1`](releases/0.8.1/design.md)
-- GitHub distribution: `v0.8.0`; `v0.8.1` pending
+- Current release: [`0.8.1`](releases/0.8.1/design.md)
+- GitHub distribution: `v0.8.1`
 - Formal compatibility baseline declared: no
 
 ## 当前验证政策
