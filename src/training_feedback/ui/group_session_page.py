@@ -133,9 +133,10 @@ class GroupSessionPage(QWidget):
         choice = self.day.currentData()
         self.day.clear()
         for revision in self.context.plans.active_revisions():
-            for day in revision["payload"]["plan"]["days"]:
-                self.day.addItem(f"{revision['name']} · {day['name']}",
-                                 (revision["id"], day["order"]))
+            days = revision["payload"]["plan"]["days"]
+            for day in days:
+                label = revision["name"] if len(days) == 1 else f"训练日 {day['order']}"
+                self.day.addItem(label, (revision["id"], day["order"]))
         index = self.day.findData(choice)
         if index >= 0:
             self.day.setCurrentIndex(index)
@@ -182,7 +183,7 @@ class GroupSessionPage(QWidget):
         revision, day = choice
         try:
             preview = self.service.preview_start(revision, day)
-            text = (preview["revision"]["name"] + " · " + preview["day"]["name"] + "\n" +
+            text = (preview["revision"]["name"] + f" · 训练日 {preview['day']['order']}\n" +
                     preview["training_date"] + "\n" + T["unreviewed"] +
                     ("、".join(preview["unreviewed"]) or T["none"]) + "\n\n" +
                     "\n\n".join(occurrence_title(row) + "\n" + occurrence_prescription(row)

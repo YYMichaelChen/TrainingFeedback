@@ -361,8 +361,8 @@ def test_backup_and_other_roots_keep_decisions_isolated(context, payload, tmp_pa
         assert not other.library.eligibility(selected[0]).removed
 
 
-def test_schema23_reopen_preserves_rows_and_lifecycle_journal_immutable(tmp_path, context, payload):
-    path = tmp_path / "schema22.sqlite3"
+def test_schema24_reopen_preserves_rows_and_lifecycle_journal_immutable(tmp_path, context, payload):
+    path = tmp_path / "schema24.sqlite3"
     with Database(path) as connection:
         connection.execute("INSERT INTO library_reference VALUES (1,'custom','example','unknown')")
         connection.commit()
@@ -370,7 +370,7 @@ def test_schema23_reopen_preserves_rows_and_lifecycle_journal_immutable(tmp_path
         assert tuple(connection.execute("SELECT * FROM library_reference").fetchone()) == (
             1, "custom", "example", "unknown",
         )
-        assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 23
+        assert connection.execute("SELECT MAX(version) FROM schema_migration").fetchone()[0] == 24
     remove(context, targets(context, payload)[:1])
     connection = context.database.connection
     for table in ("library_lifecycle_request", "library_lifecycle_event"):

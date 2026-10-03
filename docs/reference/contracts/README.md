@@ -10,5 +10,6 @@ evidence and must not be rewritten to match current behavior.
 
 - [Historical v0.7.0 contract and conversion notes](0.7.0-contracts.md)
 - [Synthetic plan v2 example](plan-v2.example.json)
-- [Synthetic plan v3 example](plan-v3.example.json)
+- [Historical synthetic plan v3 example](plan-v3.example.json)
+- [Synthetic plan v4 example](plan-v4.example.json)
 - [`baseline/`](baseline/) — frozen catalog and plan-v1 evidence

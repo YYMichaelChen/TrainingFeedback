@@ -97,7 +97,8 @@ a = Analysis(
     binaries=[],
     datas=[
         (str(project_root / "src/training_feedback/ui/chevron.svg"), "training_feedback/ui"),
-        (str(project_root / "src/training_feedback/data/schema23.sql"), "training_feedback/data"),
+        (str(project_root / "src/training_feedback/data/schema24.sql"), "training_feedback/data"),
+        (str(project_root / "src/training_feedback/ui/TrainingFeedback.ico"), "training_feedback/ui"),
         (str(project_root / "src/training_feedback/catalog"), "training_feedback/catalog"),
         (str(project_root / "src/training_feedback/contracts"), "training_feedback/contracts"),
     ],

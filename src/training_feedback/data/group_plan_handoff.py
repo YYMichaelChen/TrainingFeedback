@@ -1,4 +1,4 @@
-"""Portable v3 plan/evidence files with retained illustration bytes and managed provenance."""
+"""Portable v4 plan/evidence files with retained illustration bytes and managed provenance."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ class GroupPlanHandoff:
         payload = _strict_json(text)
         # Validate before managing files; validate again inside the single write action.
         self.service.validate(payload)
-        path = managed_path(self.root, f"imports/plan-v3-{uuid.uuid4().hex}.json")
+        path = managed_path(self.root, f"imports/plan-v4-{uuid.uuid4().hex}.json")
         try:
             with self.service.library._action():
                 payload = self.service.validate(payload)
@@ -100,7 +100,7 @@ class GroupPlanHandoff:
             raise
 
     def export(self, revision_id, *, session_service=None, session_id=None):
-        stem = ("session" if session_service else "plan") + "-evidence-v3-" + uuid.uuid4().hex
+        stem = ("session" if session_service else "plan") + "-evidence-v4-" + uuid.uuid4().hex
         destination = managed_path(self.root, f"exports/{stem}")
         staged = managed_path(self.root, f"exports/.{stem}.staging")
         staged.mkdir(parents=True)
@@ -223,7 +223,7 @@ def render_plan_evidence(evidence):
     """Readable hierarchy followed by verbatim JSON facts (no inference or missing-field loss)."""
     revision = evidence["revision"]
     lines = [
-            "# TrainingFeedback " + ("训练" if "session" in evidence else "计划") + "证据 v3",
+            "# TrainingFeedback " + ("训练" if "session" in evidence else "计划") + "证据 v4",
         "",
         revision["name"],
         "",
@@ -234,7 +234,7 @@ def render_plan_evidence(evidence):
         "",
     ]
     for day in revision["payload"]["plan"]["days"]:
-        lines.extend([f"## {day['order']}. {day['name']}", ""])
+        lines.extend([f"## 训练日 {day['order']}", ""])
         for item in day["items"]:
             lines.append(f"### {item['order']}. {item.get('name', item.get('exercise_name', ''))}")
             if item["kind"] == "group":

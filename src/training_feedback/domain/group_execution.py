@@ -54,7 +54,7 @@ def expand_day(day):
 
 def _snapshot(day, item, action, side, round_number, rest, boundary):
     value = deepcopy({
-        "day_order": day["order"], "day_name": day["name"],
+        "day_order": day["order"],
         "item_id": action["item_id"], "item_order": item["order"],
         "member_order": action["order"] if item["kind"] == "group" else None,
         "group_id": item["item_id"] if item["kind"] == "group" else None,

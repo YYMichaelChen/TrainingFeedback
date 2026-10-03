@@ -7,11 +7,11 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.1**
-- Database schema: **23**
+- Application: **0.8.2**
+- Database schema: **24**
 - Catalog: **070-illustrated-3**
-- Current plan/evidence contract: **3**
-- GitHub distribution: **v0.8.1**
+- Current plan/evidence contract: **4**
+- GitHub distribution: **v0.8.1** (previous installed update; v0.8.2 is under development)
 - Formal compatibility baseline declared: **no**
 - Current delivered version: [0.8.1](../releases/0.8.1/design.md)
 
@@ -23,7 +23,8 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.1 | 23 | Current personal-use update: [GitHub update discovery](../releases/0.8.1/design.md) | GitHub Release `v0.8.1`; Setup SHA-256 `5e9299066ad13c6ef78a2e6e8fb07b013595b57f240c64be54f388c8a219b0cf`; unsigned |
+| 0.8.2 | 24 | Current development target: remove training-day names, improve illustration views and set the application icon | Development in progress; no candidate or acceptance claimed |
+| 0.8.1 | 23 | Previous personal-use update: [GitHub update discovery](../releases/0.8.1/design.md) | GitHub Release `v0.8.1`; Setup SHA-256 `5e9299066ad13c6ef78a2e6e8fb07b013595b57f240c64be54f388c8a219b0cf`; unsigned |
 | 0.8.0 | 23 | Historical personal-use update: [installation, cleanup and response work](0.8.0/development.md) | GitHub Release `v0.8.0`; Setup SHA-256 `49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad`; unsigned |
 | 0.7.8 | 23 | Historical development version: [documentation and knowledge governance](0.7.8/development.md) | No installer candidate; documentation/identity verification only |
 | 0.7.7 | 23 | Historical development version: [new-root creation](0.7.7/development.md) | [User-approved partial closeout; full installed acceptance incomplete](0.7.7/local-candidate.md#2026-09-29-部分验收收尾) |

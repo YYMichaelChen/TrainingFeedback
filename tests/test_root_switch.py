@@ -174,7 +174,7 @@ def _payload(context):
     value = json.loads(
         (
             Path(__file__).resolve().parents[1]
-            / "docs/reference/contracts/plan-v3.example.json"
+            / "docs/reference/contracts/plan-v4.example.json"
         )
         .read_text(encoding="utf-8")
     )

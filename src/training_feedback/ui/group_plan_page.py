@@ -503,7 +503,7 @@ class GroupPlanEditor(QDialog):
             if upgrade_source
             else {
                 "schema": "training_feedback.plan",
-                "schema_version": 3,
+                "schema_version": 4,
                 "intent": "new",
                 "rationale": "",
                 "change_description": "",
@@ -521,7 +521,7 @@ class GroupPlanEditor(QDialog):
             self.source["change_description"] = change_description
         self.document = PlanDocument(self.source["plan"])
         if not self.document.plan["days"]:
-            self.document.plan["days"].append({"order": 1, "name": "", "items": []})
+            self.document.plan["days"].append({"order": 1, "items": []})
         self.setWindowTitle(T["edit"])
         self.resize(950, 740)
         layout = QVBoxLayout(self)
@@ -543,7 +543,6 @@ class GroupPlanEditor(QDialog):
         layout.addLayout(form)
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels([T["day"]])
-        self.tree.itemChanged.connect(self._tree_changed)
         self.tree.currentItemChanged.connect(self._show_selected_detail)
         self.detail_panel = QWidget()
         detail_layout = QVBoxLayout(self.detail_panel)
@@ -577,7 +576,7 @@ class GroupPlanEditor(QDialog):
         layout.addWidget(splitter, 1)
         layout.addWidget(QLabel(T["day_hint"]))
         for names in (
-            ("add_day", "rename_day", "add_action", "add_group", "edit_item"),
+            ("add_day", "add_action", "add_group", "edit_item"),
             ("remove", "up", "down", "move_day", "move_member"),
         ):
             row = QHBoxLayout()
@@ -593,8 +592,7 @@ class GroupPlanEditor(QDialog):
     def refresh(self, selection=None):
         self.tree.clear()
         for d, day in enumerate(self.document.plan["days"]):
-            parent = QTreeWidgetItem([f"{day['order']}. {day['name']}"])
-            parent.setFlags(parent.flags() | Qt.ItemFlag.ItemIsEditable)
+            parent = QTreeWidgetItem([f"{T['day']} {day['order']}"])
             parent.setData(0, Qt.ItemDataRole.UserRole, (d, None, None))
             self.tree.addTopLevelItem(parent)
             for i, item in enumerate(day["items"]):
@@ -619,15 +617,6 @@ class GroupPlanEditor(QDialog):
                     item = item.child(m)
             self.tree.setCurrentItem(item)
 
-    def _tree_changed(self, item, column):
-        location = item.data(0, Qt.ItemDataRole.UserRole)
-        if location and location[1] is None:
-            d = location[0]
-            value = item.text(column).strip()
-            if value[:1].isdigit() and ". " in value:
-                value = value.split(". ", 1)[1]
-            self.document.plan["days"][d]["name"] = value
-
     def _show_selected_detail(self, item, _previous=None):
         self.detail_sets.setRowCount(0)
         if item is None:
@@ -637,7 +626,7 @@ class GroupPlanEditor(QDialog):
         d, i, m = item.data(0, Qt.ItemDataRole.UserRole)
         if i is None:
             day = self.document.plan["days"][d]
-            self.detail_title.setText(f"{T['day']} {day['order']} · {day['name']}")
+            self.detail_title.setText(f"{T['day']} {day['order']}")
             self.detail_fields.setPlainText(T["day_detail_hint"])
             return
         plan_item = self.document.plan["days"][d]["items"][i]
@@ -671,19 +660,13 @@ class GroupPlanEditor(QDialog):
         try:
             if command == "add_day":
                 self.document.plan["days"].append({
-                    "order": len(self.document.plan["days"]) + 1, "name": "", "items": [],
+                    "order": len(self.document.plan["days"]) + 1, "items": [],
                 })
                 selection = (len(self.document.plan["days"]) - 1, None, None)
             elif d is None:
                 if command in ("add_action", "add_group"):
                     QMessageBox.information(self, T["error"], T["select_day_first"])
                 return
-            elif command == "rename_day":
-                name, accepted = QInputDialog.getText(
-                    self, T[command], T["day"], text=self.document.plan["days"][d]["name"]
-                )
-                if accepted and name.strip():
-                    self.document.plan["days"][d]["name"] = name
             elif command in ("add_action", "add_group", "edit_item"):
                 self.edit_item(command, d, i, m)
             elif command in ("up", "down"):
@@ -794,7 +777,7 @@ class GroupPlanEditor(QDialog):
         options, targets = [], []
         for day_index, day in enumerate(self.document.plan["days"]):
             if command == "move_day" and day_index != d:
-                options.append(day["name"])
+                options.append(f"{T['day']} {day['order']}")
                 targets.append(day_index)
             if command == "move_member" and m is not None:
                 for group_index, group in enumerate(day["items"]):
@@ -961,7 +944,7 @@ def render_plan(plan, adjustment=None, plan_code=None):
     if adjustment:
         lines.append(f"{T['rationale']}：{adjustment}")
     for day in plan["days"]:
-        lines.append(f"\n{T['day']} {day['order']}: {day['name']}")
+        lines.append(f"\n{T['day']} {day['order']}")
         for item in day["items"]:
             lines.append(f"{item['order']}. {item.get('name', item.get('exercise_name'))}")
             lines.append(render_fields(item))
@@ -1276,7 +1259,7 @@ class GroupPlanPage(QWidget):
             self.day_navigation.clear()
             self.day_cards = []
             for day in self.presentation["days"]:
-                day_card, day_box = self._card(f"{T['day']} {day['order']} · {day['name']}")
+                day_card, day_box = self._card(f"{T['day']} {day['order']}")
                 for plan_item in day["items"]:
                     widget = (
                         self._group_card(plan_item)
@@ -1286,7 +1269,7 @@ class GroupPlanPage(QWidget):
                     day_box.addWidget(widget)
                 self.detail_rows.insertWidget(self.detail_rows.count() - 1, day_card)
                 self.day_cards.append(day_card)
-                self.day_navigation.addItem(f"{T['day']} {day['order']} · {day['name']}")
+                self.day_navigation.addItem(f"{T['day']} {day['order']}")
             self.day_navigation.setCurrentIndex(0 if self.day_cards else -1)
             self.day_navigation.blockSignals(False)
             self._set_command_state(self.presentation["status_key"])

@@ -7,6 +7,7 @@ from copy import deepcopy
 from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -93,17 +94,25 @@ def card_icon(service, target, status, cache=None):
     check = next((item for item in status.image_checks if item.valid), None)
     if check is not None and cache is not None and check.sha256 in cache:
         return cache[check.sha256]
-    canvas = QPixmap(208, 144)
+    screen = QApplication.primaryScreen()
+    dpr = screen.devicePixelRatio() if screen is not None else 1.0
+    canvas = QPixmap(round(208 * dpr), round(144 * dpr))
+    canvas.setDevicePixelRatio(dpr)
     canvas.fill(QColor("#e9f2f5"))
     painter = QPainter(canvas)
     if check is not None:
         try:
             source = QPixmap()
             if source.loadFromData(service.display_image(target, check)):
-                scaled = source.scaled(200, 136, Qt.AspectRatioMode.KeepAspectRatio,
-                                       Qt.TransformationMode.SmoothTransformation)
-                painter.drawPixmap((208 - scaled.width()) // 2,
-                                   (144 - scaled.height()) // 2, scaled)
+                scaled = source.scaled(
+                    round(200 * dpr), round(136 * dpr), Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+                scaled.setDevicePixelRatio(dpr)
+                logical_width = round(scaled.width() / dpr)
+                logical_height = round(scaled.height() / dpr)
+                painter.drawPixmap((208 - logical_width) // 2,
+                                   (144 - logical_height) // 2, scaled)
                 painter.end()
                 icon = QIcon(canvas)
                 if cache is not None:
@@ -138,7 +147,7 @@ class CatalogReviewDialog(QDialog):
         image_scroll = QScrollArea()
         image_scroll.setWidgetResizable(True)
         image_scroll.setWidget(self.image_panel)
-        tabs.addTab(image_scroll, T["image"])
+        tabs.addTab(image_scroll, T["images_tab"])
         layout.addWidget(tabs, 1)
         self.targets_combo.currentIndexChanged.connect(self._show_target)
         form = QFormLayout()
@@ -374,7 +383,7 @@ class CatalogLibraryPage(QWidget):
         image_scroll = QScrollArea()
         image_scroll.setWidgetResizable(True)
         image_scroll.setWidget(self.images)
-        self.tabs.addTab(image_scroll, T["image"])
+        self.tabs.addTab(image_scroll, T["images_tab"])
         self.review_history = QPlainTextEdit()
         self.review_history.setReadOnly(True)
         self.tabs.addTab(self.review_history, T["review_events"])

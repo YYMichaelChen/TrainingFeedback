@@ -3,7 +3,7 @@
 from copy import deepcopy
 from dataclasses import asdict
 
-from ..data.plan_contract import plan_v3_schema
+from ..data.plan_contract import plan_v4_schema
 from ..domain.catalog import ExerciseReference, content_sha256
 from ..domain.group_plans import (
     diff_plans,
@@ -19,7 +19,7 @@ from .library_workflow import LibraryTarget
 class GroupPlanService:
     def __init__(self, repository, library):
         self.repository, self.library = repository, library
-        self.schema = plan_v3_schema()
+        self.schema = plan_v4_schema()
 
     def list_plans(self):
         return self.repository.list_plans()

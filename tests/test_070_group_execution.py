@@ -311,7 +311,7 @@ def test_export_after_catalog_replacement_is_portable_and_lossless(
         evidence = json.loads((directory / "evidence.json").read_text(encoding="utf-8"))
         assert evidence["provenance"]["scope"] == "training_session"
         assert evidence["session"] == controller.session
-        assert evidence["provenance"]["database_schema_version"] == 23
+        assert evidence["provenance"]["database_schema_version"] == 24
         assert evidence["session"]["snapshot"]["catalog_version"] != "replaced"
         assert len(evidence["assets"]) == 1
         assert (directory / evidence["assets"][0]["path"]).read_bytes() == PNG

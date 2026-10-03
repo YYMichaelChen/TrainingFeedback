@@ -48,10 +48,10 @@ class GroupPlanRepository:
                     (day["id"],),
                 )
             ]
-            plan["days"].append({"order": day["day_order"], "name": day["name"], "items": items})
+            plan["days"].append({"order": day["day_order"], "items": items})
         revision["payload"] = {
             "schema": "training_feedback.plan",
-            "schema_version": 3,
+            "schema_version": 4,
             "intent": "new",
             "rationale": row["rationale"],
             "change_description": row["change_description"],
@@ -203,8 +203,8 @@ class GroupPlanRepository:
     def _children(self, identifier, plan):
         for day in plan["days"]:
             day_id = self.connection.execute(
-                "INSERT INTO group_plan_day(revision_id,day_order,name) VALUES (?,?,?)",
-                (identifier, day["order"], day["name"]),
+                "INSERT INTO group_plan_day(revision_id,day_order) VALUES (?,?)",
+                (identifier, day["order"]),
             ).lastrowid
             for item in day["items"]:
                 parent = self._insert_item(identifier, day_id, item, None)

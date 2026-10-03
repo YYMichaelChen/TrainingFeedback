@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "training-feedback"
-version = "0.8.1"
+version = "0.8.2"
 description = "Local-first personal training desktop application"
 requires-python = ">=3.12"
 dependencies = [
@@ -78,7 +78,7 @@ regression_minor = [
     "test_failure_after_asset_publication_rolls_back_and_recovers",
     "test_retained_rows_immutable_and_identity_hash_conflicts_rollback",
     "test_family_cycles_rejected_without_overwriting_existing_versions",
-    "test_v3_file_import_retains_original_and_does_not_activate",
+    "test_v4_file_import_retains_original_and_does_not_activate",
     "test_export_is_portable_and_json_markdown_agree_after_catalog_replacement",
     "test_ui_group_plan_creation_edit_cancel_and_confirmation",
     "test_zero_free_dose_and_original_note_rendering_are_not_defaults",

@@ -57,15 +57,15 @@ POSITION_LABELS = {
 GROUP_PLAN_TEXT = {
     "title": "训练计划 · 动作组", "new": "新建计划", "edit": "编辑草稿", "clone": "复制为独立计划",
     "upgrade": "升级所选计划",
-    "activate": "预览并启用", "import": "导入 v3 计划…", "export": "导出 v3 证据…",
+    "activate": "预览并启用", "import": "导入 v4 计划…", "export": "导出 v4 证据…",
     "name": "计划名称", "purpose": "训练目的", "rationale": "调整说明",
     "change_description": "变更说明", "base_number": "三位计划编号",
     "clone_name_prompt": "输入独立计划名称", "clone_base_prompt": "输入未使用的三位编号（001–999）",
     "upgrade_preview": "以下差异将保存为 {code}。确认后保存草稿。",
     "draft_preview": "以下更改将以 {code} 保存为草稿。确认后保存。",
-    "day": "训练日", "add_day": "添加训练日", "rename_day": "修改训练日名称",
+    "day": "训练日", "add_day": "添加训练日",
     "select_detail": "在左侧选择训练日、动作组、动作或成员查看处方。",
-    "day_detail_hint": "直接在左侧编辑训练日名称；用下方操作添加和排列计划项。",
+    "day_detail_hint": "用下方操作添加和排列计划项。",
     "search_exercises": "搜索动作名称或体位",
     "choose_multiple_exercises": "至少选择一个动作；所选动作会以未完成处方加入计划。",
     "day_hint": "训练日是计划中一次训练的内容，不对应日历日期；先选中训练日，再添加动作。",
@@ -90,7 +90,8 @@ GROUP_PLAN_TEXT = {
     "dissolve": "移除后只剩一个成员。明确拆散这个动作组？请先将轮数设为 1。",
     "remove_confirm": "确定移除所选计划项？保存后生效。", "exported": "证据已导出到：",
     "no_plans": "暂无计划", "json_filter": "JSON 文件 (*.json)",
-    "empty_revision_hint": "暂无计划修订。可新建计划，或导入 v3 计划。",
+    "empty_revision_hint": "暂无计划修订。可新建计划，或导入 v4 计划。",
+    "images_tab": "动作示意图",
     "rest_seconds": "休息 {value} 秒",
     "select_destination": "选择目标", "expanded": "执行顺序（每行完成一个成员的全部组）",
     "preview_truncated": "预览仅显示前 300 个执行位置；完整处方及轮数保留。",
@@ -398,7 +399,7 @@ ERROR_TRANSLATIONS = {
     "This root has interrupted uninstall cleanup. Reinstall the current program "
     "and retry cleanup; the remaining files are preserved.":
         "此目录有未完成的卸载数据清理。请重新安装当前程序后重试清理；剩余文件已保留。",
-    "Only plan format version 3 is accepted.": "此入口只接受 v3 计划，请使用当前导出附带的格式。",
+    "Only plan format version 4 is accepted.": "此入口只接受 v4 计划，请使用当前导出附带的格式。",
     "The displayed plan revision changed.": "当前草稿已被修改，请重新打开后核对。",
     "A plan base number must be between 001 and 999.": "计划编号必须是 001 至 999 的整数。",
     "That plan base number is already in use.": "这个计划编号已经使用，请输入其他编号。",
@@ -738,8 +739,8 @@ def _activation_reasons(detail: str) -> str:
 
 
 def user_message(message: str) -> str:
-    if message.startswith("Invalid plan v3 at "):
-        return "v3 计划格式不完整或字段无效，请核对：" + message[len("Invalid plan v3 at "):]
+    if message.startswith("Invalid plan v4 at "):
+        return "v4 计划格式不完整或字段无效，请核对：" + message[len("Invalid plan v4 at "):]
     if message.startswith("Content is not eligible: "):
         return "当前内容不可用：" + "；".join(
             LIBRARY_REASON_LABELS.get(reason, reason)

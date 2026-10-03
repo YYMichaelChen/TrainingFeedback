@@ -30,7 +30,7 @@ def load_json(path):
 
 
 def example():
-    return load_json(REFERENCE_CONTRACTS / "plan-v3.example.json")
+    return load_json(REFERENCE_CONTRACTS / "plan-v4.example.json")
 
 
 def group_contract(payload=None):
@@ -55,7 +55,7 @@ def group_contract(payload=None):
 
 @pytest.fixture
 def validator():
-    schema = load_json(RUNTIME_CONTRACTS / "plan-v3.schema.json")
+    schema = load_json(RUNTIME_CONTRACTS / "plan-v4.schema.json")
     Draft202012Validator.check_schema(schema)
     return Draft202012Validator(schema)
 

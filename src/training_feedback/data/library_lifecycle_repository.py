@@ -97,7 +97,7 @@ class LibraryLifecycleRepository:
         for revision in self.connection.execute("SELECT * FROM group_plan_revision ORDER BY id"):
             matches = []
             for item in self.connection.execute(
-                "SELECT i.*,d.name AS day_name,d.day_order,p.item_key AS group_key,"
+                "SELECT i.*,d.day_order,p.item_key AS group_key,"
                 "p.fields_json AS group_json FROM group_plan_item i "
                 "JOIN group_plan_day d ON d.id=i.day_id "
                 "LEFT JOIN group_plan_item p ON p.id=i.parent_id "
@@ -106,12 +106,12 @@ class LibraryLifecycleRepository:
                 fields = json.loads(item["fields_json"])
                 if fields.get("exercise") != exercise:
                     continue
-                matches.append({"item_id": item["item_key"], "day": item["day_name"],
-                                "day_order": item["day_order"], "content": fields["content"]})
+                matches.append({"item_id": item["item_key"], "day_order": item["day_order"],
+                                "content": fields["content"]})
                 if item["parent_id"]:
                     groups.append({"revision_id": revision["id"], "group_id": item["group_key"],
                                    "name": json.loads(item["group_json"])["name"],
-                                   "member_id": item["item_key"], "day": item["day_name"]})
+                                   "member_id": item["item_key"], "day_order": item["day_order"]})
             if matches:
                 plans.append({key: revision[key] for key in
                               ("id", "plan_id", "name", "revision_number", "status", "edit_token")}

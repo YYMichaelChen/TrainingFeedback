@@ -5,11 +5,11 @@ routes current execution work; this file routes tracked project authority.
 
 ## Current state
 
-- Current application: `0.8.1`
-- Current database schema: `23`
-- Current plan/evidence contract: `3`
+- Current application: `0.8.2`
+- Current database schema: `24`
+- Current plan/evidence contract: `4`
 - Current catalog: `070-illustrated-3`
-- Current release: [`0.8.1`](releases/0.8.1/design.md)
+- Current release: [`0.8.2`](releases/0.8.2/design.md)
 - GitHub distribution: `v0.8.1`
 - Formal compatibility baseline declared: no
 
@@ -28,7 +28,7 @@ routes current execution work; this file routes tracked project authority.
 | --- | --- |
 | Product, domain, data-root and release rules | [Product specification](development-plan.md) |
 | Catalog content and initial-plan proposal | [Catalog and plan specification](initial-exercises-and-plan.md) |
-| Current release design | [v0.8.1 design](releases/0.8.1/design.md) |
+| Current release design | [v0.8.2 design](releases/0.8.2/design.md) |
 | Development, verification, version rotation and release close | [Development workflow](development-workflow.md) |
 | Pytest tiers, scopes and budget accounting | [Test instructions](../tests/README.md) |
 | Minimal startup observation; dormant public acceptance | [Packaged acceptance runbook](packaged-acceptance-runbook.md) |

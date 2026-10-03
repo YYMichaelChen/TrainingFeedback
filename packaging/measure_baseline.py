@@ -144,7 +144,7 @@ def seed_plans(context, count: int) -> None:
     from training_feedback.domain.group_plans import plan_actions
 
     payload = json.loads(checked_path(
-        PROJECT, "docs/reference/contracts/plan-v3.example.json",
+        PROJECT, "docs/reference/contracts/plan-v4.example.json",
     ).read_text(encoding="utf-8"))
     for _, _, action in plan_actions(payload["plan"]):
         entry = context.catalog.get(action["exercise"]["key"])

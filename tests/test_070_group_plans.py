@@ -19,7 +19,7 @@ from training_feedback.app import LibraryContext
 from training_feedback.application.library_workflow import LibraryTarget
 from training_feedback.data.catalog_builder import build_catalog, source_content
 from training_feedback.data.database import transaction
-from training_feedback.data.plan_contract import plan_v3_schema
+from training_feedback.data.plan_contract import plan_v4_schema
 from training_feedback.domain.catalog import ExerciseReference, content_sha256
 from training_feedback.domain.group_plans import (
     PlanDocument,
@@ -67,7 +67,7 @@ def context(tmp_path):
 @pytest.fixture
 def payload(context):
     value = json.loads(
-        (ROOT / "docs/reference/contracts/plan-v3.example.json").read_text(encoding="utf-8")
+        (ROOT / "docs/reference/contracts/plan-v4.example.json").read_text(encoding="utf-8")
     )
     value["plan"].pop("target_plan_name", None)
     for _day, _item, action in plan_actions(value["plan"]):
@@ -103,17 +103,25 @@ def activate(context, identifier):
     return preview
 
 
-def test_runtime_schema_matches_reviewed_contract_and_only_accepts_v3():
-    schema = plan_v3_schema()
+def test_runtime_schema_matches_reviewed_contract_and_only_accepts_v4():
+    schema = plan_v4_schema()
     assert schema == json.loads(
-        (ROOT / "src/training_feedback/contracts/plan-v3.schema.json").read_text(
+        (ROOT / "src/training_feedback/contracts/plan-v4.schema.json").read_text(
             encoding="utf-8"
         )
     )
-    with pytest.raises(ValueError, match="version 3"):
+    with pytest.raises(ValueError, match="version 4"):
         validate_plan_payload({"schema_version": 2}, schema)
+    obsolete = json.loads(
+        (ROOT / "docs/reference/contracts/plan-v4.example.json").read_text(encoding="utf-8")
+    )
+    obsolete["schema_version"] = 3
+    with pytest.raises(ValueError, match="version 4"):
+        validate_plan_payload(obsolete, schema)
+    assert schema["$defs"]["day"]["required"] == ["order", "items"]
+    assert "name" not in schema["$defs"]["day"]["properties"]
     example = json.loads(
-        (ROOT / "docs/reference/contracts/plan-v3.example.json").read_text(encoding="utf-8")
+        (ROOT / "docs/reference/contracts/plan-v4.example.json").read_text(encoding="utf-8")
     )
     example["rationale"] = ""
     assert validate_plan_payload(example, schema)["rationale"] == ""
@@ -331,7 +339,7 @@ def test_item_key_cannot_be_reused_for_a_different_movement(context, payload):
     assert context.plans.get(identifier)["payload"] == payload
 
 
-def test_v3_file_import_retains_original_and_does_not_activate(context, payload, tmp_path):
+def test_v4_file_import_retains_original_and_does_not_activate(context, payload, tmp_path):
     path = tmp_path / "外部计划.json"
     raw = json.dumps(payload, ensure_ascii=False, indent=2).replace("\n", "\r\n").encode("utf-8")
     path.write_bytes(raw)
@@ -410,7 +418,7 @@ def test_export_is_portable_and_json_markdown_agree_after_catalog_replacement(
     with LibraryContext.reopen(context.data_root.path, catalog_path=new_catalog) as reopened:
         destination = reopened.plan_handoff.export(identifier)
         evidence = json.loads((destination / "evidence.json").read_text(encoding="utf-8"))
-        assert evidence["schema_version"] == 3
+        assert evidence["schema_version"] == 4
         assert evidence["revision"] == baseline
         assert len(evidence["assets"]) == 1 and len(evidence["contents"]) == 3
         asset = evidence["assets"][0]
@@ -512,11 +520,11 @@ def test_new_plan_add_day_selects_it_and_add_action_opens(qt_app, context, monke
     buttons = {button.text(): button for button in editor.findChildren(QPushButton)}
     selected = editor.tree.currentItem()
     assert selected.data(0, Qt.ItemDataRole.UserRole) == (0, None, None)
-    selected.setText(0, "1. 【合成】上肢日")
-    assert editor.document.plan["days"][0]["name"] == "【合成】上肢日"
+    assert selected.text(0) == "训练日 1"
+    assert "修改训练日名称" not in [button.text() for button in buttons.values()]
     buttons["添加训练日"].click()
     selected = editor.tree.currentItem()
-    assert selected.text(0) == "2. "
+    assert selected.text(0) == "训练日 2"
     assert selected.data(0, Qt.ItemDataRole.UserRole) == (1, None, None)
 
     buttons["添加动作"].click()
@@ -655,7 +663,6 @@ def test_plan_page_empty_state_and_revision_navigation(qt_app, context, payload)
     second_payload["plan"]["name"] = "【合成】另一版计划"
     second_day = deepcopy(second_payload["plan"]["days"][0])
     second_day["order"] = 2
-    second_day["name"] = "【合成】第二训练日"
     for plan_item in second_day["items"]:
         plan_item["item_id"] = new_item_id()
         if plan_item["kind"] == "group":

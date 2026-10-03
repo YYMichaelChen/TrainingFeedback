@@ -350,9 +350,9 @@ Applying it creates a new immutable plan revision and records:
 No active plan is silently overwritten.
 
 The application owns the versioned contract; it is not tied to a particular AI
-provider. New imports use `training_feedback.plan` v3 and new evidence uses
-`training_feedback.evidence` v3. The canonical runtime schema is
-`src/training_feedback/contracts/plan-v3.schema.json`;
+provider. New imports use `training_feedback.plan` v4 and new evidence uses
+`training_feedback.evidence` v4. The canonical runtime schema is
+`src/training_feedback/contracts/plan-v4.schema.json`;
 `src/training_feedback/data/plan_contract.py` loads it, domain/application code
 validates it, and the handoff repositories produce portable evidence.
 The UI imports JSON files into drafts and retains original bytes in managed
@@ -1137,17 +1137,18 @@ backup and restore remain separate user actions outside that one-time reset.
 
 ### 12.8 External Handoff Contract
 
-Use `training_feedback.plan` version 3 for new imports and
-`training_feedback.evidence` version 3 for new exports; define their version
+Use `training_feedback.plan` version 4 for new imports and
+`training_feedback.evidence` version 4 for new exports; define their version
 constants independently. Only the current plan-import contract is accepted. A
 newly supplied older-format file gets a clear current-format error and the
 current schema, not a compatibility converter or version selector. Plans
 already stored in a usable current root retain their frozen facts; their
 original imported files and original exports are not rewritten or re-imported.
 
-V3 carries namespaced action keys, exact content references, family/variant
+V4 carries namespaced action keys, exact content references, family/variant
 identity, ordered standalone/group items, rounds, side order, per-round sets,
-all rest boundaries and source rationale. Imports create drafts only and cannot
+all rest boundaries and source rationale. Training days have order and items;
+they have no user-defined name. Imports create drafts only and cannot
 create approval, enablement, deletion decisions or plan activation. Schema and
 domain validation enforce identical invariants and reject unknown identities
 without silent substitutions. An identity for removed content resolves to
@@ -1247,13 +1248,18 @@ are `001`–`999`, are unique within the root and never wrap or silently reuse.
 Internal revision IDs/ordinals remain for associations, but the plan page shows
 the code rather than automatic `v1`/`v2` labels.
 
-Database schema 23 uses the current plan/evidence wire contracts v3.
+Database schema 24 uses the current plan/evidence wire contracts v4.
 The plan-import rationale may be empty. A new import receives a root-local base
 number; an upgrade import identifies the target by base code and follows the
-same difference classification. Only v3 is accepted; v2 imports receive
+same difference classification. Only v4 is accepted; v2/v3 imports receive
 the current-format error. JSON/Markdown evidence and new training snapshots
 show the complete code consistently. Saving a draft never activates it, and
 activation retains the existing eligibility and explicit confirmation gates.
+
+Schema 23 roots upgrade in place to schema 24 in one transaction. The upgrade
+removes only the plan-day name columns and historical session name snapshot;
+plans, training history, feedback and review records remain. A failed upgrade
+rolls back the complete change.
 
 ## 13. Version Retention And Development Data Policy
 

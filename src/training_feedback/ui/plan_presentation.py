@@ -108,7 +108,6 @@ def plan_presentation(revision, content_issues=()):
         "days": [
             {
                 "order": day["order"],
-                "name": day["name"],
                 "items": [
                     _item(item) for item in sorted(day["items"], key=lambda row: row["order"])
                 ],

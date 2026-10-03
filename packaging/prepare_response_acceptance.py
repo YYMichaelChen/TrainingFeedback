@@ -70,7 +70,7 @@ def seed_history(context):
                              entry["reference"]) for entry in context.catalog.list()]
     context.library.select_contents(targets, user_confirmed=True)
     payload = json.loads(checked_path(
-        PROJECT, "docs/reference/contracts/plan-v3.example.json",
+        PROJECT, "docs/reference/contracts/plan-v4.example.json",
     ).read_text(encoding="utf-8"))
     payload["plan"]["name"] = "【合成人工验收】训练流程，不是个人处方"
     payload["rationale"] = "【合成测试】仅测试软件，未经过外部审核，不用于真实训练。"

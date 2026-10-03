@@ -1,4 +1,4 @@
-"""V3 plan validation, identity-based diffs and editable document operations."""
+"""V4 plan validation, identity-based diffs and editable document operations."""
 
 from __future__ import annotations
 
@@ -15,18 +15,18 @@ from .catalog import ExerciseReference, require_classification
 from .models import require_non_negative_finite
 from .plans import PlannedSet, ensure_orders
 
-PLAN_IMPORT_SCHEMA_VERSION = 3
-EVIDENCE_SCHEMA_VERSION = 3
+PLAN_IMPORT_SCHEMA_VERSION = 4
+EVIDENCE_SCHEMA_VERSION = 4
 
 
 def validate_plan_payload(payload: dict, schema: dict, *, activation: bool = False) -> dict:
     if not isinstance(payload, dict) or payload.get("schema_version") != PLAN_IMPORT_SCHEMA_VERSION:
-        raise ValueError("Only plan format version 3 is accepted.")
+        raise ValueError("Only plan format version 4 is accepted.")
     errors = list(Draft202012Validator(schema).iter_errors(payload))
     if errors:
         error = errors[0]
         path = "/".join(str(part) for part in error.absolute_path)
-        raise ValueError(f"Invalid plan v3 at {path}: {error.message}")
+        raise ValueError(f"Invalid plan v4 at {path}: {error.message}")
     _require_finite(payload)
     plan = payload["plan"]
     ensure_orders((day["order"] for day in plan["days"]), "Day")
@@ -183,7 +183,7 @@ def identity_rows(plan):
     result = {}
     for day in plan["days"]:
         for item in day["items"]:
-            path = f"{day['order']}:{day['name']}/{item['order']}"
+            path = f"{day['order']}/{item['order']}"
             result[item["item_id"]] = (path, {k: v for k, v in item.items() if k != "members"})
             for member in item.get("members", []):
                 result[member["item_id"]] = (
@@ -202,8 +202,8 @@ def diff_plans(before, after):
             changes.append(
                 {"item_id": None, "path": key, "before": before.get(key), "after": after.get(key)}
             )
-    old_days = [(day["order"], day["name"]) for day in before["days"]]
-    new_days = [(day["order"], day["name"]) for day in after["days"]]
+    old_days = [day["order"] for day in before["days"]]
+    new_days = [day["order"] for day in after["days"]]
     if old_days != new_days:
         changes.append({"item_id": None, "path": "days", "before": old_days, "after": new_days})
     old, new = identity_rows(before), identity_rows(after)
@@ -239,12 +239,8 @@ def _structure_value(value):
         return [_structure_value(item) for item in value]
     if not isinstance(value, dict):
         return value
-    if "items" in value and "order" in value and "name" in value:
-        return {
-            "order": value["order"],
-            "name": value["name"],
-            "items": _structure_value(value["items"]),
-        }
+    if "items" in value and "order" in value:
+        return {"order": value["order"], "items": _structure_value(value["items"])}
     return {
         key: _structure_value(item)
         for key, item in value.items()
@@ -288,10 +284,8 @@ class PlanDocument:
         for order, row in enumerate(rows, 1):
             row["order"] = order
 
-    def add_day(self, name):
-        if not name.strip():
-            raise ValueError("Day name cannot be empty.")
-        self.plan["days"].append({"order": len(self.plan["days"]) + 1, "name": name, "items": []})
+    def add_day(self):
+        self.plan["days"].append({"order": len(self.plan["days"]) + 1, "items": []})
 
     def move(self, rows, index, offset):
         target = index + offset

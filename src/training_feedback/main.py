@@ -16,6 +16,7 @@ def main() -> int:
 
     from pathlib import Path
 
+    from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication, QMessageBox
 
     from training_feedback import __version__
@@ -30,6 +31,7 @@ def main() -> int:
     from training_feedback.ui.theme import apply_theme
 
     application = QApplication(sys.argv)
+    application.setWindowIcon(QIcon(str(Path(__file__).with_name("ui") / "TrainingFeedback.ico")))
     apply_theme(application)
     locator = Locator(default_locator_path())
 
