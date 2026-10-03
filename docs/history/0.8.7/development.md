@@ -61,9 +61,26 @@ remains the feedback channel.
 
 ## Candidate
 
-The clean implementation commit and candidate identity will be recorded here
-after the build, together with the installer and payload manifests.
+The clean implementation commit `5bf3f694780b425cb3b6ea0407aad9304b637b89`
+was built on 2026-10-03 with Python 3.12.14 AMD64, PySide6 6.11.2,
+PyInstaller 6.22.2, hooks 2026.7 and Inno Setup 6.7.3.
 
-GitHub distribution remains a separate event and does not declare formal
-compatibility, public support, external content review, personal-data
-transition or W4.
+- Setup: `dist/installer/TrainingFeedback-0.8.7-Setup.exe`
+- Bytes: `85,672,077`
+- SHA-256: `48c4dae577a17428760c135c5713f1e87608cbc9e0b89b0ff5b4e2f955a62ee0`
+- Signature: unsigned (`NotSigned`); payload EXE also `NotSigned`
+- Payload files: `298`
+- Payload executable SHA-256:
+  `8778fdde7f0a4c2fa389549844b834f312a424e8f08bf9bac7d482accda5b2d8`
+- Source dirty: `false`
+- Icon SHA-256: `3db199c1a7b7289fc4dbea91653952486431fe7072f7eb16ea7d90e51b99a65c`
+  for `icon/`, source runtime and packaged runtime copies
+- Manifests: [installer](installer-build-manifest.json) and
+  [payload](payload-build-manifest.json)
+
+The build verified the catalog and required packaged schema, contract and icon
+resources, and found no user data in the payload. Building and manifest
+inspection do not certify navigation behavior, the contained error page or
+installed behavior. GitHub distribution remains a separate event and does not
+declare formal compatibility, public support, external content review,
+personal-data transition or W4.
