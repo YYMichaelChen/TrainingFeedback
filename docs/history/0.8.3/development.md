@@ -53,23 +53,23 @@ type stub was inspected to confirm that `QProcess.startDetached()` returns a
 `(bool, pid)` tuple; the launch result is unpacked before deciding whether to
 exit the application.
 
-The final local candidate was built on 2026-10-03 with Python 3.12.14,
+The release candidate was rebuilt from clean implementation commit `d157174`
+on 2026-10-03 with Python 3.12.14,
 PySide6 6.11.2, PyInstaller 6.22.2 and Inno Setup 6.7.3. Inno compilation
 succeeded after one earlier compile failure exposed and removed an unsupported
 Pascal Script `HKEY` annotation. A subsequent successful build was discarded
 after static review found the `startDetached()` return-value issue; the identity
-below belongs only to the rebuilt final local candidate:
+below belongs only to the clean rebuilt candidate:
 
 - Setup: `dist/installer/TrainingFeedback-0.8.3-Setup.exe`
-- Bytes: `85,663,345`
-- SHA-256: `d996cec129c427a92d97f2aafb58f8b68a4ed774de95dfb6f089bd03a1b87fa7`
+- Bytes: `85,661,990`
+- SHA-256: `a7dcb23536c43422355d6113df926fef2f05cbeaaea383310e9630f50a381009`
 - Signature: unsigned (`NotSigned`)
 - Payload files: `298`
-- Payload executable SHA-256: `06d0bb1eb4e708a38b366bbce9c97e0013c9fc5946d68b63eea643f8ff037d21`
+- Payload executable SHA-256: `3e8c66147310fd9455fea512e5a87fd24de9b07cc20e1577717b2f2c87c2f5b0`
 - Source revision recorded by the builder:
-  `2ac8517e5c660fd387cde72f2a68ecd730b7265d`
-- Source dirty: `true`; this is an informal local candidate, not a clean public
-  Release candidate.
+  `d157174e5bd3246c084b96410b986be356dc8bc3`
+- Source dirty: `false`.
 - Manifests: [installer](installer-build-manifest.json) and
   [payload](payload-build-manifest.json).
 

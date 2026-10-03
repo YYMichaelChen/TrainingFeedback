@@ -1,6 +1,6 @@
 {
   "manifest_schema": 1,
-  "built_at": "2026-10-03T06:36:33Z",
+  "built_at": "2026-10-03T06:58:54Z",
   "application": "TrainingFeedback",
   "application_version": "0.8.3",
   "output_directory": "dist/TrainingFeedback",
@@ -12,18 +12,18 @@
   "pyinstaller_version": "6.22.2",
   "pyinstaller_hooks_contrib": "2026.7",
   "isolated_binary_discovery": true,
-  "source_revision": "2ac8517e5c660fd387cde72f2a68ecd730b7265d",
-  "source_dirty": true,
+  "source_revision": "d157174e5bd3246c084b96410b986be356dc8bc3",
+  "source_dirty": false,
   "file_count": 298,
   "artifact_hashes": [
     {
       "path": ".training-feedback-program.json",
-      "sha256": "fe9df0288b37f7df85caeb3b245d28cdafc0fae42a641ed499142ae4b936501d",
+      "sha256": "566443f38880b474b6fd17d2c4dc3353494c3649d870a7b7dd0ad4fdabd7d4d5",
       "bytes": 36718
     },
     {
       "path": "TrainingFeedback.exe",
-      "sha256": "06d0bb1eb4e708a38b366bbce9c97e0013c9fc5946d68b63eea643f8ff037d21",
+      "sha256": "3e8c66147310fd9455fea512e5a87fd24de9b07cc20e1577717b2f2c87c2f5b0",
       "bytes": 3155689
     },
     {
@@ -293,7 +293,7 @@
     },
     {
       "path": "_internal\\base_library.zip",
-      "sha256": "4c65230c06904e0f902b5be6e1eae3443a91c36713e16711411e243f86aa4aba",
+      "sha256": "6d37306c3778447976fe0fbc2fd5bef87db006506d23dcb0654310ba74771c94",
       "bytes": 1333490
     },
     {
