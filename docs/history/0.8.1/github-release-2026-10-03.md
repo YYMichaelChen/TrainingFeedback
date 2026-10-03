@@ -20,6 +20,11 @@ The Release tag may include this later evidence record; the identified Setup was
 built from the clean application-source commit above. Its adjacent tracked build
 manifests preserve the payload and installer identities.
 
+The public latest-Release API was inspected after upload. It returned stable,
+non-draft `v0.8.1`, published at `2026-10-03T02:28:32Z`, with exactly the asset
+above in `uploaded` state. Its reported size, `sha256:` digest and browser URL
+matched the local candidate. This is a distribution-identity check only.
+
 ## Scope and limits
 
 - The one selected startup-risk scenario passed; manual checks were zero.
