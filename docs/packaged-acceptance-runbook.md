@@ -1,100 +1,73 @@
 # Packaged Acceptance Runbook
 
-This runbook applies to every application version. The
-[development workflow](development-workflow.md) decides when a candidate is
-needed and which verification tier applies. The [product release policy](development-plan.md#13-version-retention-and-development-data-policy)
-owns compatibility and retention boundaries; current implementation identities
-are in the [version history index](history/README.md). Put dated results,
-hashes and candidate status in candidate-specific evidence; this file is a
-procedure, not a certificate for any build.
+当前长期个人使用阶段遵循
+[产品规范第 9.1 节](development-plan.md#91-release-and-follow-up-boundaries)。
+本手册不能因为制作安装包、更新版本、个人使用或收尾而增加测试：
+自动验证仅针对具体启动失败风险，每次更新最多 3 项、通常 0～1 项；
+无此风险为 0 项，人工测试默认 0 项。旧批量本机验收要求已取消。
+安装包及后续更新默认通过本仓库 GitHub Releases 分发。上传 Release 不增加测试，
+不自动声明正式兼容支持；说明中记录版本、SHA-256、签名状态和构建来源。
 
 ## 1. Build and identify a candidate
 
-1. Finish the intended source and built-in catalog content. Record application,
-   database schema, catalog and external wire-contract identities separately.
-   Use a clean, complete source revision for a local-release or completed
-   installed-acceptance claim. A dirty build is an informal preview with a
-   complete source snapshot and no acceptance claim.
-2. Use the pinned toolchain and PowerShell 7. Build the directory payload and
-   installer with `pwsh -File packaging/build.ps1 -Installer`, supplying `-ISCC`
-   when the Inno Setup compiler is not found automatically.
-3. Preserve the directory payload, adjacent build manifest, Setup executable and
-   installer manifest together. Compare every payload path, size and hash to the
-   manifest, including unexpected files. Verify the bundled catalog and actual
-   illustration bytes, required contracts/runtime files and absence of locator,
-   personal roots or other user data in the program payload.
-4. Record source revision/snapshot, source dirty flag, build time, toolchain and
-   Windows architecture, manifest/EXE/Setup hashes and Authenticode status.
-   Candidate identity changes when source or payload bytes change. Preserve prior
-   candidate evidence under its own identity.
+Only build when requested or included in the agreed deliverable. Follow the
+[development workflow](development-workflow.md) for source identity and the
+[test instructions](../tests/README.md) for the unchanged startup-only cap.
 
-Installation and upgrade replace program files only. Compare closed isolated
-locator/root bytes before launching a replacement program; application startup
-may then apply only a migration allowed by the product release policy. Ordinary
-uninstall retains the root unless the candidate implements a separately adopted,
-explicitly confirmed and path-verified exception. Never use a real personal root for fault
-injection or synthetic training.
+Use the pinned toolchain and PowerShell 7. The build command, when needed, is
+`pwsh -File packaging/build.ps1 -Installer`, with `-ISCC` for a non-default
+Inno Setup compiler. Preserve the generated payload, installer and adjacent
+manifests; identify the source revision/snapshot and application/schema/catalog/
+contract versions. A dirty source snapshot is an informal preview, not a claim
+of complete installed acceptance. Review relevant startup packaging risks only.
+
+Program files stay separate from data. Building does not authorize installation,
+root migration, deletion or discovery of personal data. Any allowed code-level
+root check uses isolated synthetic inputs and an isolated locator. Never use
+personal roots for fault injection or synthetic training.
 
 ## 2. Local installed acceptance
 
+### 当前最小观察
+
+默认不交付手动验收清单。只有本次改动有具体启动失败风险、且代码检查无法确认时，
+最多请用户在下一次正常使用时观察一次能否打开：
+
+1. **准备：**说明本次程序版本／位置、具体启动风险和预期正常入口；不要求重装、
+   卸载、重建或切换数据目录，不要求准备大批合成材料。
+2. **操作：**用户按正常方式打开一次应用。代理不点击、按键或自动操作客户端。
+3. **预期：**应用进入正常主窗口；尚未配置数据目录时能显示正常选择入口。
+   启动报错退出、无法进入正常入口或启动一直无响应时，反馈原始现象。
+4. **反馈：**一句“能打开”或具体错误／现象即可；需要定位时再补错误原文或截图。
+   不要求录屏、帧率、耗时、重复次数、统计表、页面巡检或完整训练。
+
+普通反馈无需填写候选 hash、路径清单或证据矩阵。代理在已有材料能确定的范围内
+记录构建身份；身份未知时如实说明，不把反馈自动认证为所有版本通过。
+代码检查不能代替实际界面观察；没有观察不写通过。政策已取消的检查不再待补，
+不阻止开发交付。已知启动失败应修复。
+
 ### 手动验收清单写法
 
-交给开发者实际操作的手动验收清单必须使用简单易懂的中文，按执行顺序编号。
-每一项都要写清：开始前需要什么、操作哪个程序或测试目录、具体怎么做、应该
-看到什么、什么情况算失败，以及做完后要反馈什么。不要只写“验收切根”“确认
-receipt”“检查回滚”等概括或术语，让开发者自行猜测步骤。
+如果确有上述一次启动观察，说明必须用简单中文写清准备、具体操作、预期、
+失败判断和反馈内容。不要只给编号或术语，不给用户自行准备故障材料的任务。
+命令仅在必要时给出，必须可复制并说明需要改的路径。
 
-首次出现的技术词先用中文解释；界面只有英文按钮时，同时给出按钮原文和中文
-含义。命令必须可以直接复制，注明需要改的路径、运行位置和预期输出。涉及
-删除时，必须先指出具体测试目录、哪些文件会被删除、哪些应保留。
-复杂故障案例应先提供隔离的合成测试材料和操作步骤；尚未准备好的案例明确写
-“暂不执行／未运行”，不得让开发者自行修改真实数据库或猜测如何制造故障。
+通过、失败、未运行仍分别对应 pass、fail、not run；取消要求不等于通过。
+更换候选不触发批量重测。原安装、卸载、训练、故障、性能等完整矩阵已退出
+当前本机交付门槛；历史材料只供追溯，不是待办。
 
-结果用“通过、失败、未运行”表示，并对应证据中的 `pass`、`fail`、`not run`。
-未运行的项目不得打勾为通过。给出简短的中文反馈模板；技术统计由代理根据
-原始记录计算，不能要求开发者自行理解或计算 p50/p95。
+## 3. Formal public-support preparation — explicit declaration only
 
-Use the newly built Setup on the build machine with an ordinary-user context,
-isolated `%LOCALAPPDATA%` locator and synthetic roots. Resolve the installed EXE
-before changing `%LOCALAPPDATA%`; suppress automatic post-install launch until
-the isolated profile is active. Keep one profile for restart checks and fresh
-named profiles for independent inputs. Close the app before copying a root.
+Uploading the identified personal-use installer to GitHub Releases is authorized
+and does not invoke this section. The following scenarios are dormant reference
+material for a future formal compatibility or wider public-support commitment,
+not current work or personal-use prerequisites. Such a declaration must first
+settle its scope and any change to verification policy with the user.
 
-普通权限要求同时适用于安装程序和创建测试数据。不要仅用新PowerShell的False
-结果认证借用的旧程序安装：Inno即使设置`PrivilegesRequired=lowest`，安装时
-已有管理员权限也会留下需要管理员权限卸载的记录，同目录覆盖安装可能沿用
-该记录。遇到此情况先用`/KEEPDATA`仅卸载程序、记录测试数据未变，再在普通权限
-窗口重新安装并检查新记录；不要靠修改数据所有权或读取真实默认配置解决。
-详见 [Inno安装权限说明](https://jrsoftware.org/ishelp/topic_admininstallmode.htm)。
-
-| Check | Required observation |
-| --- | --- |
-| Installed payload | Setup succeeds; installed files equal the complete payload manifest; program replacement leaves the closed isolated locator/root unchanged. |
-| Fresh launch | Cancelling root choice creates no locator/root; invalid and occupied destinations fail cleanly. |
-| New root | A Chinese or space-containing empty root receives the complete current built-in catalog and valid assets without an old root, manual import or invented review/plan/training facts. |
-| Restart | The same isolated root reopens with its selected state and frozen facts; no duplicate migration or stray data in program files. |
-| Affected workflow | Exercise the actual UI path changed by this candidate. For a release with no narrower workflow, use a representative plan, result, pause, restart and resume path with blank actuals preserved. |
-| Current-root safety | Check current-root restart/reinstall and affected malformed/future-root refusal unchanged before writes. This remains required when the candidate affects root safety. |
-| Compatibility boundary | Apply the product release policy. Where predecessor endpoints are in scope, open copies and verify declared preservation; reject unsupported roots unchanged. Preserve untouched originals. |
-| Affected installer/uninstaller behavior | Exercise every installer or uninstaller option changed by the candidate, including defaults, cancellation, invalid paths, program identity and the exact synthetic-data boundary. |
-
-For each applicable check, record candidate and installed identities, account,
-paths, synthetic input baseline, operations, expected/observed result, evidence
-path/hash and `pass`, `fail` or `not run`. Inspect interactive UI where the claim
-depends on visible behavior; offscreen process survival alone is not that evidence.
-These client checks are recorded separately and do not count toward the
-version-update pytest case limit in [test instructions](../tests/README.md).
-If a candidate changes, rerun affected checks and explicitly cite earlier
-unchanged checks that were not repeated. Do not relabel prior results as new
-candidate passes. Unsigned local builds disclose their status; signing is a
-public-distribution requirement.
-
-## 3. Public release preparation — explicit request only
-
-Do not start independent acceptance or public distribution without the user's
-explicit public-release request. Apply the formal-release and compatibility
-boundary from the product release policy. The local gate must first identify
-the exact candidate. When predecessor endpoints are in scope, prepare isolated
+Do not start independent acceptance without that declaration. Apply the formal
+compatibility boundary from the product release policy. The local gate must
+first identify the exact candidate. When predecessor endpoints are in scope,
+prepare isolated
 synthetic roots from their **actual** programs and manifests named by the
 current version index. Preserve unopened originals, closed transfer copies,
 logical facts, original text/unknown fields,
@@ -109,7 +82,7 @@ without Python, Conda, source checkout or access to the build environment. A new
 account on the build machine is insufficient. Isolate its locator and close apps
 before copying roots. Never test an old binary on the sole upgraded copy.
 
-## 4. Independent public acceptance — explicit request only
+## 4. Independent public-support acceptance — explicit declaration only
 
 Execute the following against the exact candidate with actual UI interaction.
 Each row needs input baseline, operations, expected/observed result, logical and

@@ -76,3 +76,28 @@ After removing test-only wording from the product's ownership explanation, the
 [delivery task-dialog candidate](local-candidate-2026-10-02-task-dialog-final.md)
 was rebuilt from cleanb5bf5c8 in60.17s and statically audited. The initial1bef967
 build retains its own evidence; neither has developer client results yet.
+
+## 2026-10-03 personal-use delivery
+
+The user replaced the former broad verification policy with a strict startup-only
+limit: at most three automated scenarios per update, normally zero or one, and
+zero manual checks by default. The former response sampling, simulated training,
+fault matrix and remaining installer checklist were cancelled requirements, not
+passes. Their historical facts remain intact.
+
+The five 0.8.0 implementation areas were reviewed against that policy and closed.
+The distributed Setup is the exact October 2 directory-progress candidate:
+SHA-256 `49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad`,
+built from clean application source `89f7981`. Subsequent repository changes
+affect documentation, evidence and a local diagnostic-material helper; application
+and installer inputs are unchanged. The Setup is unsigned.
+
+GitHub Releases is now the default installation and update channel. Version
+`v0.8.0` is distributed as a personal-use update and does not establish a formal
+compatibility baseline. The application does not yet check or download GitHub
+Releases automatically.
+
+Generated-test cleanup was authorized and inventoried in
+[the cleanup record](test-artifact-cleanup-2026-10-03.json). Automatic command
+approval rejected both the validated batch and a single explicit file deletion,
+so no cleanup occurred. This does not affect the release artifact or application.

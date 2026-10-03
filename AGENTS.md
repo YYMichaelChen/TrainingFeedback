@@ -70,21 +70,34 @@ are historical context and never override tracked requirements.
 
 ## Verification entry points
 
+当前长期个人使用阶段，严格遵循 `docs/development-plan.md` 第 9.1 节：
+每次开发更新自动测试最多 3 项，通常 0～1 项；仅限本次改动有具体因果关系的
+“应用打不开”风险，无此风险及纯文档更新均为 0 项。参数化、独立场景和脚本
+功能验证均计数，不拆任务／scope 或合并场景绕限；通过即停止，修复后只重跑
+失败或直接受影响的原检查并记录次数。旧测试库和工具容量不构成运行许可。
+人工测试默认 0 项；仅在代码无法确认具体启动风险时，最多在下次正常使用观察
+一次能否打开。不得要求批量手测、录屏、计时、重复安装卸载或完整模拟流程。
+其它问题随使用反馈修复；打包、版本升级、个人使用和收尾均不扩大测试范围。
+取消的检查不记通过，也不作为待补任务或收尾阻塞。GitHub Releases 是安装包和
+后续更新的默认分发渠道；发布附件不自动增加测试量，也不自动声明正式兼容支持。
+
+
 Do not use computer use, GUI automation, remote-control tools, scripted clicks
 or keystrokes, or similar capabilities to directly test client functionality.
-The developer must manually operate the client and record the results of client
-checks, including installed acceptance. Automated code-level tests may still
-run, but they do not substitute for manual client verification; report client
-checks as `not run` until the developer provides their results.
+If the one permitted startup observation is needed, the developer operates the
+client and supplies the result. Code-level checks do not certify client behavior.
+Unobserved behavior is not a pass; cancelled checks are not outstanding work.
+Do not use this client-operation boundary to require additional manual checks.
 
 手动验收清单必须用简单易懂的中文，按实际操作顺序分步写清楚要求。
 遵循 `docs/packaged-acceptance-runbook.md` 的“手动验收清单写法”：交代准备、
 具体操作、预期结果、失败判断和反馈内容；不能只给编号、术语或概括表格。
 
-Classify development, local installed acceptance, user-declared formal release,
-explicit public release and application-version rotation by event. Follow
+Classify development, GitHub Release distribution, user-declared formal release,
+explicit public support commitments and application-version rotation by event. Follow
 `docs/development-workflow.md`, the release policy in `docs/development-plan.md`
-and `tests/README.md`; do not evade test-scope accounting. Do not infer
+and `tests/README.md`; the current startup-only cap applies to every development
+update regardless of event, and test-scope accounting must not evade it. Do not infer
 compatibility, formal-release, public-release or personal-data status from a
 version number or installer build. A normal code change does not require an
 installer. A schema or external wire-schema revision requires an application

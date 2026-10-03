@@ -21,29 +21,24 @@ training-feedback
 
 ## Develop
 
+当前开发遵循 [最小验证政策](docs/development-plan.md#91-release-and-follow-up-boundaries)：
+每次更新仅检查可能导致应用打不开的具体风险，最多 3 项，通常 0～1 项；
+无此风险时为 0 项。人工测试默认 0 项，其它问题随使用反馈解决。
+
+Install development dependencies as needed:
+
 ```powershell
 .venv\Scripts\pip install -e .[dev]
-python -m pytest --test-scope my-task --basetemp .tmp/pytest
-python -m ruff check src tests
 ```
 
-Pytest defaults to a small smoke profile. For focused development, select the
-affected file or node IDs with the same scope, for example:
+Do not run bare pytest, default regression profiles or full version suites.
+When a concrete startup risk exists, select only the relevant node IDs under
+one stable update scope, following [test instructions](tests/README.md).
+The existing larger tool budgets are not permission to execute more cases.
+Documentation-only work uses link/consistency and diff checks, with no app tests.
 
-```powershell
-python -m pytest tests/test_database.py --test-scope my-task --basetemp .tmp/pytest
-python packaging/check_docs.py
-```
-
-For releases, use the corresponding `--test-tier patch|minor|major` with one
-stable `release-<version>` scope. To inspect all cases without running them:
-
-```powershell
-python -m pytest --test-tier major --collect-only -q
-```
-
-See the [development workflow](docs/development-workflow.md) for the event-based
-gates and [test instructions](tests/README.md) for selection and accounting.
+See the [development workflow](docs/development-workflow.md) for the short
+decision, verification and delivery procedure.
 
 ## Project layout
 
@@ -60,6 +55,11 @@ gates and [test instructions](tests/README.md) for selection and accounting.
 - `tests/` — pytest suite; always uses temporary databases.
 
 ## Package and install
+
+Windows installation packages are distributed through this repository's
+[GitHub Releases](https://github.com/YYMichaelChen/TrainingFeedback/releases).
+Download the Setup executable for the required version and run it to install or
+update. The application does not yet check or download Releases automatically.
 
 The Windows build first produces a PyInstaller directory layout. The verified
 build environment and pinned toolchain are recorded in
@@ -108,10 +108,12 @@ does not remove the locator or the selected data root. The data root therefore
 survives upgrades and uninstalls and can be selected again after reinstalling.
 
 The installer is intentionally not a source-code updater. The release flow is:
-build a new Setup.exe, distribute it, then run it on the user's machine.
+build a new Setup.exe, attach it to the matching GitHub Release, then run it on
+the user's machine.
 
-Local installed checks use an isolated temporary profile and synthetic data
-root; see the [packaged acceptance runbook](docs/packaged-acceptance-runbook.md).
+Building an installer does not trigger a manual acceptance checklist. Any
+permitted startup check uses an isolated temporary profile and synthetic root;
+see the [packaged acceptance runbook](docs/packaged-acceptance-runbook.md).
 Build manifests identify the exact source revision and payload. Independent
 Windows acceptance begins only on an explicit public-release request; external
 content review, W4 and personal-data transition have separate gates in the

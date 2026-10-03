@@ -1,0 +1,514 @@
+{
+  "date": "2026-10-03",
+  "purpose": "User-authorized removal of generated synthetic test artifacts for 0.8.0 closeout",
+  "scope": "Explicit recorded test paths only; current installed program, dist delivery, repository source, user_data, test budgets and retained evidence excluded",
+  "outcome": "not removed: automatic command approval rejected both the validated batch and one explicit test file; no deletion was performed",
+  "candidate_totals": {
+    "paths": 69,
+    "files": 4021,
+    "bytes": 2657783104,
+    "unreadable_paths": 3
+  },
+  "entries": [
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\070-e-visual",
+      "files": 3,
+      "bytes": 323637,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\070-f-visual",
+      "files": 5,
+      "bytes": 582729,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\070-h-package",
+      "files": 41,
+      "bytes": 3448536,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\acceptance-075",
+      "files": 149,
+      "bytes": 16075625,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\candidate-acceptance-074",
+      "files": 296,
+      "bytes": 181207969,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\candidate-acceptance-074-clean",
+      "files": 296,
+      "bytes": 181211989,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\candidate-profile-074",
+      "files": 0,
+      "bytes": 0,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\candidate-profile-074-clean",
+      "files": 1,
+      "bytes": 71,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\candidate-profile-075-acce648",
+      "files": 297,
+      "bytes": 181358224,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\candidates",
+      "files": 12,
+      "bytes": 342872632,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\inno-compile-T-005",
+      "files": 1,
+      "bytes": 2124245,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\inno-compile-T-006",
+      "files": 1,
+      "bytes": 2125960,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\installer-progress-compile",
+      "files": 2,
+      "bytes": 2126567,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\local-installed-0.7.4",
+      "files": 296,
+      "bytes": 181199989,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\local-profile-0.7.4",
+      "files": 0,
+      "bytes": 0,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\measurements",
+      "files": 0,
+      "bytes": 0,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\plan-ui-review",
+      "files": 14,
+      "bytes": 1863913,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\plan-ui-review-final",
+      "files": 10,
+      "bytes": 1141039,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\releases",
+      "files": 651,
+      "bytes": 549255885,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\response-acceptance",
+      "files": 48,
+      "bytes": 58757273,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\uninstall-dialog-compile",
+      "files": 1,
+      "bytes": 85602988,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\uninstall-task-dialog-compile",
+      "files": 1,
+      "bytes": 85595970,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\071-gallery-detail-preview.png",
+      "files": 1,
+      "bytes": 8691,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\071-gallery-preview.png",
+      "files": 1,
+      "bytes": 256147,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-070-content-caption",
+      "files": 38,
+      "bytes": 50567908,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-070-h2-dev-support-window",
+      "files": 0,
+      "bytes": 0,
+      "links": [],
+      "status": "skip",
+      "error": "Access to the path 'E:\\Github\\TrainingFeedback\\.tmp\\pytest-070-h2-dev-support-window' is denied."
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-071-gallery",
+      "files": 19,
+      "bytes": 1763558,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-071-ui",
+      "files": 118,
+      "bytes": 9953685,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-072-release",
+      "files": 198,
+      "bytes": 61273165,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-080-installer-progress",
+      "files": 61,
+      "bytes": 7645,
+      "links": [
+        "E:\\Github\\TrainingFeedback\\.tmp\\pytest-080-installer-progress\\test_actual_junction_is_refuse0\\redirect"
+      ],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-guidance-sync-final",
+      "files": 2,
+      "bytes": 180784,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-guidance-sync-rerun",
+      "files": 2,
+      "bytes": 180784,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-illustrated-final",
+      "files": 38,
+      "bytes": 50086621,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-perf-image-ui-20260927",
+      "files": 47,
+      "bytes": 4052139,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-plan-adjustment-ui-20260927",
+      "files": 36,
+      "bytes": 3240903,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-plan-editor-selection-20260927",
+      "files": 22,
+      "bytes": 1944571,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.7.3",
+      "files": 35,
+      "bytes": 3510400,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.7.4",
+      "files": 15,
+      "bytes": 1300501,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.7.5",
+      "files": 7,
+      "bytes": 656358,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.7.7",
+      "files": 5,
+      "bytes": 475459,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.7.8",
+      "files": 13,
+      "bytes": 1217906,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.8.0",
+      "files": 141,
+      "bytes": 8570665,
+      "links": [
+        "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.8.0\\test_linked_root_contents_refu0\\synthetic-data\\linked"
+      ],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.8.0-dialog",
+      "files": 21,
+      "bytes": 1428676,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.8.0-directory-message",
+      "files": 61,
+      "bytes": 7699,
+      "links": [
+        "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.8.0-directory-message\\test_actual_junction_is_refuse0\\redirect"
+      ],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.8.0-path-default",
+      "files": 61,
+      "bytes": 7669,
+      "links": [
+        "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.8.0-path-default\\test_actual_junction_is_refuse0\\redirect"
+      ],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-0.8.0-task-dialog",
+      "files": 21,
+      "bytes": 1428706,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-070-conversion-recovery",
+      "files": 0,
+      "bytes": 0,
+      "links": [],
+      "status": "skip",
+      "error": "Access to the path 'E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-070-conversion-recovery' is denied."
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-070-minor-profile",
+      "files": 0,
+      "bytes": 0,
+      "links": [],
+      "status": "skip",
+      "error": "Access to the path 'E:\\Github\\TrainingFeedback\\.tmp\\pytest-release-070-minor-profile' is denied."
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-risk-selection-policy-20260929",
+      "files": 2,
+      "bytes": 581,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-003",
+      "files": 5,
+      "bytes": 57,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-005",
+      "files": 54,
+      "bytes": 6546,
+      "links": [
+        "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-005\\test_actual_junction_is_refuse0\\redirect"
+      ],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-005-handles",
+      "files": 20,
+      "bytes": 2942,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-005-repair",
+      "files": 1,
+      "bytes": 54,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-006",
+      "files": 96,
+      "bytes": 7136768,
+      "links": [
+        "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-006\\test_linked_root_contents_refu0\\synthetic-data\\linked"
+      ],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-006-current-safety",
+      "files": 8,
+      "bytes": 950590,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-006-integration",
+      "files": 121,
+      "bytes": 8567818,
+      "links": [
+        "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-006-integration\\test_linked_root_contents_refu0\\synthetic-data\\linked"
+      ],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-006-repair",
+      "files": 6,
+      "bytes": 475492,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-007",
+      "files": 60,
+      "bytes": 6183077,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-008",
+      "files": 451,
+      "bytes": 546502677,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-T-010",
+      "files": 7,
+      "bytes": 656358,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.tmp\\pytest-v076-update",
+      "files": 59,
+      "bytes": 4253740,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.pytest_cache",
+      "files": 5,
+      "bytes": 34505,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\Github\\TrainingFeedback\\.ruff_cache",
+      "files": 8,
+      "bytes": 7750,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\TrainingFeedback-080-PathFix\\测试数据 A",
+      "files": 9,
+      "bytes": 2383004,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\TrainingFeedback-080-PathFix\\测试数据 B",
+      "files": 8,
+      "bytes": 950690,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\TrainingFeedback-080-PathFix\\测试配置",
+      "files": 1,
+      "bytes": 82,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "E:\\TrainingFeedback-080-PathFix\\根外备份",
+      "files": 1,
+      "bytes": 32,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "C:\\Users\\41315\\TrainingFeedback-080-Cancel-bbcd4e807b4d491aac2d923fb2e1786a",
+      "files": 6,
+      "bytes": 475514,
+      "links": [],
+      "status": "ready"
+    },
+    {
+      "path": "C:\\Users\\41315\\TrainingFeedback-080-Delete-20261002-153609",
+      "files": 5,
+      "bytes": 198946,
+      "links": [],
+      "status": "ready"
+    }
+  ]
+}

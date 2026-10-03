@@ -2,7 +2,7 @@
 
 Current application/schema baseline: [version history index](history/README.md).
 Public-release acceptance, external review and W4 have separate gates below.
-Last updated: 2026-09-30
+Last updated: 2026-10-03
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
@@ -618,54 +618,72 @@ is recorded in Section 13.4.
 UI tests may use offscreen Qt; all tests use temporary databases and locators,
 never real user data. One QApplication is shared for a whole run, so a UI test
 must let Qt destroy the windows it created; widget graphs abandoned to Python
-garbage collection crash the interpreter later in the run. Date-boundary checks
-cover 01:59, 02:00, and 02:01.
+garbage collection crash the interpreter later in the run. Existing date-boundary
+cases cover 01:59, 02:00, and 02:01; this inventory does not require execution.
+All test selection is limited by Section 9.1.
 
 ## 9. Delivery Gates
 
 ### 9.1 Release And Follow-Up Boundaries
 
-A local release requires candidate content closeout, budgeted regression,
-complete reproducible source and verified installer/local installed checks.
-Independent Windows acceptance (H3/8-B2) and public-distribution requirements
-become gates only on an explicit public-release request. External content review
-is a separate review of exact content/image versions with original answers and
-actual source/time; valid images alone are not review. The personal-data
-transition requires the user's explicit decision under Section 13.3. W4 follows
-that transition and the real-use gate below. No local release automatically
-authorizes either transition, creates review facts or activates a plan.
+#### 当前个人使用阶段的验证政策（2026-10-03）
 
-Deferred or unrun checks are not passed checks. The [version history index](history/README.md)
-owns the current application/schema and candidate baseline; version history
-owns dated evidence. The [workflow](development-workflow.md) owns execution
-order and verification selection.
+本项目将在相当长时间内仅供用户本人使用，通过开发和实际使用反馈逐步改进。
+GitHub Releases 是安装包和后续更新的默认分发渠道。普通更新、安装包上传、
+版本提升和开发收尾均遵循本节，
+不自动触发完整回归、安装验收、内容审核或 W4。
 
-Before the user explicitly declares a formal release, old-application-version
-compatibility testing and support promises are disabled, including old binary,
-old root and installed upgrade checks. Current-version behavior, data integrity,
-same-version restart/reinstall and read-only rejection of unknown/future roots
-remain required when affected. A local candidate or version number alone does
-not trigger formal-release compatibility duties. The first user-declared formal
-release establishes the baseline. Later formal releases select one or two
-available predecessor formal versions and pass the matching compatibility gate.
-Section 13 defines the data-safety boundary; [the v0.8.0 design](releases/0.8.0/design.md)
-records the transition.
+- 每次开发更新自动测试最多 **3 项**，通常 **0～1 项**；没有具体启动失败风险时
+  为 **0 项**，纯文档修改不运行应用测试。
+- 唯一允许的测试范围是本次改动可能导致应用打不开：启动报错退出、启动必需资源
+  无法加载、数据初始化或打开失败导致无法进入应用。选择检查前必须写明具体改动与
+  启动失败的因果关系；不能按模块名或“保障质量／数据安全”泛化选取。
+- 界面、搜索、训练流程、保存内容、导入导出、备份、性能等问题，等用户使用反馈后
+  逐步修复；不预先安排全面回归。收到反馈也不自动增加其它功能回归。
+- 不因版本级别、打包或收尾增加额度。独立场景、参数化场景和脚本中的功能验证
+  均计数；不打包大量场景进一个用例，不拆任务或换 scope 绕过上限。
+  修复后只重跑失败或直接受影响的原检查，记录重复执行，不循环采样。
+- 人工测试默认 **0 项**。仅在有具体启动风险且代码检查无法确认时，最多请用户
+  在下一次正常使用中观察一次能否打开；不专门组织验收，不要求录屏、计时、
+  填表、重复安装卸载、切根、逐页检查、完整模拟训练或批量故障操作。
+- 160 次计时、预热、60fps 录屏、性能统计及 200 ms、p50/p95、改善百分比等门槛
+  已取消。既有测量仍是事实记录，未达旧指标不再阻止当前开发交付。
+- 原范围外的未运行检查记为“按新政策取消要求”，不是通过，也不是以后必须补齐
+  的待办。未运行本身不构成开发收尾障碍；实际已知启动失败仍须修复。
 
-For future candidate acceptance, choose pytest cases from the candidate's
-affected and material risks before execution. Low-risk, unaffected cases are
-not part of a default release run; keep them available for changes that make
-their risks relevant. A case excluded after review is not a pass. Preserve
-one release scope and its count, and record selected coverage, exclusions and
-unrun required checks with the exact candidate. Installed client checks remain
-separate and must be completed when applicable. A required risk left unverified
-prevents technical acceptance even when the selected pytest count meets its cap.
+以上只收缩验证义务。数据隔离、事务、历史冻结、用户原文、未知不等于零、
+未知／不支持根在写入前拒绝等产品实现要求继续有效。任何自动检查均使用隔离
+合成根，不接触真实数据。旧测试库保留，其存在及工具的较大容量不构成执行许可。
+具体步骤和计数由 [开发流程](development-workflow.md) 与
+[测试说明](../tests/README.md) 承接。
+
+Local delivery records the actual source/build identity and known issues. Build an
+installer only when that deliverable is in scope; packaging does not add a test
+gate. A candidate certifies only checks actually performed on that exact build.
+The [version history index](history/README.md) owns current identities and routes
+dated evidence. Historical failures, passes and unrun results are not rewritten.
+
+Publishing an installer to GitHub Releases is an authorized distribution event
+and does not activate a larger verification matrix. A future formal compatibility
+or wider public-support commitment must be declared separately; do not silently
+replace the current three-check policy with a stored public checklist.
+External content review concerns exact content/image
+versions and actual sources. Personal-data transition remains the user's decision
+under Section 13.3; no test result transfers synthetic facts or activates a plan.
+
+Before a user-declared formal release, old-application-version compatibility
+tests and support promises remain disabled. The first formal release establishes
+a baseline; later formal releases select one or two predecessor formal versions
+under Section 13. A formal declaration alone does not authorize bulk testing.
+Future formal/public verification scope must be explicitly settled at that time.
 
 ### 9.2 W4 Real-Use Gate
 
 W4 begins only after the user authorizes the personal-data transition in Section
 13.3. Required actions must have complete text and valid images, be explicitly
-enabled, and belong to a fully confirmed active plan; applicable local program
-checks must pass. Unreviewed guidance is disclosed and frozen in session evidence.
+enabled, and belong to a fully confirmed active plan. Personal use and W4 do not
+add software checks beyond Section 9.1 or require the cancelled acceptance work.
+Unreviewed guidance is disclosed and frozen in session evidence.
 W4 and external content review are independent follow-ups, not local-release gates.
 H3 starts only on an explicit public-release request; starting personal
 observation does not pass H3. No personal-use readiness is assumed.
@@ -683,9 +701,12 @@ local software checks cannot close this gate or establish full content review.
 
 ### 9.3 Independent Windows Gate (8-B2)
 
-This gate begins only when the user explicitly requests a public release and
-must complete before public publication. Local packaging or installation does
-not trigger it automatically.
+This gate is dormant in the current personal-use stage. GitHub Release
+distribution of an identified installer does not activate it. Only an explicit
+formal compatibility or wider public-support declaration can open a discussion
+of its scope and verification policy; required evidence must then complete
+before making that support claim. Local packaging or installation does not
+trigger it automatically.
 The [packaged acceptance runbook](packaged-acceptance-runbook.md) owns the
 candidate-specific scenarios and evidence form.
 
@@ -708,10 +729,10 @@ unavailable scenarios stay `not run`.
 
 ### 9.4 Verification And Record Ownership
 
-Verification must protect data preservation and the exact scope of any declared
-exception; it also covers frozen history, verbatim text,
-transactional rollback and supported upgrades. Tests use synthetic temporary
-roots and locators, never personal data. The version-independent
+Data preservation, frozen history, verbatim text and transactional rollback
+remain implementation requirements. They do not independently authorize tests:
+Section 9.1 exclusively limits current verification to concrete startup risks.
+Tests use synthetic temporary roots and locators, never personal data. The version-independent
 [workflow](development-workflow.md) owns test selection, static checks and
 candidate procedure. [Test instructions](../tests/README.md)
 give the executable commands; [packaged acceptance](packaged-acceptance-runbook.md)
@@ -738,9 +759,10 @@ demonstrated with isolated synthetic inputs where appropriate:
 - confirm a revised plan without losing the previous plan;
 - run the packaged Windows application without Streamlit or the old project.
 
-Each new local release closes its intended content, verifies final source and
-builds a reproducible installer with local installed checks under the
-[workflow](development-workflow.md). The initial plan remains a proposal;
+Each local update follows the minimal verification policy in Section 9.1 and
+records actual delivery under the [workflow](development-workflow.md).
+An installer is built only when requested or part of the agreed deliverable;
+no full installed checklist is required. The initial plan remains a proposal;
 unreviewed guidance is disclosed and all selection/activation rules remain in
 force.
 
@@ -1120,39 +1142,22 @@ to render recorded history.
 
 ### 12.9 Remaining Delivery And Verification
 
-Section 9.1 owns the delivery gates. The [contract annex](reference/contracts/0.7.0-contracts.md)
-owns the historical detailed serialization/mapping baseline. Regression protects
-current-model risks below. Old-version binary/root compatibility is dormant
-until the user's formal-release declaration; independent Windows acceptance
-belongs to H3 only after a public-release request.
+Section 9.1 exclusively determines current verification scope. The
+[contract annex](reference/contracts/0.7.0-contracts.md) preserves the historical
+serialization/mapping baseline. Existing functional, failure, UI, backup,
+image, session and export cases remain available as reference; they are not an
+execution backlog or mandatory regression matrix.
 
-- For a later formal/public release: selected predecessor formal-version
-  baselines generated/opened by identified programs, using
-  isolated synthetic data with renamed/missing-key actions,
-  custom text, overrides, images, review attachments, active/draft plans,
-  terminal and paused sessions, next-day feedback, retractions and original files.
-  Compare logical facts/resource hashes for preservation upgrades. The 0.7.5
-  one-time reset remains historical evidence, not a new formal support promise.
-- Reject unsupported development and future roots before writes; preserve fresh
-  initialization coverage. The 0.7.5 schema 22 reset remains a dated exception.
-- Missing image vs corrupt image vs changed hash, no-image drafts with prior
-  review evidence, enabled-but-ineligible state, bundled and custom images,
-  renamed families, repeated exercises in groups, asymmetric sides and mixed units.
-- Failure at backup, staging, asset publication and cleanup for current flows;
-  after formal release include supported SQL conversion. The 0.7.5 reset
-  verification belongs to its historical evidence. Include disk/access errors,
-  competing opens, repeat startup and root switching. No partial success or
-  fabricated approval.
-- Catalog withdrawal after plan activation; new-start blocking; resumed frozen
-  work; history/export/backup restore with a newer catalog lacking that movement.
-- UI inventory and source review proving removal of manual bundled acceptance,
-  old-settings/legacy mode controls, old-format import selectors and fallback
-  runtime branches. Read-only provenance and recovery artifacts are labelled
-  as evidence, not selectable settings.
+Preserve current initialization, refusal before writes, frozen facts and the
+other specified behaviors in implementation. Run a check only when this update
+has a concrete application-startup failure risk, within the same three-scenario
+limit. Other issues are handled from actual use feedback.
 
-The [development workflow](development-workflow.md) owns selection and verification
-steps. The [packaged runbook](packaged-acceptance-runbook.md) owns installed and
-independent-machine checks, each tied to an exact candidate.
+Old-version compatibility and independent public acceptance stay dormant under
+Section 9.1. Their stored scenarios neither block personal development nor add
+work before personal use. The [workflow](development-workflow.md) and
+[packaged runbook](packaged-acceptance-runbook.md) record only applicable, actual
+checks and their exact candidate identity.
 
 ### 12.10 Release Exit And Documentation Ownership
 
@@ -1168,10 +1173,10 @@ release request. It is not a prerequisite for local packaging or local release.
 After formal release, no supported-upgrade success claim may rely on a reset
 root, manual re-import, compatibility settings, changed historical doses or an
 earlier build's acceptance. The 0.7.5 reset is historical deletion evidence,
-not preservation evidence. Before formal release, source regression covers
-current roots and unchanged rejection of unknown/future roots; supported
-synthetic upgrades join only after the formal declaration. Local installed checks
-and later public acceptance record their own actual scope and candidate identity.
+not preservation evidence. Current verification follows Section 9.1; neither
+formal-release wording nor a version number expands its scope automatically.
+Any actual local observation and later explicitly scoped public acceptance
+retain their own results and candidate identity.
 
 This document owns product/architecture/migration contracts. The content
 document owns family membership, aliases, technique and proposed doses.
@@ -1239,8 +1244,9 @@ version history. Rotation procedure is in the [workflow](development-workflow.md
   new compatibility obligations. The first formal release establishes a
   baseline. For later formal releases, select one or two available predecessor
   **formal** versions, record their exact source/build identity and support
-  paths, and test those actual endpoints. Development candidate numbers do not
-  automatically fill those slots.
+  paths. Any future endpoint verification must first be explicitly scoped under
+  Section 9.1; a formal declaration does not automatically increase current tests.
+  Development candidate numbers do not automatically fill those slots.
 - Every subsequent database schema revision must bump the application version
   at least by one patch in the same change. A minor/major bump may accompany
   a schema change; an application-only fix may keep the existing schema.

@@ -1,73 +1,65 @@
 # Running the regression suite
 
-The [development workflow](../docs/development-workflow.md) owns when to verify
-each affected risk. This file owns pytest tiers, limits, scopes and commands.
-Tests use temporary databases, locators and synthetic assets only. Run these
-commands in PowerShell 7 with the repository interpreter
-(shown here as `python` after activating the project environment).
+## 当前规则：每次更新最多 3 项，仅检查启动失败风险
 
-| Tier | Maximum parameter-expanded unique cases per scope |
-| --- | ---: |
-| `dev` | 30 |
-| `patch` | 50 |
-| `minor` | 100 |
-| `major` | 300 |
+[产品规范第 9.1 节](../docs/development-plan.md#91-release-and-follow-up-boundaries)
+拥有验证边界，[开发流程](../docs/development-workflow.md) 拥有操作顺序。
+本文件拥有计数和命令。当前长期个人使用阶段：
 
-The resident suite has at most 300 cases. These are ceilings, not targets.
-Use one stable `--test-scope` and tier for the whole task or release, counting
-unique cases across commands. Do not reset or split scopes, hide cases at
-collection, or loop independent scenarios to evade a limit. A release uses its
-one tier and scope from the first execution.
+- 每次开发更新自动测试最多 **3 项**，通常 **0～1 项**；没有本次改动造成的
+  具体启动失败风险就运行 **0 项**，文档修改也为 **0 项**。
+- 执行前写明具体改动为何可能让应用打不开，并列出所选场景。仅可覆盖启动退出、
+  必需资源加载失败、初始化／打开数据失败导致无法进入应用。
+- 不因模块、版本号、打包或收尾扩大范围。界面、训练、保存、备份、导入导出及
+  性能等功能问题等用户实际反馈后处理，不自动触发功能回归。
+- 人工测试默认 **0 项**；仅在代码无法确认启动风险时，最多在下次正常使用观察
+  一次能否打开。不给用户追加验收矩阵、录屏、计时或填写统计表的任务。
 
-The budget counts only parameter-expanded pytest node IDs reserved under that
-scope. Developer-operated client checks, including installed acceptance, do not
-count toward a version-update tier limit. Record their `pass`, `fail` or `not run`
-results separately against the exact candidate. Static package inspection,
-Ruff and diff checks also do not consume pytest case slots; none substitutes for
-an unrun pytest case or client check.
-UI-focused tests run through pytest still count as pytest cases.
+## 计数与停止条件
 
-For an ordinary change, select affected tests explicitly and keep one task scope:
+计数单位是独立验证场景。参数化展开分别计数；pytest 外脚本中的功能验证也计入
+同一次更新的 3 项上限。不得把大量场景放入一个测试函数、循环、子进程或“静态”
+脚本来减少表面数量。关联的启动准备不另计为场景，但不得借准备步骤验证无关功能。
 
-```powershell
-python -m pytest tests/test_database.py --test-tier dev --test-scope TASK-ID --basetemp .tmp/pytest-TASK-ID
-python -m ruff check src tests packaging
-git diff --check
-```
+同一次更新的所有命令、修复和交付共用稳定 scope，累计去重计数；不拆任务、不换
+scope、不清账规避上限。修复后只重跑失败或直接受影响的原检查，说明重跑次数。
+通过即停止；不为凑满额度而加测，不循环采样，不在交付前再跑一次整套验证。
+超过范围的检查直接不执行，不把它们留作待补任务。
 
-Paths, node IDs, `-k` and `-m` select requested cases. Without an explicit
-selector, non-release scopes use the configured profiles in `pyproject.toml`:
-`dev` is small, `patch` and `minor` are nested, and `major` is the full resident
-suite. A `release-<version>` scope **requires an explicit selector** for execution;
-the default profiles are inventories, not automatic acceptance selections.
-Before the first release execution, collect candidate cases without reservation,
-deduplicate node IDs, and record selected material risks and excluded low-risk
-cases. Run all selected cases under the **same release scope and tier**. For example:
+保留旧测试库、配置 profile 和历史账本，均不默认运行。现有预算插件仍有历史
+dev/patch/minor/major 容量，但这些技术容量**不是当前执行许可**，也不是新的测试目标。
+当前 3 项是指导规则约束，尚非插件硬拦截；本次不改插件、配置或历史账本。
+已有 scope 继续使用原 tier，不清空旧账；历史已执行数量如实保留，新政策不倒改证据。
+新开发更新通常使用 dev tier；只有确属新工作才建立新的 update scope。
 
-```powershell
-python -m pytest tests/test_one_time_reset.py::test_pending_historical_reset_is_refused_without_writes --test-tier patch --test-scope release-X.Y.Z --basetemp .tmp/pytest-release-X.Y.Z
-python -m pytest tests/test_root_switch.py::test_switch_round_trip_keeps_datasets_separate --test-tier patch --test-scope release-X.Y.Z --basetemp .tmp/pytest-release-X.Y.Z
-```
+插件只统计参数展开的 pytest node ID。因此脚本场景和实际重跑次数须在本次简短
+结果中一并记录，不能利用插件不计数的部分额外测试。Ruff、文档链接及差异检查不算
+功能场景，但也不能借此遍历应用功能。
 
-Collection inventories without execution or budget reservation:
+## 仅在风险成立时运行明确选中的检查
+
+使用 PowerShell 7、项目解释器和隔离合成根；不得读取真实用户数据。
+先阅读目标用例，确认没有夹带无关场景。禁止直接运行裸 pytest、默认 profile、
+整套版本回归或包含无关场景的整个文件。
+
+例如，只有修改 locator 重开路径确有启动失败风险，且阅读用例确认符合当前场景
+上限时，才选择对应节点；以下是命令格式示例，不是每次必跑项：
 
 ```powershell
-python -m pytest --test-tier major --collect-only -q
+python -m pytest tests/test_bootstrap.py::test_open_from_locator_reopens_current_root_and_is_idempotent --test-tier dev --test-scope UPDATE-ID --basetemp .tmp/pytest-UPDATE-ID
 ```
 
-`--collect-only` does not execute or reserve cases. Stop after the relevant
-checks pass; after a fix, rerun only failed or affected cases under the same
-scope and tier.
+需要确认参数展开数量时，只对已选节点使用 `--collect-only -q`；不例行收集全库。
+收集不执行或预留用例，也不构成通过。客户端操作和代码级检查互不替代；
+禁止 GUI 自动化、脚本点击或按键来测试客户端。
 
-An excluded case is not a passing case. Low-risk, unaffected cases remain in the
-resident suite and are selected when their behavior becomes material to a later
-candidate. If required coverage exceeds the tier limit, do not hide cases or
-start another scope to finish the same release; record the unresolved gate.
+## 结果与账本
 
-`tests/budget_plugin.py` counts parameter-expanded unique node IDs across all
-executions in `.tmp/test-budgets/<scope>.json`. Failed or interrupted cases stay
-reserved; rerunning the same node after repair adds no new slot. An existing
-scope cannot change tier. A `.lock` prevents concurrent execution: confirm a
-crashed process has ended before removing a stale lock, and retain its JSON
-ledger. Completed coverage exchanges and older release evidence remain available
-in Git history.
+交付只需说明：启动风险（或无）、独立场景数、实际通过／失败／重跑和已知问题。
+无启动风险时明确写“应用测试 0 项；人工测试 0 项”，不列功能验收欠账。
+按新政策取消的检查既不是 pass，也不是必须补齐的 not run 阻塞。
+
+`tests/budget_plugin.py` 在 `.tmp/test-budgets/<scope>.json` 保存 pytest 节点并集。
+失败或中断的节点继续保留；原节点重跑不增加并集数量。scope 不能改变 tier。
+锁覆盖执行过程；只有确认原进程已退出后才处理残留锁，保留 JSON 账本。
+既有候选结果只对应原精确构建，旧结果和未运行事实均不得改写。

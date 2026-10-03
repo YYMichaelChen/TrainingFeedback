@@ -10,7 +10,17 @@ routes current execution work; this file routes tracked project authority.
 - Current plan/evidence contract: `3`
 - Current catalog: `070-illustrated-3`
 - Current planned release: [`0.8.0`](releases/0.8.0/design.md)
-- Formal release declared: no
+- GitHub distribution: `v0.8.0`
+- Formal compatibility baseline declared: no
+
+## 当前验证政策
+
+本项目长期供用户本人使用。安装和更新统一通过 GitHub Releases 分发；
+该渠道不自动建立正式兼容支持承诺，也不扩大测试范围。
+[产品规范第 9.1 节](development-plan.md#91-release-and-follow-up-boundaries)
+规定：每次更新只允许检查具体启动失败风险，最多 3 项，通常 0～1 项；
+无此风险为 0 项。人工测试默认 0 项，其它问题随使用反馈逐步修复。
+安装包、版本升级、个人使用和收尾不自动增加验收；已取消的检查不再是待办。
 
 ## Read this for...
 
@@ -21,7 +31,7 @@ routes current execution work; this file routes tracked project authority.
 | Current release design | [v0.8.0 design](releases/0.8.0/design.md) |
 | Development, verification, version rotation and release close | [Development workflow](development-workflow.md) |
 | Pytest tiers, scopes and budget accounting | [Test instructions](../tests/README.md) |
-| Installed and public acceptance | [Packaged acceptance runbook](packaged-acceptance-runbook.md) |
+| Minimal startup observation; dormant public acceptance | [Packaged acceptance runbook](packaged-acceptance-runbook.md) |
 | Content review, personal transition and W4 | [Guidance review runbook](guidance-review-runbook.md) |
 | Current application/schema/catalog/contract identity and candidate status | [Version history](history/README.md) |
 | Runtime plan-contract schemas | [`src/training_feedback/contracts/`](../src/training_feedback/contracts/) |

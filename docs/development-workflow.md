@@ -2,9 +2,9 @@
 
 This is the version-independent procedure for TrainingFeedback development and
 delivery. Classify work by **event**, not by the version number in a task title.
-Several events may apply to one task; perform each applicable gate once. A task
-that directly produces a release uses its release verification scope and does not
-also run a separate development profile.
+Every current personal-use update follows the startup-only policy in
+[product specification §9.1](development-plan.md#91-release-and-follow-up-boundaries).
+Combining events does not add checks or increase the three-scenario cap.
 
 ## Authority and current state
 
@@ -32,17 +32,18 @@ also run a separate development profile.
 
 ## Events and minimum gates
 
-| Event | Required work | Exit |
-| --- | --- | --- |
-| Development task | State the intended behavior and affected risks; inspect existing coverage, make the change, run focused verification and applicable static checks. | Relevant checks pass and their actual results are recorded. No automatic installer build. |
-| Local release or user-requested installed acceptance | Close intended candidate content; verify final source and release regression; build and inspect the installer; exercise the installed app with isolated synthetic roots. | Candidate identity, manifests, installed checks and evidence limits are recorded. |
-| Formal release declaration | Only the user can declare it. Apply the compatibility boundary defined by the product release policy and identify any required predecessor endpoints. | Formal-release identity and applicable compatibility evidence are recorded; a local candidate alone does not activate this event. |
-| Public release | Start only on the user's explicit request; run the independent Windows and public-distribution gate in the packaged-acceptance runbook. | Every required public scenario has candidate-specific evidence; `not run` is never `pass`. |
-| Application version change | Update application version and distinct schema/catalog/contract mappings; inventory obsolete support paths and apply the product compatibility policy. | Current roots work; unknown/unsupported roots are refused unchanged before writes. Formally supported older roots work when applicable. |
+| Event | Current procedure |
+| --- | --- |
+| Development update | Identify a concrete startup failure risk. Run 0 checks without one; otherwise select at most 3 independent scenarios, normally 0–1. |
+| Local package or installed delivery | Build only if part of the agreed deliverable; record source/build identity. No added regression or installed checklist. |
+| Application version change | Update application/schema/catalog/contract identities and support mapping; the same startup-only limit applies. |
+| Formal release declaration | Only the user can declare it. Identify the support baseline under product policy; do not automatically add compatibility tests. |
+| GitHub Release distribution | Upload the identified installer and concise notes to the matching version Release. This adds no tests and does not declare a formal compatibility baseline. |
+| Formal public-support commitment | Only an explicit user declaration opens a new discussion of support scope; do not execute stored public scenarios automatically. |
 
-External content review, personal-data transition and W4 have their own product
-triggers in the development plan. None follows automatically from packaging,
-testing or a version bump. Synthetic facts never become personal facts.
+Personal-data transition remains the user's explicit decision. Content review,
+personal use and W4 do not add software checks or revive cancelled acceptance.
+Synthetic facts never become personal facts.
 
 ### Start and record one task
 
@@ -65,88 +66,80 @@ and formal release evidence stay in tracked docs.
 
 ### Verify a development task
 
-Use PowerShell 7 and the repository interpreter. Reuse meaningful existing tests
-before adding a case. For code, content or contract changes, select only affected
-pytest nodes/files (or `-k`) with `--test-tier dev --test-scope TASK-ID`; use
-`--collect-only` to inventory when necessary. Run Ruff for changed Python areas
-and `git diff --check`. A documentation-only change needs link, status and diff
-checks, not routine pytest. Stop after relevant checks pass; after a fix, rerun
-only failed or affected checks.
+1. Read the diff and state the specific causal link, if any, from this change to
+   failure to open the application. A module name or general quality/data-safety
+   concern is not sufficient. Documentation-only work runs 0 application tests.
+2. Without such a risk, run 0 application tests. With one, select only existing
+   relevant code-level checks, at most 3 independent scenarios for the whole
+   update, normally 0–1. There is no mandatory three-check bundle.
+3. Use PowerShell 7, the repository interpreter and isolated synthetic inputs.
+   Select explicit pytest node IDs under a single stable update scope; never run
+   bare pytest, a whole file containing unrelated cases or a version profile.
+4. Stop when the selected checks pass. After a fix, rerun only failed or directly
+   affected original checks; record repeat executions. Do not add unrelated
+   cases, performance samples or speculative fault scenarios.
+5. Deliver a short statement of check count, actual results and known issues.
+   Handle other problems when the user reports them in normal use. Do not append
+   a list of functional checks for the user to complete.
 
-Run `python packaging/check_docs.py` when tracked documentation, source-path
-references, current identities or contract ownership changes.
+[Tests README](../tests/README.md) owns counting and CLI details. Independent
+script scenarios and parameterized cases consume the same three-scenario cap;
+bundling, task splitting, alternate commands or new scope names cannot evade it.
+One genuine update keeps one scope across fixes and commands. A version bump,
+installer or release closeout does not create another verification allowance.
+Preserve historical ledgers; do not clear them or manufacture a new update to
+continue cancelled testing. Record the current policy beside older tool budgets.
 
-Use the tier and stable scope selected for the task; a release task uses its
-matching patch/minor/major release scope from first execution. Before that
-execution, inventory the configured profile and affected tests without budget
-reservation. Record the release-specific risk selection: each material changed
-or cross-cutting risk, the selected node IDs, and any lower-risk or overlapping
-cases excluded. Run selected cases explicitly under the one release scope;
-configured profiles and the full resident suite are inventories, not default
-release acceptance runs. An unaffected low-risk test stays available and becomes
-required when a later change makes its risk material. Follow [test instructions](../tests/README.md)
-for limits, unique-case accounting, locks, reruns and collection behavior.
-The version-update test quantity is the pytest scope's unique case count only.
-Developer-operated client and installed checks have separate candidate-specific
-statuses and never consume that pytest budget.
+Static diff/link/identity inspection is distinct from application tests. Keep it
+limited to the change: Ruff for changed Python files where applicable,
+`git diff --check`, and `python packaging/check_docs.py` for documentation,
+source-reference or identity edits. Do not disguise functional scenarios as
+static checks. No routine benchmarks, full test discovery or build is needed.
 
 ### Verification by affected risk
 
-| Change or risk | Minimum verification expectation |
-| --- | --- |
-| Documentation only | Link/status consistency and `git diff --check` |
-| UI presentation | Affected UI cases and Ruff for changed Python |
-| Domain behavior | Affected domain/application and integration cases |
-| User-data write | Success and rollback/failure behavior |
-| Session state | Affected transitions |
-| Database/schema/migration | Fresh/current DB, malformed/future refusal and rollback; formally supported older endpoints only after formal release |
-| Root switching/backup | Preservation and failure cleanup |
-| Catalog/image eligibility | Affected valid and failure paths |
-| Plan/group execution | Ordering, sides, rounds and frozen facts |
-| Import/export | Valid, malformed, stale and unsupported paths |
-| Version bump | Identity map and support rotation |
-| Release candidate | Release tier, affected cases and installed checks |
+The only selection criterion is a concrete application-startup failure caused
+by this update. Possible qualifying checks concern a changed startup import or
+required resource, initialization/opening of a synthetic current root, or
+startup object construction. Select only the relevant risk; these are examples,
+not a checklist. Do not exercise navigation or other client functionality.
+
+UI layout, search, saved content, training state, import/export, backup and
+performance have no automatic regression obligation. Their implementation
+requirements still apply; user feedback drives subsequent fixes.
 
 ### Prepare a local candidate
 
-1. Confirm the intended source/content is complete and internally consistent.
-   Reconcile deliberate development content into owned source before retiring a
-   development root; do not inspect or promote personal roots automatically.
-2. Identify the final reproducible source snapshot and the separate application,
-   schema, catalog and wire-contract versions. Use a stable `release-<version>`
-   test scope and the appropriate release tier. Review the risk selection before
-   the first execution, then run its explicitly selected cases within the one
-   tier budget, followed by applicable Ruff and diff checks. Record the reason
-   for excluding low-risk cases; an exclusion does not count as a pass. If a
-   required risk cannot be covered within the cap, leave acceptance incomplete
-   until the coverage or cap policy is resolved without resetting or splitting
-   the scope. A same-version commit uses the same version slot and release scope.
-3. Build the installer from the identified complete source with the pinned
-   toolchain. Verify source identity/dirty status, complete payload and installer
-   manifests, hashes, bundled catalog and assets, required runtime files and
-   absence of user data. A clean source revision is required to claim a local
-   release or completed installed acceptance; a dirty build is only an informal
-   preview with its exact source snapshot and limit disclosed.
-4. Install that candidate under an isolated locator/profile and synthetic roots.
-   Verify the installed payload, fresh launch and cancel, new-root catalog,
-   restart/reopen, and the affected user workflow. Apply the current
-   compatibility boundary from the product release policy; always verify
-   current-root and unknown/future-root safety when affected.
-   Record the account, paths, inputs, expected/actual result and evidence for
-   each check.
+1. Build only when an installer is requested or part of the agreed deliverable.
+   Identify the source snapshot and application/schema/catalog/contract values.
+   Reconcile owned development content before retiring its root; never inspect
+   personal roots automatically.
+2. Apply the same startup-only limit for this update. Candidate preparation
+   adds no release suite, manual matrix or larger tier allowance.
+3. When building, retain the generated manifests and exact installer/executable
+   identity. Review relevant startup payload issues without adding broad
+   runtime scenarios. Use reproducible complete source; a dirty snapshot remains
+   an informal preview and carries no complete-acceptance claim.
+4. Manual checks default to 0. Only if a concrete startup risk cannot be resolved
+   by code-level checks, ask for at most one observation on the user's next
+   normal opening of the application. No dedicated acceptance session,
+   recording, timing, repeated installation/uninstallation or simulated training.
+5. The default distribution destination is this repository's GitHub Releases.
+   Attach the identified Setup executable to the matching version tag and state
+   its SHA-256, signature status, build source revision and evidence limits.
 
-Candidate evidence is immutable and identified by source revision/snapshot,
-manifest and installer/executable hashes. If source or payload changes after a
-pass, keep the earlier candidate's results historical; rerun only affected tests
-in the same release scope and affected installed checks for the new candidate.
-Reference earlier unchanged checks explicitly rather than silently claiming they
-were repeated. A local result never implies public acceptance, expert review or
-personal-use readiness.
+Record only what was actually observed for the exact candidate. Existing
+results retain their identities; changing a candidate does not require repeating
+cancelled checks. An unrun check is not a pass, and a check cancelled by current
+policy is not an outstanding gate. A known startup failure remains actionable.
+Local delivery never itself declares public acceptance or personal-data transition.
 
 ### Close a release
 
-Verify its acceptance criteria and record formal, candidate-specific evidence
-in `docs/history/<version>/` before closing planning. Create the Planscope
+Review the implementation and its acceptance criteria under current §9.1,
+recording actual results and cancelled requirements in `docs/history/<version>/`.
+Do not retain superseded manual or functional verification as closeout blockers.
+Do not claim a cancelled check passed or close unrelated unfinished work. Create the Planscope
 `SUMMARY.md`, promote only durable non-recoverable project knowledge, update
 ROADMAP, mark every PLAN phase and its status complete, then run `plan.py doctor`
 and `plan.py close <version>`. The close command archives execution context;
@@ -162,13 +155,12 @@ history index, source version values, implemented application/schema mapping and
 relevant contract/catalog identities. Apply the compatibility and retention
 boundary owned by the product release policy; several commits of one version do
 not create distinct version identities.
-If the bump is still a development step, use its dev scope; a task that directly
-forms a release uses the release scope instead.
+A version bump does not select a larger test profile. Use the same update scope
+and three-scenario limit whether the update includes a package or not.
 
 Inventory completed documents, planning archives, contract/schema baselines,
-synthetic fixtures and migration entry support. Before removing a path, verify
-current initialization and safety, plus formally supported upgrades when those
-exist. Git history remains available; the local archive is not an unlimited
+synthetic fixtures and migration entry support. Before removing a path, inspect its current references and startup role.
+Any executable check must qualify under §9.1; no broad regression is implied. Git history remains available; the local archive is not an unlimited
 second retention system. Reject unsupported or future roots before writes with
 actionable new-empty-root guidance, without deleting or importing their data.
 Program reinstall alone does not reset a data root. Any adopted exception must
@@ -176,15 +168,11 @@ follow the product's explicit path-verification and confirmation rules.
 
 ## Three walkthroughs
 
-- **Small UI change:** one dev task and scope; affected UI cases, Ruff and diff
-  check; no installer unless the user asks for installed acceptance.
-- **Schema-changing patch release:** one patch release scope, including current
-  initialization, preservation/refusal and rollback cases; application patch
-  bump, clean source and verified installer. Old-version upgrade tests and
-  installed compatibility checks begin only after formal-release declaration.
-- **Requested public release:** apply any separate formal-release declaration
-  and compatibility boundary, then complete the local candidate gate,
-  then use the explicit public gate on an independent Windows environment with
-  actual selected binaries when applicable and distribution evidence. Mark
-  unavailable checks `not run`; required public checks must pass before public
-  acceptance.
+- **Documentation or ordinary UI wording change:** 0 application tests and
+  0 manual checks; inspect the diff and relevant document links.
+- **Startup dependency or root-opening change:** explain the startup failure
+  risk, select the minimum matching code-level scenarios, at most 3, and stop
+  when they pass. No navigation, simulated training or fault matrix.
+- **Local installer update:** same cap; retain the build identity if packaging
+  is in scope. No repeated install/uninstall acceptance. Public distribution
+  remains dormant until explicitly requested and scoped.
