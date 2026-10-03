@@ -9,7 +9,8 @@
 - Previous distributed version: `0.8.6` / schema `24` / contract `4`
 
 The implementation and clean local candidate are recorded in the
-[0.8.7 development record](../../history/0.8.7/development.md).
+[0.8.7 development record](../../history/0.8.7/development.md), and the Setup is
+distributed through [GitHub Release v0.8.7](../../history/0.8.7/github-release-2026-10-03.md).
 
 GitHub Release distribution is part of this update, but remains separate from a
 formal compatibility baseline, public-support commitment, external content
