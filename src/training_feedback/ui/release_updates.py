@@ -7,7 +7,15 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from PySide6.QtCore import QCoreApplication, QObject, QProcess, QTimer, QUrl, Signal
+from PySide6.QtCore import (
+    QCoreApplication,
+    QObject,
+    QProcess,
+    QProcessEnvironment,
+    QTimer,
+    QUrl,
+    Signal,
+)
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
@@ -41,7 +49,7 @@ class ReleaseUpdateCoordinator(QObject):
     download_started = Signal(object)
     download_progress = Signal(int, int)
     download_failed = Signal(str)
-    installer_started = Signal(str)
+    installer_handoff_started = Signal(str)
 
     def __init__(self, current_version: str, parent=None):
         super().__init__(parent)
@@ -56,7 +64,7 @@ class ReleaseUpdateCoordinator(QObject):
         self._download_part: Path | None = None
         self._download_target: Path | None = None
         self._download_error = ""
-        self._detached_installer: QProcess | None = None
+        self._detached_launcher: QProcess | None = None
         self._automatic_started = False
 
     @property
@@ -226,17 +234,49 @@ class ReleaseUpdateCoordinator(QObject):
             self._discard_download()
             self.download_failed.emit(self._download_error)
             return
-        process = QProcess(self)
-        process.setProgram(str(target))
-        process.setWorkingDirectory(str(target.parent))
-        started, _process_id = process.startDetached()
-        if not started:
-            self._download_error = "无法启动安装程序，请重试或使用浏览器下载。"
+        powershell = (
+            Path(os.environ.get("SystemRoot", r"C:\Windows"))
+            / "System32"
+            / "WindowsPowerShell"
+            / "v1.0"
+            / "powershell.exe"
+        )
+        if not powershell.is_file():
+            self._download_error = "无法找到系统更新启动程序，请重试或使用浏览器下载。"
             self._discard_download()
             self.download_failed.emit(self._download_error)
             return
-        self._detached_installer = process
-        self.installer_started.emit(str(target))
+
+        process = QProcess(self)
+        environment = QProcessEnvironment.systemEnvironment()
+        environment.insert("TRAINING_FEEDBACK_UPDATE_PARENT_PID", str(os.getpid()))
+        environment.insert("TRAINING_FEEDBACK_UPDATE_INSTALLER", str(target))
+        environment.insert("TRAINING_FEEDBACK_UPDATE_DIRECTORY", str(target.parent))
+        process.setProcessEnvironment(environment)
+        process.setProgram(str(powershell))
+        process.setArguments([
+            "-NoLogo",
+            "-NoProfile",
+            "-NonInteractive",
+            "-WindowStyle",
+            "Hidden",
+            "-Command",
+            (
+                "$parentId = [int]$env:TRAINING_FEEDBACK_UPDATE_PARENT_PID; "
+                "Wait-Process -Id $parentId -ErrorAction SilentlyContinue; "
+                "Start-Process -FilePath $env:TRAINING_FEEDBACK_UPDATE_INSTALLER "
+                "-WorkingDirectory $env:TRAINING_FEEDBACK_UPDATE_DIRECTORY"
+            ),
+        ])
+        process.setWorkingDirectory(str(target.parent))
+        started, _process_id = process.startDetached()
+        if not started:
+            self._download_error = "无法安排安装程序启动，请重试或使用浏览器下载。"
+            self._discard_download()
+            self.download_failed.emit(self._download_error)
+            return
+        self._detached_launcher = process
+        self.installer_handoff_started.emit(str(target))
         QTimer.singleShot(0, QCoreApplication.quit)
 
     def _discard_download(self) -> None:
@@ -296,6 +336,7 @@ class ReleaseDetailsDialog(QDialog):
         self.instruction.setWordWrap(True)
         layout.addWidget(self.instruction)
         self.progress = QProgressBar()
+        self.progress.setObjectName("updateDownloadProgress")
         self.progress.setRange(0, 1000)
         self.progress.setVisible(False)
         layout.addWidget(self.progress)
@@ -323,8 +364,8 @@ class ReleaseDetailsDialog(QDialog):
         else:
             self.browser_button.clicked.connect(lambda: self._open(self.release.setup.url))
             self.instruction.setText(
-                "默认由应用在后台下载并校验安装包；校验成功后会打开安装程序，"
-                "当前应用随后退出。也可以选择浏览器下载。"
+                "默认由应用在后台下载并校验安装包；校验成功后会自动退出当前应用，"
+                "退出完成后再打开安装程序。也可以选择浏览器下载。"
             )
         close_button.clicked.connect(self.reject)
         layout.addWidget(buttons)
@@ -332,7 +373,7 @@ class ReleaseDetailsDialog(QDialog):
         coordinator.download_started.connect(self._download_started)
         coordinator.download_progress.connect(self._download_progress)
         coordinator.download_failed.connect(self._download_failed)
-        coordinator.installer_started.connect(self._installer_started)
+        coordinator.installer_handoff_started.connect(self._installer_handoff_started)
         if coordinator.download_active:
             self._download_started(release.setup)
             self._download_progress(
@@ -351,7 +392,9 @@ class ReleaseDetailsDialog(QDialog):
         self.install_button.setEnabled(False)
         self.install_button.setText("后台下载中…")
         self.progress.setVisible(True)
-        self.instruction.setText("正在后台下载安装包；下载完成并校验通过后会直接打开安装程序。")
+        self.instruction.setText(
+            "正在后台下载安装包；下载完成并校验通过后会先退出当前应用，再打开安装程序。"
+        )
 
     def _download_progress(self, received: int, total: int) -> None:
         if total > 0:
@@ -364,8 +407,8 @@ class ReleaseDetailsDialog(QDialog):
         self.instruction.setText("应用内更新未完成，可以重试，或改用浏览器下载。")
         QMessageBox.warning(self, "更新失败", message)
 
-    def _installer_started(self, _path: str) -> None:
-        self.instruction.setText("安装包已校验并启动，正在退出当前应用。")
+    def _installer_handoff_started(self, _path: str) -> None:
+        self.instruction.setText("安装包已校验，正在退出当前应用；退出后会自动打开安装程序。")
         self.accept()
 
     def _open(self, url: str) -> None:

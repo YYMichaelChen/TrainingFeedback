@@ -6,9 +6,9 @@ database, Streamlit UI, wardrobe data, and submission format.
 
 ## Current status
 
-- Application: `0.8.4`
+- Application: `0.8.5`
 - Database schema: `24`
-- Current release: [`0.8.4`](docs/releases/0.8.4/design.md)
+- Current release: [`0.8.5`](docs/releases/0.8.5/design.md)
 - Version and candidate status: [`docs/history/README.md`](docs/history/README.md)
 
 ## Run
@@ -59,7 +59,8 @@ decision, verification and delivery procedure.
 Windows installation packages are distributed through this repository's
 [GitHub Releases](https://github.com/YYMichaelChen/TrainingFeedback/releases).
 Download the Setup executable for the required version and run it to install or
-update. The application does not yet check or download Releases automatically.
+update. The application also checks the latest stable Release after opening and
+can download, verify and hand its Setup to the installer after the client exits.
 
 The Windows build first produces a PyInstaller directory layout. The verified
 build environment and pinned toolchain are recorded in

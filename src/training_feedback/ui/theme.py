@@ -92,6 +92,7 @@ QScrollBar::handle:vertical { background: #bbcbd7; border-radius: 5px; min-heigh
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 QProgressBar { background: #dfe8ee; border: none; border-radius: 4px; max-height: 8px; }
 QProgressBar::chunk { background: #159986; border-radius: 4px; }
+QProgressBar#updateDownloadProgress { min-height: 22px; max-height: 22px; }
 QCheckBox { spacing: 7px; }
 QTabWidget::pane { border: 1px solid #dce5ef; background: white; }
 QTabBar::tab { padding: 10px 16px; background: #e9eff5; border: none; color: #607187; }
