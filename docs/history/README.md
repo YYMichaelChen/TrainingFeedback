@@ -23,7 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.2 | 24 | Current development target: remove training-day names, improve illustration views and set the application icon | Development in progress; no candidate or acceptance claimed |
+| 0.8.2 | 24 | Current candidate: remove training-day names, improve illustration views and set the application icon | [Startup-risk acceptance passed; clean Setup candidate built](0.8.2/development.md) |
 | 0.8.1 | 23 | Previous personal-use update: [GitHub update discovery](../releases/0.8.1/design.md) | GitHub Release `v0.8.1`; Setup SHA-256 `5e9299066ad13c6ef78a2e6e8fb07b013595b57f240c64be54f388c8a219b0cf`; unsigned |
 | 0.8.0 | 23 | Historical personal-use update: [installation, cleanup and response work](0.8.0/development.md) | GitHub Release `v0.8.0`; Setup SHA-256 `49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad`; unsigned |
 | 0.7.8 | 23 | Historical development version: [documentation and knowledge governance](0.7.8/development.md) | No installer candidate; documentation/identity verification only |
@@ -73,6 +73,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.2 development and candidate record](0.8.2/development.md)
 - [0.8.1 GitHub Release record](0.8.1/github-release-2026-10-03.md)
 - [0.8.1 development record](0.8.1/development.md)
 - [0.8.0 GitHub Release record](0.8.0/github-release-2026-10-03.md)

@@ -8,8 +8,9 @@
 - Plan and evidence wire contracts: `4`
 - Previous distributed version: `0.8.1` / schema `23` / contract `3`
 
-This is the active development target. No 0.8.2 package, acceptance result,
-formal compatibility claim, or public release is recorded here.
+The implementation and identified candidate are recorded in the
+[0.8.2 development record](../../history/0.8.2/development.md). No formal
+compatibility claim or public release is recorded here.
 
 ## Scope
 
@@ -28,4 +29,3 @@ The approved release execution plan is `.planning/releases/v0.8.2/PLAN.md`.
 Product behavior and release gates remain governed by
 [`development-plan.md`](../../development-plan.md), and development procedure
 by [`development-workflow.md`](../../development-workflow.md).
-
