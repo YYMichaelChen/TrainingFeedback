@@ -323,7 +323,7 @@ class CatalogLibraryPage(QWidget):
         filters.addWidget(self.search)
         filters.addWidget(self.position)
         refresh = QPushButton(T["refresh"])
-        refresh.clicked.connect(self.refresh)
+        refresh.clicked.connect(self._refresh_with_feedback)
         filters.addWidget(refresh)
         gallery_layout.addLayout(filters)
         self.gallery_count = QLabel()
@@ -409,7 +409,23 @@ class CatalogLibraryPage(QWidget):
         self.cards.itemClicked.connect(self._card_clicked)
         self.cards.itemSelectionChanged.connect(self._update_batch_buttons)
         self.batch_toggle.toggled.connect(self._toggle_batch_mode)
-        self.refresh()
+        if progressive:
+            self.gallery_count.setText(T["loading"])
+            QTimer.singleShot(0, self._refresh_with_feedback)
+        else:
+            self._refresh_with_feedback()
+
+    def _refresh_with_feedback(self):
+        try:
+            self.refresh()
+        except Exception as exc:
+            self.cancel_loading()
+            self.cards.clear()
+            self.target = None
+            self._show_gallery()
+            self._show_version()
+            message = user_message(str(exc)).strip() or type(exc).__name__
+            self.gallery_count.setText(T["load_failed"].format(message=message))
 
     def _selected_targets(self):
         return [item.data(Qt.ItemDataRole.UserRole) for item in self.cards.selectedItems()]
@@ -430,7 +446,7 @@ class CatalogLibraryPage(QWidget):
 
     def _filter_changed(self):
         self._show_gallery()
-        self.refresh()
+        self._refresh_with_feedback()
 
     def _show_gallery(self):
         self.stack.setCurrentIndex(0)
@@ -450,7 +466,7 @@ class CatalogLibraryPage(QWidget):
             return
         self.dialog = CatalogReviewDialog(self.service, targets, self)
         self.dialog.exec()
-        self.refresh()
+        self._refresh_with_feedback()
 
     def _open_removals(self, targets=None):
         from .library_lifecycle_page import LibraryLifecyclePage
@@ -468,7 +484,7 @@ class CatalogLibraryPage(QWidget):
         close.clicked.connect(self.dialog.accept)
         layout.addWidget(close)
         self.dialog.exec()
-        self.refresh()
+        self._refresh_with_feedback()
 
     def _set_card(self, item, row, status):
         content = row["display"]["content"]
@@ -626,4 +642,4 @@ class CatalogLibraryPage(QWidget):
         except (ValueError, OSError) as exc:
             QMessageBox.warning(self, T["error"], user_message(str(exc)))
             return
-        self.refresh()
+        self._refresh_with_feedback()

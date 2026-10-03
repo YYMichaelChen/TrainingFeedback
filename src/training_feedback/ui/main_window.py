@@ -17,6 +17,7 @@ from ..app import LibraryContext
 from ..application.release_updates import UpdateStatus
 from .release_updates import show_release_details
 from .settings_page import SettingsPage
+from .window_icon import apply_window_icon
 
 
 class MainWindow(QMainWindow):
@@ -25,6 +26,7 @@ class MainWindow(QMainWindow):
         self, context: LibraryContext, switch_request=None, update_coordinator=None, parent=None
     ):
         super().__init__(parent)
+        apply_window_icon(self)
         self.setWindowTitle("训练反馈")
         self.resize(1100, 740)
         container = QWidget(self)

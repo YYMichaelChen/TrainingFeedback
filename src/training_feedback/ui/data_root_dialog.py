@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from ..application.new_root import DEFAULT_ROOT_DIRECTORY_NAME, NewRootProposal
 from .labels import localize_dialog_buttons
+from .window_icon import apply_window_icon
 
 
 def suggested_data_root() -> Path | None:
@@ -31,6 +32,7 @@ class DataRootDialog(QDialog):
 
     def __init__(self, parent=None, *, suggested_path: Path | None = None):
         super().__init__(parent)
+        apply_window_icon(self)
         self.setWindowTitle("选择训练反馈数据目录")
         self._create_text = str(suggested_path or suggested_data_root() or "")
         self._open_text = ""

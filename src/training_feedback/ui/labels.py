@@ -57,7 +57,7 @@ POSITION_LABELS = {
 GROUP_PLAN_TEXT = {
     "title": "训练计划 · 动作组", "new": "新建计划", "edit": "编辑草稿", "clone": "复制为独立计划",
     "upgrade": "升级所选计划",
-    "activate": "预览并启用", "import": "导入 v4 计划…", "export": "导出 v4 证据…",
+    "activate": "预览并启用", "import": "导入计划文件…", "export": "导出计划资料…",
     "name": "计划名称", "purpose": "训练目的", "rationale": "调整说明",
     "change_description": "变更说明", "base_number": "三位计划编号",
     "clone_name_prompt": "输入独立计划名称", "clone_base_prompt": "输入未使用的三位编号（001–999）",
@@ -88,9 +88,9 @@ GROUP_PLAN_TEXT = {
     "preview": "完整计划、差异与执行顺序", "confirm": "确认启用当前计划及列出的未审核指导",
     "unreviewed": "未审核指导", "diff": "变更明细", "new_revision": "新计划或新版本",
     "dissolve": "移除后只剩一个成员。明确拆散这个动作组？请先将轮数设为 1。",
-    "remove_confirm": "确定移除所选计划项？保存后生效。", "exported": "证据已导出到：",
+    "remove_confirm": "确定移除所选计划项？保存后生效。", "exported": "计划资料已导出到：",
     "no_plans": "暂无计划", "json_filter": "JSON 文件 (*.json)",
-    "empty_revision_hint": "暂无计划修订。可新建计划，或导入 v4 计划。",
+    "empty_revision_hint": "暂无计划修订。可新建计划，或导入计划文件。",
     "images_tab": "动作示意图",
     "rest_seconds": "休息 {value} 秒",
     "select_destination": "选择目标", "expanded": "执行顺序（每行完成一个成员的全部组）",
@@ -268,6 +268,8 @@ LIBRARY_TEXT = {
     "close": "关闭",
     "title": "动作库", "search": "按名称或别名搜索", "all_positions": "全部起始体位",
     "gallery_count": "共 {count} 个动作 · 点击卡片查看指导",
+    "loading": "正在打开动作库…",
+    "load_failed": "动作库无法载入：{message}\n请保留当前数据并反馈以上信息。",
     "back_to_gallery": "← 返回动作库", "batch_mode": "批量选择",
     "standalone": "独立动作", "name": "动作 / 动作族", "source": "来源", "position": "起始体位",
     "readiness": "图片资格", "review": "审核", "enabled": "启用状态", "bundled": "程序内置",
@@ -399,7 +401,8 @@ ERROR_TRANSLATIONS = {
     "This root has interrupted uninstall cleanup. Reinstall the current program "
     "and retry cleanup; the remaining files are preserved.":
         "此目录有未完成的卸载数据清理。请重新安装当前程序后重试清理；剩余文件已保留。",
-    "Only plan format version 4 is accepted.": "此入口只接受 v4 计划，请使用当前导出附带的格式。",
+    "Only plan format version 4 is accepted.":
+        "此计划文件不是当前支持的格式。请使用当前版本导出的计划文件（格式版本 4）。",
     "The displayed plan revision changed.": "当前草稿已被修改，请重新打开后核对。",
     "A plan base number must be between 001 and 999.": "计划编号必须是 001 至 999 的整数。",
     "That plan base number is already in use.": "这个计划编号已经使用，请输入其他编号。",
@@ -740,7 +743,8 @@ def _activation_reasons(detail: str) -> str:
 
 def user_message(message: str) -> str:
     if message.startswith("Invalid plan v4 at "):
-        return "v4 计划格式不完整或字段无效，请核对：" + message[len("Invalid plan v4 at "):]
+        detail = message[len("Invalid plan v4 at "):]
+        return "计划文件格式不完整或字段无效（格式版本 4），请核对：" + detail
     if message.startswith("Content is not eligible: "):
         return "当前内容不可用：" + "；".join(
             LIBRARY_REASON_LABELS.get(reason, reason)

@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.3**
+- Application: **0.8.4**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.3**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.3](../releases/0.8.3/design.md)
+- Current development version: [0.8.4](../releases/0.8.4/design.md)
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,6 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.4 | 24 | Current UI reliability update: restore owned window icons, make action-library loading visible and clarify plan-file wording | Development in progress; candidate not yet built |
 | 0.8.3 | 24 | Current emergency update: verified in-app Setup download and previous-directory installer reuse | GitHub Release `v0.8.3`; Setup SHA-256 `a7dcb23536c43422355d6113df926fef2f05cbeaaea383310e9630f50a381009`; unsigned |
 | 0.8.2 | 24 | Current personal-use update: remove training-day names, improve illustration views and set the application icon | GitHub Release `v0.8.2`; Setup SHA-256 `c04ba484d6d6cbf9a7c3347a0728ad4859e11a51cb131641465b5c18ab568d97`; unsigned |
 | 0.8.1 | 23 | Previous personal-use update: [GitHub update discovery](../releases/0.8.1/design.md) | GitHub Release `v0.8.1`; Setup SHA-256 `5e9299066ad13c6ef78a2e6e8fb07b013595b57f240c64be54f388c8a219b0cf`; unsigned |

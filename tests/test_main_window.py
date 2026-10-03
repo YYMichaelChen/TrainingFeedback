@@ -23,6 +23,7 @@ def test_main_window_navigation_and_chinese_labels(qt_app, tmp_path):
         assert window.pages.widget(0).__class__.__name__ == "GroupSessionPage"
         assert all(type(window.pages.widget(i)) is QWidget for i in range(1, 4))
         window.navigation.setCurrentRow(1)
+        qt_app.processEvents()
         library = window.pages.currentWidget()
         assert library.__class__.__name__ == "CatalogLibraryPage"
         assert library.cards.count() == 36
