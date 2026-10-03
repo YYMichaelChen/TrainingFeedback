@@ -23,7 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.9 | 24 | Current action-library construction fix: restore the missing illustration-tab label used by the page and review dialog | Development in progress |
+| 0.8.9 | 24 | Current action-library construction fix: restore the missing illustration-tab label used by the page and review dialog | Local candidate; Setup SHA-256 `e0030b4c15be767b46fafb7e0da652bd27ce647207779eb2e5163a873accd722`; unsigned |
 | 0.8.8 | 24 | Current updater exit-hardening update: make the post-handoff application exit unskippable with a contained emit and a hard-exit watchdog | GitHub Release `v0.8.8`; Setup SHA-256 `bfbf1789b53d10f6aada0875c7395dcaf0493868a8a8f03b89b5119632c17207`; unsigned |
 | 0.8.7 | 24 | Current navigation reliability update: contain page-creation failure into a visible retryable message and paint the library loading state before its first read | GitHub Release `v0.8.7`; Setup SHA-256 `48c4dae577a17428760c135c5713f1e87608cbc9e0b89b0ff5b4e2f955a62ee0`; unsigned |
 | 0.8.6 | 24 | Current updater cleanup follow-up: remove verified Setup temporaries after use and safely recover owned leftovers | GitHub Release `v0.8.6`; Setup SHA-256 `06120b97244ab24a745a429617e04abdbe50f7b0057086cf050f64158b89e61c`; unsigned |
@@ -43,10 +43,11 @@ identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
 
-The [0.8.9 development record](0.8.9/development.md) records the action-library
-construction fix. Its clean candidate identity will be added after the build.
-Action-library navigation and installed-client behavior were not run and are
-not passes.
+The [0.8.9 development record](0.8.9/development.md) identifies the clean
+candidate built from application source `eec2390`. Its payload and installer
+manifests are tracked beside that record. Application tests and manual checks
+were zero. Action-library navigation, dialog construction, catalog loading and
+installed-client behavior were not run and are not passes.
 
 The [0.8.8 development record](0.8.8/development.md) identifies the clean
 candidate built from application source `13e9954`. Its payload and installer
