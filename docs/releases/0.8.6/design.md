@@ -8,6 +8,10 @@
 - Plan and evidence wire contracts: `4`
 - Previous distributed version: `0.8.5` / schema `24` / contract `4`
 
+The implementation and clean local candidate are recorded in the
+[0.8.6 development record](../../history/0.8.6/development.md), and the Setup is
+distributed through [GitHub Release v0.8.6](../../history/0.8.6/github-release-2026-10-03.md).
+
 The user requested this as an additional “v0.8.5b” update. The updater accepts
 only stable `vMAJOR.MINOR.PATCH` tags and application identities, so the
 updater-compatible patch identity is v0.8.6 rather than a suffix that existing
