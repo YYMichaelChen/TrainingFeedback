@@ -45,9 +45,9 @@ existing isolated scenario was selected under scope
   coordinator without network and opened the main window. Result: **1 passed in
   1.11 s**, with no rerun.
 
-Ruff and Python compilation passed for the three changed UI files, and
-`git diff --check` reported no whitespace errors beyond checkout line-ending
-notices. Documentation consistency will be recorded with the candidate.
+Ruff and Python compilation passed for the changed Python files,
+`packaging/check_docs.py` passed for 85 Markdown files, and `git diff --check`
+reported no whitespace errors beyond checkout line-ending notices.
 
 No other pytest node, script scenario, GUI automation, real user root or client
 operation was used. Illustration layout, update download, handoff, application
@@ -56,7 +56,25 @@ behavior were not run and are not passes. Manual checks: **0**.
 
 ## Candidate
 
-Candidate build and exact artifact identity are pending.
+The clean implementation commit `5f37d83ab8292d4d62652a2e0a3e01f51052bb3f`
+was built on 2026-10-04 with Python 3.12.14 AMD64, PySide6 6.11.2,
+PyInstaller 6.22.2, hooks 2026.7 and Inno Setup 6.7.3.
+
+- Setup: `dist/installer/TrainingFeedback-0.8.10-Setup.exe`
+- Bytes: `85,669,719`
+- SHA-256: `9846aedc52073b9c85e9f52c7f3cafe2450e60a6c38a103368bb8c34c2b1580d`
+- Signature: unsigned (`NotSigned`)
+- Payload files: `298`
+- Payload executable SHA-256:
+  `129d9f2f64d50db52a6c7e1807b4e79611c44b4b3ed5df55901ca4ca3babb48e`
+- Source dirty: `false`
+- Manifests: [installer](installer-build-manifest.json) and
+  [payload](payload-build-manifest.json)
+
+The build verified the catalog and required packaged schema, contract and icon
+resources, and found no user data in the payload. Building and manifest
+inspection do not certify illustration layout, update handoff, process exit,
+installer launch, overwrite installation or installed behavior.
 
 GitHub distribution does not declare a formal compatibility baseline, public
 support, external content review, personal-data transition or W4.
