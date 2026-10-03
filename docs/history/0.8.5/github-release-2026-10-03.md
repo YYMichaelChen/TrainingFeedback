@@ -29,6 +29,10 @@ identity check only.
 
 ## Scope and limits
 
+- v0.8.4 and earlier clients still execute the superseded handoff. To bootstrap
+  this fix, their user-facing Release notes direct the user to download Setup in
+  the browser, close the old client and then run Setup. Automatic exit-before-
+  launch applies only after v0.8.5 itself is installed.
 - One isolated startup-construction scenario passed once; manual checks were zero.
 - Visible download progress, application-managed download, client-exit handoff,
   installer launch, overwrite installation and installed-client behavior were
