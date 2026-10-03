@@ -704,8 +704,13 @@ It must match both the declared byte size and SHA-256 before execution. A
 download, write, size, digest or launch failure never executes the file and
 keeps retry and browser-download choices available. On successful validation,
 the application hands Setup to a detached Windows launcher, exits completely,
-and only then starts Setup. A handoff failure does not exit and keeps the retry
-and browser-download choices available. Opening the GitHub Release or downloading
+and only then starts Setup. The launcher waits for Setup to finish and removes
+that exact application-owned temporary update directory. On later startup, the
+application also makes a best-effort cleanup of direct, non-link temporary
+directories whose names and complete contents strictly match its updater
+artifacts; it never treats this as permission to sweep other temporary content
+or any data root. A handoff failure does not exit and keeps the retry and
+browser-download choices available. Opening the GitHub Release or downloading
 through the system browser remains an explicit secondary choice, not the default
 path. The installer is still interactive: existing installer ownership,
 directory validation and data-root separation govern the overwrite update.

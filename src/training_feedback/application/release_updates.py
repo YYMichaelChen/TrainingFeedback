@@ -6,16 +6,27 @@ import hashlib
 import hmac
 import json
 import re
+import shutil
+import tempfile
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from urllib.parse import urlsplit
 
 REPOSITORY = "YYMichaelChen/TrainingFeedback"
 LATEST_RELEASE_URL = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
 MAX_RELEASE_RESPONSE_BYTES = 1_048_576
+UPDATE_DIRECTORY_PREFIX = "TrainingFeedback-update-"
+UPDATE_MARKER_FILENAME = ".training-feedback-update"
+UPDATE_MARKER_CONTENT = "TrainingFeedback update download\n"
 
 _VERSION = re.compile(r"^(?:v)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 _DIGEST = re.compile(r"^sha256:([0-9a-fA-F]{64})$")
+_UPDATE_DIRECTORY = re.compile(r"^TrainingFeedback-update-[a-z0-9_]{8}$")
+_UPDATE_FILE = re.compile(
+    r"^TrainingFeedback-(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\."
+    r"(?:0|[1-9]\d*)-Setup\.exe(?:\.part)?$"
+)
 
 
 class ReleasePayloadError(ValueError):
@@ -59,6 +70,67 @@ class UpdateCheckResult:
     status: UpdateStatus
     current_version: str
     release: ReleaseInfo | None = None
+
+
+def create_update_directory(temp_root: Path | None = None) -> Path:
+    """Create and mark one application-owned temporary update directory."""
+    directory = Path(tempfile.mkdtemp(
+        prefix=UPDATE_DIRECTORY_PREFIX,
+        dir=None if temp_root is None else temp_root,
+    ))
+    try:
+        (directory / UPDATE_MARKER_FILENAME).write_text(
+            UPDATE_MARKER_CONTENT, encoding="ascii", newline="\n"
+        )
+    except OSError:
+        shutil.rmtree(directory, ignore_errors=True)
+        raise
+    return directory
+
+
+def cleanup_stale_update_directories(temp_root: Path | None = None) -> int:
+    """Best-effort removal of strictly recognized updater temporary directories."""
+    root = Path(tempfile.gettempdir()) if temp_root is None else Path(temp_root)
+    try:
+        resolved_root = root.resolve(strict=True)
+        candidates = list(root.iterdir())
+    except OSError:
+        return 0
+
+    removed = 0
+    for directory in candidates:
+        if _UPDATE_DIRECTORY.fullmatch(directory.name) is None:
+            continue
+        try:
+            if (
+                not directory.is_dir()
+                or directory.is_symlink()
+                or directory.is_junction()
+                or directory.resolve(strict=True).parent != resolved_root
+            ):
+                continue
+            entries = list(directory.iterdir())
+            if not entries:
+                continue
+            marker = directory / UPDATE_MARKER_FILENAME
+            if not all(
+                entry.is_file()
+                and not entry.is_symlink()
+                and (entry.name == UPDATE_MARKER_FILENAME or _UPDATE_FILE.fullmatch(entry.name))
+                for entry in entries
+            ):
+                continue
+            if marker in entries:
+                if marker.read_text(encoding="ascii") != UPDATE_MARKER_CONTENT:
+                    continue
+            elif not any(_UPDATE_FILE.fullmatch(entry.name) for entry in entries):
+                continue
+        except (OSError, UnicodeError):
+            continue
+        shutil.rmtree(directory, ignore_errors=True)
+        if not directory.exists():
+            removed += 1
+    return removed
 
 
 class SetupDownloadVerifier:

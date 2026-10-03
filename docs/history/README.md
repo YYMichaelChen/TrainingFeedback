@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.5**
+- Application: **0.8.6**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.5**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.5](../releases/0.8.5/design.md)
+- Current development version: [0.8.6](../releases/0.8.6/design.md)
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,6 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.6 | 24 | Current updater cleanup follow-up: remove verified Setup temporaries after use and safely recover owned leftovers | Implementation in progress; no installer candidate yet |
 | 0.8.5 | 24 | Current emergency updater correction: show complete download progress and exit before Setup starts | GitHub Release `v0.8.5`; Setup SHA-256 `37658f63ce49535f73ac56fef7d186495982aeecd38e5d559afe3b26cd5dc9e0`; unsigned |
 | 0.8.4 | 24 | Current UI reliability update: restore owned window icons, make action-library loading visible and clarify plan-file wording | GitHub Release `v0.8.4`; Setup SHA-256 `832e958df99c3707d85065f715787d4035d69f85fe1830ec8f4116c47c8497b7`; unsigned |
 | 0.8.3 | 24 | Current emergency update: verified in-app Setup download and previous-directory installer reuse | GitHub Release `v0.8.3`; Setup SHA-256 `a7dcb23536c43422355d6113df926fef2f05cbeaaea383310e9630f50a381009`; unsigned |

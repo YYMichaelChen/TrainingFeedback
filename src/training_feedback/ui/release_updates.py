@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import shutil
-import tempfile
 from pathlib import Path
 
 from PySide6.QtCore import (
@@ -36,6 +35,8 @@ from ..application.release_updates import (
     UpdateCheckResult,
     UpdateStatus,
     checking_result,
+    cleanup_stale_update_directories,
+    create_update_directory,
     evaluate_latest_release,
     failed_result,
     idle_result,
@@ -51,9 +52,13 @@ class ReleaseUpdateCoordinator(QObject):
     download_failed = Signal(str)
     installer_handoff_started = Signal(str)
 
-    def __init__(self, current_version: str, parent=None):
+    def __init__(self, current_version: str, parent=None, *, update_temp_root=None):
         super().__init__(parent)
         self.current_version = current_version
+        self._update_temp_root = (
+            None if update_temp_root is None else Path(update_temp_root)
+        )
+        cleanup_stale_update_directories(self._update_temp_root)
         self.result = idle_result(current_version)
         self._manager = QNetworkAccessManager(self)
         self._check_reply: QNetworkReply | None = None
@@ -142,7 +147,7 @@ class ReleaseUpdateCoordinator(QObject):
         self._download_error = ""
         directory: Path | None = None
         try:
-            directory = Path(tempfile.mkdtemp(prefix="TrainingFeedback-update-"))
+            directory = create_update_directory(self._update_temp_root)
             part = directory / f"{release.setup.name}.part"
             stream = part.open("xb")
         except OSError as exc:
@@ -264,8 +269,13 @@ class ReleaseUpdateCoordinator(QObject):
             (
                 "$parentId = [int]$env:TRAINING_FEEDBACK_UPDATE_PARENT_PID; "
                 "Wait-Process -Id $parentId -ErrorAction SilentlyContinue; "
+                "try { "
                 "Start-Process -FilePath $env:TRAINING_FEEDBACK_UPDATE_INSTALLER "
-                "-WorkingDirectory $env:TRAINING_FEEDBACK_UPDATE_DIRECTORY"
+                "-WorkingDirectory $env:TRAINING_FEEDBACK_UPDATE_DIRECTORY -Wait "
+                "} finally { "
+                "Remove-Item -LiteralPath $env:TRAINING_FEEDBACK_UPDATE_DIRECTORY "
+                "-Recurse -Force -ErrorAction SilentlyContinue "
+                "}"
             ),
         ])
         process.setWorkingDirectory(str(target.parent))

@@ -6,8 +6,8 @@ from training_feedback.ui.release_updates import ReleaseUpdateCoordinator
 
 
 class NoNetworkUpdateCoordinator(ReleaseUpdateCoordinator):
-    def __init__(self):
-        super().__init__("0.8.1")
+    def __init__(self, update_temp_root):
+        super().__init__("0.8.1", update_temp_root=update_temp_root)
         self.starts = 0
 
     def start_once(self):
@@ -20,7 +20,9 @@ class NoNetworkUpdateCoordinator(ReleaseUpdateCoordinator):
 
 def test_update_coordinator_does_not_block_main_window_startup(qt_app, tmp_path):
     context = LibraryContext.create(tmp_path / "data")
-    coordinator = NoNetworkUpdateCoordinator()
+    update_temp_root = tmp_path / "updates"
+    update_temp_root.mkdir()
+    coordinator = NoNetworkUpdateCoordinator(update_temp_root)
     window = MainWindow(context, update_coordinator=coordinator)
     try:
         window.show()
