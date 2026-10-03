@@ -23,7 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.8 | 24 | Current updater exit-hardening update: make the post-handoff application exit unskippable with a contained emit and a hard-exit watchdog | Development in progress |
+| 0.8.8 | 24 | Current updater exit-hardening update: make the post-handoff application exit unskippable with a contained emit and a hard-exit watchdog | Local candidate; Setup SHA-256 `bfbf1789b53d10f6aada0875c7395dcaf0493868a8a8f03b89b5119632c17207`; unsigned; GitHub distribution pending |
 | 0.8.7 | 24 | Current navigation reliability update: contain page-creation failure into a visible retryable message and paint the library loading state before its first read | GitHub Release `v0.8.7`; Setup SHA-256 `48c4dae577a17428760c135c5713f1e87608cbc9e0b89b0ff5b4e2f955a62ee0`; unsigned |
 | 0.8.6 | 24 | Current updater cleanup follow-up: remove verified Setup temporaries after use and safely recover owned leftovers | GitHub Release `v0.8.6`; Setup SHA-256 `06120b97244ab24a745a429617e04abdbe50f7b0057086cf050f64158b89e61c`; unsigned |
 | 0.8.5 | 24 | Current emergency updater correction: show complete download progress and exit before Setup starts | GitHub Release `v0.8.5`; Setup SHA-256 `37658f63ce49535f73ac56fef7d186495982aeecd38e5d559afe3b26cd5dc9e0`; unsigned |
@@ -41,6 +41,12 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.8 development record](0.8.8/development.md) identifies the clean
+candidate built from application source `13e9954`. Its payload and installer
+manifests are tracked beside that record. One isolated startup construction
+check passed. Download, handoff, exit, watchdog, launcher and installed-client
+behavior were not run and are not passes.
 
 The [0.8.7 development record](0.8.7/development.md) identifies the clean
 candidate built from application source `5bf3f69`. Its payload and installer
