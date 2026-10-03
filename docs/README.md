@@ -10,7 +10,7 @@ routes current execution work; this file routes tracked project authority.
 - Current plan/evidence contract: `4`
 - Current catalog: `070-illustrated-3`
 - Current release: [`0.8.10`](releases/0.8.10/design.md)
-- GitHub distribution: `v0.8.9` (v0.8.10 candidate ready)
+- GitHub distribution: `v0.8.10`
 - Formal compatibility baseline declared: no
 
 ## 当前验证政策
