@@ -8,6 +8,9 @@
 - Plan and evidence wire contracts: `4`
 - Previous distributed version: `0.8.3` / schema `24` / contract `4`
 
+The implementation and clean local candidate are recorded in the
+[0.8.4 development record](../../history/0.8.4/development.md).
+
 GitHub Release distribution is part of this update, but remains a separate event
 from development and does not declare a formal compatibility baseline, public
 support, external content review, personal-data transition or W4.

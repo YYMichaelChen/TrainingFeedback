@@ -23,7 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.4 | 24 | Current UI reliability update: restore owned window icons, make action-library loading visible and clarify plan-file wording | Development in progress; candidate not yet built |
+| 0.8.4 | 24 | Current UI reliability update: restore owned window icons, make action-library loading visible and clarify plan-file wording | Clean local Setup candidate; SHA-256 `832e958df99c3707d85065f715787d4035d69f85fe1830ec8f4116c47c8497b7`; unsigned; GitHub distribution pending |
 | 0.8.3 | 24 | Current emergency update: verified in-app Setup download and previous-directory installer reuse | GitHub Release `v0.8.3`; Setup SHA-256 `a7dcb23536c43422355d6113df926fef2f05cbeaaea383310e9630f50a381009`; unsigned |
 | 0.8.2 | 24 | Current personal-use update: remove training-day names, improve illustration views and set the application icon | GitHub Release `v0.8.2`; Setup SHA-256 `c04ba484d6d6cbf9a7c3347a0728ad4859e11a51cb131641465b5c18ab568d97`; unsigned |
 | 0.8.1 | 23 | Previous personal-use update: [GitHub update discovery](../releases/0.8.1/design.md) | GitHub Release `v0.8.1`; Setup SHA-256 `5e9299066ad13c6ef78a2e6e8fb07b013595b57f240c64be54f388c8a219b0cf`; unsigned |
@@ -37,6 +37,12 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.4 development record](0.8.4/development.md) identifies the clean
+candidate built after the icon, action-library loading and plan-wording fixes.
+One isolated startup construction check passed. Visible title-bar behavior,
+action-library navigation, plan import/export and installed-client behavior were
+not run and are not passes. GitHub distribution is pending as a separate event.
 
 The [0.8.3 development record](0.8.3/development.md) identifies the clean
 candidate built after the updater and installer fixes. Its payload and installer
@@ -91,6 +97,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.4 development and local candidate record](0.8.4/development.md)
 - [0.8.3 GitHub Release record](0.8.3/github-release-2026-10-03.md)
 - [0.8.3 development and local candidate record](0.8.3/development.md)
 - [0.8.2 GitHub Release record](0.8.2/github-release-2026-10-03.md)
