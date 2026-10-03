@@ -43,6 +43,9 @@ QFrame#hero { background: #e4f2ee; border: 1px solid #cee6de; border-radius: 14p
 QFrame#sidebar { background: #172b40; border: none; }
 QLabel#brand { color: white; font-size: 22px; font-weight: 700; }
 QLabel#brandCaption { color: #9eb6c9; font-size: 12px; }
+QToolButton#updateNotice { color: #ffd166; background: transparent; border: 2px solid #ffd166;
+                           border-radius: 12px; font-size: 16px; font-weight: 700; padding: 0; }
+QToolButton#updateNotice:hover { color: white; border-color: white; background: #245a65; }
 QListWidget#navigation { background: transparent; border: none; color: #c4d3df; padding: 0; }
 QListWidget#navigation::item { padding: 14px 12px; margin: 3px 0;
                                border: none; border-radius: 8px; }

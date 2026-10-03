@@ -8,7 +8,7 @@ from pathlib import Path
 
 LATEST_SCHEMA_VERSION = 23
 OLDEST_SUPPORTED_SCHEMA_VERSION = 23
-SUPPORTED_SCHEMA_APPLICATIONS = {23: "0.8.0"}
+SUPPORTED_SCHEMA_APPLICATIONS = {23: "0.8.1"}
 
 class FutureSchemaError(sqlite3.DatabaseError):
     """The database belongs to a newer application version."""

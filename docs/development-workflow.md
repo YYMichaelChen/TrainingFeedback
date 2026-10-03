@@ -128,6 +128,13 @@ requirements still apply; user feedback drives subsequent fixes.
    Attach the identified Setup executable to the matching version tag and state
    its SHA-256, signature status, build source revision and evidence limits.
 
+For updater-compatible distribution, publish a non-draft, non-prerelease tag
+named exactly `v<MAJOR>.<MINOR>.<PATCH>` and attach exactly one uploaded
+`TrainingFeedback-<version>-Setup.exe`. Preserve the GitHub-reported asset digest
+and verify the public latest-Release response after upload. A missing, duplicate
+or malformed Setup asset leaves the in-app notice able to open the Release page
+but disables its direct Setup action. Do not add credentials to the client.
+
 Record only what was actually observed for the exact candidate. Existing
 results retain their identities; changing a candidate does not require repeating
 cancelled checks. An unrun check is not a pass, and a check cancelled by current

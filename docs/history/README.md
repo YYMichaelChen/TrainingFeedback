@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.0**
+- Application: **0.8.1**
 - Database schema: **23**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **3**
-- GitHub distribution: **v0.8.0**
+- GitHub distribution: **v0.8.0**; v0.8.1 pending
 - Formal compatibility baseline declared: **no**
-- Current delivered version: [0.8.0](../releases/0.8.0/design.md)
+- Current development version: [0.8.1](../releases/0.8.1/design.md)
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,6 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.1 | 23 | Current update: [GitHub update discovery](../releases/0.8.1/design.md) | Implementation in progress; no candidate or GitHub Release yet |
 | 0.8.0 | 23 | Current personal-use update: [installation, cleanup and response work](0.8.0/development.md) | GitHub Release `v0.8.0`; Setup SHA-256 `49de95af46f2ae0f20f36a7bbb1f4e6318a418cf9b117370ee130ced1b1dcdad`; unsigned |
 | 0.7.8 | 23 | Historical development version: [documentation and knowledge governance](0.7.8/development.md) | No installer candidate; documentation/identity verification only |
 | 0.7.7 | 23 | Historical development version: [new-root creation](0.7.7/development.md) | [User-approved partial closeout; full installed acceptance incomplete](0.7.7/local-candidate.md#2026-09-29-部分验收收尾) |

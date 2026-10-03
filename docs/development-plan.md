@@ -677,6 +677,34 @@ a baseline; later formal releases select one or two predecessor formal versions
 under Section 13. A formal declaration alone does not authorize bulk testing.
 Future formal/public verification scope must be explicitly settled at that time.
 
+#### GitHub update discovery
+
+Starting with application 0.8.1, each process that successfully opens a main
+window checks this repository's latest stable GitHub Release once, after the
+window is visible. The request is asynchronous and unauthenticated and must not
+read or write the selected data root. Switching roots reuses the process result;
+it does not start another automatic request. A manual Settings action may retry.
+
+Only an exact `vMAJOR.MINOR.PATCH` stable Release participates. Drafts,
+prereleases, malformed responses and network or rate-limit failures never block
+startup. Failures remain quiet outside Settings and are not retried automatically.
+An equal or older published version does not display an update notice.
+
+A newer version displays a clickable hollow-circle exclamation mark in the main
+sidebar. Release text is shown as untrusted plain text. The application may offer
+the exact `TrainingFeedback-<version>-Setup.exe` browser URL only when the asset
+is uniquely present, uploaded, has a valid GitHub repository URL and supplies a
+SHA-256 digest. Otherwise the notice remains available but only the Release page
+can be opened. Both actions use the system browser: the application does not save,
+verify, execute or silently install the Setup file. The user decides whether to
+download and run it. Existing installer ownership, directory validation and
+data-root separation continue to govern an overwrite update.
+
+The 0.8.1 updater is itself bootstrapped by one final manual installation from
+0.8.0. GitHub distribution remains distinct from a formal compatibility or
+public-support declaration, external content review, personal-data transition
+and W4.
+
 ### 9.2 W4 Real-Use Gate
 
 W4 begins only after the user authorizes the personal-data transition in Section

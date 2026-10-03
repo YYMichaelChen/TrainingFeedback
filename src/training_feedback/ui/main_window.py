@@ -1,5 +1,6 @@
-"""主窗口：左侧导航 + 按需创建的页面堆栈。"""
+"""主窗口：左侧导航、更新提示与按需创建的页面堆栈。"""
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -7,17 +8,22 @@ from PySide6.QtWidgets import (
     QListWidget,
     QMainWindow,
     QStackedWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from ..app import LibraryContext
+from ..application.release_updates import UpdateStatus
+from .release_updates import show_release_details
 from .settings_page import SettingsPage
 
 
 class MainWindow(QMainWindow):
     """导航切换页面，并在首次进入时创建较重的工作区。"""
-    def __init__(self, context: LibraryContext, switch_request=None, parent=None):
+    def __init__(
+        self, context: LibraryContext, switch_request=None, update_coordinator=None, parent=None
+    ):
         super().__init__(parent)
         self.setWindowTitle("训练反馈")
         self.resize(1100, 740)
@@ -30,11 +36,22 @@ class MainWindow(QMainWindow):
         sidebar.setFixedWidth(200)
         sidebar_layout = QVBoxLayout(sidebar)
         sidebar_layout.setContentsMargins(18, 28, 18, 22)
+        brand_row = QHBoxLayout()
+        brand_row.setContentsMargins(0, 0, 0, 0)
         brand = QLabel("训练反馈")
         brand.setObjectName("brand")
+        self.update_notice = QToolButton()
+        self.update_notice.setObjectName("updateNotice")
+        self.update_notice.setText("!")
+        self.update_notice.setFixedSize(25, 25)
+        self.update_notice.setVisible(False)
+        self.update_notice.clicked.connect(self._show_update)
+        brand_row.addWidget(brand)
+        brand_row.addStretch()
+        brand_row.addWidget(self.update_notice)
         caption = QLabel("TRAINING FEEDBACK")
         caption.setObjectName("brandCaption")
-        sidebar_layout.addWidget(brand)
+        sidebar_layout.addLayout(brand_row)
         sidebar_layout.addWidget(caption)
         sidebar_layout.addSpacing(30)
         self.navigation = QListWidget()
@@ -49,7 +66,12 @@ class MainWindow(QMainWindow):
             lambda: context.create_session_page(self),
             lambda: context.create_library_page(self, progressive=True),
             lambda: context.create_plan_page(self),
-            lambda: SettingsPage(context, switch_request=switch_request, parent=self),
+            lambda: SettingsPage(
+                context,
+                switch_request=switch_request,
+                update_coordinator=update_coordinator,
+                parent=self,
+            ),
         )
         self._built_pages = {0}
         for index, name in enumerate(("训练", "动作库", "训练计划", "设置")):
@@ -60,6 +82,30 @@ class MainWindow(QMainWindow):
         layout.addWidget(sidebar)
         layout.addWidget(self.pages, 1)
         self.setCentralWidget(container)
+        self.update_coordinator = update_coordinator
+        self._update_start_scheduled = False
+        if update_coordinator is not None:
+            update_coordinator.result_changed.connect(self._update_release_notice)
+            self._update_release_notice(update_coordinator.result)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self.update_coordinator is not None and not self._update_start_scheduled:
+            self._update_start_scheduled = True
+            QTimer.singleShot(0, self.update_coordinator.start_once)
+
+    def _update_release_notice(self, result) -> None:
+        available = result.status == UpdateStatus.AVAILABLE
+        self.update_notice.setVisible(available)
+        if available and result.release is not None:
+            self.update_notice.setToolTip(f"发现新版本 v{result.release.version}")
+
+    def _show_update(self) -> None:
+        if self.update_coordinator is None:
+            return
+        result = self.update_coordinator.result
+        if result.status == UpdateStatus.AVAILABLE and result.release is not None:
+            show_release_details(result, self)
 
     def _show_page(self, index: int) -> None:
         if index < 0:

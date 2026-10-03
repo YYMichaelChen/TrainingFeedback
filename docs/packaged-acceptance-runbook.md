@@ -7,6 +7,10 @@
 无此风险为 0 项，人工测试默认 0 项。旧批量本机验收要求已取消。
 安装包及后续更新默认通过本仓库 GitHub Releases 分发。上传 Release 不增加测试，
 不自动声明正式兼容支持；说明中记录版本、SHA-256、签名状态和构建来源。
+供 0.8.1 及后续版本自动发现的 Release 必须是稳定发布，tag 为
+`v<MAJOR>.<MINOR>.<PATCH>`，并且只附带一个同版本
+`TrainingFeedback-<version>-Setup.exe`。发布后读取公共 latest-Release 响应，
+核对 tag、资产名、大小、GitHub digest 和下载地址；此身份检查不认证客户端行为。
 
 ## 1. Build and identify a candidate
 

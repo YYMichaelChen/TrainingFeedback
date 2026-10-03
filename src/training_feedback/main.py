@@ -18,6 +18,7 @@ def main() -> int:
 
     from PySide6.QtWidgets import QApplication, QMessageBox
 
+    from training_feedback import __version__
     from training_feedback.app import DataRootSwitcher, LibraryContext
     from training_feedback.bootstrap import choose_data_root, open_from_locator
     from training_feedback.data.data_root import DataRootError
@@ -25,6 +26,7 @@ def main() -> int:
     from training_feedback.ui.data_root_dialog import DataRootDialog, suggested_data_root
     from training_feedback.ui.labels import user_message
     from training_feedback.ui.main_window import MainWindow
+    from training_feedback.ui.release_updates import ReleaseUpdateCoordinator
     from training_feedback.ui.theme import apply_theme
 
     application = QApplication(sys.argv)
@@ -48,9 +50,10 @@ def main() -> int:
     if context is None:
         return 0
     switcher = DataRootSwitcher(context, locator)
+    update_coordinator = ReleaseUpdateCoordinator(__version__, application)
 
     def build_window(ctx: LibraryContext) -> MainWindow:
-        return MainWindow(ctx, request_switch)
+        return MainWindow(ctx, request_switch, update_coordinator)
 
     def request_switch(path, create) -> bool:
         return switcher.switch(path, create, build_window)
