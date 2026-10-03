@@ -48,5 +48,24 @@ real update directory or real user root was used. Manual checks: **0**.
 
 ## Candidate
 
-No candidate has been built yet. This section will identify the exact clean
-source commit, toolchain, payload and Setup after construction.
+The clean implementation commit `ccb47bd09e33807807ed28eedc863bbf4b172b2f`
+was built on 2026-10-03 with Python 3.12.14 AMD64, PySide6 6.11.2,
+PyInstaller 6.22.2, hooks 2026.7 and Inno Setup 6.7.3.
+
+- Setup: `dist/installer/TrainingFeedback-0.8.6-Setup.exe`
+- Bytes: `85,664,463`
+- SHA-256: `06120b97244ab24a745a429617e04abdbe50f7b0057086cf050f64158b89e61c`
+- Signature: unsigned (`NotSigned`); payload EXE also `NotSigned`
+- Payload files: `298`
+- Payload executable SHA-256:
+  `e3ebc0f84d0ea4443cf3699dadefef17e9ca3cc449e5da13a7a023adc3d8afd0`
+- Source dirty: `false`
+- Manifests: [installer](installer-build-manifest.json) and
+  [payload](payload-build-manifest.json)
+
+The build verified the catalog and required packaged schema, contract and icon
+resources, and found no user data in the payload. Building and manifest
+inspection do not certify stale-directory selection, deletion, Setup waiting,
+post-install cleanup or installed behavior. GitHub distribution remains a
+separate event and does not declare formal compatibility, public support,
+external content review, personal-data transition or W4.
