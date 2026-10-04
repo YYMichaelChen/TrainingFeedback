@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.10**
+- Application: **0.8.11**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.10**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.10](../releases/0.8.10/design.md)
+- Current development version: [0.8.11](../releases/0.8.11/design.md)
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,6 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.11 | 24 | Action reading redesign: responsive illustration/guidance panels, grouped guidance, zoom viewer and exact-content operations menu | Source development only; no installer candidate or GitHub distribution |
 | 0.8.10 | 24 | Current illustration-layout and updater-exit correction: align stable cards and captions, scale previews from source proportions, and use an event-loop-independent exit fallback | GitHub Release `v0.8.10`; Setup SHA-256 `9846aedc52073b9c85e9f52c7f3cafe2450e60a6c38a103368bb8c34c2b1580d`; unsigned |
 | 0.8.9 | 24 | Current action-library construction fix: restore the missing illustration-tab label used by the page and review dialog | GitHub Release `v0.8.9`; Setup SHA-256 `e0030b4c15be767b46fafb7e0da652bd27ce647207779eb2e5163a873accd722`; unsigned |
 | 0.8.8 | 24 | Current updater exit-hardening update: make the post-handoff application exit unskippable with a contained emit and a hard-exit watchdog | GitHub Release `v0.8.8`; Setup SHA-256 `bfbf1789b53d10f6aada0875c7395dcaf0493868a8a8f03b89b5119632c17207`; unsigned |
@@ -43,6 +44,11 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.11 development record](0.8.11/development.md) records the reading
+redesign and limited source verification. No 0.8.11 candidate was built;
+latest GitHub distribution remains `v0.8.10`. Earlier candidate results do not
+certify the new reading surfaces or their client behavior.
 
 The [0.8.10 development record](0.8.10/development.md) identifies the clean
 candidate built from application source `5f37d83`. Its payload and installer
@@ -161,6 +167,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.11 development record](0.8.11/development.md)
 - [0.8.10 GitHub Release record](0.8.10/github-release-2026-10-04.md)
 - [0.8.10 development and candidate record](0.8.10/development.md)
 - [0.8.9 GitHub Release record](0.8.9/github-release-2026-10-03.md)

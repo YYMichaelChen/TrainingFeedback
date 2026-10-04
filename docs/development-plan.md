@@ -1277,6 +1277,47 @@ removes only the plan-day name columns and historical session name snapshot;
 plans, training history, feedback and review records remain. A failed upgrade
 rolls back the complete change.
 
+### 12.12 Action Detail And Guidance Reading
+
+Action-library details, external-review reading regions and frozen-guidance
+dialogs share read-only reading components. At 760 Qt logical pixels of available
+body width, illustrations and guidance appear side by side with an initial
+45/55 split and adjustable divider; narrower bodies show guidance/illustration
+tabs with guidance selected initially. Resizing preserves guidance position and
+group state. Training execution and library card layouts retain their existing
+components.
+
+Illustrations fit both available dimensions without cropping or stretching.
+Declared images retain order, caption and position even when unavailable;
+multiple images are paged rather than stacked. Captions have a two-line preview
+and an entry to the full original text when longer. Clicking a valid image opens
+a resizable viewer with fit, actual logical size, wheel zoom, pan and Esc close.
+Manual zoom ranges from 10% to 400%; fit may go below 10%. Rendering always
+uses the original pixels and refreshes for display DPI changes, without changing
+files, hashes, eligibility or review status.
+
+Guidance has one vertical scroll container. How-to and safety groups default
+open; understanding and progression/regression groups default closed. User
+folding persists during resizing and resets on action/content change. Original
+field text, line breaks, step order and numbering remain accessible and
+selectable; empty fields explicitly say 未填写. No image-derived instruction or
+generated summary becomes guidance.
+
+Details put management in a grouped More actions menu bound to the exact
+displayed target on opening and execution. Selection, enablement, editing,
+copying, image replacement, review and lifecycle operations keep their existing
+service, confirmation and transaction boundaries. Enable/disable shows only the
+applicable entry. Content information and current-version review events are
+read-only dialogs, separate from reading and write operations. Events appear
+newest first with recorded/actual times, source, original notes and attachment
+information; unknown time, absent attachment and no events are explicit.
+Frozen reading uses session content and session image services only, never a
+fallback to the latest catalog. No reading action writes personal facts.
+
+The detailed layout design is in
+[动作详情与指导阅读重新设计](designs/exercise-reading-redesign.md);
+implementation evidence belongs to [v0.8.11](history/0.8.11/development.md).
+
 ## 13. Version Retention And Development Data Policy
 
 The 2026-09-20 three-version development policy is superseded by the user's

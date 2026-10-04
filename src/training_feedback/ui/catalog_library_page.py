@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import datetime
 
 from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
@@ -21,20 +22,21 @@ from PySide6.QtWidgets import (
     QListView,
     QListWidget,
     QListWidgetItem,
+    QMenu,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
     QSpinBox,
     QStackedWidget,
-    QTabWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from ..application.library_workflow import LibraryTarget
-from .guidance_widgets import GuidanceForm, GuidanceView
-from .illustrations import IllustrationLabel
+from .exercise_reading import ExerciseReading, show_readonly_text
+from .guidance_widgets import GuidanceForm
 from .labels import (
     CATEGORY_LABELS,
     EXERCISE_ENABLED_LABELS,
@@ -61,45 +63,22 @@ def buttons(parent, save, cancel):
     return box
 
 
-def show_images(layout, service, target):
-    while layout.count():
-        item = layout.takeAt(0)
-        widget = item.widget()
-        if widget is not None:
-            widget.deleteLater()
-    layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+def show_library_reading(reading, service, target, status=None):
+    """Bind every declared image position to the service's exact checked target."""
     if target is None:
+        reading.set_content(None, None, lambda index: b"")
         return
+    target = deepcopy(target)
     entry = service.target_entry(target)
-    for check in service.eligibility(target).image_checks:
-        if check.valid:
-            try:
-                pixmap = QPixmap()
-                if not pixmap.loadFromData(service.display_image(target, check)):
-                    raise ValueError("Image is unavailable or invalid.")
-                label = IllustrationLabel(pixmap)
-            except (ValueError, OSError):
-                label = QLabel()
-                label.setText(T["invalid_image"])
-        else:
-            label = QLabel()
-            label.setText(LIBRARY_REASON_LABELS.get(check.reason, check.reason))
-        label.setWordWrap(True)
-        layout.addWidget(
-            label,
-            0,
-            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
-        )
-        caption = QLabel(entry["content"]["guidance"]["images"][check.index].get("caption", ""))
-        caption.setWordWrap(True)
-        caption.setTextFormat(Qt.TextFormat.PlainText)
-        caption.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
-        caption.setMaximumWidth(getattr(label, "max_width", 760))
-        layout.addWidget(
-            caption,
-            0,
-            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
-        )
+    checks = (status or service.eligibility(target)).image_checks
+
+    def load(index):
+        check = checks[index]
+        if not check.valid:
+            raise ValueError(LIBRARY_REASON_LABELS.get(check.reason, check.reason))
+        return service.checked_image(target, index)
+
+    reading.set_content(target, entry["content"]["guidance"], load)
 
 
 def card_icon(service, target, status, cache=None):
@@ -145,23 +124,15 @@ class CatalogReviewDialog(QDialog):
         self.service, self.targets = service, deepcopy(targets)
         self.answer_file = None
         self.setWindowTitle(T["review_title"])
-        self.resize(700, 650)
+        self.resize(1040, 800)
         layout = QVBoxLayout(self)
         self.targets_combo = QComboBox()
         for target in self.targets:
             entry = service.target_entry(target)
             self.targets_combo.addItem(entry["content"]["canonical_name"], target)
         layout.addWidget(self.targets_combo)
-        tabs = QTabWidget()
-        self.view = GuidanceView(include_review=False)
-        tabs.addTab(self.view, T["details"])
-        self.image_panel = QWidget()
-        self.image_layout = QVBoxLayout(self.image_panel)
-        image_scroll = QScrollArea()
-        image_scroll.setWidgetResizable(True)
-        image_scroll.setWidget(self.image_panel)
-        tabs.addTab(image_scroll, T["images_tab"])
-        layout.addWidget(tabs, 1)
+        self.reading = ExerciseReading()
+        layout.addWidget(self.reading, 1)
         self.targets_combo.currentIndexChanged.connect(self._show_target)
         form = QFormLayout()
         self.reviewer = QComboBox()
@@ -191,9 +162,7 @@ class CatalogReviewDialog(QDialog):
     def _show_target(self):
         target = self.targets_combo.currentData()
         if target:
-            entry = self.service.target_entry(target)
-            self.view.set_guidance(entry["content"]["guidance"])
-            show_images(self.image_layout, self.service, target)
+            show_library_reading(self.reading, self.service, target)
 
     def _choose_answer(self):
         from pathlib import Path
@@ -385,38 +354,24 @@ class CatalogLibraryPage(QWidget):
         heading.addWidget(back)
         self.detail_title = QLabel()
         self.detail_title.setObjectName("sectionTitle")
+        self.detail_title.setTextFormat(Qt.TextFormat.PlainText)
+        self.detail_title.setWordWrap(True)
         heading.addWidget(self.detail_title, 1)
+        self.more = QToolButton()
+        self.more.setText("更多操作")
+        self.more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.menu = QMenu(self.more)
+        self.menu.aboutToShow.connect(self._prepare_menu)
+        self.more.setMenu(self.menu)
+        heading.addWidget(self.more)
         detail_layout.addLayout(heading)
         self.status = QLabel()
+        self.status.setTextFormat(Qt.TextFormat.PlainText)
         self.status.setWordWrap(True)
         detail_layout.addWidget(self.status)
-        self.tabs = QTabWidget()
-        self.guidance = GuidanceView(include_review=False)
-        self.tabs.addTab(self.guidance, T["details"])
-        self.images = QWidget()
-        self.images_layout = QVBoxLayout(self.images)
-        image_scroll = QScrollArea()
-        image_scroll.setWidgetResizable(True)
-        image_scroll.setWidget(self.images)
-        self.tabs.addTab(image_scroll, T["images_tab"])
-        self.review_history = QPlainTextEdit()
-        self.review_history.setReadOnly(True)
-        self.tabs.addTab(self.review_history, T["review_events"])
-        detail_layout.addWidget(self.tabs, 1)
+        self.reading = ExerciseReading()
+        detail_layout.addWidget(self.reading, 1)
         self.actions = {}
-        for names in (("select", "enable", "disable", "record_review", "withdraw"),
-                      ("edit", "copy", "image")):
-            row = QHBoxLayout()
-            for name in names:
-                button = QPushButton(T[name])
-                self.actions[name] = button
-                button.clicked.connect(lambda checked=False, action=name: self._action(action))
-                row.addWidget(button)
-            detail_layout.addLayout(row)
-        if removals is not None:
-            self.removal_button = QPushButton(T["removal"])
-            self.removal_button.clicked.connect(self._open_removals)
-            detail_layout.addWidget(self.removal_button)
         self.stack.addWidget(detail)
         layout.addWidget(self.stack, 1)
         self.search.textChanged.connect(self._filter_changed)
@@ -585,24 +540,21 @@ class CatalogLibraryPage(QWidget):
             )
 
     def _show_version(self):
-        for action in self.actions.values():
-            action.setEnabled(self.target is not None)
-        show_images(self.images_layout, self.service, self.target)
+        self.more.setEnabled(self.target is not None)
         if self.target is None:
-            self.guidance.set_guidance(None)
+            show_library_reading(self.reading, self.service, None)
             self.status.clear()
-            self.review_history.clear()
             self.detail_title.clear()
             return
         entry = self.service.target_entry(self.target)
         status = self.service.eligibility(self.target)
         exercise = self.service.get(self.target.exercise)
         self.detail_title.setText(entry["content"]["canonical_name"])
-        self.guidance.set_guidance(entry["content"]["guidance"])
+        show_library_reading(self.reading, self.service, self.target, status)
         selected = exercise["selected"]
         if selected is None:
             state = T["state_none"]
-        elif selected["reference"]["id"] == entry["reference"]["id"]:
+        elif selected["reference"] == entry["reference"]:
             state = T["state_latest"]
         else:
             state = T["state_stale"]
@@ -612,24 +564,125 @@ class CatalogLibraryPage(QWidget):
             f"{EXERCISE_ENABLED_LABELS[exercise['enabled']]}\n"
             + "；".join(LIBRARY_REASON_LABELS.get(reason, reason) for reason in status.reasons)
         )
-        events = self.service.review_events(self.target)
-        self.review_history.setPlainText("\n\n".join(
-            f"{T[event['event_type']]} · {event['confirmed_at']}\n"
-            f"{event['review_source']} · {event['reviewed_at'] or T['none']}\n{event['note']}\n"
-            + (f"{T['answer_file']}：{event['attachment']['original_name']}"
-               if event["attachment"] else T["no_answer"])
-            for event in events
-        ))
+
+    def _prepare_menu(self):
+        self.menu.clear()
+        self.actions.clear()
+        if self.target is None:
+            return
+        target = deepcopy(self.target)
+        try:
+            self._show_version()
+            enabled = self.service.get(target.exercise)["enabled"]
+        except (ValueError, OSError) as exc:
+            self.menu.addAction(user_message(str(exc))).setEnabled(False)
+            return
+        groups = (
+            (("select", T["select"]),
+             ("disable" if enabled else "enable", T["disable" if enabled else "enable"])),
+            tuple((key, T[key]) for key in ("edit", "copy", "image")),
+            (("review_events", "审核事件…"), ("record_review", T["record_review"]),
+             ("withdraw", T["withdraw"])),
+            (("removal", "移除与恢复审核…"),) if self.removals is not None else (),
+            (("info", "内容信息…"),),
+        )
+        for group in groups:
+            if not group:
+                continue
+            if self.actions:
+                self.menu.addSeparator()
+            for name, text in group:
+                action = self.menu.addAction(text)
+                self.actions[name] = action
+                action.triggered.connect(
+                    lambda checked=False, name=name, target=target: self._action(name, target))
+
+    def _show_review_events(self, target):
+        entry = self.service.target_entry(target)
+        events = self.service.review_events(target)
+        records = []
+
+        def recorded_time(event):
+            try:
+                return datetime.fromisoformat(event["confirmed_at"]).timestamp(), event["id"]
+            except (ValueError, TypeError, OSError, OverflowError):
+                return float("-inf"), event["id"]
+
+        for event in sorted(events, key=recorded_time, reverse=True):
+            attachment = event["attachment"]
+            reviewer = {**REVIEWER_TYPE_LABELS, "user": "用户"}.get(
+                event["reviewer_type"], "未记录")
+            answer = (f"答复原件：{attachment['original_name']}\n"
+                      f"保存位置：{attachment.get('path') or '未记录'}\n"
+                      f"原件 SHA-256：{attachment.get('sha256') or '未记录'}"
+                      if attachment else "答复原件：未附原件")
+            records.append(
+                f"{T[event['event_type']]}\n"
+                f"记录时间：{event['confirmed_at'] or '未知'}\n"
+                f"实际审核时间：{event['reviewed_at'] or '未知'}\n"
+                f"审核者：{reviewer}\n"
+                f"来源：{event['review_source']}\n原始备注：\n{event['note']}\n{answer}")
+        reference = entry["reference"]
+        title = (f"审核事件 · {entry['content']['canonical_name']} · "
+                 f"{reference['id']} v{reference['version']}")
+        text = "\n\n".join(records) if records else "当前内容版本暂无审核事件"
+        show_readonly_text(self, title, text)
+
+    def _show_content_info(self, target):
+        entry = self.service.target_entry(target)
+        exercise = self.service.get(target.exercise)
+        status = self.service.eligibility(target)
+        classification = entry["content"]["classification"]
+        family = classification["family_key"]
+        family_names = {row["key"]: row["name"] for row in self.service.catalog.families()}
+
+        def identity(reference):
+            return (f"{reference['id']} · v{reference['version']}\nSHA-256：{reference['sha256']}"
+                    if reference else "尚未选择内容")
+
+        origin = {"bundled": "程序内置", "override": "本地覆盖", "custom": "自定义"}
+        selected_reference = exercise["selected"]["reference"] if exercise["selected"] else None
+        lines = [
+            f"来源：{origin.get(entry.get('origin', 'bundled'), '本地保存内容')}",
+            f"动作族：{family_names.get(family, family or T['standalone'])}",
+            f"变体：{VARIANT_LABELS[classification['variant_role']]}",
+            f"当前显示内容：{identity(entry['reference'])}",
+            f"已选内容：{identity(selected_reference)}",
+            f"程序目录版本：{self.service.catalog.version}",
+        ]
+        retained_catalog = entry.get("provenance", {}).get("catalog_version")
+        if retained_catalog:
+            lines.append(f"内容保留时目录版本：{retained_catalog}")
+        for check in status.image_checks:
+            reason = ("校验可用" if check.valid
+                      else LIBRARY_REASON_LABELS.get(check.reason, check.reason))
+            lines.append(f"图片 {check.index + 1}：{reason}")
+        if not status.image_checks:
+            lines.append("图片资格：未声明图片")
+        show_readonly_text(self, f"内容信息 · {entry['content']['canonical_name']}",
+                           "\n\n".join(lines))
 
     def _confirm(self, text):
         answer = QMessageBox.question(self, T["confirm_title"], text)
         return answer == QMessageBox.StandardButton.Yes
 
-    def _action(self, action):
+    def _action(self, action, bound_target=None):
         if not self.target:
             return
-        target = deepcopy(self.target)
+        target = deepcopy(bound_target if bound_target is not None else self.target)
         try:
+            if target != self.target:
+                raise ValueError("The displayed content changed.")
+            self.service.target_entry(target)
+            if action == "review_events":
+                self._show_review_events(target)
+                return
+            if action == "info":
+                self._show_content_info(target)
+                return
+            if action == "removal":
+                self._open_removals([target])
+                return
             if action == "select":
                 if self._confirm(T["confirm_select"]):
                     self.service.select_content(target, user_confirmed=True)
@@ -664,5 +717,6 @@ class CatalogLibraryPage(QWidget):
                     self.target = LibraryTarget(target.exercise, entry["reference"])
         except (ValueError, OSError) as exc:
             QMessageBox.warning(self, T["error"], user_message(str(exc)))
+            self._refresh_with_feedback()
             return
         self._refresh_with_feedback()

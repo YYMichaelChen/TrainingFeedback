@@ -52,7 +52,7 @@ $manifestPath = Join-Path $distDir 'TrainingFeedback.build-manifest.json'
 $installerOutputDir = Join-Path $distDir 'installer'
 
 $python = Resolve-BuildInterpreter -Explicit $Python -ProjectRoot $projectRoot
-& $python (Join-Path $PSScriptRoot 'build_catalog.py') --verify (Join-Path $projectRoot 'src/training_feedback/catalog')
+& $python (Join-Path $PSScriptRoot 'build_catalog.py') --verify-files (Join-Path $projectRoot 'src/training_feedback/catalog')
 if ($LASTEXITCODE -ne 0) {
     throw 'Program catalog verification failed.'
 }
@@ -133,7 +133,7 @@ if ($foreignIcu) {
     throw "Build output contains ICU that must resolve from supported Windows: $($foreignIcu.FullName -join ', ')"
 }
 $catalogDir = Join-Path $outputDir '_internal/training_feedback/catalog'
-& $python (Join-Path $PSScriptRoot 'build_catalog.py') --verify $catalogDir
+& $python (Join-Path $PSScriptRoot 'build_catalog.py') --verify-files $catalogDir
 if ($LASTEXITCODE -ne 0) {
     throw 'Packaged catalog verification failed.'
 }

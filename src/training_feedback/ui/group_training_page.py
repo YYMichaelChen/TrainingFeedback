@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..domain.enums import AbortReason
+from .exercise_reading import ExerciseReading
 from .guidance_widgets import GuidanceView
 from .illustrations import IllustrationLabel
 from .labels import (
@@ -109,7 +110,7 @@ class FrozenGuidanceDialog(QDialog):
     def __init__(self, service, session, parent=None):
         super().__init__(parent)
         self.setWindowTitle(T["guidance"])
-        self.resize(700, 600)
+        self.resize(1040, 700)
         layout = QVBoxLayout(self)
         self.selector = QComboBox()
         self.selector.setMinimumContentsLength(24)
@@ -118,19 +119,18 @@ class FrozenGuidanceDialog(QDialog):
         for row in session["occurrences"]:
             self.selector.addItem(occurrence_title(row), row)
         layout.addWidget(self.selector)
-        self.guidance = GuidanceView(include_review=False)
-        layout.addWidget(self.guidance, 1)
-        panel = QWidget()
-        images = QVBoxLayout(panel)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(panel)
-        layout.addWidget(scroll, 1)
+        self.reading = ExerciseReading()
+        layout.addWidget(self.reading, 1)
 
         def show_current():
             row = self.selector.currentData()
-            self.guidance.set_guidance(row["content"]["guidance"])
-            show_frozen_images(images, service, row)
+            if row is None:
+                self.reading.set_content(None, None, lambda index: b"")
+                return
+            self.reading.set_content(
+                row, row["content"]["guidance"],
+                lambda index, occurrence=row: service.image(occurrence, index),
+            )
 
         self.selector.currentIndexChanged.connect(show_current)
         show_current()
