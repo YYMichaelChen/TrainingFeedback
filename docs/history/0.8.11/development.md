@@ -76,3 +76,31 @@
 当前阶段、任务和下一步均通过已安装的 `plan.py sync` 投影到 INDEX。
 开发范围完成后按流程生成 SUMMARY 并关闭归档；无不可从源码或文档恢复的新 finding。
 本地计划不替代本记录，也不建立打包/分发义务。
+
+## 追加授权后的候选构建
+
+用户随后要求“提交推送并 release”。应用源码提交
+`52c9fcef2594c03ee552fa060bb9c3cfda351bb3` 已推送到 main，安装包于
+2026-10-04 从该干净提交构建（manifest 的 `source_dirty: false`）。
+
+| 项目 | 实际值 |
+| --- | --- |
+| 安装包 | `TrainingFeedback-0.8.11-Setup.exe` |
+| SHA-256 | `baa1e40c153c4ae69ca99e5f53b5d6019cd31481db5515777d511f4911549519` |
+| 大小 | 85,689,267 bytes |
+| 签名 | NotSigned |
+| 构建时间 | `2026-10-04T08:32:04Z`（北京时间 16:32:04） |
+| Python / 架构 | 3.12.14 / AMD64 |
+| PySide6 | 6.11.2 |
+| PyInstaller / hooks | 6.22.2 / 2026.7 |
+| Inno Setup 编译器 | 用户安装的 Inno Setup 6 / ISCC.exe |
+| 载荷文件数 | 298 |
+
+构建命令：`pwsh -NoProfile -File packaging/build.ps1 -Installer`。
+精确输出由[载荷构建清单](payload-build-manifest.json)及
+[安装包构建清单](installer-build-manifest.json)保留。
+安装包未运行，客户端未操作。构建过程只核对源目录与打包目录的 37 个资源文件
+清单、字节数和 SHA-256，并生成载荷所有权/构建清单；没有执行完整目录图片解码
+或领域规则验证。打包脚本改动的 Ruff、编译及文档检查通过。
+本次更新仍累计为 1 项启动场景、1 次执行、无重跑；追加阶段应用测试 0 项，
+人工测试 0 项。构建成功不表示安装行为或新阅读界面功能通过。
