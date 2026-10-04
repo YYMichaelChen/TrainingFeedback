@@ -6,7 +6,7 @@
 - Database schema: `24`
 - Catalog: `070-illustrated-3`
 - Plan/evidence contract: `4`
-- Latest distributed application: `0.8.10`
+- Latest distributed application: `0.8.11`
 - Events: development update and application-version rotation; the user's
   2026-10-04 follow-up additionally authorizes commit/push, Setup and GitHub Release.
 
@@ -56,3 +56,5 @@ payload/installer manifests and publish stable `v0.8.11` with exactly one
 manifest, sizes and hashes via `--verify-files`; it does not run the dormant
 full-catalog decoding/rule check. This adds no application tests or manual checks.
 Record the exact candidate and public GitHub asset identity in version history.
+The [GitHub Release record](../../history/0.8.11/github-release-2026-10-04.md)
+records the completed upload, stable tag and matching public latest response.
