@@ -23,7 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.13 | 24 | Continuous plan editing/execution, exact-version guidance in plan details and field-specific numeric input handling | Source update only; no installer or client observation |
+| 0.8.13 | 24 | Continuous plan editing/execution, exact-version guidance in plan details and field-specific numeric input handling | Clean Setup from `531a317`; SHA-256 `66ec6977bc87af5ef805b35f48b3a28cc46e407051bbc1649571ca9bc66e0b5b`; unsigned; no client observation |
 | 0.8.12 | 24 | Updater exit follow-up: external watchdog bound to the exact application process, readiness acknowledgement and confirmed exit before Setup | GitHub Release `v0.8.12`; clean Setup from `8a3ae60`; SHA-256 `22fc750d5773fd9442ee1e29e7644747544786639101c72d0e9d0800d33235f6`; unsigned |
 | 0.8.11 | 24 | Action reading redesign: responsive illustration/guidance panels, grouped guidance, zoom viewer and exact-content operations menu | GitHub Release `v0.8.11`; SHA-256 `baa1e40c153c4ae69ca99e5f53b5d6019cd31481db5515777d511f4911549519`; unsigned |
 | 0.8.10 | 24 | Current illustration-layout and updater-exit correction: align stable cards and captions, scale previews from source proportions, and use an event-loop-independent exit fallback | GitHub Release `v0.8.10`; Setup SHA-256 `9846aedc52073b9c85e9f52c7f3cafe2450e60a6c38a103368bb8c34c2b1580d`; unsigned |

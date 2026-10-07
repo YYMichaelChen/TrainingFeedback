@@ -50,4 +50,27 @@ plan/evidence contract `4`。[设计范围](../../releases/0.8.13/design.md)与
 用户于 2026-10-08 明确授权“提交推送并 release 更新”。此次追加提交、推送、
 构建干净源码的 Setup 及 GitHub Release 分发。构建和发布不扩大同一次更新的
 测试范围：应用自动测试累计 0 项、人工测试累计 0 项。实际候选与公开附件身份
-将在完成后记录；当前尚不把准备动作记为分发成功。
+按各自完成时点记录，不把准备动作记为分发成功。
+
+## 干净安装包候选
+
+源码提交 `531a3178bd1babf15c4e9c7c722b32060b131a66` 已推送到 main；工作树
+干净后通过 `packaging/build.ps1` 的 `-Installer` 参数构建一次成功。未启动应用或 Setup。
+
+| 项目 | 实际值 |
+| --- | --- |
+| Setup | `dist/installer/TrainingFeedback-0.8.13-Setup.exe` |
+| SHA-256 | `66ec6977bc87af5ef805b35f48b3a28cc46e407051bbc1649571ca9bc66e0b5b` |
+| 大小 | 85,690,958 bytes |
+| 签名 | NotSigned |
+| Setup 构建时间 UTC | 2026-10-07T23:45:05Z |
+| Setup 构建时间 Asia/Shanghai | 2026-10-08 07:45:05 |
+| 构建解释器 / PySide6 | Python 3.12.14 / PySide6 6.11.2 |
+| 载荷文件数 | 298 |
+| 源码状态 | `source_dirty=false` |
+
+保留[载荷清单](payload-build-manifest.json)和[安装包清单](installer-build-manifest.json)。
+构建只核对工具链、资源文件、程序所有权清单及文件哈希/大小，未增加功能场景。
+文件哈希/大小与生成清单一致。包内不包含用户数据库或 locator；本次更新累计
+应用自动测试 0 项、人工测试 0 项。候选构建不证明保存、训练、更新安装或已安装
+客户端行为，不转移已有候选的测试结论。
