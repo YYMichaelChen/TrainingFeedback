@@ -74,3 +74,13 @@ plan/evidence contract `4`。[设计范围](../../releases/0.8.13/design.md)与
 文件哈希/大小与生成清单一致。包内不包含用户数据库或 locator；本次更新累计
 应用自动测试 0 项、人工测试 0 项。候选构建不证明保存、训练、更新安装或已安装
 客户端行为，不转移已有候选的测试结论。
+
+## GitHub 分发完成
+
+稳定版 `v0.8.13` 于 2026-10-08 07:46:37（Asia/Shanghai）公开并设为 latest。
+候选证据提交 `8dd1f6d8f2e63df339cdde84822fd250bf73c4ad` 已推送并作为标签目标；
+构建源码仍为 `531a3178bd1babf15c4e9c7c722b32060b131a66`，记录提交不改变载荷。
+草稿附件和无 Authorization 的公开 latest API 均确认唯一 uploaded Setup、
+85,690,958 bytes 及与本地相同的 SHA-256。完整身份及限制见
+[GitHub Release 记录](github-release-2026-10-08.md)。追加构建及分发应用测试 0 项，
+人工测试 0 项；本次更新累计仍分别为 0 项。
