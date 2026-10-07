@@ -43,7 +43,7 @@
 应用测试 **0 项**，人工测试 **0 项**。
 
 源码修复阶段改动文件 Ruff、Python 编译、PowerShell AST 语法及文档/差异
-检查通过。版本身份与文档静态检查在提交前执行。构建只核对目录资源清单、
+检查通过。版本身份与文档静态检查在提交前通过。构建只核对目录资源清单、
 大小、哈希和必要打包资源，不运行旧功能检查或客户端。
 
 构建审阅发现启动器 stdout 持续持有日志文件句柄，且工作目录落在待清理目录，
@@ -57,6 +57,27 @@
 
 ## 候选与分发
 
-安装包将从干净源码提交构建；实际源提交、大小、摘要、签名、清单与 GitHub
-asset 身份在完成后追加。本地 Planscope v0.8.12 记录版本准备、构建、发布和
-收尾阶段；执行状态不替代上述权威规范或候选证据。
+最终安装包从干净源码 `8a3ae604bc93dcff9b42798036a4a39d924f8158` 构建。
+构建完成时间 `2026-10-07T10:34:18Z`（北京时间 18:34:18）。工具链为
+Python 3.12.14 AMD64、PySide6 6.11.2、PyInstaller 6.22.2、hooks 2026.7
+和 Inno Setup 6.7.3。
+
+| 项目 | 实际值 |
+| --- | --- |
+| Setup | `dist/installer/TrainingFeedback-0.8.12-Setup.exe` |
+| 大小 | 85,693,750 bytes |
+| Setup SHA-256 | `22fc750d5773fd9442ee1e29e7644747544786639101c72d0e9d0800d33235f6` |
+| 载荷 EXE SHA-256 | `bde36912794d11a9f6c2f5270c41b1df2dffb7b7498277cb98bb26c99df90d64` |
+| Setup / EXE 签名 | NotSigned / NotSigned |
+| 载荷文件数 | 298 |
+| source_dirty | false |
+
+[载荷清单](payload-build-manifest.json)和[安装包清单](installer-build-manifest.json)
+保留完整来源及逐文件摘要。构建资源检查通过，静态 PyInstaller 清单包含
+`training_feedback.application.update_launcher`；未运行任何客户端或 Setup。
+原 v0.8.11 候选证据不适用于本次新安装包。
+
+安装包和清单的构建身份是实测文件事实，不是更新退出、安装或客户端行为通过。
+GitHub 分发记录在实际上传并公开后追加；不声明正式兼容基线、公共验收、
+外部内容审核、个人数据转移或 W4。本地 Planscope v0.8.12 记录版本准备、
+构建、发布和收尾；执行状态不替代规范或候选证据。
