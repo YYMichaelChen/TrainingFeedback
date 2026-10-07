@@ -48,11 +48,9 @@ def render_impact(preview):
                 if kind == "plans":
                     text = (f"{index}. {row['name']} · {T['plan_revision']} "
                             f"v{row['revision_number']} · " + T[row['status']])
-                    text += "\n    " + "；".join(
-                        f"训练日 {item['day_order']}" for item in row["items"]
-                    )
+                    text += f"\n    引用位置：{len(row['items'])} 项"
                 elif kind == "groups":
-                    text = f"{index}. 训练日 {row['day_order']} · 动作组「{row['name']}」"
+                    text = f"{index}. 动作组「{row['name']}」"
                 elif kind == "sessions":
                     text = f"{index}. {row['training_date']} · {T[row['status']]}"
                 elif kind == "reviews":

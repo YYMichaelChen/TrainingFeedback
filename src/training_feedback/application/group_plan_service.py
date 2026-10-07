@@ -3,6 +3,7 @@
 from copy import deepcopy
 from dataclasses import asdict
 
+from ..data.library_images import inspect_images
 from ..data.plan_contract import plan_v4_schema
 from ..domain.catalog import ExerciseReference, content_sha256
 from ..domain.group_plans import (
@@ -33,6 +34,19 @@ class GroupPlanService:
 
     def get(self, revision_id):
         return self.repository.get(revision_id)
+
+    def action_content(self, action):
+        """Read the exact prescription content, including retained/removed content."""
+        target = LibraryTarget(ExerciseReference(**action["exercise"]), action["content"])
+        return self.library.target_entry(target)
+
+    def action_image(self, action, index):
+        entry = self.action_content(action)
+        image = entry["content"]["guidance"]["images"][index]
+        data = self.library._read_image(entry, image)
+        if not inspect_images([image], lambda _: data)[0].valid:
+            raise ValueError("Image is unavailable or invalid.")
+        return data
 
     def content_issues(self, revision_id):
         issues = []

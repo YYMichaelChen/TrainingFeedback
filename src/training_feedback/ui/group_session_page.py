@@ -88,8 +88,9 @@ class GroupSessionPage(QWidget):
         self.active_label.setTextFormat(Qt.TextFormat.PlainText)
         self.active_label.setWordWrap(True)
         layout.addWidget(self.active_label)
-        self.day = QComboBox()
-        layout.addWidget(self.day)
+        self.plan = QComboBox()
+        layout.addWidget(QLabel("选择训练计划"))
+        layout.addWidget(self.plan)
         row = QHBoxLayout()
         self.start_button = QPushButton(T["start"])
         self.start_button.setObjectName("primaryButton")
@@ -130,17 +131,14 @@ class GroupSessionPage(QWidget):
             f"{active['training_date']} · {SESSION_STATUS_LABELS[active['status']]}"
             if active else T["no_sessions"]
         ))
-        choice = self.day.currentData()
-        self.day.clear()
+        choice = self.plan.currentData()
+        self.plan.clear()
         for revision in self.context.plans.active_revisions():
-            days = revision["payload"]["plan"]["days"]
-            for day in days:
-                label = revision["name"] if len(days) == 1 else f"训练日 {day['order']}"
-                self.day.addItem(label, (revision["id"], day["order"]))
-        index = self.day.findData(choice)
+            self.plan.addItem(f"{revision['name']} · {revision['plan_code']}", revision["id"])
+        index = self.plan.findData(choice)
         if index >= 0:
-            self.day.setCurrentIndex(index)
-        self.start_button.setEnabled(active is None and self.day.count() > 0)
+            self.plan.setCurrentIndex(index)
+        self.start_button.setEnabled(active is None and self.plan.count() > 0)
         self.resume_button.setEnabled(active is not None)
         selected = self.history.currentData()
         self.history.blockSignals(True)
@@ -177,13 +175,12 @@ class GroupSessionPage(QWidget):
         self.refresh()
 
     def start(self):
-        choice = self.day.currentData()
-        if choice is None:
+        revision = self.plan.currentData()
+        if revision is None:
             return
-        revision, day = choice
         try:
-            preview = self.service.preview_start(revision, day)
-            text = (preview["revision"]["name"] + f" · 训练日 {preview['day']['order']}\n" +
+            preview = self.service.preview_start(revision)
+            text = (preview["revision"]["name"] + "\n" +
                     preview["training_date"] + "\n" + T["unreviewed"] +
                     ("、".join(preview["unreviewed"]) or T["none"]) + "\n\n" +
                     "\n\n".join(occurrence_title(row) + "\n" + occurrence_prescription(row)
@@ -191,7 +188,7 @@ class GroupSessionPage(QWidget):
             if not ExecutionPreview(T["start_preview"], text, self).exec():
                 return
             controller = self.context.session_controller()
-            controller.start(revision, day, expected_preview=preview["token"], user_confirmed=True)
+            controller.start(revision, expected_preview=preview["token"], user_confirmed=True)
             self.open_training(controller)
         except (ValueError, OSError) as exc:
             QMessageBox.warning(self, T["error"], user_message(str(exc)))

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..domain.group_plans import continuous_plan_day, prescription_rest_applicability
 from .labels import (
     DOSE_UNIT_LABELS,
     LIBRARY_REASON_LABELS,
@@ -26,6 +27,10 @@ def _boundary(record, field):
 
 
 def _sets(action, *, every_round=False):
+    doses = sorted(action["sets"], key=lambda row: row["order"])
+    rest_applicability = prescription_rest_applicability(
+        doses, aggregate="provenance" in action
+    )["set_rests"]
     return [
         {
             "order": dose["order"],
@@ -40,10 +45,11 @@ def _sets(action, *, every_round=False):
             ),
             "per_side": dose["per_side"],
             "note": dose["note"],
-            "rest": _boundary(dose, "rest_after_set_seconds"),
+            "rest": (_boundary(dose, "rest_after_set_seconds")
+                     if rest_applicability[index] else "不适用"),
             "every_round": every_round,
         }
-        for dose in sorted(action["sets"], key=lambda row: row["order"])
+        for index, dose in enumerate(doses)
     ]
 
 
@@ -105,13 +111,5 @@ def plan_presentation(revision, content_issues=()):
             }
             for issue in content_issues
         ],
-        "days": [
-            {
-                "order": day["order"],
-                "items": [
-                    _item(item) for item in sorted(day["items"], key=lambda row: row["order"])
-                ],
-            }
-            for day in sorted(plan["days"], key=lambda row: row["order"])
-        ],
+        "items": [_item(item) for item in continuous_plan_day(plan)["items"]],
     }

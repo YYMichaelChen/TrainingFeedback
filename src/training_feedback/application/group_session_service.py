@@ -14,6 +14,7 @@ from ..domain.group_execution import (
     round_members,
     session_feedback_areas,
 )
+from ..domain.group_plans import continuous_plan_day
 from ..domain.training import has_previous_day_label, is_active_session, is_terminal_session
 from .library_workflow import LibraryTarget
 
@@ -51,8 +52,8 @@ class GroupSessionService:
         return has_previous_day_label(date.fromisoformat(session["training_date"]),
                                       SessionStatus(session["status"]), self.clock)
 
-    def preview_start(self, revision_id, day_order):
-        if type(day_order) is not int:
+    def preview_start(self, revision_id, day_order=None):
+        if day_order is not None and type(day_order) is not int:
             raise ValueError("Select a day from the displayed plan revision.")
         if self.active() is not None:
             raise ValueError("An unfinished session already exists. Resume it first.")
@@ -61,8 +62,9 @@ class GroupSessionService:
             raise ValueError("An active plan revision is required to start training.")
         if self.library.user.plan_invalidated(revision_id):
             raise ValueError("This plan was affected by removal; confirm a new plan revision.")
-        day = next((day for day in revision["payload"]["plan"]["days"]
-                    if day["order"] == day_order), None)
+        day = (continuous_plan_day(revision["payload"]["plan"]) if day_order is None else
+               next((day for day in revision["payload"]["plan"]["days"]
+                     if day["order"] == day_order), None))
         if day is None:
             raise ValueError("Select a day from the displayed plan revision.")
         occurrences = expand_day(day)
@@ -92,7 +94,7 @@ class GroupSessionService:
                  "catalog_version": self.library.catalog.version}
         return {**value, "token": content_sha256(value)}
 
-    def start(self, revision_id, day_order, *, expected_preview, user_confirmed):
+    def start(self, revision_id, day_order=None, *, expected_preview, user_confirmed):
         self._confirmed(user_confirmed)
         with self._transaction():
             preview = self.preview_start(revision_id, day_order)

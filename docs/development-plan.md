@@ -108,8 +108,9 @@ The first version excludes:
 Section 12.3 extends this model with ordered action groups and rounds;
 Section 12.5 pins content and images before catalog updates can change a plan.
 
-An exercise describes how a movement is performed. A plan describes what to do
-on a specific training day. Dose, set sequence, rest, and plan-specific notes
+An exercise describes how a movement is performed. A plan describes one complete
+ordered training sequence. There is no user-facing training-day concept or
+day selection. Dose, set sequence, rest, and plan-specific notes
 belong to the plan, not the exercise catalog.
 
 A plan action contains one or more ordered set prescriptions. This must support
@@ -137,12 +138,12 @@ Supported initial units:
 All sets of one action use the same unit. `per_side` is stored separately from
 the value and unit. Numeric doses and rest seconds must be finite and
 non-negative; a `free` dose may omit its numeric value only with a non-empty
-explanatory note. Day, action, and set orders are positive and unique within
+explanatory note. Action and set orders are positive and unique within
 their parent. Action phases are `preparation`, `main`, and `cooldown`.
 
 Plan revisions move from `draft` to `active` to `superseded`. Editing an active
-revision creates a new draft. A saved draft has a name, at least one day, an
-action in each day, and sets in every action; it may reference guidance that has
+revision creates a new draft. A saved draft has a name, at least one action or
+group, and sets in every action; it may reference guidance that has
 not been reviewed. Activation additionally requires enabled exercises whose
 guidance in use has complete text and valid required images under Section 12.4.
 Review state does not gate activation: unreviewed
@@ -171,7 +172,7 @@ rationale, source references and the managed original file remain unchanged by
 later draft edits.
 
 The training-plan page presents revisions in compact navigation and the selected
-plan as a readable hierarchy of days, ordered actions or groups, members and
+plan as a readable hierarchy of ordered actions or groups, members and
 per-round sets. Its first view emphasizes plan identity, status, purpose,
 prescription and execution order instead of raw stored fields. Show side order,
 rest at its applicable boundary, original notes and content issues without
@@ -943,7 +944,7 @@ inherited by child movements.
 
 ### 12.3 Plan Action Groups And Dose Semantics
 
-The new logical structure is day → ordered items (single action or action
+The logical structure is plan → ordered items (single action or action
 group) → ordered member actions → per-round dose sets. Preserve standalone
 action behavior. A group has a stable plan-item identity, display name, phase,
 order, positive integer `round_count`, finite non-negative
@@ -989,14 +990,14 @@ transition; never present it as identical starting position. The editor lists
 class/support differences and requires a transition description for mixed or
 unknown positions before activation; it does not claim to assess movement safety.
 
-Plan editing must support creating plans/days, adding/removing/reordering single
+Plan editing must support creating plans, adding/removing/reordering single
 actions and groups, moving members, rounds, side order, per-round doses and rest.
 Removing the penultimate group member must explicitly dissolve the group or
 cancel, not leave an invalid one-member group. Invalid input stays on screen.
 One save commits all children and ordering or nothing. Activated revisions are
 immutable and are copied to edit; Section 12.11 distinguishes the planned
 `Clone` and `Upgrade` operations. Diffs use stable item identities plus readable
-day/group/member paths, and include membership, ordering, side sequence, rounds,
+item/group/member paths, and include membership, ordering, side sequence, rounds,
 rest, dose, notes and pinned content changes.
 
 ### 12.4 Illustration, Review And Enablement
@@ -1236,16 +1237,25 @@ these specifications.
 
 ### 12.11 Plan Authoring And Identity
 
-New-plan entry and editing use one page: a plan/day/item hierarchy beside the
-selected item's fields and per-set table. The new page starts with an unfinished
-day whose name is entered in place. Searchable, multiple exercise selection adds
+New-plan entry and editing use one page: an ordered action/group list beside the
+selected action's exact-version guidance and illustrations, with a concise
+prescription summary and per-set table. Technical classification and identity
+fields do not appear as guidance. The new page starts with an empty action list;
+adding an action or group requires no parent selection. Searchable, multiple exercise selection adds
 unsaved actions; groups and members use the same detail area. The user supplies
 set values, count, unit, per-side choice and applicable rest, including an
-explicit zero for no prescribed rest. No catalog proposal or UI placeholder is
+explicit zero for no prescribed rest. The final set has no additional set rest:
+its cell says 不适用 and the boundary rest is entered separately. Bilateral
+actions have no side-switch rest. These structural zeros are not user-entered
+rest facts. Blank applicable fields stay unknown on screen and saving identifies
+the required field in Chinese; numeric conversion errors do not leak to users.
+Legacy aggregate unknown fields remain unknown. No catalog proposal or UI placeholder is
 silently saved as a user dose. An explicit equal-set fill may replace existing
-values or notes only after confirmation. Incomplete or invalid input remains
+values or notes only after confirmation. It copies rest only when both the
+source and target set have applicable set rest; selecting a terminal set does
+not erase other sets' prescribed rest. Incomplete or invalid input remains
 visible, blocks switching or saving as applicable, and identifies the field to
-repair. A valid draft still requires a name, a nonempty day and complete action
+repair. A valid draft still requires a name, a nonempty action list and complete action
 sets; one save commits the complete prescription transactionally.
 
 Each root uses a visible code `plan-NNN.AA.DD`. A new plan takes the next free
@@ -1259,7 +1269,7 @@ Both operations ask for a change description when opened but allow it to remain
 empty. Copied prescription and user text remain verbatim until explicitly edited.
 
 The upgrade code is calculated from the actual difference against its source.
-Changes to day/group structure, action identity or content, item/member order,
+Changes to item/group structure, action identity or content, item/member order,
 phase, first side or side sequence increment `AA` and reset `DD` to `00`.
 Changes confined to dose, rest or other plan text increment `DD`; combined
 changes use the structural rule. A rationale alone does not create an upgrade.
@@ -1271,6 +1281,16 @@ Internal revision IDs/ordinals remain for associations, but the plan page shows
 the code rather than automatic `v1`/`v2` labels.
 
 Database schema 24 uses the current plan/evidence wire contracts v4.
+The existing `days` wire/storage envelope remains an internal representation;
+there is no new schema or wire shape. New manual drafts use one container.
+Reading and whole-plan execution concatenate existing containers by their order
+and each item's order. Editing projects this sequence into one unsaved container,
+retaining item/member identities, all prescriptions and original text; saving
+shows the resulting structural diff. Cancelling does not modify stored revisions.
+Starting from the UI executes the complete selected plan, with a preview and
+freshness token covering every action. New sessions freeze that sequence and the
+original source revision; existing sessions resume their original frozen scope.
+There is no automatic root migration or rewrite of active revisions or history.
 The plan-import rationale may be empty. A new import receives a root-local base
 number; an upgrade import identifies the target by base code and follows the
 same difference classification. Only v4 is accepted; v2/v3 imports receive
@@ -1278,7 +1298,7 @@ the current-format error. JSON/Markdown evidence and new training snapshots
 show the complete code consistently. Saving a draft never activates it, and
 activation retains the existing eligibility and explicit confirmation gates.
 
-Schema 23 roots upgrade in place to schema 24 in one transaction. The upgrade
+The historical schema 23 roots upgrade in place to schema 24 in one transaction. The upgrade
 removes only the plan-day name columns and historical session name snapshot;
 plans, training history, feedback and review records remain. A failed upgrade
 rolls back the complete change.

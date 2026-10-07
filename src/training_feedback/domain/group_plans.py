@@ -179,6 +179,47 @@ def plan_actions(plan):
                 yield day, item, action
 
 
+def continuous_plan_day(plan):
+    """Project legacy containers into one ordered plan without changing source facts.
+
+    The v4 wire/storage envelope retains ``days``. New editing and whole-plan
+    execution use a single container; immutable source revisions keep their
+    original boundaries and every action/member identity and text.
+    """
+    items = [
+        deepcopy(item)
+        for day in sorted(plan["days"], key=lambda row: row["order"])
+        for item in sorted(day["items"], key=lambda row: row["order"])
+    ]
+    for order, item in enumerate(items, 1):
+        item["order"] = order
+    return {"order": 1, "items": items}
+
+
+def prescription_rest_applicability(sets, *, aggregate=False):
+    """Applicable set rests and side-switch boundary, independent of widgets."""
+    return {
+        "set_rests": [aggregate or index < len(sets) - 1 for index in range(len(sets))],
+        "side_rest": aggregate or any(dose["per_side"] for dose in sets),
+    }
+
+
+def normalize_inapplicable_rest(action):
+    """Encode absent boundaries using v4 structural zeros, never default real rest.
+
+    Historical aggregate unknowns are facts and retain their original meaning.
+    """
+    action = deepcopy(action)
+    if "provenance" in action:
+        return action
+    if action["sets"]:
+        action["sets"][-1]["rest_after_set_seconds"] = 0
+    if action.get("kind") == "action" and not any(dose["per_side"] for dose in action["sets"]):
+        action["first_side"] = None
+        action["rest_between_sides_seconds"] = 0
+    return action
+
+
 def identity_rows(plan):
     result = {}
     for day in plan["days"]:

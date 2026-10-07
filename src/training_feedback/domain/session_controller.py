@@ -10,7 +10,7 @@ class GroupSessionController:
         self.service = service
         self.session = None
 
-    def start(self, revision_id, day_order, *, expected_preview, user_confirmed):
+    def start(self, revision_id, day_order=None, *, expected_preview, user_confirmed):
         self.session = self.service.start(revision_id, day_order,
                                           expected_preview=expected_preview,
                                           user_confirmed=user_confirmed)

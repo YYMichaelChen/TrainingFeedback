@@ -13,7 +13,12 @@ from pathlib import Path
 from .. import __version__
 from ..application.library_workflow import LibraryTarget
 from ..domain.catalog import ExerciseReference
-from ..domain.group_plans import EVIDENCE_SCHEMA_VERSION, plan_actions, revision_code_for_change
+from ..domain.group_plans import (
+    EVIDENCE_SCHEMA_VERSION,
+    continuous_plan_day,
+    plan_actions,
+    revision_code_for_change,
+)
 from .catalog_resources import managed_path
 from .conversion_repository import ConversionRepository
 from .group_session_handoff import known
@@ -233,8 +238,8 @@ def render_plan_evidence(evidence):
         else "范围：计划版本；不是实际训练完成记录。",
         "",
     ]
-    for day in revision["payload"]["plan"]["days"]:
-        lines.extend([f"## 训练日 {day['order']}", ""])
+    for day in [continuous_plan_day(revision["payload"]["plan"])]:
+        lines.extend(["## 计划动作", ""])
         for item in day["items"]:
             lines.append(f"### {item['order']}. {item.get('name', item.get('exercise_name', ''))}")
             if item["kind"] == "group":

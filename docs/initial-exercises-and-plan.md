@@ -136,7 +136,6 @@ missing-image inventory records the earlier baseline, not today's asset state.
 ## 4. Initial Plan Proposal
 
 Plan name: `臀腿与核心基础`\
-Day name: `基础训练日`\
 Purpose: validate preparation, unequal/equal set models, repetitions, per-side
 work, timed holds, exercise results, next-day prompts, and external AI export.
 
