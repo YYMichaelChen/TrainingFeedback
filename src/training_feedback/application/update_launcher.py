@@ -19,7 +19,12 @@ $directory = $env:TRAINING_FEEDBACK_UPDATE_DIRECTORY
 $installer = $env:TRAINING_FEEDBACK_UPDATE_INSTALLER
 $completed = $false
 $parentHandle = [IntPtr]([long]$env:TRAINING_FEEDBACK_UPDATE_PARENT_HANDLE)
+function Write-UpdateLog([string]$message) {
+    [IO.File]::AppendAllText((Join-Path $directory 'update-launcher.log'),
+        $message + [Environment]::NewLine)
+}
 try {
+    Write-UpdateLog 'Preparing external update launcher.'
     Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
@@ -39,7 +44,7 @@ public static class TrainingFeedbackUpdateParent {
     [IO.File]::WriteAllText((Join-Path $directory '.update-launcher-ready'), 'ready')
     $state = [TrainingFeedbackUpdateParent]::WaitForSingleObject($parentHandle, 10000)
     if ($state -eq 258) {
-        Write-Output 'Normal application exit timed out; terminating the bound process.'
+        Write-UpdateLog 'Normal application exit timed out; terminating the bound process.'
         $terminated = [TrainingFeedbackUpdateParent]::TerminateProcess($parentHandle, 0)
         # TerminateProcess is asynchronous. Even a successful call is not proof of exit.
         $state = [TrainingFeedbackUpdateParent]::WaitForSingleObject($parentHandle, 30000)
@@ -48,11 +53,11 @@ public static class TrainingFeedbackUpdateParent {
         }
     }
     if ($state -ne 0) { throw 'Cannot confirm application exit; Setup was not started.' }
-    Write-Output 'Application exited; starting verified Setup.'
+    Write-UpdateLog 'Application exited; starting verified Setup.'
     Start-Process -FilePath $installer -WorkingDirectory $directory -Wait
     $completed = $true
 } catch {
-    Write-Output $_.Exception.Message
+    Write-UpdateLog $_.Exception.Message
     exit 1
 } finally {
     if ('TrainingFeedbackUpdateParent' -as [type]) {
@@ -108,13 +113,15 @@ def start_update_launcher(target: Path) -> subprocess.Popen:
         startup = subprocess.STARTUPINFO()
         startup.lpAttributeList = {"handle_list": [inherited.value]}
         encoded = base64.b64encode(LAUNCHER_SCRIPT.encode("utf-16-le")).decode("ascii")
-        with (target.parent / LAUNCHER_LOG_FILENAME).open("xb") as log:
-            return subprocess.Popen(
-                [str(powershell), "-NoLogo", "-NoProfile", "-NonInteractive",
-                 "-WindowStyle", "Hidden", "-EncodedCommand", encoded],
-                cwd=target.parent, env=environment, startupinfo=startup,
-                creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP,
-                close_fds=True, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
-            )
+        # No persistent file handle or current-directory lock inside the cleanup target.
+        (target.parent / LAUNCHER_LOG_FILENAME).touch(exist_ok=False)
+        return subprocess.Popen(
+            [str(powershell), "-NoLogo", "-NoProfile", "-NonInteractive",
+             "-WindowStyle", "Hidden", "-EncodedCommand", encoded],
+            cwd=powershell.parent, env=environment, startupinfo=startup,
+            creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP,
+            close_fds=True, stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
     finally:
         kernel.CloseHandle(inherited)
