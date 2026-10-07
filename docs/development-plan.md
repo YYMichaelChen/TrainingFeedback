@@ -2,7 +2,7 @@
 
 Current application/schema baseline: [version history index](history/README.md).
 Public-release acceptance, external review and W4 have separate gates below.
-Last updated: 2026-10-03
+Last updated: 2026-10-06
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
@@ -704,7 +704,13 @@ It must match both the declared byte size and SHA-256 before execution. A
 download, write, size, digest or launch failure never executes the file and
 keeps retry and browser-download choices available. On successful validation,
 the application hands Setup to a detached Windows launcher, exits completely,
-and only then starts Setup. The launcher waits for Setup to finish and removes
+and only then starts Setup. The launcher must be ready before the application
+requests normal exit. It holds an inherited wait/terminate handle to that exact
+application process; after a 10-second normal-exit grace period it can terminate
+that process independently of Qt, Python threads or interpreter shutdown. It
+must confirm process termination before starting Setup, and must not terminate
+other instances or select targets by executable name. Launcher preparation
+failure leaves the application open. The launcher waits for Setup to finish and removes
 that exact application-owned temporary update directory. On later startup, the
 application also makes a best-effort cleanup of direct, non-link temporary
 directories whose names and complete contents strictly match its updater

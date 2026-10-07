@@ -13,6 +13,8 @@ from enum import Enum
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from .update_launcher import LAUNCHER_LOG_FILENAME, LAUNCHER_READY_FILENAME
+
 REPOSITORY = "YYMichaelChen/TrainingFeedback"
 LATEST_RELEASE_URL = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
 MAX_RELEASE_RESPONSE_BYTES = 1_048_576
@@ -116,14 +118,20 @@ def cleanup_stale_update_directories(temp_root: Path | None = None) -> int:
             if not all(
                 entry.is_file()
                 and not entry.is_symlink()
-                and (entry.name == UPDATE_MARKER_FILENAME or _UPDATE_FILE.fullmatch(entry.name))
+                and (entry.name in (
+                    UPDATE_MARKER_FILENAME, LAUNCHER_READY_FILENAME, LAUNCHER_LOG_FILENAME,
+                ) or _UPDATE_FILE.fullmatch(entry.name))
                 for entry in entries
             ):
                 continue
             if marker in entries:
                 if marker.read_text(encoding="ascii") != UPDATE_MARKER_CONTENT:
                     continue
-            elif not any(_UPDATE_FILE.fullmatch(entry.name) for entry in entries):
+            elif (
+                any(entry.name in (LAUNCHER_READY_FILENAME, LAUNCHER_LOG_FILENAME)
+                    for entry in entries)
+                or not any(_UPDATE_FILE.fullmatch(entry.name) for entry in entries)
+            ):
                 continue
         except (OSError, UnicodeError):
             continue

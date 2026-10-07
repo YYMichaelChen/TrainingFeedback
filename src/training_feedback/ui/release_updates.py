@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import os
 import shutil
-import threading
+import subprocess
+import time
 from pathlib import Path
 
 from PySide6.QtCore import (
     QCoreApplication,
     QObject,
-    QProcess,
-    QProcessEnvironment,
+    QTimer,
     QUrl,
     Signal,
 )
@@ -41,17 +41,7 @@ from ..application.release_updates import (
     failed_result,
     idle_result,
 )
-
-# 常规退出未生效时的硬退出兜底：启动器检测到本进程结束后才会打开安装程序。
-_FORCE_QUIT_FALLBACK_MS = 10_000
-
-
-def _force_quit() -> None:
-    """最后兜底：常规退出未在限定时间内结束进程时硬退出。
-
-    只在已校验下载完成、无用户数据写入进行时武装；SQLite WAL 可安全恢复。
-    """
-    os._exit(0)
+from ..application.update_launcher import LAUNCHER_READY_FILENAME, start_update_launcher
 
 
 def _request_application_exit() -> None:
@@ -93,8 +83,11 @@ class ReleaseUpdateCoordinator(QObject):
         self._download_part: Path | None = None
         self._download_target: Path | None = None
         self._download_error = ""
-        self._detached_launcher: QProcess | None = None
-        self._force_quit_timer: threading.Timer | None = None
+        self._detached_launcher: subprocess.Popen | None = None
+        self._launcher_deadline = 0.0
+        self._handoff_timer = QTimer(self)
+        self._handoff_timer.setInterval(100)
+        self._handoff_timer.timeout.connect(self._check_launcher_ready)
         self._automatic_started = False
 
     @property
@@ -124,7 +117,8 @@ class ReleaseUpdateCoordinator(QObject):
         return self.check()
 
     def check(self) -> bool:
-        if self._check_reply is not None or self._download_reply is not None:
+        if (self._check_reply is not None or self._download_reply is not None
+                or self._detached_launcher is not None):
             return False
         self._set_result(checking_result(self.current_version))
         request = QNetworkRequest(QUrl(LATEST_RELEASE_URL))
@@ -167,6 +161,7 @@ class ReleaseUpdateCoordinator(QObject):
             or release is None
             or release.setup is None
             or self._download_reply is not None
+            or self._detached_launcher is not None
         ):
             return False
         self._download_error = ""
@@ -264,68 +259,47 @@ class ReleaseUpdateCoordinator(QObject):
             self._discard_download()
             self.download_failed.emit(self._download_error)
             return
-        powershell = (
-            Path(os.environ.get("SystemRoot", r"C:\Windows"))
-            / "System32"
-            / "WindowsPowerShell"
-            / "v1.0"
-            / "powershell.exe"
-        )
-        if not powershell.is_file():
-            self._download_error = "无法找到系统更新启动程序，请重试或使用浏览器下载。"
-            self._discard_download()
-            self.download_failed.emit(self._download_error)
-            return
-
-        process = QProcess(self)
-        environment = QProcessEnvironment.systemEnvironment()
-        environment.insert("TRAINING_FEEDBACK_UPDATE_PARENT_PID", str(os.getpid()))
-        environment.insert("TRAINING_FEEDBACK_UPDATE_INSTALLER", str(target))
-        environment.insert("TRAINING_FEEDBACK_UPDATE_DIRECTORY", str(target.parent))
-        process.setProcessEnvironment(environment)
-        process.setProgram(str(powershell))
-        process.setArguments([
-            "-NoLogo",
-            "-NoProfile",
-            "-NonInteractive",
-            "-WindowStyle",
-            "Hidden",
-            "-Command",
-            (
-                "$parentId = [int]$env:TRAINING_FEEDBACK_UPDATE_PARENT_PID; "
-                "Wait-Process -Id $parentId -ErrorAction SilentlyContinue; "
-                "try { "
-                "Start-Process -FilePath $env:TRAINING_FEEDBACK_UPDATE_INSTALLER "
-                "-WorkingDirectory $env:TRAINING_FEEDBACK_UPDATE_DIRECTORY -Wait "
-                "} finally { "
-                "Remove-Item -LiteralPath $env:TRAINING_FEEDBACK_UPDATE_DIRECTORY "
-                "-Recurse -Force -ErrorAction SilentlyContinue "
-                "}"
-            ),
-        ])
-        process.setWorkingDirectory(str(target.parent))
-        started, _process_id = process.startDetached()
-        if not started:
-            self._download_error = "无法安排安装程序启动，请重试或使用浏览器下载。"
-            self._discard_download()
-            self.download_failed.emit(self._download_error)
-            return
-        self._detached_launcher = process
-        # 硬退出不能依赖 Qt 事件循环：正是事件循环未继续推进时，
-        # 先前的 QTimer 兜底也会一起失效。
-        timer = threading.Timer(_FORCE_QUIT_FALLBACK_MS / 1000, _force_quit)
-        timer.daemon = True
-        self._force_quit_timer = timer
-        timer.start()
         try:
-            self.installer_handoff_started.emit(str(target))
-        except Exception:
-            # 启动器已在等待本进程；可视通知失败不影响退出。
-            pass
-        finally:
-            # 先关闭可见窗口，再退出主事件循环；两步都不依赖
-            # 对话框通知槽成功。若 Qt 关闭链路卡住，后台计时器最后兜底。
-            _request_application_exit()
+            self._detached_launcher = start_update_launcher(target)
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            self._download_error = f"无法安排安装程序启动：{exc}。请重试或使用浏览器下载。"
+            self._discard_download()
+            self.download_failed.emit(self._download_error)
+            return
+        self._launcher_deadline = time.monotonic() + 15
+        self._handoff_timer.start()
+
+    def _check_launcher_ready(self) -> None:
+        process = self._detached_launcher
+        target = self._download_target
+        if process is None or target is None:
+            self._handoff_timer.stop()
+            return
+        if process.poll() is None and (target.parent / LAUNCHER_READY_FILENAME).is_file():
+            self._handoff_timer.stop()
+            try:
+                self.installer_handoff_started.emit(str(target))
+            except Exception:
+                # Notification failure cannot cancel an already armed external watchdog.
+                pass
+            finally:
+                _request_application_exit()
+            return
+        if process.poll() is not None or time.monotonic() >= self._launcher_deadline:
+            self._handoff_timer.stop()
+            try:
+                if process.poll() is None:
+                    process.terminate()
+                process.wait(timeout=2)
+            except (OSError, subprocess.SubprocessError):
+                # Do not allow a retry while an earlier launcher might still be armed.
+                self._download_error = "更新启动程序未就绪且无法停止，请使用浏览器下载。"
+                self.download_failed.emit(self._download_error)
+                return
+            self._detached_launcher = None
+            # Preserve the owned Setup/log for diagnostics and safe later cleanup.
+            self._download_error = "更新启动程序未能就绪，应用未退出；请重试或使用浏览器下载。"
+            self.download_failed.emit(self._download_error)
 
     def _discard_download(self) -> None:
         directory = self._download_directory
@@ -458,7 +432,7 @@ class ReleaseDetailsDialog(QDialog):
     def _installer_handoff_started(self, _path: str) -> None:
         self.instruction.setText(
             "安装包已校验，正在退出当前应用；退出后会自动打开安装程序。"
-            "若长时间没有退出，请直接手动关闭本应用，安装程序同样会自动打开。"
+            "若正常退出未完成，更新启动程序会自动结束本次应用进程。"
         )
         self.accept()
 

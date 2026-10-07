@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.11**
+- Application: **0.8.12**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.11**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.11](../releases/0.8.11/design.md)
+- Current development version: [0.8.12](../releases/0.8.12/design.md)
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,6 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.12 | 24 | Updater exit follow-up: external watchdog bound to the exact application process, readiness acknowledgement and confirmed exit before Setup | Source prepared; authorized installer and GitHub distribution in progress |
 | 0.8.11 | 24 | Action reading redesign: responsive illustration/guidance panels, grouped guidance, zoom viewer and exact-content operations menu | GitHub Release `v0.8.11`; SHA-256 `baa1e40c153c4ae69ca99e5f53b5d6019cd31481db5515777d511f4911549519`; unsigned |
 | 0.8.10 | 24 | Current illustration-layout and updater-exit correction: align stable cards and captions, scale previews from source proportions, and use an event-loop-independent exit fallback | GitHub Release `v0.8.10`; Setup SHA-256 `9846aedc52073b9c85e9f52c7f3cafe2450e60a6c38a103368bb8c34c2b1580d`; unsigned |
 | 0.8.9 | 24 | Current action-library construction fix: restore the missing illustration-tab label used by the page and review dialog | GitHub Release `v0.8.9`; Setup SHA-256 `e0030b4c15be767b46fafb7e0da652bd27ce647207779eb2e5163a873accd722`; unsigned |
@@ -44,6 +45,12 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.12 development record](0.8.12/development.md) carries the
+[2026-10-06 updater follow-up](0.8.11/updater-follow-up-2026-10-06.md)
+into a new application version. The distributed v0.8.11 asset below does not
+include that fix. Candidate preparation and GitHub distribution are authorized;
+their exact identities will be recorded after completion.
 
 The [0.8.11 development record](0.8.11/development.md) records the reading
 redesign, limited source verification and the clean candidate built from
@@ -169,6 +176,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.12 development record](0.8.12/development.md)
 - [0.8.11 GitHub Release record](0.8.11/github-release-2026-10-04.md)
 - [0.8.11 development record](0.8.11/development.md)
 - [0.8.10 GitHub Release record](0.8.10/github-release-2026-10-04.md)
