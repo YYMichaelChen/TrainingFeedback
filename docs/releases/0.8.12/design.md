@@ -45,3 +45,10 @@ Distribution does not declare formal compatibility, public acceptance or W4.
 An already running older application uses its own old updater during this
 upgrade; downloading 0.8.12 cannot replace the updater in that running process.
 The external watchdog becomes available after installing and opening 0.8.12.
+
+## Completed distribution
+
+The [GitHub Release record](../../history/0.8.12/github-release-2026-10-07.md)
+records stable v0.8.12, the single uploaded Setup matching its clean candidate,
+and the unauthenticated public latest response. No application or manual checks
+were added for packaging, distribution or closeout.
