@@ -24,10 +24,11 @@ from .. import __version__
 from ..application.release_updates import UpdateStatus
 from ..data.backup import BackupError, create_backup
 from ..data.data_root import DataRootError
+from .compact_widgets import ActionBar
 from .data_root_dialog import DataRootDialog, suggested_data_root
 from .labels import user_message
 from .relative_widgets import AdaptiveFields, LocalScrollArea
-from .sizing import scale_manager
+from .sizing import bind_units, scale_manager
 
 
 class SettingsPage(QWidget):
@@ -48,8 +49,11 @@ class SettingsPage(QWidget):
         outer = QVBoxLayout(self)
         scroll = LocalScrollArea()
         body = QWidget()
+        bind_units(body, "setMaximumWidth", 84)
         layout = QVBoxLayout(body)
+        layout.setContentsMargins(0, 0, 0, 0)
         scroll.setWidget(body)
+        scroll.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         outer.addWidget(scroll)
         title = QLabel("设置")
         title.setObjectName("pageTitle")
@@ -60,14 +64,16 @@ class SettingsPage(QWidget):
         layout.addWidget(self._scale_group())
         open_button = QPushButton("打开数据目录位置")
         open_button.clicked.connect(lambda: self._open_location())
-        layout.addWidget(open_button)
+        root_actions = ActionBar()
+        root_actions.addWidget(open_button)
         if switch_request is not None:
             self.switch_button = QPushButton("切换到其他数据目录…")
             self.switch_button.clicked.connect(self._switch_root)
-            layout.addWidget(self.switch_button)
+            root_actions.addWidget(self.switch_button)
         backup_button = QPushButton("立即创建备份")
         backup_button.clicked.connect(self._create_backup)
-        layout.addWidget(backup_button)
+        root_actions.addWidget(backup_button)
+        layout.addWidget(root_actions)
         update_group = QGroupBox("应用更新")
         update_layout = QVBoxLayout(update_group)
         update_layout.addWidget(QLabel(f"当前版本：{__version__}"))
@@ -109,6 +115,10 @@ class SettingsPage(QWidget):
         layout.addWidget(QLabel("80% — 200%（每次 10%）"))
         layout.addWidget(self.scale_slider)
         layout.addWidget(self.scale_value)
+        reference = QLabel("4K 屏幕默认窗口为 2560×1440、16:9；可独立调整文字和控件大小。")
+        reference.setWordWrap(True)
+        reference.setObjectName("muted")
+        layout.addWidget(reference)
         preview = AdaptiveFields()
         preview.addRow("预览", QLabel("正文文字"))
         preview.addRow("按钮", QPushButton("示例按钮"))

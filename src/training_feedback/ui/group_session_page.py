@@ -2,11 +2,12 @@
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QBoxLayout,
     QComboBox,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
-    QHBoxLayout,
+    QFrame,
     QInputDialog,
     QLabel,
     QMessageBox,
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .compact_widgets import ActionBar
 from .group_training_page import ExecutionPreview, FrozenGuidanceDialog
 from .labels import EXECUTION_TEXT as T
 from .labels import (
@@ -28,7 +30,7 @@ from .labels import (
     session_history_text,
     user_message,
 )
-from .sizing import initial_size
+from .sizing import bind_units, initial_size, scale_manager, u
 
 
 class GroupFeedbackDialog(QDialog):
@@ -85,14 +87,25 @@ class GroupSessionPage(QWidget):
         self.training_window = None
         self.setWindowTitle(T["hub"])
         layout = QVBoxLayout(self)
+        title = QLabel("训练")
+        title.setObjectName("pageTitle")
+        layout.addWidget(title)
+        self.panels = QBoxLayout(QBoxLayout.Direction.LeftToRight)
+        self.start_panel = QFrame()
+        self.start_panel.setObjectName("card")
+        start_layout = QVBoxLayout(self.start_panel)
+        bind_units(start_layout, "setContentsMargins", 1, 1, 1, 1)
+        start_title = QLabel("开始训练")
+        start_title.setObjectName("sectionTitle")
+        start_layout.addWidget(start_title)
         self.active_label = QLabel()
         self.active_label.setTextFormat(Qt.TextFormat.PlainText)
         self.active_label.setWordWrap(True)
-        layout.addWidget(self.active_label)
+        start_layout.addWidget(self.active_label)
         self.plan = QComboBox()
-        layout.addWidget(QLabel("选择训练计划"))
-        layout.addWidget(self.plan)
-        row = QHBoxLayout()
+        start_layout.addWidget(QLabel("选择训练计划"))
+        start_layout.addWidget(self.plan)
+        row = ActionBar()
         self.start_button = QPushButton(T["start"])
         self.start_button.setObjectName("primaryButton")
         self.start_button.clicked.connect(self.start)
@@ -102,15 +115,22 @@ class GroupSessionPage(QWidget):
         refresh.clicked.connect(self.refresh)
         for button in (self.start_button, self.resume_button, refresh):
             row.addWidget(button)
-        layout.addLayout(row)
-        layout.addWidget(QLabel(T["history"]))
+        start_layout.addWidget(row)
+        start_layout.addStretch()
+        history_panel = QFrame()
+        history_panel.setObjectName("card")
+        history_layout = QVBoxLayout(history_panel)
+        bind_units(history_layout, "setContentsMargins", 1, 1, 1, 1)
+        history_title = QLabel(T["history"])
+        history_title.setObjectName("sectionTitle")
+        history_layout.addWidget(history_title)
         self.history = QComboBox()
         self.history.currentIndexChanged.connect(self.show_history)
-        layout.addWidget(self.history)
+        history_layout.addWidget(self.history)
         self.detail = QPlainTextEdit()
         self.detail.setReadOnly(True)
-        layout.addWidget(self.detail, 1)
-        row = QHBoxLayout()
+        history_layout.addWidget(self.detail, 1)
+        row = ActionBar()
         self.export_button = QPushButton(T["export"])
         self.export_button.clicked.connect(self.export)
         self.feedback_button = QPushButton(T["feedback"])
@@ -119,11 +139,30 @@ class GroupSessionPage(QWidget):
         self.correct_button.clicked.connect(self.correct_note)
         for button in (self.export_button, self.feedback_button, self.correct_button):
             row.addWidget(button)
-        layout.addLayout(row)
         self.guidance_button = QPushButton(T["guidance"])
         self.guidance_button.clicked.connect(self.show_guidance)
-        layout.addWidget(self.guidance_button)
+        row.addWidget(self.guidance_button)
+        history_layout.addWidget(row)
+        self.panels.addWidget(self.start_panel)
+        self.panels.addWidget(history_panel, 1)
+        layout.addLayout(self.panels, 1)
+        manager = scale_manager()
+        if manager is not None:
+            manager.changed.connect(self._reflow)
+        self._reflow()
         self.refresh()
+
+    def _reflow(self):
+        wide = self.width() >= u(66)
+        self.panels.setDirection(QBoxLayout.Direction.LeftToRight if wide
+                                 else QBoxLayout.Direction.TopToBottom)
+        self.start_panel.setMinimumWidth(0)
+        self.start_panel.setMaximumWidth(u(26) if wide else 16777215)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "panels"):
+            self._reflow()
 
     def refresh(self):
         active = self.service.active()

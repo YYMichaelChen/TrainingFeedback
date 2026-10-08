@@ -37,9 +37,9 @@ STYLESHEET = """
 QWidget { color: #233249; }
 QMainWindow, QDialog { background: #f3f6fa; }
 QLabel { background: transparent; }
-QLabel#pageTitle { font-size: 1.5u; font-weight: 700; margin: 0.25u 0 0.5u 0; }
+QLabel#pageTitle { font-size: 1.4u; font-weight: 700; margin: 0.125u 0 0.375u 0; }
 QLabel#actionTitle { font-size: 1.25u; font-weight: 700; }
-QLabel#dialogTitle { font-size: 1.5u; font-weight: 700; }
+QLabel#dialogTitle { font-size: 1.4u; font-weight: 700; }
 QToolButton { min-height: 2.5u; min-width: 2.5u; }
 QCheckBox::indicator, QRadioButton::indicator { width: 1.25u; height: 1.25u; }
 QTreeWidget#planActions::item { min-height: 2.5u; padding: 0.25u 0.5u; }
@@ -60,12 +60,12 @@ QToolButton#updateNotice { color: #ffd166; background: transparent; border: 0.12
                            border-radius: 0.75u; font-size: 1u; font-weight: 700; padding: 0; }
 QToolButton#updateNotice:hover { color: white; border-color: white; background: #245a65; }
 QListWidget#navigation { background: transparent; border: none; color: #c4d3df; padding: 0; }
-QListWidget#navigation::item { padding: 0.875u 0.75u; margin: 0.1875u 0;
+QListWidget#navigation::item { padding: 0.75u 0.625u; margin: 0.1875u 0;
                                border: none; border-radius: 0.5u; }
 QListWidget#navigation::item:selected { background: #245a65; color: #ffffff; }
 QListWidget#navigation::item:hover:!selected { background: #223e55; }
 QPushButton { background: #ffffff; border: 1px solid #cbd7e4; border-radius: 0.375u;
-              padding: 0.5u 1.5u; min-height: 1.5u; min-width: 3u; }
+              padding: 0.375u 0.875u; min-height: 1.5u; min-width: 3u; }
 QPushButton:hover { background: #eef6f7; border-color: #6fa8a6; }
 QPushButton:pressed { background: #d6eae6; }
 QPushButton:focus { border: 0.125u solid #0f877a; }
@@ -108,7 +108,7 @@ QProgressBar::chunk { background: #159986; border-radius: 0.25u; }
 QProgressBar#updateDownloadProgress { min-height: 1.375u; max-height: 1.375u; }
 QCheckBox { spacing: 0.4375u; }
 QTabWidget::pane { border: 1px solid #dce5ef; background: white; }
-QTabBar::tab { padding: 0.625u 1u; background: #e9eff5; border: none; color: #607187; }
+QTabBar::tab { padding: 0.5u 0.75u; background: #e9eff5; border: none; color: #607187; }
 QTabBar::tab:selected { background: white; color: #0f8175; border-bottom: 0.125u solid #0f8175; }
 QToolTip { background: white; color: #233249; border: 1px solid #cbd7e4; padding: 0.375u; }
 """

@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFormLayout,
-    QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
@@ -23,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..domain.enums import AbortReason
+from .compact_widgets import ActionBar
 from .exercise_reading import ExerciseReading
 from .guidance_widgets import GuidanceView
 from .illustrations import IllustrationLabel
@@ -177,8 +177,8 @@ class GroupTrainingPage(QWidget):
         self.note.setPlaceholderText(T["note"])
         bind_units(self.note, "setMaximumHeight", 5.3125)
         layout.addWidget(self.note)
-        self.results = QWidget()
-        buttons = QHBoxLayout(self.results)
+        self.results = ActionBar()
+        buttons = self.results
         self.result_buttons = {}
         for result in ("completed", "exceeded", "partial", "not_completed"):
             button = QPushButton(RESULT_LABELS[result])
@@ -196,17 +196,17 @@ class GroupTrainingPage(QWidget):
         self.actual.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.actual.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         actual_layout.addWidget(self.actual)
-        row = QHBoxLayout()
+        row = ActionBar()
         add = QPushButton(T["add_set"])
         add.clicked.connect(self.add_actual)
         remove = QPushButton(T["remove_set"])
         remove.clicked.connect(lambda: self.actual.removeRow(self.actual.currentRow()))
         row.addWidget(add)
         row.addWidget(remove)
-        actual_layout.addLayout(row)
+        actual_layout.addWidget(row)
         layout.addWidget(self.actual_panel)
-        self.pending_controls = QWidget()
-        row = QHBoxLayout(self.pending_controls)
+        self.pending_controls = ActionBar()
+        row = self.pending_controls
         self.save_result = QPushButton(T["save_result"])
         self.save_result.clicked.connect(self.save_pending)
         self.cancel_result = QPushButton(T["cancel"])
@@ -235,8 +235,8 @@ class GroupTrainingPage(QWidget):
         self.reload_button = QPushButton(T["reload"])
         self.reload_button.clicked.connect(self.reload)
         outer.addWidget(self.reload_button)
-        self.controls = QWidget()
-        controls = QHBoxLayout(self.controls)
+        self.controls = ActionBar()
+        controls = self.controls
         self.pause_button = QPushButton(T["pause"])
         self.pause_button.clicked.connect(self.pause)
         self.abort_button = QPushButton(T["abort"])

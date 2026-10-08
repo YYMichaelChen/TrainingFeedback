@@ -187,30 +187,40 @@ revision targeting, activation checks or stored facts.
 ### 4.1.1 Plan Editor Sizing And Interface Scale
 
 The native interface uses one font-relative logical unit `u`, with a readable
-system-font baseline equivalent to 16 logical pixels at normal Qt DPI. Qt owns
+system-font baseline equivalent to 14 logical pixels at normal Qt DPI. Qt owns
 system DPI scaling; application dimensions must not multiply devicePixelRatio
-again. Owned font sizes, spacing, icons and explicit dimensions are expressed
+again. Font scale is independent of screen resolution and window size.
+On the user's physical 3840×2160 display, the main window defaults to a physical
+2560×1440 client area (16:9). Use two thirds of full screen width and height in
+Qt logical coordinates, preserving 16:9 within the smaller axis for other aspect
+ratios. Thus a 2560×1440 screen defaults to about 1707×960 and a 1920×1080 screen
+to 1280×720. Clamp to 96% of available screen space if necessary. This window
+size policy is independent of custom font percentages; window resizing remains
+free and triggers the existing responsive layout. Owned font sizes, spacing,
+icons and explicit dimensions are expressed
 as unit multiples, compiled into logical dimensions at the Qt boundary. A
 one-pixel separator is permitted. Native layout defaults also derive from `u`.
 
 Settings offer follow-system and custom scaling from 80% to 200%, in 10% steps,
 with text/button/input previews. Changes apply immediately and persist in local
-interface configuration, independently of training roots. Ctrl/Cmd plus/minus
+interface configuration, independently of training roots. Percentages multiply
+the compact font baseline; existing custom preferences are preserved. Ctrl/Cmd plus/minus
 adjusts custom scale; Ctrl/Cmd 0 restores follow-system. Scaling never changes
 training facts, catalog content or root/schema compatibility.
 
-The plan dialog sizes itself against the available screen: width
-`clamp(60u, 85%, 110u)`, height `clamp(36u, 88%, 70u)`, with available screen
-bounds taking precedence on small displays. Header and save/cancel footer stay
+The plan dialog sizes itself within the default main-window canvas: width
+`min(canvasWidth, max(60u, 85% of canvasWidth))`, height
+`min(canvasHeight, max(36u, 88% of canvasHeight))`; screen bounds take precedence
+over the minimums on small displays. Header and save/cancel footer stay
 outside scroll regions. Plan name remains visible; expandable basic information
 uses at most two columns (20u minimum per column) and an internal scroll region
 bounded by 30% of dialog height. Multi-line edits initially show at least three
 lines and can be enlarged with a vertical grip without moving the footer offscreen.
 
-At dialog width >=80u, display action navigation, prescription and guidance
-beside one another. Navigation uses 18% within 12u–18u, guidance uses 24% within
-16u–26u, and the center consumes the remainder. At 56u–80u, guidance becomes a
-drawer with an entry at the center's upper right. Below 56u, action navigation
+At pane viewport width >=96u, display action navigation, prescription and guidance
+beside one another. Navigation uses 17% within 13u–18u, guidance uses 28% within
+22u–30u, and the center consumes the remainder. At 64u–96u, guidance becomes a
+drawer with an entry at the center's upper right. Below 64u, action navigation
 becomes horizontally scrollable name capsules. Selected action/member and
 unsaved edits survive layout changes. Sibling drag ordering and context-menu
 commands use the same document operations as existing move buttons.
@@ -230,6 +240,14 @@ Captions wrap fully. Images open in a viewer bounded by 90% of the smaller
 available screen dimension. Wheel events stay in the hovered explicit scroll
 region, including at its boundary. User text is neither elided nor rewritten to
 make the layout fit; explicit edit/read regions may scroll.
+
+The main training page presents start/resume and history in separate cards,
+side by side from 66u of page width and stacked below that. Action toolbars wrap
+using full button labels. The library gallery, multi-action picker, group member
+list and plan revision navigator use independent rounded frames. Text height is
+measured at current font/viewport width, with wrapped names and distinct hover,
+selection and keyboard-focus states. Gallery columns and card heights recalculate
+on font, content and viewport changes; no stale per-item fixed size is retained.
 
 The requested scale/DPI/layout criteria describe intended behavior. Current
 verification remains governed by Section 9.1: unobserved client layout is not a

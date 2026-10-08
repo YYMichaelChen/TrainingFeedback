@@ -7,13 +7,19 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.14**
+- Application: **0.8.15**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.14**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.14](../releases/0.8.14/design.md)
+- Current development version: [0.8.15](../releases/0.8.15/design.md)
+
+The [QHD compact-interface source follow-up](0.8.14/compact-interface-2026-10-08.md)
+adds a 16:9 default window (2560×1440 on 4K) and independent action frames without changing these
+data identities. It has one isolated startup scenario executed twice and no client
+observation. The [0.8.15 development record](0.8.15/development.md) carries it into
+the newly authorized patch delivery; the existing v0.8.14 Setup does not contain it.
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -23,6 +29,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.15 | 24 | Compact 16:9 default window, responsive page structures and independent measured action frames | Source prepared; installer and GitHub distribution pending |
 | 0.8.14 | 24 | Font-relative interface scale and responsive plan/guidance editing | GitHub Release `v0.8.14`; clean Setup from `b09b611`; SHA-256 `26a5a403975e2dab7ce769e048abae04fb33faba7171579357e84e6ebca4169e`; unsigned; no client observation |
 | 0.8.13 | 24 | Continuous plan editing/execution, exact-version guidance in plan details and field-specific numeric input handling | GitHub Release `v0.8.13`; clean Setup from `531a317`; SHA-256 `66ec6977bc87af5ef805b35f48b3a28cc46e407051bbc1649571ca9bc66e0b5b`; unsigned; no client observation |
 | 0.8.12 | 24 | Updater exit follow-up: external watchdog bound to the exact application process, readiness acknowledgement and confirmed exit before Setup | GitHub Release `v0.8.12`; clean Setup from `8a3ae60`; SHA-256 `22fc750d5773fd9442ee1e29e7644747544786639101c72d0e9d0800d33235f6`; unsigned |
@@ -47,6 +54,12 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.15 development record](0.8.15/development.md) records the user's
+2026-10-09 submission and GitHub distribution request. The source update has
+one isolated startup construction scenario passed on two executions; packaging
+and distribution add no application or manual checks. Exact candidate identity
+will be recorded after the clean build. Client layout remains unobserved.
 
 The [0.8.14 development record](0.8.14/development.md) carries the
 [2026-10-08 plan-interface source follow-up](0.8.13/plan-interface-2026-10-08.md)

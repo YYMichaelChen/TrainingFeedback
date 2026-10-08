@@ -6,8 +6,7 @@ from copy import deepcopy
 from itertools import islice
 from pathlib import Path
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QFontMetrics
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -21,7 +20,6 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
     QLineEdit,
-    QListWidget,
     QListWidgetItem,
     QMenu,
     QMessageBox,
@@ -51,6 +49,7 @@ from ..domain.group_plans import (
     prescription_rest_applicability,
     validate_action,
 )
+from .compact_widgets import ActionBar, CardList, frame_combo_popup
 from .exercise_reading import PlanGuidance
 from .labels import (
     DOSE_UNIT_LABELS,
@@ -134,6 +133,7 @@ class ActionPrescriptionDialog(QDialog):
         fields = QVBoxLayout(body)
         form = AdaptiveFields()
         self.exercise = _ScrollCombo()
+        frame_combo_popup(self.exercise)
         self.exercise.setEditable(True)
         self.exercise.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.exercise.setMinimumContentsLength(18)
@@ -504,7 +504,7 @@ class GroupPrescriptionDialog(QDialog):
         ):
             form.addRow(T[label], widget)
         layout.addWidget(form)
-        self.members = QListWidget()
+        self.members = CardList()
         bind_units(self.members, "setMinimumHeight", 6)
         self.members.setWordWrap(True)
         self.members.setTextElideMode(Qt.TextElideMode.ElideNone)
@@ -605,7 +605,7 @@ class MultiExerciseSelectionDialog(QDialog):
         self.setWindowTitle(T["add_action"])
         self.search = QLineEdit()
         self.search.setPlaceholderText(T["search_exercises"])
-        self.exercise_list = QListWidget()
+        self.exercise_list = CardList()
         self.exercise_list.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
         for choice in choices:
             item = QListWidgetItem(
@@ -1266,7 +1266,7 @@ class GroupPlanPage(QWidget):
         layout.addWidget(title)
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setChildrenCollapsible(False)
-        self.revisions = QListWidget()
+        self.revisions = CardList()
         self.revisions.setObjectName("revisionNavigator")
         bind_units(self.revisions, "setMinimumWidth", 16.25)
         bind_units(self.revisions, "setMaximumWidth", 20)
@@ -1327,7 +1327,7 @@ class GroupPlanPage(QWidget):
         splitter.setStretchFactor(1, 1)
         splitter.setSizes([u(18), u(62.5)])
         layout.addWidget(splitter, 1)
-        row = QHBoxLayout()
+        row = ActionBar()
         self.buttons = {}
         for name in ("new", "edit", "clone", "upgrade", "activate", "import", "export"):
             button = QPushButton(T[name].replace("…", ""))
@@ -1335,7 +1335,7 @@ class GroupPlanPage(QWidget):
             button.clicked.connect(lambda checked=False, command=name: self.command(command))
             row.addWidget(button)
             self.buttons[name] = button
-        layout.addLayout(row)
+        layout.addWidget(row)
         self.revisions.currentItemChanged.connect(self.show_revision)
         self.refresh()
 
@@ -1350,16 +1350,6 @@ class GroupPlanPage(QWidget):
                     f"{revision['name']}\n{revision['plan_code']} · "
                     + PLAN_STATUS_LABELS[revision["status"]]
                 )
-                metrics = QFontMetrics(self.revisions.font())
-                height = metrics.boundingRect(
-                    0,
-                    0,
-                    max(u(1), self.revisions.width() - u(1.875)),
-                    u(125),
-                    Qt.TextFlag.TextWordWrap,
-                    item.text(),
-                ).height()
-                item.setSizeHint(QSize(self.revisions.width() - u(.75), height + u(.875)))
                 item.setData(Qt.ItemDataRole.UserRole, revision["id"])
                 self.revisions.addItem(item)
                 if revision["id"] == preferred:

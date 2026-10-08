@@ -20,8 +20,8 @@ class InterfaceScale(QObject):
         self.application = application
         self.preferences = preferences if preferences is not None else UiPreferences()
         self.base_font = QFont(application.font())
-        # A readable 1rem default (12 points at Qt's normal logical DPI).
-        self.base_font.setPointSizeF(max(12.0, self.base_font.pointSizeF()))
+        # Compact default typography; Qt alone applies the system's font DPI.
+        self.base_font.setPointSizeF(10.5)
         self.custom, self.percent = self.preferences.load()
         self._apply()
         application.installEventFilter(self)
@@ -94,7 +94,7 @@ class UnitStyle(QProxyStyle):
 def u(multiplier=1):
     """Round only at the Qt API boundary, in logical pixels (never multiply DPR)."""
     application = QApplication.instance()
-    unit = QFontInfo(application.font()).pixelSize() if application is not None else 16
+    unit = QFontInfo(application.font()).pixelSize() if application is not None else 14
     return round(unit * multiplier)
 
 
@@ -141,6 +141,19 @@ def bind_units(target, method, *values, kind=None):
     bindings[method] = _UnitBinding(target, method, values, kind)
 
 
+def _window_canvas(screen):
+    """2/3 of a 16:9 screen: physical 2560x1440 on 4K at any Qt DPR."""
+    full, available = screen.geometry(), screen.availableGeometry()
+    width = min(full.width() * 2 / 3, full.height() * 2 / 3 * 16 / 9,
+                available.width() * .96, available.height() * .96 * 16 / 9)
+    return QSize(round(width), round(width * 9 / 16))
+
+
+def initial_window_size(widget):
+    screen = widget.screen() or QApplication.primaryScreen()
+    widget.resize(_window_canvas(screen) if screen is not None else QSize(1280, 720))
+
+
 def fit_dialog(dialog, *, width=.85, height=.88, square=False):
     screen = dialog.screen() or QApplication.primaryScreen()
     if screen is None:
@@ -150,11 +163,10 @@ def fit_dialog(dialog, *, width=.85, height=.88, square=False):
         side = round(min(area.width() * width, area.height() * height))
         dialog.resize(side, side)
         return
-    # The available screen wins over the requested lower clamp on small displays.
-    dialog.resize(min(max(round(area.width() * width), u(60)), u(110),
-                      round(area.width() * .96)),
-                  min(max(round(area.height() * height), u(36)), u(70),
-                      round(area.height() * .96)))
+    # Large editing dialogs fit within the default main-window canvas.
+    canvas = _window_canvas(screen)
+    dialog.resize(min(max(round(canvas.width() * width), u(60)), canvas.width()),
+                  min(max(round(canvas.height() * height), u(36)), canvas.height()))
 
 
 def initial_size(widget, width, height):

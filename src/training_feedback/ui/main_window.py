@@ -18,7 +18,7 @@ from ..application.release_updates import UpdateStatus
 from .labels import MAIN_WINDOW_TEXT, user_message
 from .release_updates import show_release_details
 from .settings_page import SettingsPage
-from .sizing import bind_units, initial_size
+from .sizing import bind_units, initial_window_size
 from .window_icon import apply_window_icon
 
 
@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         apply_window_icon(self)
         self.setWindowTitle("训练反馈")
-        initial_size(self, 68.75, 46.25)
+        initial_window_size(self)
         container = QWidget(self)
         layout = QHBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -56,9 +56,9 @@ class MainWindow(QMainWindow):
         sidebar = QFrame()
         sidebar.setObjectName("sidebar")
         sidebar.setMinimumWidth(0)
-        bind_units(sidebar, "setFixedWidth", 12.5)
+        bind_units(sidebar, "setFixedWidth", 11.5)
         sidebar_layout = QVBoxLayout(sidebar)
-        bind_units(sidebar_layout, "setContentsMargins", 1.125, 1.75, 1.125, 1.375)
+        bind_units(sidebar_layout, "setContentsMargins", .875, 1.5, .875, 1)
         brand_row = QHBoxLayout()
         brand_row.setContentsMargins(0, 0, 0, 0)
         brand = QLabel("训练反馈")
@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
         footer.setObjectName("brandCaption")
         sidebar_layout.addWidget(footer)
         self.pages = QStackedWidget()
-        bind_units(self.pages, "setContentsMargins", 1.5, 1.25, 1.5, 1.25)
+        bind_units(self.pages, "setContentsMargins", 1, .875, 1, .875)
         self._page_factories = (
             lambda: context.create_session_page(self),
             lambda: context.create_library_page(self, progressive=True),

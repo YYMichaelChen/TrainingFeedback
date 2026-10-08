@@ -19,8 +19,6 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
     QLineEdit,
-    QListView,
-    QListWidget,
     QListWidgetItem,
     QMenu,
     QMessageBox,
@@ -35,6 +33,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..application.library_workflow import LibraryTarget
+from .compact_widgets import ActionBar, CardList
 from .exercise_reading import ExerciseReading, show_readonly_text
 from .guidance_widgets import GuidanceForm
 from .labels import (
@@ -304,7 +303,7 @@ class CatalogLibraryPage(QWidget):
         self.position.addItem(T["all_positions"], None)
         for key, text in POSITION_LABELS.items():
             self.position.addItem(text, key)
-        filters.addWidget(self.search)
+        filters.addWidget(self.search, 1)
         filters.addWidget(self.position)
         refresh = QPushButton(T["refresh"])
         refresh.clicked.connect(self._refresh_with_feedback)
@@ -313,27 +312,9 @@ class CatalogLibraryPage(QWidget):
         self.gallery_count = QLabel()
         self.gallery_count.setObjectName("muted")
         gallery_layout.addWidget(self.gallery_count)
-        self.cards = QListWidget()
-        self.cards.setViewMode(QListView.ViewMode.IconMode)
-        self.cards.setResizeMode(QListView.ResizeMode.Adjust)
-        self.cards.setMovement(QListView.Movement.Static)
-        self.cards.setFlow(QListView.Flow.LeftToRight)
-        self.cards.setWrapping(True)
-        self.cards.setWordWrap(True)
-        self.cards.setUniformItemSizes(True)
-        bind_units(self.cards, "setIconSize", 13, 9, kind="size")
-        bind_units(self.cards, "setGridSize", 14.75, 14.125, kind="size")
-        bind_units(self.cards, "setSpacing", 0.625)
-        bind_units(self.cards, "setStyleSheet", """
-            QListWidget { background: transparent; border: none; }
-            QListWidget::item { background: white; border: 1px solid #dce5ef;
-                               border-radius: 0.75u; padding: 0.5u; color: #233249; }
-            QListWidget::item:hover { border-color: #0f8175; background: #f5fbf9; }
-            QListWidget::item:selected { border: 0.125u solid #0f8175;
-                                        background: #e8f5f1; color: #115e59; }
-        """, kind="style")
+        self.cards = CardList(gallery=True)
         gallery_layout.addWidget(self.cards, 1)
-        batch_row = QHBoxLayout()
+        batch_row = ActionBar()
         self.batch_toggle = QCheckBox(T["batch_mode"])
         batch_row.addWidget(self.batch_toggle)
         self.batch_review_button = QPushButton(T["batch_review"])
@@ -344,8 +325,7 @@ class CatalogLibraryPage(QWidget):
             self.batch_removal_button.clicked.connect(
                 lambda: self._open_removals(self._selected_targets()))
             batch_row.addWidget(self.batch_removal_button)
-        batch_row.addStretch()
-        gallery_layout.addLayout(batch_row)
+        gallery_layout.addWidget(batch_row)
         self.stack.addWidget(gallery)
         detail = QWidget()
         detail_layout = QVBoxLayout(detail)
@@ -417,8 +397,8 @@ class CatalogLibraryPage(QWidget):
     def _toggle_batch_mode(self, enabled):
         self.cards.clearSelection()
         self.cards.setSelectionMode(
-            QListWidget.SelectionMode.MultiSelection if enabled
-            else QListWidget.SelectionMode.SingleSelection
+            CardList.SelectionMode.MultiSelection if enabled
+            else CardList.SelectionMode.SingleSelection
         )
         self._update_batch_buttons()
 
@@ -516,7 +496,6 @@ class CatalogLibraryPage(QWidget):
         )
         for row in rows:
             item = QListWidgetItem()
-            item.setSizeHint(self.cards.gridSize())
             self._set_card(item, row, row["eligibility"])
             self.cards.addItem(item)
             if progressive:

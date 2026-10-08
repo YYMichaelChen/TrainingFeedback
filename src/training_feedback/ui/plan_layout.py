@@ -109,8 +109,8 @@ class PlanPanes(QWidget):
         self.capsules.setFixedHeight(height + scrollbar + self.capsules.frameWidth() * 2)
 
     def reflow(self):
-        width = self.window().width()
-        mode = "wide" if width >= u(80) else "medium" if width >= u(56) else "narrow"
+        width = self.width()
+        mode = "wide" if width >= u(96) else "medium" if width >= u(64) else "narrow"
         if mode != self.mode:
             self.drawer_open = False
             self.mode = mode
@@ -124,14 +124,14 @@ class PlanPanes(QWidget):
         self.guidance_button.setVisible(mode != "wide")
         self.close_drawer.setVisible(mode != "wide")
         if mode != "narrow" and self.tree is not None:
-            self.left.setFixedWidth(max(u(12), min(u(18), round(self.width() * .18))))
+            self.left.setFixedWidth(max(u(13), min(u(18), round(self.width() * .17))))
         if mode == "wide":
-            self.right.setFixedWidth(max(u(16), min(u(26), round(self.width() * .24))))
+            self.right.setFixedWidth(max(u(22), min(u(30), round(self.width() * .28))))
             self.right.show()
         else:
             self.right.setVisible(self.drawer_open)
             if self.drawer_open:
-                width = min(self.width(), max(u(16), min(u(26), round(self.width() * .8))))
+                width = min(self.width(), max(u(22), min(u(30), round(self.width() * .8))))
                 self.right.setFixedWidth(width)
                 self.right.setGeometry(self.width() - width, 0, width, self.height())
                 self.right.raise_()
