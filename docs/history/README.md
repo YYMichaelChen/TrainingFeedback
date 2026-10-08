@@ -7,19 +7,26 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.15**
+- Application: **0.8.16**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.15**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.15](../releases/0.8.15/design.md)
+- Current development version: [0.8.16](../releases/0.8.16/design.md)
 
 The [QHD compact-interface source follow-up](0.8.14/compact-interface-2026-10-08.md)
 adds a 16:9 default window (2560×1440 on 4K) and independent action frames without changing these
 data identities. It has one isolated startup scenario executed twice and no client
 observation. The [0.8.15 development record](0.8.15/development.md) carries it into
 the newly authorized patch delivery; the existing v0.8.14 Setup does not contain it.
+
+The [225% scaling layout source follow-up](0.8.15/layout-follow-up-2026-10-09.md)
+reserves full training-button widths and centers gallery captions while filling
+the gallery width. Application/data identities remain unchanged; no application
+or manual tests were run. The published v0.8.15 Setup does not contain this follow-up.
+The user authorized submission and distribution; [0.8.16 development](0.8.16/development.md)
+carries this fix into a patch version with unchanged data identities.
 
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
@@ -29,6 +36,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.16 | 24 | Full training-button widths, centered gallery captions and evenly distributed gallery columns | Candidate preparation; application and manual tests 0 |
 | 0.8.15 | 24 | Compact 16:9 default window, responsive page structures and independent measured action frames | GitHub Release `v0.8.15`; clean Setup from `22acd71`; SHA-256 `4aa81c4c6e517a8e1958ef36c4ce59fb96da520d558d707cae47025b6e1484bf`; unsigned; no client observation |
 | 0.8.14 | 24 | Font-relative interface scale and responsive plan/guidance editing | GitHub Release `v0.8.14`; clean Setup from `b09b611`; SHA-256 `26a5a403975e2dab7ce769e048abae04fb33faba7171579357e84e6ebca4169e`; unsigned; no client observation |
 | 0.8.13 | 24 | Continuous plan editing/execution, exact-version guidance in plan details and field-specific numeric input handling | GitHub Release `v0.8.13`; clean Setup from `531a317`; SHA-256 `66ec6977bc87af5ef805b35f48b3a28cc46e407051bbc1649571ca9bc66e0b5b`; unsigned; no client observation |
@@ -54,6 +62,11 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.16 development record](0.8.16/development.md) carries the default-window
+layout follow-up into the user's explicitly requested GitHub delivery. Application
+and manual tests remain zero; no client layout result is claimed. The published
+v0.8.15 Setup does not contain this fix.
 
 The [0.8.15 development record](0.8.15/development.md) records the user's
 2026-10-09 submission and GitHub distribution request. The source update has
@@ -207,6 +220,8 @@ checks. Candidate evidence certifies only its identified source and payload;
 it never transfers to a later version.
 
 ## Historical records
+
+- [0.8.16 development record](0.8.16/development.md)
 
 - [0.8.15 GitHub Release record](0.8.15/github-release-2026-10-09.md)
 - [0.8.15 development record](0.8.15/development.md)

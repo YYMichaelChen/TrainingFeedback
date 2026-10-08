@@ -103,6 +103,7 @@ class GroupSessionPage(QWidget):
         self.active_label.setWordWrap(True)
         start_layout.addWidget(self.active_label)
         self.plan = QComboBox()
+        self.plan.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         start_layout.addWidget(QLabel("选择训练计划"))
         start_layout.addWidget(self.plan)
         row = ActionBar()
@@ -117,7 +118,7 @@ class GroupSessionPage(QWidget):
             row.addWidget(button)
         start_layout.addWidget(row)
         start_layout.addStretch()
-        history_panel = QFrame()
+        history_panel = self.history_panel = QFrame()
         history_panel.setObjectName("card")
         history_layout = QVBoxLayout(history_panel)
         bind_units(history_layout, "setContentsMargins", 1, 1, 1, 1)
@@ -153,11 +154,18 @@ class GroupSessionPage(QWidget):
         self.refresh()
 
     def _reflow(self):
-        wide = self.width() >= u(66)
+        # The flow toolbar needs the full natural width of its longest button.
+        # Do not let history's stretch squeeze the start card below that width.
+        start_width = max(u(18), self.start_panel.layout().minimumSize().width())
+        margins = self.layout().contentsMargins()
+        available = self.width() - margins.left() - margins.right()
+        required = (start_width + self.history_panel.minimumSizeHint().width()
+                    + self.panels.spacing())
+        wide = available >= max(u(66), required)
         self.panels.setDirection(QBoxLayout.Direction.LeftToRight if wide
                                  else QBoxLayout.Direction.TopToBottom)
-        self.start_panel.setMinimumWidth(0)
-        self.start_panel.setMaximumWidth(u(26) if wide else 16777215)
+        self.start_panel.setMaximumWidth(max(u(26), start_width) if wide else 16777215)
+        self.start_panel.setMinimumWidth(start_width)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

@@ -242,12 +242,18 @@ region, including at its boundary. User text is neither elided nor rewritten to
 make the layout fit; explicit edit/read regions may scroll.
 
 The main training page presents start/resume and history in separate cards,
-side by side from 66u of page width and stacked below that. Action toolbars wrap
-using full button labels. The library gallery, multi-action picker, group member
+side by side from 66u of usable content width only when both cards' measured
+minimum widths fit, and stacked otherwise. The start card reserves at least
+18u and the natural width needed by its longest button and card margins.
+Action toolbars wrap using full button labels and never shrink buttons below
+their natural width. The library gallery, multi-action picker, group member
 list and plan revision navigator use independent rounded frames. Text height is
 measured at current font/viewport width, with wrapped names and distinct hover,
 selection and keyboard-focus states. Gallery columns and card heights recalculate
 on font, content and viewport changes; no stale per-item fixed size is retained.
+Gallery images and their wrapped captions are centered. Gallery columns divide
+the available viewport width, with native item padding disabled so the final
+column is not pushed to the next row by duplicate insets.
 
 The requested scale/DPI/layout criteria describe intended behavior. Current
 verification remains governed by Section 9.1: unobserved client layout is not a

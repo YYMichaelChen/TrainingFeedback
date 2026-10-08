@@ -55,7 +55,7 @@ class _FlowLayout(QLayout):
             if item.isEmpty():
                 continue
             size = item.sizeHint()
-            width = min(size.width(), max(1, rect.width()))
+            width = size.width()
             if x > rect.x() and x + width > rect.x() + rect.width():
                 x, y, row_height = rect.x(), y + row_height + gap, 0
             if apply:
@@ -67,7 +67,9 @@ class _FlowLayout(QLayout):
     def minimumSize(self):
         size = QSize()
         for item in self.items:
-            size = size.expandedTo(item.minimumSize())
+            if item.isEmpty():
+                continue
+            size = size.expandedTo(item.minimumSize()).expandedTo(item.sizeHint())
         return size
 
     def sizeHint(self):
@@ -111,7 +113,8 @@ class FramedItemDelegate(QStyledItemDelegate):
         self.initStyleOption(option, index)
         width = (self.view.gridSize().width() if self.gallery
                  else self.view.viewport().width())
-        height = self.text_height(option, width - u(1.9)) + u(1.4)
+        height = (self.text_height(option, width - 2 * (u(.2) + u(.75)))
+                  + 2 * (u(.2) + u(.5)))
         if self.gallery:
             return self.view.gridSize()
         return QSize(max(1, width), max(u(3), height))
@@ -135,8 +138,9 @@ class FramedItemDelegate(QStyledItemDelegate):
             text_rect.setTop(image_rect.bottom() + u(.5))
         painter.setFont(option.font)
         painter.setPen(QColor("#115e59" if selected else "#233249"))
-        painter.drawText(text_rect, Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignVCenter,
-                         option.text)
+        alignment = (Qt.AlignmentFlag.AlignCenter if self.gallery
+                     else Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        painter.drawText(text_rect, Qt.TextFlag.TextWordWrap | alignment, option.text)
         if option.state & QStyle.StateFlag.State_HasFocus:
             painter.setBrush(Qt.BrushStyle.NoBrush)
             pen = QPen(QColor("#0f8175"), 1, Qt.PenStyle.DotLine)
@@ -156,17 +160,22 @@ class CardList(QListWidget):
         self.setVerticalScrollMode(QListView.ScrollMode.ScrollPerPixel)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setItemDelegate(FramedItemDelegate(self, gallery=gallery))
-        bind_units(self, "setStyleSheet",
-                   "QListWidget { background: transparent; border: none; }", kind="style")
+        style = "QListWidget { background: transparent; border: none; }"
         if gallery:
+            # The delegate supplies all card insets; native item padding must not
+            # enlarge a cell beyond its grid slot and wrap the last column away.
+            style += "QListWidget::item { padding: 0; margin: 0; border: none; }"
+            self.setSpacing(0)
             self.setViewMode(QListView.ViewMode.IconMode)
             self.setResizeMode(QListView.ResizeMode.Adjust)
             self.setMovement(QListView.Movement.Static)
             self.setFlow(QListView.Flow.LeftToRight)
             self.setWrapping(True)
             bind_units(self, "setIconSize", 13, 9, kind="size")
+        bind_units(self, "setStyleSheet", style, kind="style")
         self.model().dataChanged.connect(self.update_metrics)
         self.model().rowsInserted.connect(self.update_metrics)
+        self.model().rowsRemoved.connect(self.update_metrics)
         manager = scale_manager()
         if manager is not None:
             manager.changed.connect(self.update_metrics)
@@ -174,16 +183,19 @@ class CardList(QListWidget):
 
     def update_metrics(self, *_):
         if self.gallery:
-            available = max(1, self.viewport().width())
+            # Leave one logical pixel for view-layout rounding; distribute the
+            # remaining width across every column rather than capping card width.
+            available = max(1, self.viewport().width() - 1)
             columns = max(1, available // max(1, u(17)))
-            width = min(u(22), available // columns)
+            width = available // columns
             height = u(15)
+            text_width = width - 2 * (u(.2) + u(.75))
+            insets = 2 * (u(.2) + u(.5)) + u(9) + u(.5)
             for row in range(self.count()):
                 option = QStyleOptionViewItem()
                 option.font, option.fontMetrics = self.font(), self.fontMetrics()
                 option.text = self.item(row).text()
-                height = max(height, self.itemDelegate().text_height(option, width - u(1.9))
-                             + u(10.9))
+                height = max(height, self.itemDelegate().text_height(option, text_width) + insets)
             self.setGridSize(QSize(width, height))
         self.doItemsLayout()
         self.viewport().update()
