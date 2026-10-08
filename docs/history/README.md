@@ -11,7 +11,7 @@ the [development workflow](../development-workflow.md) owns version rotation.
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
-- GitHub distribution: **v0.8.13**
+- GitHub distribution: **v0.8.14**
 - Formal compatibility baseline declared: **no**
 - Current development version: [0.8.14](../releases/0.8.14/design.md)
 
@@ -23,7 +23,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.14 | 24 | Font-relative interface scale and responsive plan/guidance editing | Clean Setup from `b09b611`; SHA-256 `26a5a403975e2dab7ce769e048abae04fb33faba7171579357e84e6ebca4169e`; unsigned; GitHub publication pending |
+| 0.8.14 | 24 | Font-relative interface scale and responsive plan/guidance editing | GitHub Release `v0.8.14`; clean Setup from `b09b611`; SHA-256 `26a5a403975e2dab7ce769e048abae04fb33faba7171579357e84e6ebca4169e`; unsigned; no client observation |
 | 0.8.13 | 24 | Continuous plan editing/execution, exact-version guidance in plan details and field-specific numeric input handling | GitHub Release `v0.8.13`; clean Setup from `531a317`; SHA-256 `66ec6977bc87af5ef805b35f48b3a28cc46e407051bbc1649571ca9bc66e0b5b`; unsigned; no client observation |
 | 0.8.12 | 24 | Updater exit follow-up: external watchdog bound to the exact application process, readiness acknowledgement and confirmed exit before Setup | GitHub Release `v0.8.12`; clean Setup from `8a3ae60`; SHA-256 `22fc750d5773fd9442ee1e29e7644747544786639101c72d0e9d0800d33235f6`; unsigned |
 | 0.8.11 | 24 | Action reading redesign: responsive illustration/guidance panels, grouped guidance, zoom viewer and exact-content operations menu | GitHub Release `v0.8.11`; SHA-256 `baa1e40c153c4ae69ca99e5f53b5d6019cd31481db5515777d511f4911549519`; unsigned |
@@ -54,7 +54,9 @@ into a patch version after the user's explicit submission/distribution request.
 The published v0.8.13 Setup does not include that change. One isolated
 theme/main-window startup construction check passed during source development;
 client layout and functional behavior remain unobserved. The clean Setup was built
-from `b09b611`; retained manifests identify the candidate. Version rotation,
+from `b09b611`; retained manifests identify the candidate. The
+[public release record](0.8.14/github-release-2026-10-08.md) preserves its unique
+uploaded Setup, GitHub digest and matching public latest response. Version rotation,
 packaging and distribution add no application/manual checks.
 
 The [0.8.12 development record](0.8.12/development.md) carries the
@@ -191,6 +193,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.14 GitHub Release record](0.8.14/github-release-2026-10-08.md)
 - [0.8.14 development record](0.8.14/development.md)
 - [0.8.13 GitHub Release record](0.8.13/github-release-2026-10-08.md)
 - [0.8.13 development record](0.8.13/development.md)
