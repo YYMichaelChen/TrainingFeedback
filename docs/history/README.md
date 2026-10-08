@@ -11,7 +11,7 @@ the [development workflow](../development-workflow.md) owns version rotation.
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
-- GitHub distribution: **v0.8.15**
+- GitHub distribution: **v0.8.16**
 - Formal compatibility baseline declared: **no**
 - Current development version: [0.8.16](../releases/0.8.16/design.md)
 
@@ -36,7 +36,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.16 | 24 | Full training-button widths, centered gallery captions and evenly distributed gallery columns | Clean Setup from `e12b5db`; SHA-256 `c26ff9d174bc1de6677feb293d52954339c63db21f889cbe1bccc27ba53b149c`; unsigned; application and manual tests 0; distribution pending |
+| 0.8.16 | 24 | Full training-button widths, centered gallery captions and evenly distributed gallery columns | GitHub Release `v0.8.16`; clean Setup from `e12b5db`; SHA-256 `c26ff9d174bc1de6677feb293d52954339c63db21f889cbe1bccc27ba53b149c`; unsigned; application and manual tests 0 |
 | 0.8.15 | 24 | Compact 16:9 default window, responsive page structures and independent measured action frames | GitHub Release `v0.8.15`; clean Setup from `22acd71`; SHA-256 `4aa81c4c6e517a8e1958ef36c4ce59fb96da520d558d707cae47025b6e1484bf`; unsigned; no client observation |
 | 0.8.14 | 24 | Font-relative interface scale and responsive plan/guidance editing | GitHub Release `v0.8.14`; clean Setup from `b09b611`; SHA-256 `26a5a403975e2dab7ce769e048abae04fb33faba7171579357e84e6ebca4169e`; unsigned; no client observation |
 | 0.8.13 | 24 | Continuous plan editing/execution, exact-version guidance in plan details and field-specific numeric input handling | GitHub Release `v0.8.13`; clean Setup from `531a317`; SHA-256 `66ec6977bc87af5ef805b35f48b3a28cc46e407051bbc1649571ca9bc66e0b5b`; unsigned; no client observation |
@@ -67,6 +67,8 @@ The [0.8.16 development record](0.8.16/development.md) carries the default-windo
 layout follow-up into the user's explicitly requested GitHub delivery. Application
 and manual tests remain zero; no client layout result is claimed. The published
 v0.8.15 Setup does not contain this fix.
+The [public release record](0.8.16/github-release-2026-10-09.md) identifies the
+unique Setup built from `e12b5db` and its matching unauthenticated latest response.
 
 The [0.8.15 development record](0.8.15/development.md) records the user's
 2026-10-09 submission and GitHub distribution request. The source update has
@@ -221,6 +223,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.16 GitHub Release record](0.8.16/github-release-2026-10-09.md)
 - [0.8.16 development record](0.8.16/development.md)
 
 - [0.8.15 GitHub Release record](0.8.15/github-release-2026-10-09.md)
