@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFileDialog,
-    QFormLayout,
     QFrame,
     QHBoxLayout,
     QHeaderView,
@@ -24,6 +23,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMenu,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
@@ -33,8 +33,7 @@ from PySide6.QtWidgets import (
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
-    QTabWidget,
-    QTreeWidget,
+    QToolButton,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -52,7 +51,7 @@ from ..domain.group_plans import (
     prescription_rest_applicability,
     validate_action,
 )
-from .exercise_reading import ExerciseReading
+from .exercise_reading import PlanGuidance
 from .labels import (
     DOSE_UNIT_LABELS,
     EXERCISE_SOURCE_LABELS,
@@ -62,17 +61,29 @@ from .labels import (
     VARIANT_LABELS,
     confirm,
     localize_dialog_buttons,
-    make_unit_combo,
     user_message,
 )
 from .labels import (
     GROUP_PLAN_TEXT as T,
 )
+from .plan_layout import PlanActionTree, PlanPanes
 from .plan_presentation import plan_presentation
+from .relative_widgets import AdaptiveFields, LocalScrollArea, RelativeTable, ResizableTextEdit
+from .sizing import bind_units, fit_dialog, initial_size, scale_manager, u
+
+
+class _ScrollCombo(QComboBox):
+    def wheelEvent(self, event):
+        event.ignore()
+
+
+class _ScrollSpin(QSpinBox):
+    def wheelEvent(self, event):
+        event.ignore()
 
 
 def combo(mapping, selected):
-    widget = QComboBox()
+    widget = _ScrollCombo()
     for key, value in mapping.items():
         widget.addItem(value, key)
     widget.setCurrentIndex(widget.findData(selected))
@@ -112,16 +123,17 @@ def number(edit, label, *, optional=False):
 
 
 class ActionPrescriptionDialog(QDialog):
-    def __init__(self, choices, action=None, *, member=False, parent=None, service=None):
+    def __init__(self, choices, action=None, *, member=False, parent=None, service=None,
+                 embedded=False):
         super().__init__(parent)
         self.member, self.source, self.value = member, deepcopy(action), None
         self.service = service
         self.setWindowTitle(T["action"])
-        self.resize(820, 640)
+        fit_dialog(self)
         body = QWidget()
         fields = QVBoxLayout(body)
-        form = QFormLayout()
-        self.exercise = QComboBox()
+        form = AdaptiveFields()
+        self.exercise = _ScrollCombo()
         self.exercise.setEditable(True)
         self.exercise.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.exercise.setMinimumContentsLength(18)
@@ -178,48 +190,59 @@ class ActionPrescriptionDialog(QDialog):
             form.addRow(T["first_side"], self.side)
             form.addRow(T["side_rest"], self.side_rest)
         form.addRow(T["member_rest"] if member else T["exit_rest"], self.rest)
-        self.note = QPlainTextEdit(action["note"] if action else "")
-        self.note.setMaximumHeight(75)
+        self.note = ResizableTextEdit(action["note"] if action else "")
         form.addRow(T["note"], self.note)
-        fields.addLayout(form)
+        fields.addWidget(form)
         fields.addWidget(QLabel(T["sets"]))
-        self.sets = QTableWidget(0, 5)
+        self.sets = RelativeTable([5, 4, 3, 6, 4, 4, 4, 2])
         self.sets.setHorizontalHeaderLabels(
             [T[key] for key in ("value", "unit", "per_side", "set_rest", "note")]
+            + ["组次", "操作", "#"]
         )
-        self.sets.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.sets.horizontalHeader().setSectionsMovable(False)
+        self.sets.horizontalHeader().moveSection(5, 0)
+        self.sets.horizontalHeader().moveSection(7, 0)
         self.exercise.currentIndexChanged.connect(self.refresh_rest_fields)
         for dose in action["sets"] if action else []:
             self.add_set(dose)
         self.refresh_rest_fields()
-        fields.addWidget(self.sets, 1)
-        controls = QHBoxLayout()
+        fields.addWidget(self.sets)
+        controls = AdaptiveFields(minimum=8)
         add = QPushButton(T["add_set"])
         add.clicked.connect(lambda: self.add_set())
         remove = QPushButton(T["remove_set"])
         remove.clicked.connect(self.remove_set)
         fill = QPushButton(T["fill_equal_sets"])
         fill.clicked.connect(self.fill_equal_sets)
-        controls.addWidget(add)
-        controls.addWidget(remove)
-        controls.addWidget(fill)
-        fields.addLayout(controls)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
+        controls.addRow("", add)
+        controls.addRow("", remove)
+        controls.addRow("", fill)
+        fields.addWidget(controls)
+        fields.addStretch()
+        scroll = LocalScrollArea()
         scroll.setWidget(body)
+        self.sets.height_budget = lambda: scroll.viewport().height()
+        bind_units(fields, "setContentsMargins", 1.5, 1.5, 1.5, 1.5)
         layout = QVBoxLayout(self)
-        if service is not None:
-            tabs = QTabWidget()
-            tabs.addTab(scroll, "训练安排")
-            self.reading = ExerciseReading()
-            tabs.addTab(self.reading, "动作指导")
+        if service is not None and not embedded:
+            center = QWidget()
+            center_layout = QVBoxLayout(center)
+            center_layout.setContentsMargins(0, 0, 0, 0)
+            center_layout.addWidget(scroll, 1)
+            self.reading = PlanGuidance()
+            self.panes = PlanPanes(QWidget(), center, self.reading, None, self)
             self.exercise.currentIndexChanged.connect(self.show_guidance)
             self.show_guidance()
-            layout.addWidget(tabs, 1)
+            layout.addWidget(self.panes, 1)
         else:
             layout.addWidget(scroll, 1)
         self.buttons = dialog_buttons(self, self.save)
         layout.addWidget(self.buttons)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "panes"):
+            self.panes.reflow()
 
     def show_guidance(self):
         choice = self.exercise.currentData()
@@ -249,7 +272,9 @@ class ActionPrescriptionDialog(QDialog):
         self.sets.setItem(
             row, 0, QTableWidgetItem("" if dose["value"] is None else str(dose["value"]))
         )
-        self.sets.setCellWidget(row, 1, make_unit_combo(dose["unit"]))
+        self.sets.setCellWidget(row, 1, combo(
+            {unit.value: label for unit, label in DOSE_UNIT_LABELS.items()}, dose["unit"]
+        ))
         check = QCheckBox()
         check.setChecked(dose["per_side"])
         check.stateChanged.connect(self.refresh_rest_fields)
@@ -259,11 +284,31 @@ class ActionPrescriptionDialog(QDialog):
         note = QTableWidgetItem(dose["note"])
         note.setData(Qt.ItemDataRole.UserRole, dose["note"])
         self.sets.setItem(row, 4, note)
+        order = QTableWidgetItem(str(row + 1))
+        order.setFlags(order.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self.sets.setItem(row, 5, order)
+        ordinal = QTableWidgetItem(str(row + 1))
+        ordinal.setFlags(ordinal.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self.sets.setItem(row, 7, ordinal)
+        remove = QPushButton("删除")
+        remove.setObjectName("tableActionButton")
+        remove.clicked.connect(lambda checked=False, button=remove: self._remove_set_button(button))
+        self.sets.setCellWidget(row, 6, remove)
         self.refresh_rest_fields()
+
+    def _remove_set_button(self, button):
+        for row in range(self.sets.rowCount()):
+            if self.sets.cellWidget(row, 6) is button:
+                self.sets.setCurrentCell(row, 0)
+                self.remove_set()
+                break
 
     def remove_set(self):
         if self.sets.currentRow() >= 0:
             self.sets.removeRow(self.sets.currentRow())
+            for row in range(self.sets.rowCount()):
+                self.sets.item(row, 5).setText(str(row + 1))
+                self.sets.item(row, 7).setText(str(row + 1))
             self.refresh_rest_fields()
 
     def refresh_rest_fields(self):
@@ -310,6 +355,7 @@ class ActionPrescriptionDialog(QDialog):
             self.side_rest.setEnabled(applicable)
             self.side.setEnabled(applicable and not aggregate)
             self.side_rest.setPlaceholderText(T["unknown"] if applicable else T["none"])
+        self.sets.update_metrics()
 
     def fill_equal_sets(self):
         source = self.sets.currentRow()
@@ -415,12 +461,14 @@ class GroupPrescriptionDialog(QDialog):
             ):
                 self.group[key] = None
         self.setWindowTitle(T["group"])
-        self.resize(820, 660)
-        layout = QVBoxLayout(self)
-        form = QFormLayout()
+        initial_size(self, 51.25, 41.25)
+        outer = QVBoxLayout(self)
+        body = QWidget()
+        layout = QVBoxLayout(body)
+        form = AdaptiveFields()
         self.name = QLineEdit(self.group["name"])
         self.phase = combo(PLAN_PHASE_LABELS, self.group["phase"])
-        self.rounds = QSpinBox()
+        self.rounds = _ScrollSpin()
         self.rounds.setRange(1, 1000000)
         self.rounds.setValue(self.group["round_count"])
         self.side = combo(
@@ -443,10 +491,8 @@ class GroupPrescriptionDialog(QDialog):
                 "" if self.group[key] is None else str(self.group[key])
             )
             form.addRow(T[label], self.fields[key])
-        self.transition = QPlainTextEdit(self.group["transition"])
-        self.note = QPlainTextEdit(self.group["note"])
-        for edit in (self.transition, self.note):
-            edit.setMaximumHeight(60)
+        self.transition = ResizableTextEdit(self.group["transition"])
+        self.note = ResizableTextEdit(self.group["note"])
         for label, widget in (
             ("group_name", self.name),
             ("phase", self.phase),
@@ -457,10 +503,13 @@ class GroupPrescriptionDialog(QDialog):
             ("note", self.note),
         ):
             form.addRow(T[label], widget)
-        layout.addLayout(form)
+        layout.addWidget(form)
         self.members = QListWidget()
+        bind_units(self.members, "setMinimumHeight", 6)
+        self.members.setWordWrap(True)
+        self.members.setTextElideMode(Qt.TextElideMode.ElideNone)
         layout.addWidget(self.members, 1)
-        controls = QHBoxLayout()
+        controls = AdaptiveFields(minimum=8)
         for name, function in (
             ("add_member", self.add_member),
             ("edit_item", self.edit_member),
@@ -470,10 +519,13 @@ class GroupPrescriptionDialog(QDialog):
         ):
             button = QPushButton(T[name])
             button.clicked.connect(function)
-            controls.addWidget(button)
-        layout.addLayout(controls)
+            controls.addRow("", button)
+        layout.addWidget(controls)
+        scroll = LocalScrollArea()
+        scroll.setWidget(body)
+        outer.addWidget(scroll, 1)
         self.buttons = dialog_buttons(self, self.save)
-        layout.addWidget(self.buttons)
+        outer.addWidget(self.buttons)
         self.refresh()
 
     def refresh(self):
@@ -626,87 +678,141 @@ class GroupPlanEditor(QDialog):
         self.document = PlanDocument(self.source["plan"])
         self.document.plan["days"] = [continuous_plan_day(self.document.plan)]
         self.setWindowTitle(T["edit"])
-        self.resize(950, 740)
+        fit_dialog(self)
         layout = QVBoxLayout(self)
-        form = QFormLayout()
+        bind_units(layout, "setContentsMargins", 1.5, 1, 1.5, 1)
+        header = QHBoxLayout()
+        title = QLabel(T["edit"])
+        title.setObjectName("dialogTitle")
+        title.setWordWrap(True)
+        header.addWidget(title, 1)
+        badge = QLabel("草稿")
+        badge.setObjectName("muted")
+        header.addWidget(badge)
+        close = QPushButton("关闭")
+        close.clicked.connect(self.reject)
+        header.addWidget(close)
+        layout.addLayout(header)
         self.name = QLineEdit(self.source["plan"]["name"])
-        self.purpose = QPlainTextEdit(self.source["plan"]["purpose"])
-        self.rationale = QPlainTextEdit(self.source["rationale"])
-        self.change_description = QPlainTextEdit(self.source["change_description"])
-        self.purpose.setMaximumHeight(70)
-        self.rationale.setMaximumHeight(70)
-        self.change_description.setMaximumHeight(60)
+        basic = QHBoxLayout()
+        basic.addWidget(QLabel(T["name"]))
+        basic.addWidget(self.name, 1)
+        self.basic_toggle = QPushButton("展开基本信息")
+        self.basic_toggle.setCheckable(True)
+        basic.addWidget(self.basic_toggle)
+        layout.addLayout(basic)
+        self.basic_scroll = LocalScrollArea()
+        self.basic_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        form = AdaptiveFields(minimum=20, max_columns=2)
+        self.purpose = ResizableTextEdit(self.source["plan"]["purpose"])
+        self.rationale = ResizableTextEdit(self.source["rationale"])
+        self.change_description = ResizableTextEdit(self.source["change_description"])
         for name, widget in (
-            ("name", self.name),
             ("purpose", self.purpose),
             ("rationale", self.rationale),
             ("change_description", self.change_description),
         ):
             form.addRow(T[name], widget)
-        layout.addLayout(form)
-        self.tree = QTreeWidget()
+        self.basic_scroll.setWidget(form)
+        self.basic_scroll.hide()
+        self.basic_toggle.toggled.connect(self._toggle_basic)
+        layout.addWidget(self.basic_scroll)
+        self.tree = PlanActionTree()
+        self.tree.setObjectName("planActions")
+        self.tree.setTextElideMode(Qt.TextElideMode.ElideNone)
+        self.tree.setWordWrap(True)
         self.tree.setHeaderLabels([T["items"]])
+        self.tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.tree.header().setStretchLastSection(False)
         self.tree.currentItemChanged.connect(self._show_selected_detail)
+        self.tree.reorder_requested.connect(self._reorder_dragged)
+        self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self._action_menu)
         self.detail_panel = QWidget()
         detail_layout = QVBoxLayout(self.detail_panel)
         self.detail_content_layout = detail_layout
         self.detail_summary = QWidget()
         summary_layout = QVBoxLayout(self.detail_summary)
         self.detail_title = QLabel(T["select_detail"])
+        self.detail_title.setObjectName("actionTitle")
         self.detail_title.setWordWrap(True)
         summary_layout.addWidget(self.detail_title)
-        self.detail_fields = QPlainTextEdit()
+        self.detail_fields = ResizableTextEdit()
         self.detail_fields.setReadOnly(True)
-        self.detail_fields.setMaximumHeight(100)
         summary_layout.addWidget(self.detail_fields)
-        self.detail_reading = ExerciseReading()
-        summary_layout.addWidget(self.detail_reading, 3)
-        self.detail_sets = QTableWidget(0, 6)
+        self.detail_reading = PlanGuidance()
+        self.detail_sets = RelativeTable([2, 4, 5, 4, 3, 6])
         self.detail_sets.setHorizontalHeaderLabels(
             [T["member"], T["set_order"], T["value"], T["unit"], T["per_side"], T["set_rest"]]
         )
         self.detail_sets.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.detail_sets.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )
-        self.detail_sets.horizontalHeader().setStretchLastSection(True)
-        self.detail_sets.setMaximumHeight(160)
         summary_layout.addWidget(self.detail_sets)
-        detail_layout.addWidget(self.detail_summary, 1)
+        summary_layout.addStretch()
+        self.summary_scroll = LocalScrollArea()
+        self.summary_scroll.setWidget(self.detail_summary)
+        self.detail_sets.height_budget = lambda: self.summary_scroll.viewport().height()
+        detail_layout.addWidget(self.summary_scroll, 1)
+        bind_units(summary_layout, "setContentsMargins", 1.5, 1.5, 1.5, 1.5)
+        bind_units(detail_layout, "setContentsMargins", 0, 0, 0, 0)
         self.inline_editor = None
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.addWidget(self.tree)
-        splitter.addWidget(self.detail_panel)
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 2)
-        layout.addWidget(splitter, 1)
-        layout.addWidget(QLabel("直接添加动作或动作组；选择动作查看指导，编辑训练安排。"))
-        for names in (
-            ("add_action", "add_group", "edit_item"),
-            ("remove", "up", "down", "move_member"),
-        ):
-            row = QHBoxLayout()
-            for name in names:
-                button = QPushButton(T[name])
-                button.clicked.connect(lambda checked=False, command=name: self.command(command))
-                row.addWidget(button)
-            layout.addLayout(row)
+        left = QWidget()
+        left_layout = QVBoxLayout(left)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.addWidget(self.tree, 1)
+        add = QPushButton("+ 添加动作")
+        add.clicked.connect(lambda: self.command("add_action"))
+        left_layout.addWidget(add)
+        self.panes = PlanPanes(left, self.detail_panel, self.detail_reading, self.tree, self)
+        layout.addWidget(self.panes, 1)
+        commands = QHBoxLayout()
+        edit = QPushButton(T["edit_item"])
+        edit.clicked.connect(lambda: self.command("edit_item"))
+        commands.addWidget(edit)
+        # Keep secondary commands available without a row of overflowing buttons.
+        more = QToolButton()
+        more.setText("更多操作 ▾")
+        more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu = QMenu(more)
+        for name in ("add_action", "add_group", "remove", "up", "down", "move_member"):
+            menu.addAction(T[name], lambda checked=False, command=name: self.command(command))
+        more.setMenu(menu)
+        commands.addWidget(more)
+        commands.addStretch()
         self.buttons = dialog_buttons(self, self.save)
-        layout.addWidget(self.buttons)
+        commands.addWidget(self.buttons)
+        layout.addLayout(commands)
+        manager = scale_manager()
+        if manager is not None:
+            manager.changed.connect(self._update_layout)
         self.refresh()
+
+    def _toggle_basic(self, expanded):
+        self.basic_scroll.setVisible(expanded)
+        self.basic_toggle.setText("收起基本信息" if expanded else "展开基本信息")
+        self._update_layout()
+
+    def _update_layout(self):
+        self.basic_scroll.setMaximumHeight(max(u(3), round(self.height() * .3)))
+        self.panes.reflow()
+        self.detail_sets.update_metrics()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "panes"):
+            self._update_layout()
 
     def refresh(self, selection=None):
         self.tree.clear()
         for d, day in enumerate(self.document.plan["days"]):
             for i, item in enumerate(day["items"]):
                 child = QTreeWidgetItem(
-                    [f"{item['order']}. {item.get('name', item.get('exercise_name'))}"]
+                    [f"≡ {item['order']}. {item.get('name', item.get('exercise_name'))}"]
                 )
                 child.setData(0, Qt.ItemDataRole.UserRole, (d, i, None))
                 self.tree.addTopLevelItem(child)
                 for m, member in enumerate(item.get("members", [])):
                     leaf = QTreeWidgetItem(
-                        [f"{member['order']}. {member['exercise_name']}"]
+                        [f"≡ {member['order']}. {member['exercise_name']}"]
                     )
                     leaf.setData(0, Qt.ItemDataRole.UserRole, (d, i, m))
                     child.addChild(leaf)
@@ -717,8 +823,37 @@ class GroupPlanEditor(QDialog):
             if m is not None and m < item.childCount():
                 item = item.child(m)
             self.tree.setCurrentItem(item)
+        self.panes.rebuild_capsules()
+
+    def _reorder_dragged(self, before, after):
+        if self.inline_editor is not None:
+            return
+        d, i, m = before
+        target = after[1] if m is None else after[2]
+        rows = (self.document.plan["days"][d]["items"] if m is None
+                else self.document.plan["days"][d]["items"][i]["members"])
+        index = i if m is None else m
+        step = 1 if target > index else -1
+        while index != target:
+            self.document.move(rows, index, step)
+            index += step
+        self.refresh((d, target, None) if m is None else (d, i, target))
+
+    def _action_menu(self, position):
+        if self.inline_editor is not None:
+            return
+        item = self.tree.itemAt(position)
+        if item is None:
+            return
+        self.tree.setCurrentItem(item)
+        menu = QMenu(self.tree)
+        for name in ("edit_item", "up", "down", "remove", "move_member"):
+            menu.addAction(T[name], lambda checked=False, command=name: self.command(command))
+        menu.exec(self.tree.viewport().mapToGlobal(position))
 
     def _show_selected_detail(self, item, _previous=None):
+        if hasattr(self, "panes"):
+            self.panes.rebuild_capsules()
         self.detail_sets.setRowCount(0)
         self.detail_reading.set_content(None, None, lambda index: b"")
         if item is None:
@@ -734,7 +869,6 @@ class GroupPlanEditor(QDialog):
             key: value for key, value in selected.items()
             if key not in ("sets", "members", "name", "exercise_name")
         }))
-        self.detail_reading.setVisible("exercise" in selected)
         if "exercise" in selected:
             try:
                 entry = self.service.action_content(selected)
@@ -808,23 +942,30 @@ class GroupPlanEditor(QDialog):
         elif source and m is not None:
             dialog = ActionPrescriptionDialog(
                 choices, source["members"][m], member=True, parent=self, service=self.service,
+                embedded=True,
             )
         elif command == "add_group" or (source and source["kind"] == "group"):
             dialog = GroupPrescriptionDialog(choices, source, self, service=self.service)
         else:
-            dialog = ActionPrescriptionDialog(choices, source, parent=self, service=self.service)
+            dialog = ActionPrescriptionDialog(choices, source, parent=self, service=self.service,
+                                              embedded=True)
         self._show_inline_editor(dialog, d, i, m)
 
     def _show_inline_editor(self, dialog, d, i, m):
         self.tree.setEnabled(False)
-        self.detail_summary.hide()
+        self.panes.rebuild_capsules()
+        self.summary_scroll.hide()
         self.inline_editor = dialog
         dialog.setParent(self.detail_panel)
         dialog.setWindowFlags(Qt.WindowType.Widget)
-        dialog.setMinimumSize(380, 520)
+        dialog.setMinimumSize(0, 0)
         self.detail_content_layout.addWidget(dialog, 1)
         dialog.accepted.connect(lambda: self._inline_saved(dialog, d, i, m))
         dialog.rejected.connect(self._inline_cancelled)
+        if isinstance(dialog, ActionPrescriptionDialog):
+            dialog.reading = self.detail_reading
+            dialog.exercise.currentIndexChanged.connect(dialog.show_guidance)
+            dialog.show_guidance()
         dialog.show()
 
     def _inline_saved(self, dialog, d, i, m):
@@ -864,7 +1005,8 @@ class GroupPlanEditor(QDialog):
             dialog.hide()
             dialog.deleteLater()
         self.tree.setEnabled(True)
-        self.detail_summary.show()
+        self.summary_scroll.show()
+        self.panes.rebuild_capsules()
 
     def remove(self, d, i, m):
         if m is not None:
@@ -1076,7 +1218,7 @@ class GroupPlanActivation(QDialog):
         self.service, self.revision_id = service, revision_id
         self.preview = service.preview(revision_id)
         self.setWindowTitle(T["preview"])
-        self.resize(900, 700)
+        initial_size(self, 56.25, 43.75)
         layout = QVBoxLayout(self)
         view = QPlainTextEdit()
         view.setReadOnly(True)
@@ -1126,15 +1268,15 @@ class GroupPlanPage(QWidget):
         splitter.setChildrenCollapsible(False)
         self.revisions = QListWidget()
         self.revisions.setObjectName("revisionNavigator")
-        self.revisions.setMinimumWidth(260)
-        self.revisions.setMaximumWidth(320)
-        self.revisions.setSpacing(4)
+        bind_units(self.revisions, "setMinimumWidth", 16.25)
+        bind_units(self.revisions, "setMaximumWidth", 20)
+        bind_units(self.revisions, "setSpacing", 0.25)
         self.revisions.setWordWrap(True)
         splitter.addWidget(self.revisions)
 
         self.detail_panel = QWidget()
         detail_layout = QVBoxLayout(self.detail_panel)
-        detail_layout.setContentsMargins(14, 0, 0, 0)
+        bind_units(detail_layout, "setContentsMargins", 0.875, 0, 0, 0)
         self.revision_title = QLabel()
         self.revision_title.setObjectName("revisionTitle")
         self.revision_title.setWordWrap(True)
@@ -1175,15 +1317,15 @@ class GroupPlanPage(QWidget):
         self.detail_host = QWidget()
         self.detail_host.setMinimumWidth(0)
         self.detail_rows = QVBoxLayout(self.detail_host)
-        self.detail_rows.setContentsMargins(0, 8, 8, 8)
-        self.detail_rows.setSpacing(12)
+        bind_units(self.detail_rows, "setContentsMargins", 0, 0.5, 0.5, 0.5)
+        bind_units(self.detail_rows, "setSpacing", 0.75)
         self.detail_rows.addStretch(1)
         self.detail_scroll.setWidget(self.detail_host)
         detail_layout.addWidget(self.detail_scroll, 1)
         splitter.addWidget(self.detail_panel)
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
-        splitter.setSizes([288, 1000])
+        splitter.setSizes([u(18), u(62.5)])
         layout.addWidget(splitter, 1)
         row = QHBoxLayout()
         self.buttons = {}
@@ -1212,12 +1354,12 @@ class GroupPlanPage(QWidget):
                 height = metrics.boundingRect(
                     0,
                     0,
-                    self.revisions.width() - 30,
-                    2000,
+                    max(u(1), self.revisions.width() - u(1.875)),
+                    u(125),
                     Qt.TextFlag.TextWordWrap,
                     item.text(),
                 ).height()
-                item.setSizeHint(QSize(self.revisions.width() - 12, height + 14))
+                item.setSizeHint(QSize(self.revisions.width() - u(.75), height + u(.875)))
                 item.setData(Qt.ItemDataRole.UserRole, revision["id"])
                 self.revisions.addItem(item)
                 if revision["id"] == preferred:
@@ -1256,8 +1398,8 @@ class GroupPlanPage(QWidget):
         card.setObjectName("planCard" if level == 0 else "memberCard")
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         box = QVBoxLayout(card)
-        box.setContentsMargins(12, 10, 12, 10)
-        box.setSpacing(5)
+        bind_units(box, "setContentsMargins", 0.75, 0.625, 0.75, 0.625)
+        bind_units(box, "setSpacing", 0.3125)
         box.addWidget(self._label(title, bold=True))
         if subtitle:
             box.addWidget(self._label(subtitle))

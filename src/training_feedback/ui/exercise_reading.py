@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from copy import deepcopy
+from html import escape
 
 from PySide6.QtCore import QEvent, QRectF, QSize, Qt, QTimer
-from PySide6.QtGui import QPainter, QPixmap, QTextLayout, QTextOption
+from PySide6.QtGui import QPainter, QPixmap
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -30,12 +31,14 @@ from PySide6.QtWidgets import (
 )
 
 from .labels import localize_dialog_buttons, user_message
+from .relative_widgets import LocalScrollArea
+from .sizing import bind_units, fit_dialog, initial_size, scale_manager, u
 
 
 def show_readonly_text(parent, title: str, text: str) -> None:
     dialog = QDialog(parent)
     dialog.setWindowTitle(title)
-    dialog.resize(720, 560)
+    initial_size(dialog, 45, 35)
     layout = QVBoxLayout(dialog)
     view = QPlainTextEdit()
     view.setReadOnly(True)
@@ -53,8 +56,10 @@ def _text(value) -> str:
 
 
 def _label(text: str) -> QLabel:
-    label = QLabel(text)
-    label.setTextFormat(Qt.TextFormat.PlainText)
+    label = QLabel()
+    label.setTextFormat(Qt.TextFormat.RichText)
+    label.setText("<p style='line-height:160%; white-space:pre-wrap'>"
+                  + escape(text).replace("\n", "<br>") + "</p>")
     label.setWordWrap(True)
     label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
@@ -80,7 +85,7 @@ GROUPS = (
 )
 
 
-class GroupedGuidance(QScrollArea):
+class GroupedGuidance(LocalScrollArea):
     """One scroll container with selectable verbatim fields and hanging numbers."""
 
     def __init__(self, parent=None):
@@ -96,18 +101,19 @@ class GroupedGuidance(QScrollArea):
         if not reset and guidance == self._guidance:
             return
         self._guidance = deepcopy(guidance)
+        self.anchors = []
         old = self.takeWidget()
         if old is not None:
             old.deleteLater()
         panel = QWidget()
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(16, 12, 16, 16)
-        layout.setSpacing(14)
+        bind_units(layout, "setContentsMargins", 1, 0.75, 1, 1)
+        bind_units(layout, "setSpacing", 0.875)
         for title, expanded, fields in GROUPS:
             group = QFrame()
             group.setObjectName("safetyGroup" if title == "安全提醒" else "readingGroup")
             group_layout = QVBoxLayout(group)
-            group_layout.setContentsMargins(12, 10, 12, 12)
+            bind_units(group_layout, "setContentsMargins", 0.75, 0.625, 0.75, 0.75)
             toggle = QToolButton()
             toggle.setText(title)
             toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
@@ -117,8 +123,8 @@ class GroupedGuidance(QScrollArea):
             toggle.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             body = QWidget()
             body_layout = QVBoxLayout(body)
-            body_layout.setContentsMargins(0, 4, 0, 0)
-            body_layout.setSpacing(10)
+            bind_units(body_layout, "setContentsMargins", 0, 0.25, 0, 0)
+            bind_units(body_layout, "setSpacing", 0.625)
             for key, name in fields:
                 heading = _label(name)
                 heading.setObjectName("readingFieldTitle")
@@ -150,6 +156,7 @@ class GroupedGuidance(QScrollArea):
             group_layout.addWidget(toggle)
             group_layout.addWidget(body)
             layout.addWidget(group)
+            self.anchors.append((title, group, toggle))
         layout.addStretch(1)
         self.setWidget(panel)
         self.verticalScrollBar().setValue(0)
@@ -217,7 +224,7 @@ class ImageViewer(QDialog):
         super().__init__(parent)
         self.setWindowTitle("动作示意图 · 放大查看")
         self.setWindowFlag(Qt.WindowType.WindowMaximizeButtonHint, True)
-        self.resize(1000, 760)
+        fit_dialog(self, width=.9, height=.9, square=True)
         layout = QVBoxLayout(self)
         toolbar = QHBoxLayout()
         self.view = _ZoomView(source)
@@ -258,7 +265,7 @@ class _FittedImage(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        area = QRectF(self.contentsRect()).adjusted(8, 8, -8, -8)
+        area = QRectF(self.contentsRect()).adjusted(u(.5), u(.5), -u(.5), -u(.5))
         if area.width() <= 0 or area.height() <= 0:
             return
         if self.source.isNull():
@@ -291,7 +298,7 @@ class _Caption(QWidget):
         self.text = ""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
+        bind_units(layout, "setSpacing", 0.125)
         self.preview = _label("")
         self.preview.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(self.preview)
@@ -305,28 +312,13 @@ class _Caption(QWidget):
 
     def set_text(self, text: str):
         self.text = text
-        self.preview.setText(text or "未填写图片说明")
+        self.preview.setText("<p style='line-height:160%; white-space:pre-wrap'>"
+                             + escape(text or "未填写图片说明").replace("\n", "<br>") + "</p>")
         self._measure()
 
     def _measure(self):
-        self.preview.setFixedHeight(self.preview.fontMetrics().lineSpacing() * 2 + 4)
-        line_count = 0
-        for paragraph in self.text.split("\n"):
-            text_layout = QTextLayout(paragraph, self.preview.font())
-            option = QTextOption()
-            option.setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
-            text_layout.setTextOption(option)
-            text_layout.beginLayout()
-            while True:
-                line = text_layout.createLine()
-                if not line.isValid():
-                    break
-                line.setLineWidth(max(1, self.preview.width()))
-                line_count += 1
-            text_layout.endLayout()
-            if not paragraph:
-                line_count += 1
-        self.full.setVisible(line_count > 2)
+        self.preview.updateGeometry()
+        self.full.hide()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -341,7 +333,7 @@ class IllustrationPanel(QWidget):
         self.index = 0
         self.setMinimumSize(0, 0)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)
+        bind_units(layout, "setContentsMargins", 0.75, 0.75, 0.75, 0.75)
         self.image = _FittedImage()
         layout.addWidget(self.image, 1)
         self.caption = _Caption()
@@ -395,16 +387,7 @@ class ExerciseReading(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("exerciseReading")
-        self.setStyleSheet(
-            "QWidget#exerciseReading { background: white; border: 1px solid #dce5ef; }"
-            "QScrollArea > QWidget > QWidget { background: white; }"
-            "QFrame#readingGroup { background: #ffffff; border: 1px solid #dce5ef;"
-            " border-radius: 8px; }"
-            "QFrame#safetyGroup { background: #eef7f5; border: 1px solid #c5dfd9;"
-            " border-radius: 8px; }"
-            "QLabel#readingFieldTitle { color: #233249; font-weight: 600; }"
-            "QToolButton { color: #115e59; padding: 5px; text-align: left; }"
-        )
+        bind_units(self, "setStyleSheet", READING_STYLE, kind="style")
         self.setMinimumSize(0, 0)
         self._identity = None
         self._wide = None
@@ -423,7 +406,7 @@ class ExerciseReading(QWidget):
         self._set_mode(False)
 
     def sizeHint(self):
-        return QSize(800, 440)
+        return QSize(u(50), u(27.5))
 
     def set_content(self, identity, guidance: dict | None, loader: Callable[[int], bytes]):
         reset = identity != self._identity
@@ -441,18 +424,18 @@ class ExerciseReading(QWidget):
         if wide:
             self.tabs.removeTab(self.tabs.indexOf(self.guidance))
             self.tabs.removeTab(self.tabs.indexOf(self.images))
-            self.images.setMinimumWidth(300)
-            self.guidance.setMinimumWidth(400)
+            bind_units(self.images, "setMinimumWidth", 18.75)
+            bind_units(self.guidance, "setMinimumWidth", 25)
             self.splitter.addWidget(self.images)
             self.splitter.addWidget(self.guidance)
             # A removed tab can retain its hidden flag when reparented.
             self.images.show()
             self.guidance.show()
             self.stack.setCurrentWidget(self.splitter)
-            self.splitter.setSizes(self._sizes or [450, 550])
+            self.splitter.setSizes(self._sizes or [u(28.125), u(34.375)])
         else:
-            self.images.setMinimumWidth(0)
-            self.guidance.setMinimumWidth(0)
+            bind_units(self.images, "setMinimumWidth", 0)
+            bind_units(self.guidance, "setMinimumWidth", 0)
             self.tabs.addTab(self.guidance, "动作指导")
             self.tabs.addTab(self.images, "示意图")
             self.tabs.setCurrentIndex(0)
@@ -465,4 +448,103 @@ class ExerciseReading(QWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self._set_mode(self.contentsRect().width() >= 760)
+        self._set_mode(self.contentsRect().width() >= u(47.5))
+
+
+class _InlineImage(_FittedImage):
+    def __init__(self):
+        super().__init__()
+        policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        policy.setHeightForWidth(True)
+        self.setSizePolicy(policy)
+
+    def heightForWidth(self, width):
+        if self.source.isNull():
+            return u(6)
+        size = self.source.deviceIndependentSize()
+        return round(width * size.height() / size.width())
+
+    def sizeHint(self):
+        return QSize(u(16), self.heightForWidth(u(16)))
+
+    def set_source(self, source, message=""):
+        super().set_source(source, message)
+        self.updateGeometry()
+
+
+class PlanGuidance(QWidget):
+    """Sticky anchors above a single local scroll region, with full-width images."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("exerciseReading")
+        self.setMinimumWidth(0)
+        self.identity = None
+        layout = QVBoxLayout(self)
+        bind_units(layout, "setContentsMargins", .5, .5, .5, .5)
+        self.anchor_scroll = QScrollArea()
+        self.anchor_scroll.setWidgetResizable(True)
+        self.anchor_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        anchors = QWidget()
+        self.anchor_row = QHBoxLayout(anchors)
+        self.anchor_row.setContentsMargins(0, 0, 0, 0)
+        self.anchor_scroll.setWidget(anchors)
+        layout.addWidget(self.anchor_scroll)
+        self.guidance = GroupedGuidance()
+        layout.addWidget(self.guidance, 1)
+        self.images = IllustrationPanel()
+        original = self.images.image
+        self.images.image = _InlineImage()
+        self.images.layout().replaceWidget(original, self.images.image)
+        original.deleteLater()
+        self.images.previous.setText("‹")
+        self.images.previous.setToolTip("上一张")
+        self.images.next.setText("›")
+        self.images.next.setToolTip("下一张")
+        bind_units(self, "setStyleSheet", READING_STYLE, kind="style")
+        manager = scale_manager()
+        if manager is not None:
+            manager.changed.connect(self._update_anchor_height)
+            manager.changed.connect(self.images.image.updateGeometry)
+        self.set_content(None, None, lambda index: b"")
+
+    def set_content(self, identity, guidance, loader):
+        reset = identity != self.identity
+        self.identity = deepcopy(identity)
+        # Detach the owned image widget before replacing the guidance content.
+        self.images.setParent(self)
+        self.guidance.set_guidance(guidance, reset=reset)
+        self.guidance.widget().layout().insertWidget(0, self.images)
+        self.images.set_images((guidance or {}).get("images", []), loader, reset=reset)
+        self.images.show()
+        while self.anchor_row.count():
+            item = self.anchor_row.takeAt(0)
+            if item.widget() is not None:
+                item.widget().deleteLater()
+        for title, group, toggle in self.guidance.anchors:
+            button = QPushButton(title)
+            button.clicked.connect(lambda checked=False, target=group, control=toggle:
+                                   self._jump(target, control))
+            self.anchor_row.addWidget(button)
+        self.anchor_row.addStretch()
+        self._update_anchor_height()
+
+    def _update_anchor_height(self):
+        height = max(self.anchor_row.itemAt(index).widget().sizeHint().height()
+                     for index in range(self.anchor_row.count() - 1))
+        scrollbar = self.anchor_scroll.horizontalScrollBar().sizeHint().height()
+        self.anchor_scroll.setFixedHeight(height + self.anchor_scroll.frameWidth() * 2 + scrollbar)
+
+    def _jump(self, target, toggle):
+        toggle.setChecked(True)
+        self.guidance.ensureWidgetVisible(target)
+
+
+READING_STYLE = """
+QWidget#exerciseReading { background: white; border: 1px solid #dce5ef; }
+QScrollArea > QWidget > QWidget { background: white; }
+QFrame#readingGroup { background: white; border: 1px solid #dce5ef; border-radius: 0.5u; }
+QFrame#safetyGroup { background: #eef7f5; border: 1px solid #c5dfd9; border-radius: 0.5u; }
+QLabel#readingFieldTitle { color: #233249; font-weight: 600; font-size: 1.125u; }
+QToolButton { color: #115e59; padding: 0.3125u; text-align: left; }
+"""

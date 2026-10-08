@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import Callable
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -10,8 +11,11 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QMessageBox,
     QPushButton,
+    QRadioButton,
+    QSlider,
     QVBoxLayout,
     QWidget,
 )
@@ -22,6 +26,8 @@ from ..data.backup import BackupError, create_backup
 from ..data.data_root import DataRootError
 from .data_root_dialog import DataRootDialog, suggested_data_root
 from .labels import user_message
+from .relative_widgets import AdaptiveFields, LocalScrollArea
+from .sizing import scale_manager
 
 
 class SettingsPage(QWidget):
@@ -39,11 +45,19 @@ class SettingsPage(QWidget):
         self.backup_picker = backup_picker
         self.switch_request = switch_request
         self.update_coordinator = update_coordinator
-        layout = QVBoxLayout(self)
+        outer = QVBoxLayout(self)
+        scroll = LocalScrollArea()
+        body = QWidget()
+        layout = QVBoxLayout(body)
+        scroll.setWidget(body)
+        outer.addWidget(scroll)
         title = QLabel("设置")
         title.setObjectName("pageTitle")
         layout.addWidget(title)
-        layout.addWidget(QLabel(f"当前数据目录：{context.data_root.path}"))
+        location = QLabel(f"当前数据目录：{context.data_root.path}")
+        location.setWordWrap(True)
+        layout.addWidget(location)
+        layout.addWidget(self._scale_group())
         open_button = QPushButton("打开数据目录位置")
         open_button.clicked.connect(lambda: self._open_location())
         layout.addWidget(open_button)
@@ -73,6 +87,59 @@ class SettingsPage(QWidget):
             update_coordinator.result_changed.connect(self._show_update_status)
             self._show_update_status(update_coordinator.result)
         layout.addStretch()
+
+    def _scale_group(self):
+        group = QGroupBox("界面缩放")
+        layout = QVBoxLayout(group)
+        self.scale_system = QRadioButton("跟随系统")
+        self.scale_custom = QRadioButton("自定义")
+        modes = QHBoxLayout()
+        modes.addWidget(self.scale_system)
+        modes.addWidget(self.scale_custom)
+        modes.addStretch()
+        layout.addLayout(modes)
+        self.scale_slider = QSlider(Qt.Orientation.Horizontal)
+        self.scale_slider.setRange(80, 200)
+        self.scale_slider.setSingleStep(10)
+        self.scale_slider.setPageStep(10)
+        self.scale_slider.setTickInterval(10)
+        self.scale_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.scale_value = QLabel()
+        self.scale_value.setWordWrap(True)
+        layout.addWidget(QLabel("80% — 200%（每次 10%）"))
+        layout.addWidget(self.scale_slider)
+        layout.addWidget(self.scale_value)
+        preview = AdaptiveFields()
+        preview.addRow("预览", QLabel("正文文字"))
+        preview.addRow("按钮", QPushButton("示例按钮"))
+        preview.addRow("输入框", QLineEdit("示例输入"))
+        layout.addWidget(preview)
+        hint = QLabel("立即生效，保存在本机。Ctrl/Cmd + 加号、减号调整；0 恢复跟随系统。")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+        manager = scale_manager()
+        self.scale_slider.setEnabled(manager is not None)
+        self.scale_custom.setEnabled(manager is not None)
+        if manager is not None:
+            manager.changed.connect(self._refresh_scale)
+            self._refresh_scale()
+            self.scale_system.clicked.connect(lambda: manager.set_scale(False, manager.percent))
+            self.scale_custom.clicked.connect(lambda: manager.set_scale(True, manager.percent))
+            self.scale_slider.valueChanged.connect(lambda value: manager.set_scale(True, value))
+        else:
+            self.scale_system.setChecked(True)
+            self.scale_value.setText("当前 100%（跟随系统）")
+        return group
+
+    def _refresh_scale(self):
+        manager = scale_manager()
+        self.scale_slider.blockSignals(True)
+        self.scale_slider.setValue(manager.percent)
+        self.scale_slider.blockSignals(False)
+        self.scale_system.setChecked(not manager.custom)
+        self.scale_custom.setChecked(manager.custom)
+        percent = manager.percent if manager.custom else 100
+        self.scale_value.setText(f"当前 {percent}%" + ("" if manager.custom else "（跟随系统）"))
 
     def _check_updates(self) -> None:
         if self.update_coordinator is not None:

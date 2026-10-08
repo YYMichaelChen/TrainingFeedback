@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime
 
-from PySide6.QtCore import QSize, Qt, QTimer
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -52,6 +52,7 @@ from .labels import (
     LIBRARY_TEXT as T,
 )
 from .review_occurrence import OccurrenceQuickFill, remember_occurrence
+from .sizing import bind_units, initial_size
 
 
 def buttons(parent, save, cancel):
@@ -124,7 +125,7 @@ class CatalogReviewDialog(QDialog):
         self.service, self.targets = service, deepcopy(targets)
         self.answer_file = None
         self.setWindowTitle(T["review_title"])
-        self.resize(1040, 800)
+        initial_size(self, 65, 50)
         layout = QVBoxLayout(self)
         self.targets_combo = QComboBox()
         for target in self.targets:
@@ -143,7 +144,7 @@ class CatalogReviewDialog(QDialog):
         self.occurred.setPlaceholderText(T["occurrence_hint"])
         self.quick_fill = OccurrenceQuickFill(self.occurred, service.clock)
         self.note = QPlainTextEdit()
-        self.note.setMaximumHeight(80)
+        bind_units(self.note, "setMaximumHeight", 5)
         form.addRow(T["reviewer"], self.reviewer)
         form.addRow(T["review_source"], self.source)
         form.addRow(T["occurred"], self.occurred)
@@ -192,13 +193,13 @@ class CatalogEditor(QDialog):
         self.original = deepcopy(service.target_entry(target)["content"])
         self.saved_id = None
         self.setWindowTitle(T["edit_title"])
-        self.resize(760, 700)
+        initial_size(self, 47.5, 43.75)
         content = QWidget()
         fields = QVBoxLayout(content)
         form = QFormLayout()
         self.name = QLineEdit(self.original["canonical_name"])
         self.aliases = QPlainTextEdit("\n".join(self.original["aliases"]))
-        self.aliases.setMaximumHeight(70)
+        bind_units(self.aliases, "setMaximumHeight", 4.375)
         self.category = QComboBox()
         for value, label in CATEGORY_LABELS.items():
             self.category.addItem(label, value)
@@ -320,17 +321,17 @@ class CatalogLibraryPage(QWidget):
         self.cards.setWrapping(True)
         self.cards.setWordWrap(True)
         self.cards.setUniformItemSizes(True)
-        self.cards.setIconSize(QSize(208, 144))
-        self.cards.setGridSize(QSize(236, 226))
-        self.cards.setSpacing(10)
-        self.cards.setStyleSheet(
-            "QListWidget { background: transparent; border: none; }"
-            "QListWidget::item { background: white; border: 1px solid #dce5ef;"
-            " border-radius: 12px; padding: 8px; color: #233249; }"
-            "QListWidget::item:hover { border-color: #0f8175; background: #f5fbf9; }"
-            "QListWidget::item:selected { border: 2px solid #0f8175;"
-            " background: #e8f5f1; color: #115e59; }"
-        )
+        bind_units(self.cards, "setIconSize", 13, 9, kind="size")
+        bind_units(self.cards, "setGridSize", 14.75, 14.125, kind="size")
+        bind_units(self.cards, "setSpacing", 0.625)
+        bind_units(self.cards, "setStyleSheet", """
+            QListWidget { background: transparent; border: none; }
+            QListWidget::item { background: white; border: 1px solid #dce5ef;
+                               border-radius: 0.75u; padding: 0.5u; color: #233249; }
+            QListWidget::item:hover { border-color: #0f8175; background: #f5fbf9; }
+            QListWidget::item:selected { border: 0.125u solid #0f8175;
+                                        background: #e8f5f1; color: #115e59; }
+        """, kind="style")
         gallery_layout.addWidget(self.cards, 1)
         batch_row = QHBoxLayout()
         self.batch_toggle = QCheckBox(T["batch_mode"])
@@ -454,7 +455,7 @@ class CatalogLibraryPage(QWidget):
             return
         self.dialog = QDialog(self)
         self.dialog.setWindowTitle(T["removal"])
-        self.dialog.resize(1040, 780)
+        initial_size(self.dialog, 65, 48.75)
         layout = QVBoxLayout(self.dialog)
         layout.addWidget(LibraryLifecyclePage(self.removals, self.dialog, targets=targets))
         close = QPushButton(T["close"])

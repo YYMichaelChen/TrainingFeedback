@@ -4,14 +4,16 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QScrollArea, QSizePolicy, QVBoxLayout
 
+from .sizing import bind_units, fit_dialog, u
+
 
 class IllustrationLabel(QLabel):
-    def __init__(self, source: QPixmap, *, width: int = 760, parent=None):
+    def __init__(self, source: QPixmap, *, width: int | None = None, parent=None):
         super().__init__(parent)
         self.source = source
-        self.max_width = width
+        self.max_width = width if width is not None else u(47.5)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setMinimumSize(1, 1)
+        bind_units(self, "setMinimumSize", 0.0625, 0.0625)
         policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         policy.setHeightForWidth(True)
         self.setSizePolicy(policy)
@@ -35,7 +37,7 @@ class IllustrationLabel(QLabel):
         return QSize(self.max_width, self.heightForWidth(self.max_width))
 
     def minimumSizeHint(self) -> QSize:
-        width = min(360, self.max_width)
+        width = min(u(22.5), self.max_width)
         return QSize(width, self.heightForWidth(width))
 
     def _scale_to_viewport(self):
@@ -64,8 +66,7 @@ class IllustrationLabel(QLabel):
             return super().mousePressEvent(event)
         dialog = QDialog(self)
         dialog.setWindowTitle("动作示意图 · 原图")
-        dialog.resize(min(1100, self.source.width() + 48),
-                      min(850, self.source.height() + 48))
+        fit_dialog(dialog, width=.9, height=.9, square=True)
         layout = QVBoxLayout(dialog)
         image = QLabel()
         image.setPixmap(self.source)

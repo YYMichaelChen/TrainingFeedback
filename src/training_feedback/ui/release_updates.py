@@ -42,6 +42,7 @@ from ..application.release_updates import (
     idle_result,
 )
 from ..application.update_launcher import LAUNCHER_READY_FILENAME, start_update_launcher
+from .sizing import initial_size
 
 
 def _request_application_exit() -> None:
@@ -327,7 +328,7 @@ class ReleaseDetailsDialog(QDialog):
         self.release = release
         self.coordinator = coordinator
         self.setWindowTitle("应用更新")
-        self.resize(620, 500)
+        initial_size(self, 38.75, 31.25)
         layout = QVBoxLayout(self)
         title = QLabel(f"发现新版本 v{release.version}")
         title.setObjectName("sectionTitle")

@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from .labels import EXERCISE_SOURCE_LABELS, user_message
 from .labels import LIFECYCLE_TEXT as T
 from .review_occurrence import OccurrenceQuickFill
+from .sizing import bind_units, initial_size
 
 
 def render_impact(preview):
@@ -70,7 +71,7 @@ class LifecycleRequestDialog(QDialog):
         super().__init__(parent)
         self.service, self.preview, self.saved_id = service, None, None
         self.setWindowTitle(T["new_request"])
-        self.resize(940, 720)
+        initial_size(self, 58.75, 45)
         layout = QVBoxLayout(self)
         body = QWidget()
         content = QVBoxLayout(body)
@@ -91,15 +92,15 @@ class LifecycleRequestDialog(QDialog):
             item.setData(0, Qt.ItemDataRole.UserRole, target)
             self.targets.addTopLevelItem(item)
             item.setSelected(target.exercise in chosen)
-        self.targets.setMinimumHeight(160)
+        bind_units(self.targets, "setMinimumHeight", 10)
         content.addWidget(self.targets)
         content.addWidget(QLabel(T["reason"]))
         self.reason = QPlainTextEdit()
-        self.reason.setMaximumHeight(90)
+        bind_units(self.reason, "setMaximumHeight", 5.625)
         content.addWidget(self.reason)
         self.details = QPlainTextEdit()
         self.details.setReadOnly(True)
-        self.details.setMinimumHeight(220)
+        bind_units(self.details, "setMinimumHeight", 13.75)
         content.addWidget(self.details, 1)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -203,12 +204,12 @@ class LibraryLifecyclePage(QWidget):
         occurred_row.addWidget(self.quick_fill)
         form.addRow(T["occurred"], occurred_row)
         self.note = QPlainTextEdit()
-        self.note.setMaximumHeight(70)
+        bind_units(self.note, "setMaximumHeight", 4.375)
         form.addRow(T["note"], self.note)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(fields)
-        scroll.setMaximumHeight(205)
+        bind_units(scroll, "setMaximumHeight", 12.8125)
         layout.addWidget(scroll)
         self.confirmed = QCheckBox(T["confirm_decision"])
         layout.addWidget(self.confirmed)

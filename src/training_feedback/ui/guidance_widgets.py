@@ -31,6 +31,7 @@ from .labels import (
     REVIEWER_TYPE_LABELS,
     label,
 )
+from .sizing import bind_units
 
 SCALAR_FIELDS = (
     ("purpose", "训练目的"),
@@ -211,7 +212,7 @@ class GuidanceView(QTextBrowser):
         self.data_root = Path(data_root) if data_root is not None else None
         self.include_review = include_review
         self.setOpenExternalLinks(False)
-        self.setMinimumHeight(240)
+        bind_units(self, "setMinimumHeight", 15)
         self.set_guidance(guidance)
 
     def set_guidance(self, guidance: dict[str, Any] | None) -> None:
@@ -229,7 +230,7 @@ class GuidanceListEditor(QWidget):
         self.table.setHorizontalHeaderLabels(["内容（每行一项，可在单项内换行）"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setMinimumHeight(105)
+        bind_units(self.table, "setMinimumHeight", 6.5625)
         add_button = QPushButton("添加")
         remove_button = QPushButton("删除")
         up_button = QPushButton("上移")
@@ -311,7 +312,7 @@ class GuidanceStepsEditor(QWidget):
         )
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setMinimumHeight(125)
+        bind_units(self.table, "setMinimumHeight", 7.8125)
         add_button = QPushButton("添加步骤")
         remove_button = QPushButton("删除步骤")
         up_button = QPushButton("上移")
@@ -409,7 +410,7 @@ class GuidanceImagesEditor(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setMinimumHeight(115)
+        bind_units(self.table, "setMinimumHeight", 7.1875)
         add_button = QPushButton("添加图片记录")
         remove_button = QPushButton("删除图片记录")
         add_button.clicked.connect(self._add)
@@ -497,8 +498,8 @@ class GuidanceForm(QWidget):
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         for field, field_label in SCALAR_FIELDS:
             edit = QPlainTextEdit()
-            edit.setMinimumHeight(70)
-            edit.setMaximumHeight(105)
+            bind_units(edit, "setMinimumHeight", 4.375)
+            bind_units(edit, "setMaximumHeight", 6.5625)
             self.scalar_edits[field] = edit
             form.addRow(field_label, edit)
         self.steps_editor = GuidanceStepsEditor()

@@ -41,6 +41,7 @@ from .labels import (
     user_message,
 )
 from .labels import EXECUTION_TEXT as T
+from .sizing import bind_units, initial_size
 
 
 class AbortDialog(QDialog):
@@ -71,7 +72,7 @@ class ExecutionPreview(QDialog):
     def __init__(self, title, text, parent=None):
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.resize(700, 540)
+        initial_size(self, 43.75, 33.75)
         layout = QVBoxLayout(self)
         self.text = QPlainTextEdit()
         self.text.setReadOnly(True)
@@ -110,7 +111,7 @@ class FrozenGuidanceDialog(QDialog):
     def __init__(self, service, session, parent=None):
         super().__init__(parent)
         self.setWindowTitle(T["guidance"])
-        self.resize(1040, 700)
+        initial_size(self, 65, 43.75)
         layout = QVBoxLayout(self)
         self.selector = QComboBox()
         self.selector.setMinimumContentsLength(24)
@@ -151,7 +152,7 @@ class GroupTrainingPage(QWidget):
         self.busy = False
         self.leaving = False
         self.setWindowTitle(T["title"])
-        self.resize(800, 740)
+        initial_size(self, 50, 46.25)
         outer = QVBoxLayout(self)
         content = QWidget()
         layout = QVBoxLayout(content)
@@ -174,7 +175,7 @@ class GroupTrainingPage(QWidget):
             layout.addWidget(widget)
         self.note = QPlainTextEdit()
         self.note.setPlaceholderText(T["note"])
-        self.note.setMaximumHeight(85)
+        bind_units(self.note, "setMaximumHeight", 5.3125)
         layout.addWidget(self.note)
         self.results = QWidget()
         buttons = QHBoxLayout(self.results)

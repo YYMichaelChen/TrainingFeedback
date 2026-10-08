@@ -28,6 +28,7 @@ from .labels import (
     session_history_text,
     user_message,
 )
+from .sizing import initial_size
 
 
 class GroupFeedbackDialog(QDialog):
@@ -35,7 +36,7 @@ class GroupFeedbackDialog(QDialog):
         super().__init__(parent)
         self.service, self.session = service, session
         self.setWindowTitle(T["feedback"])
-        self.resize(560, 440)
+        initial_size(self, 35, 27.5)
         layout = QVBoxLayout(self)
         content = QWidget()
         form = QFormLayout(content)

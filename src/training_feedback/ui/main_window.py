@@ -18,6 +18,7 @@ from ..application.release_updates import UpdateStatus
 from .labels import MAIN_WINDOW_TEXT, user_message
 from .release_updates import show_release_details
 from .settings_page import SettingsPage
+from .sizing import bind_units, initial_size
 from .window_icon import apply_window_icon
 
 
@@ -47,16 +48,17 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         apply_window_icon(self)
         self.setWindowTitle("训练反馈")
-        self.resize(1100, 740)
+        initial_size(self, 68.75, 46.25)
         container = QWidget(self)
         layout = QHBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         sidebar = QFrame()
         sidebar.setObjectName("sidebar")
-        sidebar.setFixedWidth(200)
+        sidebar.setMinimumWidth(0)
+        bind_units(sidebar, "setFixedWidth", 12.5)
         sidebar_layout = QVBoxLayout(sidebar)
-        sidebar_layout.setContentsMargins(18, 28, 18, 22)
+        bind_units(sidebar_layout, "setContentsMargins", 1.125, 1.75, 1.125, 1.375)
         brand_row = QHBoxLayout()
         brand_row.setContentsMargins(0, 0, 0, 0)
         brand = QLabel("训练反馈")
@@ -64,7 +66,7 @@ class MainWindow(QMainWindow):
         self.update_notice = QToolButton()
         self.update_notice.setObjectName("updateNotice")
         self.update_notice.setText("!")
-        self.update_notice.setFixedSize(25, 25)
+        bind_units(self.update_notice, "setFixedSize", 2.5, 2.5)
         self.update_notice.setVisible(False)
         self.update_notice.clicked.connect(self._show_update)
         brand_row.addWidget(brand)
@@ -74,7 +76,9 @@ class MainWindow(QMainWindow):
         caption.setObjectName("brandCaption")
         sidebar_layout.addLayout(brand_row)
         sidebar_layout.addWidget(caption)
-        sidebar_layout.addSpacing(30)
+        spacer = QWidget()
+        bind_units(spacer, "setFixedHeight", 1.875)
+        sidebar_layout.addWidget(spacer)
         self.navigation = QListWidget()
         self.navigation.setObjectName("navigation")
         sidebar_layout.addWidget(self.navigation, 1)
@@ -82,7 +86,7 @@ class MainWindow(QMainWindow):
         footer.setObjectName("brandCaption")
         sidebar_layout.addWidget(footer)
         self.pages = QStackedWidget()
-        self.pages.setContentsMargins(24, 20, 24, 20)
+        bind_units(self.pages, "setContentsMargins", 1.5, 1.25, 1.5, 1.25)
         self._page_factories = (
             lambda: context.create_session_page(self),
             lambda: context.create_library_page(self, progressive=True),

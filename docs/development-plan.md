@@ -2,7 +2,7 @@
 
 Current application/schema baseline: [version history index](history/README.md).
 Public-release acceptance, external review and W4 have separate gates below.
-Last updated: 2026-10-06
+Last updated: 2026-10-08
 
 This is the authoritative product scope, domain model, and delivery plan.
 The [initial catalog and plan proposal](initial-exercises-and-plan.md) defines
@@ -183,6 +183,59 @@ Import paths, source IDs, migration registrations and other technical provenance
 do not appear in the plan page or its activation preview; they remain preserved
 in storage and appropriate machine-readable evidence. The page does not alter
 revision targeting, activation checks or stored facts.
+
+### 4.1.1 Plan Editor Sizing And Interface Scale
+
+The native interface uses one font-relative logical unit `u`, with a readable
+system-font baseline equivalent to 16 logical pixels at normal Qt DPI. Qt owns
+system DPI scaling; application dimensions must not multiply devicePixelRatio
+again. Owned font sizes, spacing, icons and explicit dimensions are expressed
+as unit multiples, compiled into logical dimensions at the Qt boundary. A
+one-pixel separator is permitted. Native layout defaults also derive from `u`.
+
+Settings offer follow-system and custom scaling from 80% to 200%, in 10% steps,
+with text/button/input previews. Changes apply immediately and persist in local
+interface configuration, independently of training roots. Ctrl/Cmd plus/minus
+adjusts custom scale; Ctrl/Cmd 0 restores follow-system. Scaling never changes
+training facts, catalog content or root/schema compatibility.
+
+The plan dialog sizes itself against the available screen: width
+`clamp(60u, 85%, 110u)`, height `clamp(36u, 88%, 70u)`, with available screen
+bounds taking precedence on small displays. Header and save/cancel footer stay
+outside scroll regions. Plan name remains visible; expandable basic information
+uses at most two columns (20u minimum per column) and an internal scroll region
+bounded by 30% of dialog height. Multi-line edits initially show at least three
+lines and can be enlarged with a vertical grip without moving the footer offscreen.
+
+At dialog width >=80u, display action navigation, prescription and guidance
+beside one another. Navigation uses 18% within 12u–18u, guidance uses 24% within
+16u–26u, and the center consumes the remainder. At 56u–80u, guidance becomes a
+drawer with an entry at the center's upper right. Below 56u, action navigation
+becomes horizontally scrollable name capsules. Selected action/member and
+unsaved edits survive layout changes. Sibling drag ordering and context-menu
+commands use the same document operations as existing move buttons.
+
+Parameter fields use an adaptive grid with 14u minimum fields. The per-set table
+uses base-size text and relative widths: # 2, set order 4, value 5, unit 4,
+per-side 3, rest 6, operations 4. Keep the existing verbatim per-set note column
+(weight 4). The table's minimum is 28u, increased if embedded controls require
+more width; a narrower center scrolls horizontally rather than crushing columns.
+Rows grow from a 2.5u minimum. Up to eight rows use content height; more rows
+scroll internally within half of the center viewport. Deleting a set and
+confirmed equal-set filling retain the existing validation and rest semantics.
+
+Guidance combines full-width proportional images and selectable wrapping text
+with 1.6 line height; sticky section anchors remain outside the scroll region.
+Captions wrap fully. Images open in a viewer bounded by 90% of the smaller
+available screen dimension. Wheel events stay in the hovered explicit scroll
+region, including at its boundary. User text is neither elided nor rewritten to
+make the layout fit; explicit edit/read regions may scroll.
+
+The requested scale/DPI/layout criteria describe intended behavior. Current
+verification remains governed by Section 9.1: unobserved client layout is not a
+pass and does not create a bulk manual acceptance obligation. Native mapping and
+source-follow-up evidence: [plan interface design](designs/plan-interface-scaling.md)
+and [development record](history/0.8.13/plan-interface-2026-10-08.md).
 
 ### 4.2 Exercise Results Stay Simple
 
@@ -1306,7 +1359,7 @@ rolls back the complete change.
 ### 12.12 Action Detail And Guidance Reading
 
 Action-library details, external-review reading regions and frozen-guidance
-dialogs share read-only reading components. At 760 Qt logical pixels of available
+dialogs share read-only reading components. At 47.5u of available
 body width, illustrations and guidance appear side by side with an initial
 45/55 split and adjustable divider; narrower bodies show guidance/illustration
 tabs with guidance selected initially. Resizing preserves guidance position and
@@ -1315,8 +1368,8 @@ components.
 
 Illustrations fit both available dimensions without cropping or stretching.
 Declared images retain order, caption and position even when unavailable;
-multiple images are paged rather than stacked. Captions have a two-line preview
-and an entry to the full original text when longer. Clicking a valid image opens
+multiple images are paged rather than stacked. Captions wrap to display the full
+original text rather than being limited to two lines. Clicking a valid image opens
 a resizable viewer with fit, actual logical size, wheel zoom, pan and Esc close.
 Manual zoom ranges from 10% to 400%; fit may go below 10%. Rendering always
 uses the original pixels and refreshes for display DPI changes, without changing
