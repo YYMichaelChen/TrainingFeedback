@@ -34,3 +34,27 @@
 
 本地 Planscope `v0.8.14` 只记录这次追加交付，沿用原验证范围；不重开旧归档。
 GitHub 分发不声明正式兼容基线、公共验收、外部内容审核、W4 或个人数据转移。
+
+## 干净安装包候选
+
+源码提交 `b09b611a790f0647feecc8e3813351c45eaaa44c` 已推送 main。
+工作树干净后使用 `packaging/build.ps1` 的 `-Installer` 参数构建一次成功；未启动客户端或 Setup。
+
+| 项目 | 实际值 |
+| --- | --- |
+| Setup | `dist/installer/TrainingFeedback-0.8.14-Setup.exe` |
+| SHA-256 | `26a5a403975e2dab7ce769e048abae04fb33faba7171579357e84e6ebca4169e` |
+| 大小 | 85,727,665 bytes |
+| 签名 | NotSigned |
+| 干净构建源码 | `b09b611a790f0647feecc8e3813351c45eaaa44c` |
+| 构建时间 UTC | `2026-10-08T10:57:52Z` |
+| 构建时间 Asia/Shanghai | 2026-10-08 18:57:52 |
+| Python / PySide6 | 3.12.14 / 6.11.2 |
+| 载荷文件数 | 298 |
+| 源码状态 | `source_dirty=false` |
+
+保留[载荷清单](payload-build-manifest.json)和[安装包清单](installer-build-manifest.json)。
+实际文件 SHA-256、大小、版本与清单一致；构建流程核对受控工具链、必需资源、
+程序所有权文件及不混入用户数据库/locator，不运行应用功能场景。
+沿用源开发累计 1 项启动构造通过、执行 1 次、人工测试 0 项；此次构建新增应用
+测试 0 项、重跑 0 次。清单与构建事实不证明安装、缩放或已安装客户端行为。
