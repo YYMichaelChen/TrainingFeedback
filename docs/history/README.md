@@ -11,7 +11,7 @@ the [development workflow](../development-workflow.md) owns version rotation.
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
-- GitHub distribution: **v0.8.17**
+- GitHub distribution: **v0.8.18**
 - Formal compatibility baseline declared: **no**
 - Current development version: [0.8.18](../releases/0.8.18/design.md)
 
@@ -28,6 +28,12 @@ or manual tests were run. The published v0.8.15 Setup does not contain this foll
 The user authorized submission and distribution; [0.8.16 development](0.8.16/development.md)
 carries this fix into a patch version with unchanged data identities.
 
+The [plan-editor width follow-up](../designs/plan-interface-scaling.md#2026-10-09-编辑区宽度源码跟进)
+keeps short columns compact and horizontal overflow inside the table, improves
+scrollbar visibility and clarifies group-order/rest labels. The user authorized
+GitHub distribution; [0.8.18 development](0.8.18/development.md) and its
+[release record](0.8.18/github-release-2026-10-10.md) identify the exact clean Setup.
+
 The [plan-editor source follow-up](0.8.16/plan-editor-follow-up-2026-10-09.md)
 addresses disappearing rows after drag ordering and opens editable prescriptions by
 default. It retains application/data identities and has no application or manual
@@ -43,7 +49,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.18 | 24 | Compact prescription columns, table-local horizontal scrolling and clear plan-editor labels | Clean Setup from `905b534`; SHA-256 `774751f0392362cf200d19cb58aab6ae9b039407903997734944711a9533b6d7`; unsigned; distribution pending; application and manual tests 0 |
+| 0.8.18 | 24 | Compact prescription columns, table-local horizontal scrolling and clear plan-editor labels | GitHub Release `v0.8.18`; clean Setup from `905b534`; SHA-256 `774751f0392362cf200d19cb58aab6ae9b039407903997734944711a9533b6d7`; unsigned; application and manual tests 0 |
 | 0.8.17 | 24 | Plan drag ordering and default inline prescription editing | GitHub Release `v0.8.17`; clean Setup from `943bf42`; SHA-256 `c83b8dc41c0efcf8f79ef75e9d616c73ec6856bf19cd4d22d27ccacbfafda233`; unsigned; application and manual tests 0 |
 | 0.8.16 | 24 | Full training-button widths, centered gallery captions and evenly distributed gallery columns | GitHub Release `v0.8.16`; clean Setup from `e12b5db`; SHA-256 `c26ff9d174bc1de6677feb293d52954339c63db21f889cbe1bccc27ba53b149c`; unsigned; application and manual tests 0 |
 | 0.8.15 | 24 | Compact 16:9 default window, responsive page structures and independent measured action frames | GitHub Release `v0.8.15`; clean Setup from `22acd71`; SHA-256 `4aa81c4c6e517a8e1958ef36c4ce59fb96da520d558d707cae47025b6e1484bf`; unsigned; no client observation |
@@ -238,6 +244,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.18 GitHub Release record](0.8.18/github-release-2026-10-10.md)
 - [0.8.18 development record](0.8.18/development.md)
 
 - [0.8.17 GitHub Release record](0.8.17/github-release-2026-10-09.md)

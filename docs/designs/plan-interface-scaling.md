@@ -63,3 +63,6 @@ Planscope INDEX 无活动版本，本次未新建或修改执行计划。
 用户于 2026-10-10 授权提交、推送和 GitHub Release，承接补丁交付见
 [0.8.18 设计](../releases/0.8.18/design.md)和[开发记录](../history/0.8.18/development.md)。
 前述未打包状态保留源码修改时的事实，后续候选身份独立记录。
+
+上述改动现已进入 v0.8.18 的唯一 Setup，分发身份见
+[2026-10-10 发布记录](../history/0.8.18/github-release-2026-10-10.md)。
