@@ -155,11 +155,18 @@ updating the active revision pointer form one transaction.
 Section 12.11 owns the distinction between editing a draft, cloning an
 independent plan and explicitly upgrading an active plan.
 
-The editor places an action list beside a single per-set table. Equal-set entry
+The editor places an action list beside the selected action's editable prescription
+and per-set table by default, without a separate read-only summary or an edit-entry
+button. Existing prescriptions use the dialog's single save/cancel footer; switching
+between independent actions retains unfinished input in the unsaved editor.
+Moving between a group and its members first validates and stages related edits in
+the unsaved document so their copies cannot overwrite one another. Equal-set entry
 is an optional collapsible batch-fill tool, with explicit confirmation before
 replacing current values and notes. Opening or closing that tool does not change
-the table. Invalid values block saving or switching actions without losing the
-input. Revision diffs cover action additions,
+the table. Invalid values block saving or switching between a group and its members
+without losing the input. Ordering updates the document once and moves existing
+navigation rows without recreating the selected editor or reloading its guidance.
+Revision diffs cover action additions,
 removals and ordering, phase, rest, notes, set values, units, per-side flags,
 and plan purpose without mutating either revision.
 

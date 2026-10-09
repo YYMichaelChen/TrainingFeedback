@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.16**
+- Application: **0.8.17**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.16**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.16](../releases/0.8.16/design.md)
+- Current development version: [0.8.17](../releases/0.8.17/design.md)
 
 The [QHD compact-interface source follow-up](0.8.14/compact-interface-2026-10-08.md)
 adds a 16:9 default window (2560×1440 on 4K) and independent action frames without changing these
@@ -28,6 +28,13 @@ or manual tests were run. The published v0.8.15 Setup does not contain this foll
 The user authorized submission and distribution; [0.8.16 development](0.8.16/development.md)
 carries this fix into a patch version with unchanged data identities.
 
+The [plan-editor source follow-up](0.8.16/plan-editor-follow-up-2026-10-09.md)
+addresses disappearing rows after drag ordering and opens editable prescriptions by
+default. It retains application/data identities and has no application or manual
+tests. The published v0.8.16 Setup does not contain this source follow-up.
+The user authorized submission and distribution; [0.8.17 development](0.8.17/development.md)
+carries this fix into a patch version with unchanged data identities.
+
 The user has suspended old-version compatibility obligations until an explicit
 formal-release declaration. Older rows below are historical records, not a
 current support promise.
@@ -36,6 +43,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.17 | 24 | Plan drag ordering and default inline prescription editing | Build and distribution pending; application and manual tests 0 |
 | 0.8.16 | 24 | Full training-button widths, centered gallery captions and evenly distributed gallery columns | GitHub Release `v0.8.16`; clean Setup from `e12b5db`; SHA-256 `c26ff9d174bc1de6677feb293d52954339c63db21f889cbe1bccc27ba53b149c`; unsigned; application and manual tests 0 |
 | 0.8.15 | 24 | Compact 16:9 default window, responsive page structures and independent measured action frames | GitHub Release `v0.8.15`; clean Setup from `22acd71`; SHA-256 `4aa81c4c6e517a8e1958ef36c4ce59fb96da520d558d707cae47025b6e1484bf`; unsigned; no client observation |
 | 0.8.14 | 24 | Font-relative interface scale and responsive plan/guidance editing | GitHub Release `v0.8.14`; clean Setup from `b09b611`; SHA-256 `26a5a403975e2dab7ce769e048abae04fb33faba7171579357e84e6ebca4169e`; unsigned; no client observation |
@@ -62,6 +70,10 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.17 development record](0.8.17/development.md) records the requested plan-editor
+delivery. No concrete startup risk is introduced; application and manual tests remain
+zero. Candidate identity will be recorded after a clean source build.
 
 The [0.8.16 development record](0.8.16/development.md) carries the default-window
 layout follow-up into the user's explicitly requested GitHub delivery. Application
@@ -222,6 +234,8 @@ checks. Candidate evidence certifies only its identified source and payload;
 it never transfers to a later version.
 
 ## Historical records
+
+- [0.8.17 development record](0.8.17/development.md)
 
 - [0.8.16 GitHub Release record](0.8.16/github-release-2026-10-09.md)
 - [0.8.16 development record](0.8.16/development.md)

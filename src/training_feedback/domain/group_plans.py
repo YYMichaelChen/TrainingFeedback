@@ -335,6 +335,12 @@ class PlanDocument:
         rows[index], rows[target] = rows[target], rows[index]
         self.reorder(rows)
 
+    def move_to(self, rows, index, target):
+        if index == target or not 0 <= target < len(rows):
+            return
+        rows.insert(target, rows.pop(index))
+        self.reorder(rows)
+
     def remove_member(self, day_index, group_index, member_index, *, dissolve=False):
         day = self.plan["days"][day_index]
         group = day["items"][group_index]

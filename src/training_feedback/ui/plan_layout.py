@@ -1,6 +1,7 @@
 """Plan-dialog pane arrangement; no prescriptions or persistence rules live here."""
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QCursor, QDrag
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFrame,
@@ -25,9 +26,30 @@ class PlanActionTree(QTreeWidget):
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.setDropIndicatorShown(True)
+        self._drag_source = None
+
+    def startDrag(self, supported_actions):
+        source = self.currentItem()
+        if source is None:
+            return
+        self._drag_source = source
+        drag = QDrag(self)
+        drag.setMimeData(self.mimeData([source]))
+        drag.setPixmap(self.viewport().grab(self.visualItemRect(source)))
+        drag.setHotSpot(self.viewport().mapFromGlobal(QCursor.pos())
+                        - self.visualItemRect(source).topLeft())
+        try:
+            # The document handles moves. QAbstractItemView.startDrag would
+            # remove the original row again after an accepted MoveAction.
+            drag.exec(Qt.DropAction.MoveAction)
+        finally:
+            self._drag_source = None
+            self.stopAutoScroll()
+            self.setState(QAbstractItemView.State.NoState)
+            self.viewport().update()
 
     def dropEvent(self, event):
-        source = self.currentItem()
+        source = self._drag_source
         target = self.itemAt(event.position().toPoint())
         if (event.source() is not self or source is None or target is None
                 or source is target or source.parent() is not target.parent()):
@@ -41,11 +63,14 @@ class PlanActionTree(QTreeWidget):
 
 
 class PlanPanes(QWidget):
+    guidance_visibility_changed = Signal(bool)
+
     def __init__(self, left, center, guidance, tree, parent=None):
         super().__init__(parent)
         self.left, self.center, self.tree = left, center, tree
         self.mode = None
         self.drawer_open = False
+        self.guidance_visible = None
         self.setMinimumSize(0, 0)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -135,6 +160,10 @@ class PlanPanes(QWidget):
                 self.right.setFixedWidth(width)
                 self.right.setGeometry(self.width() - width, 0, width, self.height())
                 self.right.raise_()
+        visible = mode == "wide" or self.drawer_open
+        if visible != self.guidance_visible:
+            self.guidance_visible = visible
+            self.guidance_visibility_changed.emit(visible)
 
     def toggle_drawer(self):
         self.drawer_open = not self.drawer_open

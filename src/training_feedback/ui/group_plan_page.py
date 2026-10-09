@@ -6,7 +6,7 @@ from copy import deepcopy
 from itertools import islice
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -29,7 +29,6 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSpinBox,
     QSplitter,
-    QTableWidget,
     QTableWidgetItem,
     QToolButton,
     QTreeWidgetItem,
@@ -245,6 +244,8 @@ class ActionPrescriptionDialog(QDialog):
             self.panes.reflow()
 
     def show_guidance(self):
+        if hasattr(self, "guidance_visible") and not self.guidance_visible():
+            return
         choice = self.exercise.currentData()
         if choice is None:
             self.reading.set_content(None, None, lambda index: b"")
@@ -390,7 +391,7 @@ class ActionPrescriptionDialog(QDialog):
             self.sets.item(row, 4).setText(note)
         self.refresh_rest_fields()
 
-    def save(self):
+    def save(self, *, accept=True):
         try:
             choice = self.exercise.currentData()
             if choice is None:
@@ -442,8 +443,10 @@ class ActionPrescriptionDialog(QDialog):
             self.value = action
         except (ValueError, TypeError) as exc:
             error(self, exc)
-            return
-        self.accept()
+            return False
+        if accept:
+            self.accept()
+        return True
 
 
 class GroupPrescriptionDialog(QDialog):
@@ -573,7 +576,7 @@ class GroupPrescriptionDialog(QDialog):
             PlanDocument.reorder(self.group["members"])
             self.refresh()
 
-    def save(self):
+    def save(self, *, accept=True):
         try:
             group = {
                 **self.group,
@@ -592,8 +595,10 @@ class GroupPrescriptionDialog(QDialog):
             self.value = group
         except ValueError as exc:
             error(self, exc)
-            return
-        self.accept()
+            return False
+        if accept:
+            self.accept()
+        return True
 
 
 class MultiExerciseSelectionDialog(QDialog):
@@ -722,8 +727,8 @@ class GroupPlanEditor(QDialog):
         self.tree.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.tree.setWordWrap(True)
         self.tree.setHeaderLabels([T["items"]])
-        self.tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.tree.header().setStretchLastSection(False)
+        self.tree.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tree.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.tree.currentItemChanged.connect(self._show_selected_detail)
         self.tree.reorder_requested.connect(self._reorder_dragged)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -731,30 +736,15 @@ class GroupPlanEditor(QDialog):
         self.detail_panel = QWidget()
         detail_layout = QVBoxLayout(self.detail_panel)
         self.detail_content_layout = detail_layout
-        self.detail_summary = QWidget()
-        summary_layout = QVBoxLayout(self.detail_summary)
-        self.detail_title = QLabel(T["select_detail"])
-        self.detail_title.setObjectName("actionTitle")
-        self.detail_title.setWordWrap(True)
-        summary_layout.addWidget(self.detail_title)
-        self.detail_fields = ResizableTextEdit()
-        self.detail_fields.setReadOnly(True)
-        summary_layout.addWidget(self.detail_fields)
         self.detail_reading = PlanGuidance()
-        self.detail_sets = RelativeTable([2, 4, 5, 4, 3, 6])
-        self.detail_sets.setHorizontalHeaderLabels(
-            [T["member"], T["set_order"], T["value"], T["unit"], T["per_side"], T["set_rest"]]
-        )
-        self.detail_sets.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        summary_layout.addWidget(self.detail_sets)
-        summary_layout.addStretch()
-        self.summary_scroll = LocalScrollArea()
-        self.summary_scroll.setWidget(self.detail_summary)
-        self.detail_sets.height_budget = lambda: self.summary_scroll.viewport().height()
-        detail_layout.addWidget(self.summary_scroll, 1)
-        bind_units(summary_layout, "setContentsMargins", 1.5, 1.5, 1.5, 1.5)
+        self.empty_detail = QLabel("选择左侧动作即可编辑；修改后使用底部保存。")
+        self.empty_detail.setWordWrap(True)
+        detail_layout.addWidget(self.empty_detail)
         bind_units(detail_layout, "setContentsMargins", 0, 0, 0, 0)
         self.inline_editor = None
+        self.editors = {}
+        self.editor_states = {}
+        self.pending_add = False
         left = QWidget()
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 0, 0)
@@ -763,11 +753,9 @@ class GroupPlanEditor(QDialog):
         add.clicked.connect(lambda: self.command("add_action"))
         left_layout.addWidget(add)
         self.panes = PlanPanes(left, self.detail_panel, self.detail_reading, self.tree, self)
+        self.panes.guidance_visibility_changed.connect(self._refresh_guidance)
         layout.addWidget(self.panes, 1)
         commands = QHBoxLayout()
-        edit = QPushButton(T["edit_item"])
-        edit.clicked.connect(lambda: self.command("edit_item"))
-        commands.addWidget(edit)
         # Keep secondary commands available without a row of overflowing buttons.
         more = QToolButton()
         more.setText("更多操作 ▾")
@@ -794,7 +782,10 @@ class GroupPlanEditor(QDialog):
     def _update_layout(self):
         self.basic_scroll.setMaximumHeight(max(u(3), round(self.height() * .3)))
         self.panes.reflow()
-        self.detail_sets.update_metrics()
+
+    def _refresh_guidance(self, visible=True):
+        if visible and isinstance(self.inline_editor, ActionPrescriptionDialog):
+            self.inline_editor.show_guidance()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -802,6 +793,7 @@ class GroupPlanEditor(QDialog):
             self._update_layout()
 
     def refresh(self, selection=None):
+        blocker = QSignalBlocker(self.tree)
         self.tree.clear()
         for d, day in enumerate(self.document.plan["days"]):
             for i, item in enumerate(day["items"]):
@@ -823,24 +815,44 @@ class GroupPlanEditor(QDialog):
             if m is not None and m < item.childCount():
                 item = item.child(m)
             self.tree.setCurrentItem(item)
+        del blocker
+        self._prune_editors()
+        self._show_selected_detail(self.tree.currentItem())
         self.panes.rebuild_capsules()
 
     def _reorder_dragged(self, before, after):
-        if self.inline_editor is not None:
+        if self.pending_add:
             return
         d, i, m = before
         target = after[1] if m is None else after[2]
         rows = (self.document.plan["days"][d]["items"] if m is None
                 else self.document.plan["days"][d]["items"][i]["members"])
         index = i if m is None else m
-        step = 1 if target > index else -1
-        while index != target:
-            self.document.move(rows, index, step)
-            index += step
-        self.refresh((d, target, None) if m is None else (d, i, target))
+        self.document.move_to(rows, index, target)
+        blocker = QSignalBlocker(self.tree)
+        if m is None:
+            node = self.tree.takeTopLevelItem(index)
+            self.tree.insertTopLevelItem(target, node)
+        else:
+            parent = self.tree.topLevelItem(i)
+            node = parent.takeChild(index)
+            parent.insertChild(target, node)
+        for row, item in enumerate(self.document.plan["days"][d]["items"]):
+            root = self.tree.topLevelItem(row)
+            root.setText(0, f"≡ {item['order']}. {item.get('name', item.get('exercise_name'))}")
+            root.setData(0, Qt.ItemDataRole.UserRole, (d, row, None))
+            for member_index, member in enumerate(item.get("members", [])):
+                leaf = root.child(member_index)
+                leaf.setText(0, f"≡ {member['order']}. {member['exercise_name']}")
+                leaf.setData(0, Qt.ItemDataRole.UserRole, (d, row, member_index))
+        node.setExpanded(True)
+        self.tree.setCurrentItem(node)
+        del blocker
+        self._show_selected_detail(node)
+        self.panes.rebuild_capsules()
 
     def _action_menu(self, position):
-        if self.inline_editor is not None:
+        if self.pending_add:
             return
         item = self.tree.itemAt(position)
         if item is None:
@@ -852,65 +864,155 @@ class GroupPlanEditor(QDialog):
         menu.exec(self.tree.viewport().mapToGlobal(position))
 
     def _show_selected_detail(self, item, _previous=None):
-        if hasattr(self, "panes"):
-            self.panes.rebuild_capsules()
-        self.detail_sets.setRowCount(0)
-        self.detail_reading.set_content(None, None, lambda index: b"")
+        if self.pending_add:
+            return
         if item is None:
-            self.detail_title.setText(T["select_detail"])
-            self.detail_fields.clear()
+            self._hide_editor()
+            self.empty_detail.show()
+            self.detail_reading.set_content(None, None, lambda index: b"")
             return
         d, i, m = item.data(0, Qt.ItemDataRole.UserRole)
         plan_item = self.document.plan["days"][d]["items"][i]
         selected = plan_item["members"][m] if m is not None else plan_item
-        title = selected.get("name", selected.get("exercise_name", T["group"]))
-        self.detail_title.setText(title)
-        self.detail_fields.setPlainText(render_fields({
-            key: value for key, value in selected.items()
-            if key not in ("sets", "members", "name", "exercise_name")
-        }))
-        if "exercise" in selected:
-            try:
-                entry = self.service.action_content(selected)
-                self.detail_reading.set_content(
-                    entry["reference"], entry["content"]["guidance"],
-                    lambda index, action=deepcopy(selected): self.service.action_image(
-                        action, index
-                    ),
+        key = (plan_item["item_id"], selected["item_id"] if m is not None else None)
+        related = [other for other in self.editors if other[0] == key[0] and other != key
+                   and (other[1] is None or key[1] is None)]
+        if related:
+            if not self._commit_editors(related):
+                return
+            # A group and its member forms must never keep competing copies.
+            # Commit related edits to the unsaved document before changing level.
+            for other in related:
+                self._discard_editor(other)
+            locations = {entry: location for entry, location, _value in self._locations()}
+            self.refresh(locations.get(key, (d, i, None)))
+            return
+        dialog = self.editors.get(key)
+        if dialog is not None and dialog is self.inline_editor:
+            return
+        self._hide_editor()
+        if dialog is None:
+            choices = self.service.exercise_choices()
+            if m is None and selected["kind"] == "group":
+                dialog = GroupPrescriptionDialog(choices, selected, self, service=self.service)
+            else:
+                dialog = ActionPrescriptionDialog(
+                    choices, selected, member=m is not None, parent=self,
+                    service=self.service, embedded=True,
                 )
-            except (ValueError, OSError) as exc:
-                self.detail_fields.appendPlainText("指导暂时无法读取：" + user_message(str(exc)))
-        members = plan_item.get("members", []) if m is None else []
-        if m is not None or plan_item["kind"] == "action":
-            members = [{"order": "", **selected}]
-        for member in members:
-            doses = member.get("sets", [])
-            rest_applicability = prescription_rest_applicability(
-                doses, aggregate="provenance" in member
-            )["set_rests"]
-            for dose_index, dose in enumerate(doses):
-                row = self.detail_sets.rowCount()
-                self.detail_sets.insertRow(row)
-                values = (
-                    str(member.get("order", "")),
-                    str(dose["order"]),
-                    "" if dose["value"] is None else str(dose["value"]),
-                    DOSE_UNIT_LABELS[dose["unit"]],
-                    T["yes"] if dose["per_side"] else T["no"],
-                    (T["none"] if not rest_applicability[dose_index] else
-                     T["unknown"] if dose["rest_after_set_seconds"] is None
-                     else str(dose["rest_after_set_seconds"])),
-                )
-                for column, value in enumerate(values):
-                    self.detail_sets.setItem(row, column, QTableWidgetItem(value))
+            dialog.buttons.hide()
+            for button in dialog.buttons.buttons():
+                button.setAutoDefault(False)
+                button.setDefault(False)
+                button.setEnabled(False)
+            dialog.rejected.connect(self.reject)
+            self.editors[key] = dialog
+            self.editor_states[key] = self._editor_state(dialog)
+        self._show_inline_editor(dialog, d, i, m, existing=True)
+        self.panes.rebuild_capsules()
+
+    @staticmethod
+    def _editor_state(dialog):
+        if isinstance(dialog, ActionPrescriptionDialog):
+            return (
+                dialog.exercise.currentData(), dialog.exercise.currentText(),
+                dialog.phase.currentData(), dialog.side.currentData(),
+                dialog.side_rest.text(), dialog.rest.text(), dialog.note.toPlainText(),
+                [(dialog.sets.item(row, 0).text(),
+                  dialog.sets.cellWidget(row, 1).currentData(),
+                  dialog.sets.cellWidget(row, 2).isChecked(),
+                  dialog.sets.item(row, 3).text(), dialog.sets.item(row, 4).text())
+                 for row in range(dialog.sets.rowCount())],
+            )
+        return (
+            dialog.name.text(), dialog.phase.currentData(), dialog.rounds.value(),
+            dialog.side.currentData(), dialog.sequence.currentData(),
+            dialog.transition.toPlainText(), dialog.note.toPlainText(),
+            [edit.text() for edit in dialog.fields.values()], deepcopy(dialog.group["members"]),
+        )
+
+    def _locations(self):
+        for d, day in enumerate(self.document.plan["days"]):
+            for i, item in enumerate(day["items"]):
+                yield (item["item_id"], None), (d, i, None), item
+                for m, member in enumerate(item.get("members", [])):
+                    yield (item["item_id"], member["item_id"]), (d, i, m), member
+
+    def _commit_editors(self, keys=None):
+        locations = {key: (location, item) for key, location, item in self._locations()}
+        changes = []
+        for key in sorted(keys if keys is not None else self.editors,
+                          key=lambda value: value[1] is not None):
+            dialog = self.editors[key]
+            if key not in locations or self._editor_state(dialog) == self.editor_states[key]:
+                continue
+            if not dialog.save(accept=False):
+                location, _item = locations[key]
+                blocker = QSignalBlocker(self.tree)
+                node = self.tree.topLevelItem(location[1])
+                if location[2] is not None:
+                    node = node.child(location[2])
+                self.tree.setCurrentItem(node)
+                del blocker
+                self._hide_editor()
+                self._show_inline_editor(dialog, *location, existing=True)
+                return False
+            changes.append((key, deepcopy(dialog.value)))
+        for key, value in changes:
+            current = {entry: (location, item) for entry, location, item in self._locations()}
+            if key not in current:
+                continue
+            (d, i, m), source = current[key]
+            value["order"] = source["order"]
+            rows = self.document.plan["days"][d]["items"]
+            if m is not None:
+                rows = rows[i]["members"]
+            rows[i if m is None else m] = value
+            dialog = self.editors[key]
+            if isinstance(dialog, ActionPrescriptionDialog):
+                dialog.source = deepcopy(value)
+            else:
+                dialog.group = deepcopy(value)
+            self.editor_states[key] = self._editor_state(dialog)
+            if value["item_id"] != source["item_id"]:
+                new_key = ((value["item_id"], None) if m is None
+                           else (key[0], value["item_id"]))
+                self.editors[new_key] = self.editors.pop(key)
+                self.editor_states[new_key] = self.editor_states.pop(key)
+        return True
+
+    def _discard_editor(self, key):
+        if key not in self.editors:
+            return
+        dialog = self.editors.pop(key)
+        self.editor_states.pop(key)
+        if dialog is self.inline_editor:
+            self._hide_editor()
+        dialog.deleteLater()
+
+    def _prune_editors(self):
+        keys = {key for key, _location, _item in self._locations()}
+        for key in list(self.editors):
+            if key not in keys:
+                self._discard_editor(key)
+
+    def _hide_editor(self):
+        if self.inline_editor is not None:
+            self.detail_content_layout.removeWidget(self.inline_editor)
+            self.inline_editor.hide()
+            self.inline_editor = None
 
     def command(self, command):
-        if self.inline_editor is not None:
+        if self.pending_add:
             return
         selected = self.tree.currentItem()
         d, i, m = selected.data(0, Qt.ItemDataRole.UserRole) if selected else (0, None, None)
         selection = (d, i, m) if d is not None else None
         try:
+            if command == "edit_item":
+                if selected is not None:
+                    self._show_selected_detail(selected)
+                return
             if command in ("add_action", "add_group", "edit_item"):
                 self.edit_item(command, d, None if command != "edit_item" else i,
                                None if command != "edit_item" else m)
@@ -919,17 +1021,23 @@ class GroupPlanEditor(QDialog):
                     return
                 rows = (self.document.plan["days"][d]["items"] if m is None
                         else self.document.plan["days"][d]["items"][i]["members"])
-                self.document.move(
-                    rows, i if m is None else m, -1 if command == "up" else 1
-                )
+                index = i if m is None else m
+                target = index + (-1 if command == "up" else 1)
+                if 0 <= target < len(rows):
+                    self._reorder_dragged((d, i, m), (d, target, None) if m is None
+                                          else (d, i, target))
+                return
             elif command == "remove" and i is not None:
                 self.remove(d, i, m)
             elif command == "move_member":
+                if not self._commit_editors():
+                    return
                 self.transfer(command, d, i, m)
         except ValueError as exc:
             error(self, exc)
             return
-        self.refresh(selection)
+        if not self.pending_add:
+            self.refresh(selection)
 
     def edit_item(self, command, d, i, m):
         choices = self.service.exercise_choices()
@@ -951,22 +1059,31 @@ class GroupPlanEditor(QDialog):
                                               embedded=True)
         self._show_inline_editor(dialog, d, i, m)
 
-    def _show_inline_editor(self, dialog, d, i, m):
-        self.tree.setEnabled(False)
-        self.panes.rebuild_capsules()
-        self.summary_scroll.hide()
+    def _show_inline_editor(self, dialog, d, i, m, *, existing=False):
+        self._hide_editor()
+        self.pending_add = not existing
+        self.tree.setEnabled(existing)
+        self.empty_detail.hide()
         self.inline_editor = dialog
         dialog.setParent(self.detail_panel)
         dialog.setWindowFlags(Qt.WindowType.Widget)
         dialog.setMinimumSize(0, 0)
         self.detail_content_layout.addWidget(dialog, 1)
-        dialog.accepted.connect(lambda: self._inline_saved(dialog, d, i, m))
-        dialog.rejected.connect(self._inline_cancelled)
+        if not existing:
+            dialog.accepted.connect(lambda: self._inline_saved(dialog, d, i, m))
+            dialog.rejected.connect(self._inline_cancelled)
         if isinstance(dialog, ActionPrescriptionDialog):
             dialog.reading = self.detail_reading
-            dialog.exercise.currentIndexChanged.connect(dialog.show_guidance)
+            dialog.guidance_visible = lambda: (self.inline_editor is dialog
+                                               and not self.panes.right.isHidden())
+            if not getattr(dialog, "_guidance_connected", False):
+                dialog.exercise.currentIndexChanged.connect(dialog.show_guidance)
+                dialog._guidance_connected = True
             dialog.show_guidance()
+        else:
+            self.detail_reading.set_content(None, None, lambda index: b"")
         dialog.show()
+        self.panes.rebuild_capsules()
 
     def _inline_saved(self, dialog, d, i, m):
         items = self.document.plan["days"][d]["items"]
@@ -1005,7 +1122,7 @@ class GroupPlanEditor(QDialog):
             dialog.hide()
             dialog.deleteLater()
         self.tree.setEnabled(True)
-        self.summary_scroll.show()
+        self.pending_add = False
         self.panes.rebuild_capsules()
 
     def remove(self, d, i, m):
@@ -1039,8 +1156,10 @@ class GroupPlanEditor(QDialog):
             self.document.move_member(self.document.plan["days"][d]["items"][i], m, destination)
 
     def save(self):
-        if self.inline_editor is not None:
+        if self.pending_add:
             QMessageBox.information(self, T["error"], "请先保存或取消右侧正在编辑的训练安排。")
+            return
+        if not self._commit_editors():
             return
         payload = deepcopy(self.source)
         payload["plan"] = deepcopy(self.document.plan)
