@@ -10,7 +10,7 @@ routes current execution work; this file routes tracked project authority.
 - Current plan/evidence contract: `4`
 - Current catalog: `070-illustrated-3`
 - Current development release: [`0.8.17`](releases/0.8.17/design.md)
-- GitHub distribution: `v0.8.16`
+- GitHub distribution: `v0.8.17`
 - Formal compatibility baseline declared: no
 
 ## 当前验证政策
@@ -34,6 +34,7 @@ routes current execution work; this file routes tracked project authority.
 | Compact default window and independent action frames | [源码跟进](history/0.8.14/compact-interface-2026-10-08.md), [0.8.15 交付记录](history/0.8.15/development.md) |
 | Default training-button widths and centered gallery captions | [0.8.16 交付记录](history/0.8.16/development.md) |
 | Plan drag ordering and default inline editing source follow-up | [计划编辑源码跟进](history/0.8.16/plan-editor-follow-up-2026-10-09.md) |
+| Published plan-editor fix and candidate identity | [0.8.17 交付记录](history/0.8.17/development.md) |
 | Development, verification, version rotation and release close | [Development workflow](development-workflow.md) |
 | Pytest tiers, scopes and budget accounting | [Test instructions](../tests/README.md) |
 | Minimal startup observation; dormant public acceptance | [Packaged acceptance runbook](packaged-acceptance-runbook.md) |
