@@ -73,7 +73,7 @@ GROUP_PLAN_TEXT = {
     "choose_multiple_exercises": "至少选择一个动作；所选动作会以未完成处方加入计划。",
     "action": "独立动作", "group": "动作组", "add_action": "添加动作", "add_group": "添加动作组",
     "add_member": "添加成员", "edit_item": "编辑所选项", "remove": "移除所选项",
-    "member": "成员", "set_order": "组次",
+    "member": "成员", "set_order": "第几组",
     "up": "上移", "down": "下移", "move_member": "移至另一动作组…",
     "choose": "选择动作", "phase": "训练阶段", "note": "原始备注",
     "sets": "逐组剂量（动作组内为每轮剂量）", "value": "数值", "unit": "单位",
@@ -84,7 +84,7 @@ GROUP_PLAN_TEXT = {
         "也会覆盖其他适用组的休息；所选组休息不适用时，保留其他组休息。继续吗？"
     ),
     "member_rest": "成员后休息秒", "side_rest": "换侧休息秒", "round_rest": "轮间休息秒",
-    "exit_rest": "退出后休息秒", "first_side": "先做哪一侧", "rounds": "轮数",
+    "exit_rest": "动作结束后休息（秒）", "first_side": "先做哪一侧", "rounds": "轮数",
     "sequence": "换侧顺序", "transition": "体位 / 支撑转换说明", "group_name": "动作组名称",
     "none": "不适用", "left": "左侧", "right": "右侧",
     "member_each_side": "每个成员分别完成两侧", "same_side_then_switch": "每轮先同侧序列再换侧",

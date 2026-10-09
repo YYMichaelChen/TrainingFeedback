@@ -103,6 +103,12 @@ QScrollArea > QWidget > QWidget { background: #f3f6fa; }
 QScrollBar:vertical { background: transparent; width: 0.625u; margin: 0; }
 QScrollBar::handle:vertical { background: #bbcbd7; border-radius: 0.3125u; min-height: 1.75u; }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+QScrollBar:horizontal { background: #dfe8ee; height: 0.875u; margin: 0;
+                        border: 1px solid #cbd7e4; border-radius: 0.4375u; }
+QScrollBar::handle:horizontal { background: #607e91; border-radius: 0.375u; min-width: 3u; }
+QScrollBar::handle:horizontal:hover, QScrollBar::handle:horizontal:pressed { background: #0f8175; }
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal { background: transparent; }
 QProgressBar { background: #dfe8ee; border: none; border-radius: 0.25u; max-height: 0.5u; }
 QProgressBar::chunk { background: #159986; border-radius: 0.25u; }
 QProgressBar#updateDownloadProgress { min-height: 1.375u; max-height: 1.375u; }

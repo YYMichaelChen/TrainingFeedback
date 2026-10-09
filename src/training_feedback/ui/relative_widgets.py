@@ -131,15 +131,18 @@ class AdaptiveFields(QWidget):
 
 
 class RelativeTable(QTableWidget):
-    def __init__(self, weights, parent=None):
+    def __init__(self, weights, parent=None, *, compact_columns=()):
         super().__init__(0, len(weights), parent)
         self.weights = weights
+        self.compact_columns = frozenset(compact_columns)
+        self._updating_metrics = False
         self.height_budget = lambda: u(36)
-        self.setMinimumWidth(u(28))
+        self.setMinimumWidth(0)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
         self.horizontalHeader().setStretchLastSection(False)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.horizontalScrollBar().setToolTip("左右拖动可查看其余列。")
         self.verticalHeader().hide()
         self.setWordWrap(True)
         self.model().rowsInserted.connect(self.update_metrics)
@@ -152,21 +155,40 @@ class RelativeTable(QTableWidget):
         self.update_metrics()
 
     def update_metrics(self, *_):
-        minimum = u(28)
+        if self._updating_metrics:
+            return
+        self._updating_metrics = True
+        try:
+            self._update_metrics()
+        finally:
+            self._updating_metrics = False
+
+    def _update_metrics(self):
+        header = self.horizontalHeader()
+        minimums = []
         for column, weight in enumerate(self.weights):
+            title = self.horizontalHeaderItem(column)
+            title_width = (header.fontMetrics().horizontalAdvance(title.text()) + u(1)
+                           if title is not None else 0)
             content = max((self.cellWidget(row, column).minimumSizeHint().width()
                            for row in range(self.rowCount())
                            if self.cellWidget(row, column) is not None), default=0)
-            minimum = max(minimum, round((content + u(.25)) * sum(self.weights) / weight))
-        self.setMinimumWidth(minimum)
-        self.horizontalHeader().setMinimumSectionSize(u(1.5))
+            # A control can widen its own column, never multiply the whole table.
+            minimums.append(max(u(weight), title_width, content + u(.25)))
+        header.setMinimumSectionSize(u(1.5))
         width = max(1, self.viewport().width())
-        assigned = 0
-        for column, weight in enumerate(self.weights):
-            size = (width - assigned if column == len(self.weights) - 1
-                    else round(width * weight / sum(self.weights)))
+        extra = max(0, width - sum(minimums))
+        flexible = [column for column in range(len(self.weights))
+                    if column not in self.compact_columns]
+        remaining_weight = sum(self.weights[column] for column in flexible)
+        sizes = list(minimums)
+        for column in flexible:
+            addition = round(extra * self.weights[column] / remaining_weight)
+            sizes[column] += addition
+            extra -= addition
+            remaining_weight -= self.weights[column]
+        for column, size in enumerate(sizes):
             self.setColumnWidth(column, size)
-            assigned += size
         self.verticalHeader().setMinimumSectionSize(u(2.5))
         self.verticalHeader().setDefaultSectionSize(u(2.5))
         self.resizeRowsToContents()
@@ -175,6 +197,8 @@ class RelativeTable(QTableWidget):
         ) + self.frameWidth() * 2
         if self.rowCount() > 8:
             height = min(height, max(u(5), round(self.height_budget() * .5)))
+        if sum(sizes) > width:
+            height += self.horizontalScrollBar().sizeHint().height()
         self.setFixedHeight(max(u(2.5), height))
 
     def resizeEvent(self, event):
@@ -183,6 +207,10 @@ class RelativeTable(QTableWidget):
 
     def sizeHint(self):
         return QSize(u(28), self.height())
+
+    def minimumSizeHint(self):
+        # Keep column overflow inside the table instead of widening its form.
+        return QSize(0, self.height())
 
     def wheelEvent(self, event):
         super().wheelEvent(event)

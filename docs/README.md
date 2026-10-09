@@ -5,11 +5,11 @@ routes current execution work; this file routes tracked project authority.
 
 ## Current state
 
-- Current application: `0.8.17`
+- Current application: `0.8.18`
 - Current database schema: `24`
 - Current plan/evidence contract: `4`
 - Current catalog: `070-illustrated-3`
-- Current development release: [`0.8.17`](releases/0.8.17/design.md)
+- Current development release: [`0.8.18`](releases/0.8.18/design.md)
 - GitHub distribution: `v0.8.17`
 - Formal compatibility baseline declared: no
 
@@ -28,7 +28,7 @@ routes current execution work; this file routes tracked project authority.
 | --- | --- |
 | Product, domain, data-root and release rules | [Product specification](development-plan.md) |
 | Catalog content and initial-plan proposal | [Catalog and plan specification](initial-exercises-and-plan.md) |
-| Current release design | [v0.8.17 design](releases/0.8.17/design.md) |
+| Current release design | [v0.8.18 design](releases/0.8.18/design.md) |
 | Action-detail and guidance reading design implemented in v0.8.11 source | [动作详情与指导阅读重新设计](designs/exercise-reading-redesign.md) |
 | Plan editor sizing and local scale source follow-up | [计划界面相对尺寸与缩放](designs/plan-interface-scaling.md) |
 | Compact default window and independent action frames | [源码跟进](history/0.8.14/compact-interface-2026-10-08.md), [0.8.15 交付记录](history/0.8.15/development.md) |

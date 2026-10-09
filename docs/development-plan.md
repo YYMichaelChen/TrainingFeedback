@@ -232,11 +232,16 @@ becomes horizontally scrollable name capsules. Selected action/member and
 unsaved edits survive layout changes. Sibling drag ordering and context-menu
 commands use the same document operations as existing move buttons.
 
-Parameter fields use an adaptive grid with 14u minimum fields. The per-set table
-uses base-size text and relative widths: # 2, set order 4, value 5, unit 4,
-per-side 3, rest 6, operations 4. Keep the existing verbatim per-set note column
-(weight 4). The table's minimum is 28u, increased if embedded controls require
-more width; a narrower center scrolls horizontally rather than crushing columns.
+Parameter fields use an adaptive grid with 14u minimum fields, reflowing to the
+center's available width independently of table columns. The per-set table uses
+base-size text and font-relative minimum column widths: # 2u, set order 4u,
+value 5u, unit 4u, per-side 3u, rest 6u, operations 4u, verbatim per-set note 4u.
+Each column also fits its own header and embedded controls; one control must not
+inflate every column. Short fields keep these compact widths; the note column
+receives the remaining space. A narrower center scrolls inside the table rather
+than widening the entire form or crushing columns. Horizontal scrollbars have a
+visible track and contrasting draggable handle, with hover/pressed emphasis.
+Set and member action buttons wrap at their natural widths.
 Rows grow from a 2.5u minimum. Up to eight rows use content height; more rows
 scroll internally within half of the center viewport. Deleting a set and
 confirmed equal-set filling retain the existing validation and rest semantics.

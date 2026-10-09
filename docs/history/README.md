@@ -7,13 +7,13 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.17**
+- Application: **0.8.18**
 - Database schema: **24**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.17**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.17](../releases/0.8.17/design.md)
+- Current development version: [0.8.18](../releases/0.8.18/design.md)
 
 The [QHD compact-interface source follow-up](0.8.14/compact-interface-2026-10-08.md)
 adds a 16:9 default window (2560×1440 on 4K) and independent action frames without changing these
@@ -43,6 +43,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.18 | 24 | Compact prescription columns, table-local horizontal scrolling and clear plan-editor labels | Authorized GitHub delivery; clean candidate and distribution pending; application and manual tests 0 |
 | 0.8.17 | 24 | Plan drag ordering and default inline prescription editing | GitHub Release `v0.8.17`; clean Setup from `943bf42`; SHA-256 `c83b8dc41c0efcf8f79ef75e9d616c73ec6856bf19cd4d22d27ccacbfafda233`; unsigned; application and manual tests 0 |
 | 0.8.16 | 24 | Full training-button widths, centered gallery captions and evenly distributed gallery columns | GitHub Release `v0.8.16`; clean Setup from `e12b5db`; SHA-256 `c26ff9d174bc1de6677feb293d52954339c63db21f889cbe1bccc27ba53b149c`; unsigned; application and manual tests 0 |
 | 0.8.15 | 24 | Compact 16:9 default window, responsive page structures and independent measured action frames | GitHub Release `v0.8.15`; clean Setup from `22acd71`; SHA-256 `4aa81c4c6e517a8e1958ef36c4ce59fb96da520d558d707cae47025b6e1484bf`; unsigned; no client observation |
@@ -236,6 +237,8 @@ checks. Candidate evidence certifies only its identified source and payload;
 it never transfers to a later version.
 
 ## Historical records
+
+- [0.8.18 development record](0.8.18/development.md)
 
 - [0.8.17 GitHub Release record](0.8.17/github-release-2026-10-09.md)
 - [0.8.17 development record](0.8.17/development.md)

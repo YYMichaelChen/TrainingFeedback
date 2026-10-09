@@ -193,10 +193,11 @@ class ActionPrescriptionDialog(QDialog):
         form.addRow(T["note"], self.note)
         fields.addWidget(form)
         fields.addWidget(QLabel(T["sets"]))
-        self.sets = RelativeTable([5, 4, 3, 6, 4, 4, 4, 2])
+        self.sets = RelativeTable([5, 4, 3, 6, 4, 4, 4, 2],
+                                  compact_columns=(0, 1, 2, 3, 5, 6, 7))
         self.sets.setHorizontalHeaderLabels(
             [T[key] for key in ("value", "unit", "per_side", "set_rest", "note")]
-            + ["组次", "操作", "#"]
+            + [T["set_order"], "操作", "#"]
         )
         self.sets.horizontalHeader().setSectionsMovable(False)
         self.sets.horizontalHeader().moveSection(5, 0)
@@ -206,19 +207,20 @@ class ActionPrescriptionDialog(QDialog):
             self.add_set(dose)
         self.refresh_rest_fields()
         fields.addWidget(self.sets)
-        controls = AdaptiveFields(minimum=8)
+        controls = ActionBar()
         add = QPushButton(T["add_set"])
         add.clicked.connect(lambda: self.add_set())
         remove = QPushButton(T["remove_set"])
         remove.clicked.connect(self.remove_set)
         fill = QPushButton(T["fill_equal_sets"])
         fill.clicked.connect(self.fill_equal_sets)
-        controls.addRow("", add)
-        controls.addRow("", remove)
-        controls.addRow("", fill)
+        controls.addWidget(add)
+        controls.addWidget(remove)
+        controls.addWidget(fill)
         fields.addWidget(controls)
         fields.addStretch()
         scroll = LocalScrollArea()
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setWidget(body)
         self.sets.height_budget = lambda: scroll.viewport().height()
         bind_units(fields, "setContentsMargins", 1.5, 1.5, 1.5, 1.5)
@@ -488,7 +490,7 @@ class GroupPrescriptionDialog(QDialog):
         for key, label in (
             ("rest_between_sides_seconds", "side_rest"),
             ("rest_between_rounds_seconds", "round_rest"),
-            ("rest_after_group_seconds", "exit_rest"),
+            ("rest_after_group_seconds", "rest_after_group_seconds"),
         ):
             self.fields[key] = QLineEdit(
                 "" if self.group[key] is None else str(self.group[key])
@@ -512,7 +514,7 @@ class GroupPrescriptionDialog(QDialog):
         self.members.setWordWrap(True)
         self.members.setTextElideMode(Qt.TextElideMode.ElideNone)
         layout.addWidget(self.members, 1)
-        controls = AdaptiveFields(minimum=8)
+        controls = ActionBar()
         for name, function in (
             ("add_member", self.add_member),
             ("edit_item", self.edit_member),
@@ -522,7 +524,7 @@ class GroupPrescriptionDialog(QDialog):
         ):
             button = QPushButton(T[name])
             button.clicked.connect(function)
-            controls.addRow("", button)
+            controls.addWidget(button)
         layout.addWidget(controls)
         scroll = LocalScrollArea()
         scroll.setWidget(body)
