@@ -43,7 +43,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.17 | 24 | Plan drag ordering and default inline prescription editing | Build and distribution pending; application and manual tests 0 |
+| 0.8.17 | 24 | Plan drag ordering and default inline prescription editing | Clean Setup from `943bf42`; SHA-256 `c83b8dc41c0efcf8f79ef75e9d616c73ec6856bf19cd4d22d27ccacbfafda233`; unsigned; distribution pending; application and manual tests 0 |
 | 0.8.16 | 24 | Full training-button widths, centered gallery captions and evenly distributed gallery columns | GitHub Release `v0.8.16`; clean Setup from `e12b5db`; SHA-256 `c26ff9d174bc1de6677feb293d52954339c63db21f889cbe1bccc27ba53b149c`; unsigned; application and manual tests 0 |
 | 0.8.15 | 24 | Compact 16:9 default window, responsive page structures and independent measured action frames | GitHub Release `v0.8.15`; clean Setup from `22acd71`; SHA-256 `4aa81c4c6e517a8e1958ef36c4ce59fb96da520d558d707cae47025b6e1484bf`; unsigned; no client observation |
 | 0.8.14 | 24 | Font-relative interface scale and responsive plan/guidance editing | GitHub Release `v0.8.14`; clean Setup from `b09b611`; SHA-256 `26a5a403975e2dab7ce769e048abae04fb33faba7171579357e84e6ebca4169e`; unsigned; no client observation |
@@ -73,7 +73,8 @@ identities in Git history; they do not imply application releases or support.
 
 The [0.8.17 development record](0.8.17/development.md) records the requested plan-editor
 delivery. No concrete startup risk is introduced; application and manual tests remain
-zero. Candidate identity will be recorded after a clean source build.
+zero. A clean Setup from `943bf42` has matching local hash and build manifests;
+GitHub distribution remains pending.
 
 The [0.8.16 development record](0.8.16/development.md) carries the default-window
 layout follow-up into the user's explicitly requested GitHub delivery. Application

@@ -35,3 +35,27 @@
 
 Planscope `v0.8.17` 跟踪交付与收尾；旧归档保持只读。分发不建立正式兼容支持、
 公共验收、外部内容审核、W4、个人数据转移或个人使用就绪状态。
+
+## 干净安装包候选
+
+源码提交 `943bf42cd8b609ce710619cea28590438fbe3b8f` 已推送 main，工作树干净后
+构建一次成功；没有启动应用或 Setup。受影响源码 Ruff、文档链接／身份和 Git 差异
+静态检查通过。构建核对受控工具链、必需资源、目录和程序所有权载荷清单。
+
+| 项目 | 实际值 |
+| --- | --- |
+| Setup | `dist/installer/TrainingFeedback-0.8.17-Setup.exe` |
+| SHA-256 | `c83b8dc41c0efcf8f79ef75e9d616c73ec6856bf19cd4d22d27ccacbfafda233` |
+| 大小 | 85,740,355 bytes |
+| 签名 | NotSigned |
+| 干净构建源码 | `943bf42cd8b609ce710619cea28590438fbe3b8f` |
+| 构建时间 UTC | `2026-10-09T13:08:37Z` |
+| 构建时间 Asia/Shanghai | 2026-10-09 21:08:37 |
+| Python / PySide6 | 3.12.14 / 6.11.2 |
+| 载荷文件数 | 298 |
+| 源码状态 | `source_dirty=false` |
+
+[载荷清单](payload-build-manifest.json)和[安装包清单](installer-build-manifest.json)
+保留精确候选身份；实际 Setup 哈希、大小、版本与源码提交和清单相符。载荷只含
+程序拥有的资源，不含用户数据库或 locator。应用／人工测试仍各 0 项；候选身份
+和构建成功不证明客户端拖动、保存、流畅度或安装行为。
