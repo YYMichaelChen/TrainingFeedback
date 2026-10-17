@@ -60,7 +60,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.20 | 25 | Separate action addition from plan save; in-memory plan-file template with explicit Save As | Source prepared; installer and GitHub distribution pending; application and manual tests 0 |
+| 0.8.20 | 25 | Separate action addition from plan save; in-memory plan-file template with explicit Save As | Clean Setup from `f71bee5`; SHA-256 `daed4069ce5cf45327c5880a4a556933af7871038a4562c48af8eeceb5e4064c`; unsigned; GitHub distribution pending; application and manual tests 0 |
 | 0.8.19 | 25 | Persistent incomplete edit documents, strict v4 import preview and Chinese client presentation | GitHub Release `v0.8.19`; clean Setup from `2d0e787`; SHA-256 `b379a509025db8d011a0697eda90c3ace4f343f3180c90d527cb29d8c09791ec`; unsigned; 2 startup scenarios passed, manual tests 0 |
 | 0.8.18 | 24 | Compact prescription columns, table-local horizontal scrolling and clear plan-editor labels | GitHub Release `v0.8.18`; clean Setup from `905b534`; SHA-256 `774751f0392362cf200d19cb58aab6ae9b039407903997734944711a9533b6d7`; unsigned; application and manual tests 0 |
 | 0.8.17 | 24 | Plan drag ordering and default inline prescription editing | GitHub Release `v0.8.17`; clean Setup from `943bf42`; SHA-256 `c83b8dc41c0efcf8f79ef75e9d616c73ec6856bf19cd4d22d27ccacbfafda233`; unsigned; application and manual tests 0 |

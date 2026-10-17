@@ -31,6 +31,27 @@
 
 ## 候选与分发
 
-待完成源码提交、干净构建、精确身份记录和 GitHub Release 发布。旧 v0.8.19 安装包
-不包含本次两项改动。构建和分发不新增测试；不会声明正式兼容支持、公共验收、
-内容审核、W4、个人数据转移或个人使用就绪。
+源码 `f71bee5bde3d92f487177ccd5dcf9bde4cf141e3` 已提交并推送 main。从干净工作树
+使用 packaging/build.ps1 构建安装包一次成功；未运行程序或 Setup。
+
+| 项目 | 实际值 |
+| --- | --- |
+| Setup | `dist/installer/TrainingFeedback-0.8.20-Setup.exe` |
+| SHA-256 | `daed4069ce5cf45327c5880a4a556933af7871038a4562c48af8eeceb5e4064c` |
+| 大小 | 85,845,146 bytes |
+| 签名 | NotSigned |
+| 干净源码 | `f71bee5bde3d92f487177ccd5dcf9bde4cf141e3` |
+| 载荷构建时间 UTC | `2026-10-17T18:36:37Z` |
+| Setup 构建时间 UTC | `2026-10-17T18:37:09Z` |
+| Setup 构建时间 Asia/Shanghai | 2026-10-18 02:37:09 |
+| Python / PySide6 | 3.12.14 / 6.11.2 |
+| 载荷文件数 | 300 |
+| 源码状态 | `source_dirty=false` |
+
+[载荷清单](payload-build-manifest.json)和[安装包清单](installer-build-manifest.json)
+保留完整候选身份；实际文件哈希、大小、未签名状态及源码身份已核对。构建核对受控
+工具链、必需资源及程序所有权载荷，不增加应用场景。
+
+GitHub Release 待发布。旧 v0.8.19 安装包不包含本次两项改动；旧候选结果不自动
+转移。构建和分发不新增测试，不声明正式兼容支持、公共验收、内容审核、W4、
+个人数据转移或个人使用就绪。
