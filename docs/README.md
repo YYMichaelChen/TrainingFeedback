@@ -10,7 +10,7 @@ routes current execution work; this file routes tracked project authority.
 - Current plan/evidence contract: `4`
 - Current catalog: `070-illustrated-3`
 - Current development release: [`0.8.19`](releases/0.8.19/design.md)
-- GitHub distribution: `v0.8.18`
+- GitHub distribution: `v0.8.19`
 - Formal compatibility baseline declared: no
 
 ## 当前验证政策
@@ -35,7 +35,7 @@ routes current execution work; this file routes tracked project authority.
 | Default training-button widths and centered gallery captions | [0.8.16 交付记录](history/0.8.16/development.md) |
 | Plan drag ordering and default inline editing source follow-up | [计划编辑源码跟进](history/0.8.16/plan-editor-follow-up-2026-10-09.md) |
 | Published plan-editor fix and candidate identity | [0.8.17 交付记录](history/0.8.17/development.md) |
-| Compact plan-editor columns, scrollbars and current candidate | [0.8.18 交付记录](history/0.8.18/development.md) |
+| Compact plan-editor columns and scrollbars | [0.8.18 交付记录](history/0.8.18/development.md) |
 | Long names, switch overhead, drag insertion, group doses and bounded save confirmation | [计划编辑源码跟进](history/0.8.18/plan-editor-follow-up-2026-10-17.md) |
 | Chinese client errors, validation locations and system-error presentation | [报错中文映射源码跟进](history/0.8.18/error-localization-2026-10-17.md) |
 | Incomplete drafts, strict plan-file import and Chinese client text | [功能设计](designs/plan-drafts-import-and-chinese.md), [0.8.19 开发记录](history/0.8.19/development.md) |
