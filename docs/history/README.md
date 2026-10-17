@@ -11,19 +11,20 @@ the [development workflow](../development-workflow.md) owns version rotation.
 - Database schema: **25**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
-- GitHub distribution: **v0.8.19**
+- GitHub distribution: **v0.8.20**
 - Formal compatibility baseline declared: **no**
 - Current development version: [0.8.20](../releases/0.8.20/design.md)
 
 应用 0.8.20 将“添加到计划”与整份草稿保存分开，并提供先预览、由用户另存后编辑的
 计划 JSON 模板。schema 25、内部编辑格式 1、catalog 和外部合同均不变；既有
 schema 23/24 升级入口不变，不新增正式兼容承诺。源码及交付状态见
-[0.8.20 开发记录](0.8.20/development.md)。
+[0.8.20 开发记录](0.8.20/development.md)；稳定/latest 安装包身份见
+[0.8.20 发布记录](0.8.20/github-release-2026-10-18.md)。
 
 应用 0.8.19 增加内部编辑文档（格式 1）、未完成输入保存、严格 v4 文件预览导入、
 中文问题定位和 Qt 中文资源。schema 23/24 在同一升级事务内到达 25，活动计划和
 冻结训练事实保持原样；catalog 与外部合同未改变。验证和候选身份见
-[0.8.19 开发记录](0.8.19/development.md)；稳定/latest 安装包身份见
+[0.8.19 开发记录](0.8.19/development.md)；当次安装包身份见
 [发布记录](0.8.19/github-release-2026-10-18.md)。
 
 The [QHD compact-interface source follow-up](0.8.14/compact-interface-2026-10-08.md)
@@ -60,7 +61,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.20 | 25 | Separate action addition from plan save; in-memory plan-file template with explicit Save As | Clean Setup from `f71bee5`; SHA-256 `daed4069ce5cf45327c5880a4a556933af7871038a4562c48af8eeceb5e4064c`; unsigned; GitHub distribution pending; application and manual tests 0 |
+| 0.8.20 | 25 | Separate action addition from plan save; in-memory plan-file template with explicit Save As | GitHub Release `v0.8.20`; clean Setup from `f71bee5`; SHA-256 `daed4069ce5cf45327c5880a4a556933af7871038a4562c48af8eeceb5e4064c`; unsigned; application and manual tests 0 |
 | 0.8.19 | 25 | Persistent incomplete edit documents, strict v4 import preview and Chinese client presentation | GitHub Release `v0.8.19`; clean Setup from `2d0e787`; SHA-256 `b379a509025db8d011a0697eda90c3ace4f343f3180c90d527cb29d8c09791ec`; unsigned; 2 startup scenarios passed, manual tests 0 |
 | 0.8.18 | 24 | Compact prescription columns, table-local horizontal scrolling and clear plan-editor labels | GitHub Release `v0.8.18`; clean Setup from `905b534`; SHA-256 `774751f0392362cf200d19cb58aab6ae9b039407903997734944711a9533b6d7`; unsigned; application and manual tests 0 |
 | 0.8.17 | 24 | Plan drag ordering and default inline prescription editing | GitHub Release `v0.8.17`; clean Setup from `943bf42`; SHA-256 `c83b8dc41c0efcf8f79ef75e9d616c73ec6856bf19cd4d22d27ccacbfafda233`; unsigned; application and manual tests 0 |
@@ -90,6 +91,12 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.20 development record](0.8.20/development.md) carries both plan UI follow-ups
+into a clean Setup from `f71bee5`. Application and manual tests remain zero; client
+behavior is unobserved. The [public release record](0.8.20/github-release-2026-10-18.md)
+identifies stable/latest v0.8.20, its unique uploaded Setup and matching unauthenticated
+public metadata. Schema, catalog and external contract are unchanged.
 
 The [0.8.17 development record](0.8.17/development.md) records the requested plan-editor
 delivery. No concrete startup risk is introduced; application and manual tests remain
@@ -257,6 +264,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.20 GitHub Release record](0.8.20/github-release-2026-10-18.md)
 - [0.8.20 development record](0.8.20/development.md)
 - [0.8.19 GitHub Release record](0.8.19/github-release-2026-10-18.md)
 - [0.8.19 development record](0.8.19/development.md)
