@@ -28,7 +28,7 @@ class _PageOpenError(QWidget):
     def __init__(self, name, exc, parent=None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
-        detail = user_message(str(exc)).strip() or type(exc).__name__
+        detail = user_message(exc).strip() or type(exc).__name__
         message = QLabel(MAIN_WINDOW_TEXT["page_open_failed"].format(name=name, message=detail))
         message.setWordWrap(True)
         message.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)

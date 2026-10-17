@@ -42,6 +42,7 @@ from ..application.release_updates import (
     idle_result,
 )
 from ..application.update_launcher import LAUNCHER_READY_FILENAME, start_update_launcher
+from ..error_messages import user_message
 from .sizing import initial_size
 
 
@@ -174,7 +175,7 @@ class ReleaseUpdateCoordinator(QObject):
         except OSError as exc:
             if directory is not None:
                 shutil.rmtree(directory, ignore_errors=True)
-            self._download_error = f"无法创建更新临时文件：{exc}"
+            self._download_error = f"无法创建更新临时文件：{user_message(exc)}"
             self.download_failed.emit(self._download_error)
             return False
 
@@ -214,7 +215,7 @@ class ReleaseUpdateCoordinator(QObject):
             if written != len(chunk):
                 raise OSError("更新临时文件未完整写入。")
         except (OSError, SetupDownloadError) as exc:
-            self._download_error = str(exc)
+            self._download_error = user_message(exc)
             reply.abort()
             return
         self.download_progress.emit(
@@ -232,7 +233,7 @@ class ReleaseUpdateCoordinator(QObject):
                 self._download_stream.close()
             except OSError as exc:
                 if not self._download_error:
-                    self._download_error = str(exc)
+                    self._download_error = user_message(exc)
             self._download_stream = None
         status = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if not self._download_error and (
@@ -244,7 +245,7 @@ class ReleaseUpdateCoordinator(QObject):
                 self._download_verifier.finish()
                 os.replace(self._download_part, self._download_target)
             except (OSError, SetupDownloadError) as exc:
-                self._download_error = str(exc)
+                self._download_error = user_message(exc)
         reply.deleteLater()
 
         if self._download_error:
@@ -263,7 +264,9 @@ class ReleaseUpdateCoordinator(QObject):
         try:
             self._detached_launcher = start_update_launcher(target)
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
-            self._download_error = f"无法安排安装程序启动：{exc}。请重试或使用浏览器下载。"
+            self._download_error = (
+                f"无法安排安装程序启动：{user_message(exc)}。请重试或使用浏览器下载。"
+            )
             self._discard_download()
             self.download_failed.emit(self._download_error)
             return
@@ -428,7 +431,7 @@ class ReleaseDetailsDialog(QDialog):
         self.install_button.setText("重新下载并安装")
         self.progress.setVisible(False)
         self.instruction.setText("应用内更新未完成，可以重试，或改用浏览器下载。")
-        QMessageBox.warning(self, "更新失败", message)
+        QMessageBox.warning(self, "更新失败", user_message(message))
 
     def _installer_handoff_started(self, _path: str) -> None:
         self.instruction.setText(

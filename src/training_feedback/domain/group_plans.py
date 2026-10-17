@@ -26,7 +26,7 @@ def validate_plan_payload(payload: dict, schema: dict, *, activation: bool = Fal
     if errors:
         error = errors[0]
         path = "/".join(str(part) for part in error.absolute_path)
-        raise ValueError(f"Invalid plan v4 at {path}: {error.message}")
+        raise ValueError(f"Invalid plan v4 at {path}: {error.message}") from error
     _require_finite(payload)
     plan = payload["plan"]
     ensure_orders((day["order"] for day in plan["days"]), "Day")

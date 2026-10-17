@@ -1,5 +1,7 @@
 """Native equivalents of auto-height fields, proportional grids and local scrolling."""
 
+from contextlib import contextmanager
+
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
     QGridLayout,
@@ -136,6 +138,7 @@ class RelativeTable(QTableWidget):
         self.weights = weights
         self.compact_columns = frozenset(compact_columns)
         self._updating_metrics = False
+        self._metrics_batch_depth = 0
         self.height_budget = lambda: u(36)
         self.setMinimumWidth(0)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -155,13 +158,24 @@ class RelativeTable(QTableWidget):
         self.update_metrics()
 
     def update_metrics(self, *_):
-        if self._updating_metrics:
+        if self._updating_metrics or self._metrics_batch_depth:
             return
         self._updating_metrics = True
         try:
             self._update_metrics()
         finally:
             self._updating_metrics = False
+
+    @contextmanager
+    def batch_metrics(self):
+        """Measure once after a form fills several cells or rows."""
+        self._metrics_batch_depth += 1
+        try:
+            yield
+        finally:
+            self._metrics_batch_depth -= 1
+            if not self._metrics_batch_depth:
+                self.update_metrics()
 
     def _update_metrics(self):
         header = self.horizontalHeader()

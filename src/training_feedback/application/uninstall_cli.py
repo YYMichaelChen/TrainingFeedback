@@ -12,6 +12,7 @@ from pathlib import Path
 from ..data.installation import checked_components
 from ..data.locator import default_locator_path
 from ..data.root_cleanup import CleanupPolicy, commit, offer
+from ..error_messages import user_message
 
 
 def system_policy() -> CleanupPolicy:
@@ -47,11 +48,13 @@ def main(arguments: list[str]) -> int:
         else:
             value = json.loads(args.offer.read_text(encoding="utf-8"))
             result = commit(policy, value, user_confirmed=args.confirmed)
-            lines = [result["status"], result.get("root", ""), result.get("reason", ""),
+            reason = result.get("reason", "")
+            lines = [result["status"], result.get("root", ""),
+                     user_message(reason) if reason else "",
                      result.get("recovery", "")]
             code = 0 if result["status"] in {"complete", "cancelled"} else 1
     except (OSError, ValueError, TypeError, KeyError, sqlite3.Error, MemoryError) as exc:
-        lines, code = ["REFUSED", str(exc)], 1
+        lines, code = ["REFUSED", user_message(exc)], 1
     with args.result.open("x", encoding="utf-8", newline="\n") as stream:
         stream.write("\n".join(lines) + "\n")
     return code

@@ -14,6 +14,7 @@ from ..domain.group_plans import (
     validate_plan_payload,
     validate_stored_plan,
 )
+from ..domain.plan_editing import PlanIssue, PlanIssues, compile_input, payload_issues
 from .library_workflow import LibraryTarget
 
 
@@ -23,17 +24,246 @@ class GroupPlanService:
         self.schema = plan_v4_schema()
 
     def list_plans(self):
-        return self.repository.list_plans()
+        return self.repository.list_plans() + [
+            {"id": doc["id"], "active_revision_id": None}
+            for doc in self.repository.edit_documents() if doc["revision_id"] is None
+        ]
 
     def active_revisions(self):
         return [self.get(plan["active_revision_id"]) for plan in self.list_plans()
                 if plan["active_revision_id"] is not None]
 
     def revisions(self, plan_id):
-        return self.repository.revisions(plan_id)
+        if isinstance(plan_id, str):
+            return [self.get(plan_id)]
+        return [self.get(row["id"]) for row in self.repository.revisions(plan_id)]
 
     def get(self, revision_id):
-        return self.repository.get(revision_id)
+        document = (self.repository.edit_document(revision_id) if isinstance(revision_id, str)
+                    else self.repository.document_for_revision(revision_id))
+        if document is None:
+            return self.repository.get(revision_id)
+        linked = (self.repository.get(document["revision_id"])
+                  if document["revision_id"] is not None else {})
+        return {**linked, "id": document["id"], "edit_document": document,
+                "normalized_revision_id": document["revision_id"],
+                "plan_id": linked.get("plan_id", document["id"]),
+                "status": "draft", "edit_token": document["edit_token"],
+                "upgrade_source_revision_id": (document["source_revision_id"]
+                    if document["purpose"] == "upgrade" else None),
+                "base_number": linked.get("base_number"),
+                "plan_code": linked.get("plan_code"),
+                "name": document["payload"]["plan"]["name"],
+                "payload": deepcopy(document["payload"]), "pins": []}
+
+    def input_issues(self, payload, *, stored=None, activation=False, raw=False):
+        candidate, issues = compile_input(payload) if raw else (deepcopy(payload), [])
+        # Stored migration bindings are validated through their original projection.
+        if stored and stored.get("migration"):
+            try:
+                self.validate(candidate, stored=stored, activation=activation)
+            except (ValueError, TypeError, KeyError) as exc:
+                issues.append(PlanIssue("rule", detail=str(exc)))
+            return candidate, issues
+        issues.extend(payload_issues(candidate, self.schema, activation=activation))
+        if isinstance(candidate, dict) and isinstance(candidate.get("plan"), dict) \
+                and isinstance(candidate["plan"].get("days"), list):
+            # Schema-valid nodes can be checked independently against exact library facts.
+            for d, day in enumerate(candidate["plan"]["days"]):
+                if not isinstance(day, dict) or not isinstance(day.get("items"), list):
+                    continue
+                for i, item in enumerate(day["items"]):
+                    if not isinstance(item, dict) or not isinstance(item.get("members", []), list):
+                        continue
+                    for m, action in enumerate(item.get("members", [item])):
+                        path = ("plan", "days", d, "items", i)
+                        if item.get("kind") == "group":
+                            path += ("members", m)
+                        if not isinstance(action, dict) or any(
+                            issue.path[:len(path)] == path for issue in issues
+                        ):
+                            continue
+                        try:
+                            reference = ExerciseReference(**action["exercise"])
+                            entry = self.library.resolve(reference, action["exercise_name"],
+                                                         action["content"])
+                            if entry["content"]["classification"] != action["classification"]:
+                                raise ValueError(
+                                    "Plan classification does not match the exact content revision."
+                                )
+                        except (ValueError, TypeError, KeyError) as exc:
+                            issues.append(PlanIssue("rule", path, action["item_id"], str(exc)))
+        return candidate, issues
+
+    def _document_target(self, payload, purpose, source_id, base, stored=None):
+        """Check conversion identities without reserving a number for incomplete input."""
+        self.repository.check_source(payload.get("source", {}))
+        base = self._base_number(base)
+        if purpose == "clone" and stored and base is not None and base != stored["base_number"]:
+            raise ValueError("此草稿已分配正式基础编号，后续编辑不能更改该编号。")
+        if purpose == "upgrade":
+            source = self.repository.get(source_id)
+            active = self.repository.active(source["plan_id"])
+            if not active or active["id"] != source_id:
+                raise ValueError("The active plan changed; reopen the upgrade draft.")
+            payload["intent"] = "upgrade"
+            payload["target_base_number"] = source["base_number"]
+            self._lineage(source["plan_id"], payload)
+            code, _ = revision_code_for_change(source["base_number"], source["plan_code"],
+                                               source["payload"]["plan"], payload["plan"])
+            return source["plan_id"], code
+        if stored:
+            self._lineage(stored["plan_id"], payload)
+        existing = self.repository.find_plan(payload["plan"]["name"])
+        if existing is not None and (not stored or existing != stored["plan_id"]):
+            raise ValueError("A plan with this name already exists.")
+        if not stored and base is not None and self.repository.find_base_number(base) is not None:
+            raise ValueError("That plan base number is already in use.")
+        if not stored and base is None and len(self.repository.list_plans()) >= 999:
+            raise ValueError("All plan base numbers 001–999 are in use.")
+        return (stored["plan_id"], stored["plan_code"]) if stored else (None, None)
+
+    @staticmethod
+    def _base_number(raw):
+        if raw is None or (isinstance(raw, str) and not raw.strip()):
+            return None
+        if isinstance(raw, str) and raw.strip().isascii() and raw.strip().isdigit():
+            raw = int(raw.strip())
+        if type(raw) is not int or not 1 <= raw <= 999:
+            raise ValueError("A plan base number must be between 001 and 999.")
+        return raw
+
+    def preview_document(self, payload, *, revision=None, purpose="new", source_id=None, base=None):
+        stored = None
+        if revision:
+            doc = revision.get("edit_document")
+            linked = doc["revision_id"] if doc else revision["id"]
+            stored = self.repository.get(linked) if linked is not None else None
+            if doc:
+                purpose, source_id = doc["purpose"], doc["source_revision_id"]
+            elif stored and stored["upgrade_source_revision_id"]:
+                purpose, source_id = "upgrade", stored["upgrade_source_revision_id"]
+        candidate, issues = self.input_issues(payload, raw=True, stored=stored)
+        code = None
+        if not issues:
+            try:
+                _plan_id, code = self._document_target(candidate, purpose, source_id, base, stored)
+                if code is None:
+                    number = self._base_number(base)
+                    if number is None:
+                        used = {row["base_number"] for row in self.repository.list_plans()}
+                        number = next((n for n in range(1, 1000) if n not in used), None)
+                    if number is None:
+                        raise ValueError("All plan base numbers 001–999 are in use.")
+                    code = f"plan-{number:03d}.01.00"
+            except ValueError as exc:
+                issues.append(PlanIssue("rule", detail=str(exc)))
+        return {"issues": issues, "plan_code": code}
+
+    def save_document(self, payload, *, identifier=None, expected_token=None, purpose="new",
+                      source_revision_id=None, requested_base_number=None):
+        """Save raw input and, if complete, its normalized snapshot in one transaction."""
+        with self.library._action():
+            stored = None
+            linked = None
+            if identifier is not None:
+                current = self.get(identifier)
+                if current["status"] != "draft":
+                    raise ValueError("Only draft revisions can be edited.")
+                if current["edit_token"] != expected_token:
+                    raise ValueError("The displayed plan revision changed.")
+                doc = current.get("edit_document")
+                if doc:
+                    purpose = doc["purpose"]
+                    source_revision_id = doc["source_revision_id"]
+                    if purpose != "clone":
+                        requested_base_number = doc["requested_base_number"]
+                    linked = doc["revision_id"]
+                else:
+                    linked = current["id"]
+                    source_revision_id = current["upgrade_source_revision_id"]
+                    purpose = "upgrade" if source_revision_id else "edit"
+                    identifier = None
+                stored = self.repository.get(linked) if linked is not None else None
+            if purpose == "upgrade":
+                source = self.repository.get(source_revision_id)
+                if source["status"] != "active":
+                    # Content incompleteness is permitted; identity misuse is not.
+                    raise ValueError("Only the latest active revision can be upgraded.")
+                for other in self.repository.edit_documents():
+                    if (other["purpose"] == "upgrade"
+                            and other["source_revision_id"] == source_revision_id
+                            and other["id"] != identifier):
+                        raise ValueError("An upgrade draft already exists; reopen it to continue.")
+                existing = self.repository.upgrade_draft(source["plan_id"], source_revision_id)
+                if existing and existing["id"] != linked:
+                    raise ValueError("An upgrade draft already exists; reopen it to continue.")
+            candidate, issues = self.input_issues(payload, raw=True, stored=stored)
+            target = (None, None)
+            if not issues:
+                try:
+                    target = self._document_target(candidate, purpose, source_revision_id,
+                                                   requested_base_number, stored)
+                except ValueError as exc:
+                    issues.append(PlanIssue("rule", detail=str(exc)))
+            now = self.library.clock.now().isoformat()
+            identifier = self.repository.put_document(
+                payload, now, identifier=identifier, expected_token=expected_token,
+                purpose=purpose, revision_id=linked, source_revision_id=source_revision_id,
+                requested_base_number=requested_base_number,
+            )
+            if not issues:
+                plan_id, code = target
+                if linked is None:
+                    linked = self.repository.create(
+                        candidate, now, plan_id,
+                        base_number=self._base_number(requested_base_number),
+                        plan_code=code, change_description=candidate.get("change_description", ""),
+                        upgrade_source_revision_id=(source_revision_id
+                            if purpose == "upgrade" else None),
+                    )
+                    self.repository.link_document(identifier, linked)
+                else:
+                    self.repository.replace(linked, candidate, stored["edit_token"],
+                                            plan_code=code,
+                                            change_description=candidate.get(
+                                                "change_description", ""))
+            return {"id": identifier, "issues": issues, "revision_id": linked}
+
+    def ready_revision(self, identifier, *, activation=False):
+        revision = self.get(identifier)
+        doc = revision.get("edit_document")
+        if doc is None:
+            return revision
+        linked = doc["revision_id"]
+        stored = self.repository.get(linked) if linked is not None else None
+        candidate, issues = self.input_issues(doc["payload"], raw=True, stored=stored,
+                                             activation=activation)
+        if not issues:
+            try:
+                self._document_target(candidate, doc["purpose"], doc["source_revision_id"],
+                                      doc["requested_base_number"], stored)
+            except ValueError as exc:
+                issues.append(PlanIssue("rule", detail=str(exc)))
+        if issues:
+            raise PlanIssues(issues)
+        if stored is None or stored["payload"]["plan"] != candidate["plan"]:
+            raise ValueError("请先保存最新草稿，再预览或导出。")
+        return {**stored, "editing_identifier": doc["id"],
+                "document_token": doc["edit_token"]}
+
+    def delete_draft(self, identifier, expected_token):
+        with self.library._action():
+            revision = self.get(identifier)
+            if revision["status"] != "draft" or revision["edit_token"] != expected_token:
+                raise ValueError("草稿状态已变化，请重新打开后继续。")
+            doc = revision.get("edit_document")
+            if doc:
+                self.repository.delete_document(doc["id"], expected_token)
+                if doc["revision_id"] is not None:
+                    self.repository.delete_draft_revision(doc["revision_id"])
+            else:
+                self.repository.delete_draft_revision(identifier)
 
     def action_content(self, action):
         """Read the exact prescription content, including retained/removed content."""
@@ -115,6 +345,8 @@ class GroupPlanService:
 
     def save(self, revision_id, payload, *, expected_token):
         with self.library._action():
+            if isinstance(revision_id, str) or self.repository.document_for_revision(revision_id):
+                raise ValueError("此计划有独立编辑草稿，请重新打开最新草稿保存。")
             current = self.get(revision_id)
             payload = self.validate(payload, stored=current)
             self.repository.check_source(payload.get("source", {}))
@@ -166,6 +398,9 @@ class GroupPlanService:
         active = self.repository.active(source["plan_id"])
         if active is None or active["id"] != source["id"]:
             raise ValueError("Only the latest active revision can be upgraded.")
+        for doc in self.repository.edit_documents():
+            if doc["purpose"] == "upgrade" and doc["source_revision_id"] == source["id"]:
+                return self.get(doc["id"])
         existing = self.repository.upgrade_draft(source["plan_id"], source["id"])
         return existing
 
@@ -175,7 +410,7 @@ class GroupPlanService:
             active = self.repository.active(source["plan_id"])
             if active is None or active["id"] != source["id"]:
                 raise ValueError("Only the latest active revision can be upgraded.")
-            existing = self.repository.upgrade_draft(source["plan_id"], source["id"])
+            existing = self.upgrade_draft(source["id"])
             if existing is not None:
                 raise ValueError("An upgrade draft already exists; reopen it to continue.")
             payload = deepcopy(payload)
@@ -220,7 +455,7 @@ class GroupPlanService:
         ]
 
     def preview(self, revision_id):
-        revision = self.get(revision_id)
+        revision = self.ready_revision(revision_id, activation=True)
         if revision["status"] != "draft":
             raise ValueError("Only draft revisions can be activated.")
         payload = self.validate(revision["payload"], activation=True, stored=revision)
@@ -253,6 +488,7 @@ class GroupPlanService:
             if preview["token"] != expected_preview:
                 raise ValueError("The activation preview changed. Review it again.")
             now = self.library.clock.now().isoformat()
+            revision_id = preview["revision"]["id"]
             for _day, _item, action in plan_actions(preview["revision"]["payload"]["plan"]):
                 target = LibraryTarget(ExerciseReference(**action["exercise"]), action["content"])
                 identifier = self.library._retain_target(target)
@@ -274,6 +510,9 @@ class GroupPlanService:
                     now,
                 )
             self.repository.activate(revision_id, now)
+            doc_id = preview["revision"].get("editing_identifier")
+            if doc_id:
+                self.repository.delete_document(doc_id, preview["revision"]["document_token"])
 
     def exercise_choices(self):
         choices = []

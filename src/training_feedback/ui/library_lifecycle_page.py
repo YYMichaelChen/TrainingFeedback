@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .labels import EXERCISE_SOURCE_LABELS, user_message
+from .labels import EXERCISE_SOURCE_LABELS, OPERATION_ERRORS, user_message
 from .labels import LIFECYCLE_TEXT as T
 from .review_occurrence import OccurrenceQuickFill
 from .sizing import bind_units, initial_size
@@ -36,7 +36,8 @@ def render_impact(preview):
     for target, impact in zip(preview["targets"], preview["impacts"], strict=True):
         source = target["exercise"]["source"]
         lines.extend([target["name"],
-                      f"{T['source']}：{EXERCISE_SOURCE_LABELS.get(source, source)}"])
+                      f"{T['source']}："
+                      + EXERCISE_SOURCE_LABELS.get(source, f"未知来源（标识：{source}）")])
         removal = target["removal"]
         local = removal["local"]
         lines.append(T["local"] + "：" + (T[local["disposition"]] if local else T["no_decision"]))
@@ -47,8 +48,10 @@ def render_impact(preview):
             lines.append(f"{T[kind]}（{len(impact[kind])}）")
             for index, row in enumerate(impact[kind], 1):
                 if kind == "plans":
-                    text = (f"{index}. {row['name']} · {T['plan_revision']} "
-                            f"v{row['revision_number']} · " + T[row['status']])
+                    identity = ("编辑草稿 " + row["id"] if row.get("editing_document")
+                                else f"{T['plan_revision']} v{row['revision_number']}")
+                    text = (f"{index}. {row['name'] or '未命名草稿'} · {identity} · "
+                            + T[row['status']])
                     text += f"\n    引用位置：{len(row['items'])} 项"
                 elif kind == "groups":
                     text = f"{index}. 动作组「{row['name']}」"
@@ -135,8 +138,8 @@ class LifecycleRequestDialog(QDialog):
         self._invalidate()
         try:
             self.preview = self.service.preview(self._selected(), self.operation.currentData())
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             return
         self.details.setPlainText(render_impact(self.preview))
         self.submit.setEnabled(True)
@@ -150,8 +153,8 @@ class LifecycleRequestDialog(QDialog):
                 reason=self.reason.toPlainText(), expected_preview=self.preview["token"],
                 user_confirmed=self.confirmed.isChecked(),
             )
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             return
         self.accept()
 
@@ -306,7 +309,7 @@ class LibraryLifecyclePage(QWidget):
                 note=self.note.toPlainText(), user_confirmed=self.confirmed.isChecked(),
                 apply=action == "approve_apply",
             )
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             return
         self.reload(result["id"])

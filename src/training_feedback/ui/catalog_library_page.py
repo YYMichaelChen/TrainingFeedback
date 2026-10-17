@@ -40,6 +40,7 @@ from .labels import (
     CATEGORY_LABELS,
     EXERCISE_ENABLED_LABELS,
     LIBRARY_REASON_LABELS,
+    OPERATION_ERRORS,
     POSITION_LABELS,
     REVIEW_STATE_LABELS,
     REVIEWER_TYPE_LABELS,
@@ -178,8 +179,8 @@ class CatalogReviewDialog(QDialog):
                 occurred_at=self.occurred.text(), note=self.note.toPlainText(),
                 user_confirmed=self.confirm.isChecked(), answer_file=self.answer_file,
             )
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             return
         remember_occurrence(self.occurred.text())
         self.accept()
@@ -268,8 +269,8 @@ class CatalogEditor(QDialog):
             self.saved_id = self.service.save_override(
                 self.target.exercise, content, self.target.content,
             )
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             return
         self.accept()
 
@@ -382,7 +383,7 @@ class CatalogLibraryPage(QWidget):
             self.target = None
             self._show_gallery()
             self._show_version()
-            message = user_message(str(exc)).strip() or type(exc).__name__
+            message = user_message(exc).strip() or type(exc).__name__
             self.gallery_count.setText(T["load_failed"].format(message=message))
 
     def _selected_targets(self):
@@ -542,7 +543,8 @@ class CatalogLibraryPage(QWidget):
             f"{state} · "
             f"{REVIEW_STATE_LABELS[status.reviewed]} · "
             f"{EXERCISE_ENABLED_LABELS[exercise['enabled']]}\n"
-            + "；".join(LIBRARY_REASON_LABELS.get(reason, reason) for reason in status.reasons)
+            + "；".join(LIBRARY_REASON_LABELS.get(
+                reason, f"未知内容状态（标识：{reason}）") for reason in status.reasons)
         )
 
     def _prepare_menu(self):
@@ -554,8 +556,8 @@ class CatalogLibraryPage(QWidget):
         try:
             self._show_version()
             enabled = self.service.get(target.exercise)["enabled"]
-        except (ValueError, OSError) as exc:
-            self.menu.addAction(user_message(str(exc))).setEnabled(False)
+        except OPERATION_ERRORS as exc:
+            self.menu.addAction(user_message(exc)).setEnabled(False)
             return
         groups = (
             (("select", T["select"]),
@@ -695,8 +697,8 @@ class CatalogLibraryPage(QWidget):
                     identifier = self.service.attach_illustration(target, Path(path), "")
                     entry = self.service.user.content(identifier)
                     self.target = LibraryTarget(target.exercise, entry["reference"])
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             self._refresh_with_feedback()
             return
         self._refresh_with_feedback()

@@ -219,4 +219,4 @@ def test_main_helper_dispatch_does_not_import_qt_or_open_locator(tmp_path):
         "assert not any(name.startswith('PySide6') for name in sys.modules)"
     )
     subprocess.run([sys.executable, "-c", script], check=True, capture_output=True)
-    assert "relative paths" in result.read_text(encoding="utf-8")
+    assert "不支持网络路径、设备路径或相对路径" in result.read_text(encoding="utf-8")

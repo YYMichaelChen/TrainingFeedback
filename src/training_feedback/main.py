@@ -23,6 +23,7 @@ def main() -> int:
     from training_feedback.bootstrap import choose_data_root, open_from_locator
     from training_feedback.data.data_root import DataRootError
     from training_feedback.data.locator import Locator, default_locator_path
+    from training_feedback.ui.chinese import install_chinese
     from training_feedback.ui.data_root_dialog import DataRootDialog, suggested_data_root
     from training_feedback.ui.labels import user_message
     from training_feedback.ui.main_window import MainWindow
@@ -31,12 +32,13 @@ def main() -> int:
     from training_feedback.ui.window_icon import apply_application_icon
 
     application = QApplication(sys.argv)
+    install_chinese(application)
     apply_application_icon(application)
     apply_theme(application)
     locator = Locator(default_locator_path())
 
     def report_error(error: DataRootError) -> None:
-        QMessageBox.warning(None, "无法打开数据目录", user_message(str(error)))
+        QMessageBox.warning(None, "无法打开数据目录", user_message(error))
 
     context = open_from_locator(locator, report_error)
     if context is None:

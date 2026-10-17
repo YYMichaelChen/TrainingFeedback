@@ -103,6 +103,17 @@ The first version excludes:
 
 ## 4. Core Product Decisions
 
+Client errors use Chinese explanations at the presentation boundary. Maintain an
+exact mapping for owned exception messages and database-trigger messages, and
+translate dynamic validation locations, numeric/order constraints and system
+errors without changing validation rules or persisted evidence. Preserve quoted
+user text, paths and useful error codes. Known failures must explain what is wrong
+and, where possible, what to edit; do not expose a raw schema validator dump as the
+primary message. Unknown failures use a Chinese explanation and retain technical
+details for reporting, rather than being treated as success. Installation and
+uninstallation failure text follows the same boundary without translating machine
+status tokens or changing cleanup authorization.
+
 ### 4.1 Plans Drive Training
 
 Section 12.3 extends this model with ordered action groups and rounds;
@@ -142,9 +153,11 @@ explanatory note. Action and set orders are positive and unique within
 their parent. Action phases are `preparation`, `main`, and `cooldown`.
 
 Plan revisions move from `draft` to `active` to `superseded`. Editing an active
-revision creates a new draft. A saved draft has a name, at least one action or
-group, and sets in every action; it may reference guidance that has
-not been reviewed. Activation additionally requires enabled exercises whose
+revision creates an upgrade draft. Internal edit documents may preserve blank names,
+empty plans/groups, unfinished nodes and invalid numeric text verbatim. They are
+not executable prescriptions. Conversion to a normalized draft requires a name,
+at least one action/group and complete valid sets. Activation reads the latest
+edit token, compiles and validates that document again and requires enabled exercises whose
 guidance in use has complete text and valid required images under Section 12.4.
 Review state does not gate activation: unreviewed
 guidance is reported before confirmation and recorded in training evidence, but
@@ -159,13 +172,31 @@ The editor places an action list beside the selected action's editable prescript
 and per-set table by default, without a separate read-only summary or an edit-entry
 button. Existing prescriptions use the dialog's single save/cancel footer; switching
 between independent actions retains unfinished input in the unsaved editor.
-Moving between a group and its members first validates and stages related edits in
-the unsaved document so their copies cannot overwrite one another. Equal-set entry
+Each group owns its settings and cached member forms in one unsaved editor, with
+separate settings and per-round-dose tabs. Selecting a member opens its dose form
+directly; switching members or tabs preserves incomplete input without first
+validating group settings. One donkey kick plus one fire hydrant can be prescribed
+as one round by giving each member one set of one repetition; the group round count
+controls repetition of that sequence under the selected side order. This example
+does not supply user doses or rest values automatically. Equal-set entry
 is an optional collapsible batch-fill tool, with explicit confirmation before
 replacing current values and notes. Opening or closing that tool does not change
-the table. Invalid values block saving or switching between a group and its members
-without losing the input. Ordering updates the document once and moves existing
-navigation rows without recreating the selected editor or reloading its guidance.
+the table. Invalid values block saving without losing the input. The plan footer
+also handles pending additions, using explicit complete-add/discard-add labels
+before returning to plan save/cancel; nested forms do not show duplicate footers.
+Ordering updates the document once and moves existing navigation rows without
+recreating the selected editor or reloading its guidance. Drag insertion uses the
+upper/lower half of the hovered sibling and a matching insertion line; it adjusts
+the destination for removal of the source row. Navigation names grow to their full
+wrapped height at the current column width, indentation and font size.
+Action choices are loaded once per plan-editor lifetime, existing forms are reused,
+hidden capsule navigation is built only when needed, and dose-table population
+performs one final size calculation instead of recalculating after every cell.
+Draft and upgrade-save confirmation initially shows only a short explanation and
+the target plan code. Full changes are optional, collapsed by default, and rendered
+on demand in a read-only scroll area within a screen-bounded dialog. Save-draft and
+cancel buttons remain outside that area; long plans cannot stretch the confirmation
+into an unbounded message box or push its footer below the screen.
 Revision diffs cover action additions,
 removals and ordering, phase, rest, notes, set values, units, per-side flags,
 and plan purpose without mutating either revision.
@@ -446,7 +477,15 @@ provider. New imports use `training_feedback.plan` v4 and new evidence uses
 `src/training_feedback/data/plan_contract.py` loads it, domain/application code
 validates it, and the handoff repositories produce portable evidence.
 The UI imports JSON files into drafts and retains original bytes in managed
-imports. Clipboard import is outside current scope. Validation and saving never
+imports. Import first reads one immutable UTF-8 byte snapshot, rejects duplicate
+keys, non-finite numbers and malformed JSON, then collects independently checkable
+schema/domain/identity/source/target issues in Chinese with field paths. Parse
+failures include line/column where available. Invalid files create no draft.
+A valid preview shows the complete prescription and activation warnings; only
+confirmation writes that exact snapshot, with state rechecked transactionally.
+Original-file cleanup is separate from database rollback and reports its failures.
+The UI provides saveable current schema instructions and a synthetic example.
+Clipboard import is outside current scope. Validation and saving never
 imply activation or approval. Section 12.8 owns the detailed wire contract.
 
 ## 5. Exercise Guidance Model
@@ -1336,24 +1375,40 @@ set values, count, unit, per-side choice and applicable rest, including an
 explicit zero for no prescribed rest. The final set has no additional set rest:
 its cell says 不适用 and the boundary rest is entered separately. Bilateral
 actions have no side-switch rest. These structural zeros are not user-entered
-rest facts. Blank applicable fields stay unknown on screen and saving identifies
-the required field in Chinese; numeric conversion errors do not leak to users.
+rest facts. Blank applicable fields stay unknown; invalid numeric text remains
+verbatim in the edit document. Chinese issue lists locate the required field;
+numeric conversion errors do not leak to users.
 Legacy aggregate unknown fields remain unknown. No catalog proposal or UI placeholder is
 silently saved as a user dose. An explicit equal-set fill may replace existing
 values or notes only after confirmation. It copies rest only when both the
 source and target set have applicable set rest; selecting a terminal set does
-not erase other sets' prescribed rest. Incomplete or invalid input remains
-visible, blocks switching or saving as applicable, and identifies the field to
-repair. A valid draft still requires a name, a nonempty action list and complete action
-sets; one save commits the complete prescription transactionally.
+not erase other sets' prescribed rest. Incomplete or invalid input never blocks
+saving an internal draft, including a wholly empty plan or pending add/member node.
+Saving commits the version-1 edit document first and updates a normalized draft
+only when complete validation succeeds, within one transaction. Documents carry
+stable IDs, optimistic edit tokens, creation/update times, new/clone/edit/upgrade
+purpose and source/normalized revision links. Future document formats are refused.
+Lists show one current editing entry, including an unnamed-draft label and saved
+time without inserting placeholder names into user text. Invalid latest input
+blocks activation/export of any older linked snapshot. Preview rechecks document
+tokens, lineage and current active source. Problem lists are copyable and locate
+action/group/member/set fields. Closing offers save, discard or continue; no timer
+autosave is introduced. Draft deletion preserves active/history/original-import
+and exported evidence records, and refuses referenced drafts rather than erasing
+their provenance. Root backup/restore includes edit documents with the database;
+reference impact also includes their current action/group references.
 
 Each root uses a visible code `plan-NNN.AA.DD`. A new plan takes the next free
-three-digit `NNN` on save and begins at `.01.00`. `Clone` copies the complete
-selected revision into an independent plan; on save the user supplies an unused
-three-digit base number and a distinct plan name, beginning at `.01.00`.
+three-digit `NNN` when first converted to a complete prescription and begins at
+`.01.00`. Before conversion the UI shows the draft ID and says the formal code
+is undetermined. `Clone` copies the selected editing content into an independent
+draft; requested name and base-number text may remain incomplete/conflicting in
+the document. A blank base requests automatic allocation. Conversion requires
+an unused three-digit base number and distinct name, beginning at `.01.00`.
 `Upgrade` copies the latest active revision within the same plan; an existing
-upgrade draft reopens for editing, and an unchanged copy cannot be saved as a
-new upgrade. Draft edits keep their identity and do not create an extra version.
+upgrade draft reopens for editing. An unchanged/incomplete upgrade can be saved
+as an edit document, but cannot create a formal unchanged upgrade revision.
+Draft edits keep their identity and do not create an extra version.
 Both operations ask for a change description when opened but allow it to remain
 empty. Copied prescription and user text remain verbatim until explicitly edited.
 
@@ -1362,16 +1417,20 @@ Changes to item/group structure, action identity or content, item/member order,
 phase, first side or side sequence increment `AA` and reset `DD` to `00`.
 Changes confined to dose, rest or other plan text increment `DD`; combined
 changes use the structural rule. A rationale alone does not create an upgrade.
-Before every draft save, show the changed fields and resulting code, recheck
-uniqueness transactionally and recompute after later edits; activation fixes the
+Before every draft save, show expandable changed fields and the proposed code
+or explicitly undetermined formal identity. Recheck uniqueness transactionally
+when converting and recompute after later edits; activation fixes the
 code. Both suffixes have a two-digit minimum and may grow past 99. Base numbers
 are `001`–`999`, are unique within the root and never wrap or silently reuse.
 Internal revision IDs/ordinals remain for associations, but the plan page shows
 the code rather than automatic `v1`/`v2` labels.
 
-Database schema 24 uses the current plan/evidence wire contracts v4.
+Database schema 25 uses the current plan/evidence wire contracts v4.
 The existing `days` wire/storage envelope remains an internal representation;
-there is no new schema or wire shape. New manual drafts use one container.
+the external wire shape is unchanged. Internal editing format 1 is stored in
+`plan_edit_document`, separate from prescription tables and external contracts.
+Incomplete documents have no exchange format and cannot be exported as valid v4
+plans or training evidence. New manual drafts use one container.
 Reading and whole-plan execution concatenate existing containers by their order
 and each item's order. Editing projects this sequence into one unsaved container,
 retaining item/member identities, all prescriptions and original text; saving
@@ -1379,7 +1438,7 @@ shows the resulting structural diff. Cancelling does not modify stored revisions
 Starting from the UI executes the complete selected plan, with a preview and
 freshness token covering every action. New sessions freeze that sequence and the
 original source revision; existing sessions resume their original frozen scope.
-There is no automatic root migration or rewrite of active revisions or history.
+Schema upgrades do not rewrite active revisions or history.
 The plan-import rationale may be empty. A new import receives a root-local base
 number; an upgrade import identifies the target by base code and follows the
 same difference classification. Only v4 is accepted; v2/v3 imports receive
@@ -1387,10 +1446,17 @@ the current-format error. JSON/Markdown evidence and new training snapshots
 show the complete code consistently. Saving a draft never activates it, and
 activation retains the existing eligibility and explicit confirmation gates.
 
-The historical schema 23 roots upgrade in place to schema 24 in one transaction. The upgrade
-removes only the plan-day name columns and historical session name snapshot;
-plans, training history, feedback and review records remain. A failed upgrade
-rolls back the complete change.
+Schema 24 roots add the internal edit table/index in one transaction to reach 25.
+Retained schema 23 roots perform the historical day-name column removal and add
+the edit store in that same transaction, recording 24 and 25. Plans, training
+history, feedback and review records remain. Failure rolls back the complete upgrade.
+
+程序提供的客户端文案（包括 Qt 默认按钮、菜单和对话框）使用中文，不依赖系统语言。
+导航、状态、校验、预览、设置和自有安装／卸载提示均适用。产品／品牌名、必要技术
+专名、动作专名、用户及引用原文、路径／网址／版本／编号／字段路径／哈希／错误码
+保留原样；内部合同键及枚举不变，显示时集中映射。未知枚举用中文兜底并附标识。
+未知异常正文用中文解释，原始技术信息仅记日志或在设置中复制最近错误诊断，不在
+客户端正文或展开详情倾倒英文堆栈。外部网站及系统界面不属于程序自有文案。
 
 ### 12.12 Action Detail And Guidance Reading
 

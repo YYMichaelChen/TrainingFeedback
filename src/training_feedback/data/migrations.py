@@ -1,4 +1,4 @@
-"""Schema24 initialization and the retained-version migration boundary."""
+"""Schema25 initialization and the retained-version migration boundary."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 
-LATEST_SCHEMA_VERSION = 24
+LATEST_SCHEMA_VERSION = 25
 OLDEST_SUPPORTED_SCHEMA_VERSION = 23
-SUPPORTED_SCHEMA_APPLICATIONS = {23: "0.8.1", 24: "0.8.2-0.8.18"}
+SUPPORTED_SCHEMA_APPLICATIONS = {23: "0.8.1", 24: "0.8.2-0.8.18", 25: "0.8.19"}
 
 class FutureSchemaError(sqlite3.DatabaseError):
     """The database belongs to a newer application version."""
@@ -38,24 +38,8 @@ def _current_version(connection: sqlite3.Connection) -> int:
 def _initialize(connection: sqlite3.Connection) -> None:
     schema = Path(__file__).with_name("schema24.sql").read_text(encoding="utf-8")
     try:
-        connection.executescript("BEGIN;\n" + schema)
-        connection.execute(
-            "INSERT INTO schema_migration(version, applied_at) VALUES (?, ?)",
-            (LATEST_SCHEMA_VERSION, datetime.now(UTC).isoformat()),
-        )
-        connection.commit()
-    except Exception:
-        connection.rollback()
-        raise
-
-
-def _upgrade_23_to_24(connection: sqlite3.Connection) -> None:
-    """Remove obsolete training-day labels as one atomic schema change."""
-    try:
-        connection.execute("BEGIN IMMEDIATE")
-        connection.execute("ALTER TABLE group_plan_day DROP COLUMN name")
-        connection.execute("ALTER TABLE training_plan_day DROP COLUMN name")
-        connection.execute("ALTER TABLE training_session DROP COLUMN plan_day_name_snapshot")
+        edits = Path(__file__).with_name("draft_documents.sql").read_text(encoding="utf-8")
+        connection.executescript("BEGIN;\n" + schema + "\n" + edits)
         connection.execute(
             "INSERT INTO schema_migration(version, applied_at) VALUES (?, ?)",
             (LATEST_SCHEMA_VERSION, datetime.now(UTC).isoformat()),
@@ -76,5 +60,26 @@ def apply_migrations(connection: sqlite3.Connection) -> None:
     if current == 0:
         _initialize(connection)
         return
-    if current == 23:
-        _upgrade_23_to_24(connection)
+    if current in (23, 24):
+        script = Path(__file__).with_name("draft_documents.sql").read_text(encoding="utf-8")
+        if current == 23:
+            script = (
+                "ALTER TABLE group_plan_day DROP COLUMN name;\n"
+                "ALTER TABLE training_plan_day DROP COLUMN name;\n"
+                "ALTER TABLE training_session DROP COLUMN plan_day_name_snapshot;\n" + script
+            )
+        try:
+            connection.executescript("BEGIN IMMEDIATE;\n" + script)
+            if current == 23:
+                connection.execute(
+                    "INSERT INTO schema_migration(version, applied_at) VALUES (?, ?)",
+                    (24, datetime.now(UTC).isoformat()),
+                )
+            connection.execute(
+                "INSERT INTO schema_migration(version, applied_at) VALUES (?, ?)",
+                (25, datetime.now(UTC).isoformat()),
+            )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise

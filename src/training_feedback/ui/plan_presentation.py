@@ -106,7 +106,8 @@ def plan_presentation(revision, content_issues=()):
             {
                 "name": issue["name"],
                 "reasons": [
-                    LIBRARY_REASON_LABELS.get(reason, reason) for reason in issue["reasons"]
+                    LIBRARY_REASON_LABELS.get(reason, f"未知内容状态（标识：{reason}）")
+                    for reason in issue["reasons"]
                 ],
             }
             for issue in content_issues

@@ -7,13 +7,18 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.18**
-- Database schema: **24**
+- Application: **0.8.19**
+- Database schema: **25**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **4**
 - GitHub distribution: **v0.8.18**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.18](../releases/0.8.18/design.md)
+- Current development version: [0.8.19](../releases/0.8.19/design.md)
+
+应用 0.8.19 增加内部编辑文档（格式 1）、未完成输入保存、严格 v4 文件预览导入、
+中文问题定位和 Qt 中文资源。schema 23/24 在同一升级事务内到达 25，活动计划和
+冻结训练事实保持原样；catalog 与外部合同未改变。验证和候选身份见
+[0.8.19 开发记录](0.8.19/development.md)。GitHub 分发状态在完成后更新。
 
 The [QHD compact-interface source follow-up](0.8.14/compact-interface-2026-10-08.md)
 adds a 16:9 default window (2560×1440 on 4K) and independent action frames without changing these
@@ -243,6 +248,8 @@ checks. Candidate evidence certifies only its identified source and payload;
 it never transfers to a later version.
 
 ## Historical records
+
+- [0.8.19 development record](0.8.19/development.md)
 
 - [0.8.18 GitHub Release record](0.8.18/github-release-2026-10-10.md)
 - [0.8.18 development record](0.8.18/development.md)

@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..application.new_root import DEFAULT_ROOT_DIRECTORY_NAME, NewRootProposal
-from .labels import localize_dialog_buttons
+from .labels import localize_dialog_buttons, user_message
 from .window_icon import apply_window_icon
 
 
@@ -96,7 +96,7 @@ class DataRootDialog(QDialog):
                 proposal = NewRootProposal(Path(self.path_edit.text()), self.name_edit.text())
             except ValueError as exc:
                 self._selected = None
-                self.preview_label.setText(str(exc))
+                self.preview_label.setText(user_message(exc))
             else:
                 self._selected = proposal.target
                 self.preview_label.setText(f"将创建：{proposal.preview}")

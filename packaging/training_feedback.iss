@@ -99,12 +99,12 @@ begin
   if not Exec(ExpandConstant('{tmp}\helper\{#MyAppExeName}'), Parameters,
     ExpandConstant('{tmp}\helper'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then
   begin
-    Result := 'Cannot start the installation safety helper. No installation is permitted.';
+    Result := '无法启动安装安全检查程序，安装已停止。';
     Exit;
   end;
   if not LoadStringsFromFile(ResultFile, MessageLines) or (GetArrayLength(MessageLines) = 0) then
   begin
-    Result := 'The installation safety helper did not return a result.';
+    Result := '安装安全检查程序未返回结果，安装已停止。';
     Exit;
   end;
   if ResultCode <> 0 then
@@ -136,7 +136,7 @@ begin
   begin
     SetArrayLength(Lines, 2);
     Lines[0] := 'REFUSED';
-    Lines[1] := 'The cleanup helper could not complete. Retain data.';
+    Lines[1] := '数据清理程序未能完成操作，本次保留数据。';
   end;
 end;
 
@@ -151,13 +151,16 @@ end;
 
 function CleanupReasonText(Reason: String): String;
 begin
-  if Reason = 'Selected data does not belong to the current user.' then
+  if (Reason = 'Selected data does not belong to the current user.') or
+    (Reason = '所选数据不属于当前系统用户，无法清理。') then
     Result := '数据目录或配置文件的 Windows 所有者与当前账号不一致（例如属于管理员组）。' +
       '' + #13#10 + '为避免删除归属不明确的数据，本次只能卸载程序并保留数据。' +
       '' + #13#10 + '本次保留这些数据，不会取得所有权或修改目录权限。'
-  else if Reason = 'A selected file is in use or access is denied.' then
+  else if (Reason = 'A selected file is in use or access is denied.') or
+    (Reason = '所选文件正在使用中，或没有访问权限。') then
     Result := '数据文件正在使用，或当前账号没有所需权限。请关闭程序后重试；本次可以仅卸载程序并保留数据。'
-  else if Pos('requires the Windows safety backend', Reason) > 0 then
+  else if (Pos('requires the Windows safety backend', Reason) > 0) or
+    (Reason = '当前环境不支持安全清理数据，请保留数据目录。') then
     Result := '当前环境不支持安全删除数据，本次可以仅卸载程序并保留数据。'
   else
     Result := '安全检查未通过，本次保留数据。检查详情：' + #13#10 + Reason;
@@ -364,25 +367,25 @@ begin
   if (PreviousDirectory <> '') and not PathSame(PreviousDirectory, WizardDirValue) then
   begin
     if not WizardSilent then
-      if MsgBox('Move the program from:' + #13#10 + PreviousDirectory + #13#10 +
-        'to:' + #13#10 + WizardDirValue + #13#10#13#10 +
-        'The previous program and its shortcuts will be uninstalled first. Your data is retained.' + #13#10 +
-        'If installation fails, reinstall the program. Continue?',
+      if MsgBox('将程序从以下目录迁移：' + #13#10 + PreviousDirectory + #13#10 +
+        '迁移到：' + #13#10 + WizardDirValue + #13#10#13#10 +
+        '将先卸载旧程序及其快捷方式，训练数据会保留。' + #13#10 +
+        '如安装失败，请重新安装程序。是否继续？',
         mbConfirmation, MB_YESNO) <> IDYES then
       begin
-        Result := 'Program directory change cancelled. Your data is retained.';
+        Result := '已取消程序目录变更，训练数据已保留。';
         Exit;
       end;
     if not Exec(PreviousUninstaller,
       '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /KEEPDATA', PreviousDirectory,
       SW_HIDE, ewWaitUntilTerminated, ResultCode) or (ResultCode <> 0) then
     begin
-      Result := 'Previous program removal did not complete. Installation stopped; data is retained.';
+      Result := '旧程序未能完成卸载，安装已停止，训练数据已保留。';
       Exit;
     end;
     if FileExists(AddBackslash(PreviousDirectory) + '{#MyAppExeName}') then
     begin
-      Result := 'The previous executable remains. Installation stopped; data is retained.';
+      Result := '旧程序的可执行文件仍存在，安装已停止，训练数据已保留。';
       Exit;
     end;
     PreviousDirectory := '';
@@ -404,6 +407,6 @@ begin
     ErrorText := RunHelper('register', ExpandConstant('{app}'),
       ' --uninstaller ' + AddQuotes(ExpandConstant('{uninstallexe}')));
     if ErrorText <> '' then
-      RaiseException('Installation is incomplete. ' + ErrorText);
+      RaiseException('安装未完成。' + ErrorText);
   end;
 end;

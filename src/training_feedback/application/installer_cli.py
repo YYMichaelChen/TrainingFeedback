@@ -21,6 +21,7 @@ from ..data.installation import (
 )
 from ..data.locator import default_locator_path
 from ..data.windows_files import BoundTree
+from ..error_messages import user_message
 
 
 def system_policy() -> InstallPolicy:
@@ -103,7 +104,7 @@ def main(arguments: list[str]) -> int:
                 remove_obsolete(directory, Path(args.payload), policy)
         message, code = "OK", 0
     except (InstallPathError, OSError, ValueError, TypeError) as exc:
-        message, code = str(exc), 1
+        message, code = user_message(exc), 1
     # Plain UTF-8 text is deliberately readable by Inno without a JSON interpreter.
     with result_path.open("x", encoding="utf-8", newline="\n") as stream:
         stream.write(message + "\n")

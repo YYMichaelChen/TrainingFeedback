@@ -1,6 +1,7 @@
 """V3 normalized day/item/member/set persistence; application owns transactions."""
 
 import json
+from uuid import uuid4
 
 from .conversion_repository import ConversionRepository
 
@@ -8,6 +9,85 @@ from .conversion_repository import ConversionRepository
 class GroupPlanRepository:
     def __init__(self, connection):
         self.connection = connection
+
+    def edit_documents(self):
+        return [self.edit_document(row[0]) for row in self.connection.execute(
+            "SELECT id FROM plan_edit_document ORDER BY created_at,id"
+        )]
+
+    def edit_document(self, identifier):
+        row = self.connection.execute(
+            "SELECT * FROM plan_edit_document WHERE id=?", (identifier,),
+        ).fetchone()
+        if row is None:
+            raise ValueError("没有找到草稿编辑文档。")
+        document = dict(row)
+        if document["format_version"] != 1:
+            raise ValueError("草稿格式不受支持，请使用支持此格式的程序版本。")
+        document["payload"] = json.loads(document.pop("payload_json"))
+        return document
+
+    def document_for_revision(self, revision_id):
+        row = self.connection.execute(
+            "SELECT id FROM plan_edit_document WHERE revision_id=?", (revision_id,),
+        ).fetchone()
+        return self.edit_document(row[0]) if row else None
+
+    def put_document(self, payload, now, *, identifier=None, expected_token=None,
+                     purpose="new", revision_id=None, source_revision_id=None,
+                     requested_base_number=None):
+        raw = json.dumps(payload, ensure_ascii=False, allow_nan=False)
+        if identifier is None:
+            identifier = "draft." + uuid4().hex
+            self.connection.execute(
+                "INSERT INTO plan_edit_document(id,format_version,purpose,revision_id,"
+                "source_revision_id,requested_base_number,payload_json,created_at,updated_at) "
+                "VALUES (?,1,?,?,?,?,?,?,?)",
+                (identifier, purpose, revision_id, source_revision_id, requested_base_number,
+                 raw, now, now),
+            )
+        else:
+            cursor = self.connection.execute(
+                "UPDATE plan_edit_document SET payload_json=?,updated_at=?,requested_base_number=?,"
+                "edit_token=edit_token+1 WHERE id=? AND edit_token=?",
+                (raw, now, requested_base_number, identifier, expected_token),
+            )
+            if cursor.rowcount != 1:
+                raise ValueError("草稿已被修改，请重新打开后继续；本次输入尚未保存。")
+        return identifier
+
+    def link_document(self, identifier, revision_id):
+        self.connection.execute(
+            "UPDATE plan_edit_document SET revision_id=? WHERE id=?", (revision_id, identifier),
+        )
+
+    def delete_document(self, identifier, expected_token):
+        cursor = self.connection.execute(
+            "DELETE FROM plan_edit_document WHERE id=? AND edit_token=?",
+            (identifier, expected_token),
+        )
+        if cursor.rowcount != 1:
+            raise ValueError("草稿已被修改，请重新打开后继续。")
+
+    def delete_draft_revision(self, identifier):
+        current = self.get(identifier)
+        if current["status"] != "draft":
+            raise ValueError("只能删除草稿；已启用版本和历史版本须保留。")
+        if current["import"] or current["conversion_registrations"] or self.connection.execute(
+            "SELECT 1 FROM group_plan_export WHERE revision_id=?", (identifier,),
+        ).fetchone():
+            raise ValueError("此草稿关联导入原件或已导出证据，须保留来源记录，不能删除。")
+        self.connection.execute(
+            "DELETE FROM group_plan_set WHERE item_id IN "
+            "(SELECT id FROM group_plan_item WHERE revision_id=?)", (identifier,))
+        self.connection.execute("DELETE FROM group_plan_item WHERE revision_id=? AND parent_id "
+                                "IS NOT NULL", (identifier,))
+        self.connection.execute("DELETE FROM group_plan_item WHERE revision_id=?", (identifier,))
+        self.connection.execute("DELETE FROM group_plan_day WHERE revision_id=?", (identifier,))
+        self.connection.execute("DELETE FROM group_plan_revision WHERE id=?", (identifier,))
+        self.connection.execute("DELETE FROM group_plan WHERE id=? AND active_revision_id IS NULL "
+                                "AND NOT EXISTS(SELECT 1 FROM group_plan_revision WHERE plan_id=?)",
+                                (current["plan_id"], current["plan_id"]))
 
     def list_plans(self):
         return [

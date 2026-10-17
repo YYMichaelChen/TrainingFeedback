@@ -1,19 +1,35 @@
 """Plan-dialog pane arrangement; no prescriptions or persistence rules live here."""
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QCursor, QDrag
+from PySide6.QtCore import QEvent, QSize, Qt, Signal
+from PySide6.QtGui import QColor, QCursor, QDrag, QPainter, QPen
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFrame,
     QHBoxLayout,
     QPushButton,
     QScrollArea,
+    QStyleOptionViewItem,
     QTreeWidget,
     QVBoxLayout,
     QWidget,
 )
 
+from .compact_widgets import FramedItemDelegate
 from .sizing import bind_units, scale_manager, u
+
+
+class _ActionNameDelegate(FramedItemDelegate):
+    def sizeHint(self, option, index):
+        option = QStyleOptionViewItem(option)
+        self.initStyleOption(option, index)
+        depth = int(self.view.rootIsDecorated())
+        parent = index.parent()
+        while parent.isValid():
+            depth += 1
+            parent = parent.parent()
+        width = self.view.columnWidth(index.column()) - depth * self.view.indentation()
+        height = self.text_height(option, width - 2 * (u(.2) + u(.75)))
+        return QSize(max(1, width), max(u(3), height + 2 * (u(.2) + u(.5))))
 
 
 class PlanActionTree(QTreeWidget):
@@ -25,8 +41,25 @@ class PlanActionTree(QTreeWidget):
         super().__init__()
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
-        self.setDropIndicatorShown(True)
+        self.setDropIndicatorShown(False)
+        self.setItemDelegate(_ActionNameDelegate(self))
+        self.setUniformRowHeights(False)
+        self.setMouseTracking(True)
+        self.header().sectionResized.connect(self.doItemsLayout)
+        manager = scale_manager()
+        if manager is not None:
+            manager.changed.connect(self.doItemsLayout)
         self._drag_source = None
+        self._drop_line = None
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.doItemsLayout()
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.FontChange:
+            self.doItemsLayout()
 
     def startDrag(self, supported_actions):
         source = self.currentItem()
@@ -44,22 +77,79 @@ class PlanActionTree(QTreeWidget):
             drag.exec(Qt.DropAction.MoveAction)
         finally:
             self._drag_source = None
+            self._drop_line = None
             self.stopAutoScroll()
             self.setState(QAbstractItemView.State.NoState)
             self.viewport().update()
 
-    def dropEvent(self, event):
+    def _drop_location(self, point):
         source = self._drag_source
-        target = self.itemAt(event.position().toPoint())
-        if (event.source() is not self or source is None or target is None
-                or source is target or source.parent() is not target.parent()):
+        if source is None:
+            return None
+        parent = source.parent()
+        siblings = parent or self.invisibleRootItem()
+        target = self.itemAt(point)
+        if target is None:
+            target = siblings.child(siblings.childCount() - 1)
+            if target is None or point.y() < self.visualItemRect(target).bottom():
+                return None
+        # Hovering a group's children still places a top-level action after that group.
+        while target is not None and target.parent() is not parent:
+            target = target.parent()
+        if target is None:
+            return None
+        rect = self.visualItemRect(target)
+        below = point.y() > rect.center().y()
+        slot = siblings.indexOfChild(target) + int(below)
+        index = siblings.indexOfChild(source)
+        destination = slot - int(index < slot)
+        if below:
+            last = target
+            while last.isExpanded() and last.childCount():
+                last = last.child(last.childCount() - 1)
+            rect.setBottom(self.visualItemRect(last).bottom())
+        y = rect.bottom() if below else rect.top()
+        before = source.data(0, Qt.ItemDataRole.UserRole)
+        d, i, m = before
+        after = (d, destination, None) if m is None else (d, i, destination)
+        return before, after, (rect.left(), y, self.viewport().width() - 1)
+
+    def dragMoveEvent(self, event):
+        super().dragMoveEvent(event)
+        location = self._drop_location(event.position().toPoint())
+        self._drop_line = location[2] if event.source() is self and location else None
+        if self._drop_line is None:
+            event.ignore()
+        else:
+            event.setDropAction(Qt.DropAction.MoveAction)
+            event.accept()
+        self.viewport().update()
+
+    def dragLeaveEvent(self, event):
+        self._drop_line = None
+        super().dragLeaveEvent(event)
+        self.viewport().update()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self._drop_line is not None:
+            left, y, right = self._drop_line
+            painter = QPainter(self.viewport())
+            painter.setPen(QPen(QColor("#0f8175"), max(2, u(.15))))
+            painter.drawLine(left, y, right, y)
+            painter.end()
+
+    def dropEvent(self, event):
+        location = self._drop_location(event.position().toPoint())
+        self._drop_line = None
+        self.viewport().update()
+        if event.source() is not self or location is None:
             event.ignore()
             return
-        before = source.data(0, Qt.ItemDataRole.UserRole)
-        after = target.data(0, Qt.ItemDataRole.UserRole)
         event.setDropAction(Qt.DropAction.MoveAction)
         event.accept()
-        self.reorder_requested.emit(before, after)
+        if location[0] != location[1]:
+            self.reorder_requested.emit(location[0], location[1])
 
 
 class PlanPanes(QWidget):
@@ -71,6 +161,8 @@ class PlanPanes(QWidget):
         self.mode = None
         self.drawer_open = False
         self.guidance_visible = None
+        self._capsules_dirty = True
+        self._capsule_buttons = []
         self.setMinimumSize(0, 0)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -109,8 +201,20 @@ class PlanPanes(QWidget):
         self.reflow()
 
     def rebuild_capsules(self):
+        self._capsules_dirty = True
+        if self.mode == "narrow":
+            self._build_capsules()
+
+    def update_capsule_selection(self):
+        for item, button in self._capsule_buttons:
+            button.setChecked(item is self.tree.currentItem())
+            button.setEnabled(self.tree.isEnabled())
+
+    def _build_capsules(self):
         if self.tree is None:
             return
+        self._capsules_dirty = False
+        self._capsule_buttons = []
         while self.capsule_row.count():
             item = self.capsule_row.takeAt(0)
             if item.widget() is not None:
@@ -126,6 +230,7 @@ class PlanPanes(QWidget):
                 button.clicked.connect(lambda checked=False, selected=item:
                                        self.tree.setCurrentItem(selected))
                 self.capsule_row.addWidget(button)
+                self._capsule_buttons.append((item, button))
         self.capsule_row.addStretch()
         height = max((self.capsule_row.itemAt(index).widget().sizeHint().height()
                       for index in range(self.capsule_row.count())
@@ -146,6 +251,8 @@ class PlanPanes(QWidget):
                 self.right.setParent(self)
         self.left.setVisible(mode != "narrow" and self.tree is not None)
         self.capsules.setVisible(mode == "narrow" and self.tree is not None)
+        if mode == "narrow" and self._capsules_dirty:
+            self._build_capsules()
         self.guidance_button.setVisible(mode != "wide")
         self.close_drawer.setVisible(mode != "wide")
         if mode != "narrow" and self.tree is not None:

@@ -1,11 +1,13 @@
 """界面文案：稳定内部枚举/状态码到中文标签的映射，以及通用对话框工具。"""
 
-import re
-
 from PySide6.QtWidgets import QComboBox, QDialogButtonBox, QMessageBox
 
 from ..domain.enums import AbortReason, DoseUnit, ExerciseResult, FeedbackValue, SessionStatus
 from ..domain.plans import PlanPhase
+from ..error_messages import ERROR_TRANSLATIONS as ERROR_TRANSLATIONS
+from ..error_messages import LIBRARY_REASON_LABELS as LIBRARY_REASON_LABELS
+from ..error_messages import OPERATION_ERRORS as OPERATION_ERRORS
+from ..error_messages import user_message as user_message
 
 RESULT_LABELS = {
     ExerciseResult.EXCEEDED: "超额完成",
@@ -66,8 +68,8 @@ GROUP_PLAN_TEXT = {
     "name": "计划名称", "purpose": "训练目的", "rationale": "调整说明",
     "change_description": "变更说明", "base_number": "三位计划编号",
     "clone_name_prompt": "输入独立计划名称", "clone_base_prompt": "输入未使用的三位编号（001–999）",
-    "upgrade_preview": "以下差异将保存为 {code}。确认后保存草稿。",
-    "draft_preview": "以下更改将以 {code} 保存为草稿。确认后保存。",
+    "upgrade_preview": "将以 {code} 保存升级草稿。是否保存？",
+    "draft_preview": "将以 {code} 保存草稿。是否保存？",
     "select_detail": "在左侧选择动作查看指导，或选择动作组查看训练安排。",
     "search_exercises": "搜索动作名称或体位",
     "choose_multiple_exercises": "至少选择一个动作；所选动作会以未完成处方加入计划。",
@@ -258,13 +260,6 @@ def session_history_text(session):
             area["value"], EXECUTION_TEXT["unknown_feedback"]) for area in feedback["areas"])
         lines.append(EXECUTION_TEXT["overall_note"] + "：" + (feedback["overall_note"] or ""))
     return "\n".join(lines)
-LIBRARY_REASON_LABELS = {
-    "disabled": "未启用；仅阻止新开始，历史与暂停训练仍保留",
-    "incomplete_text": "指导文字不完整", "invalid_images": "缺少有效必需示意图",
-    "removed": "已移出可用目录", "missing": "图片未提供", "unavailable": "路径、文件或哈希不可用",
-    "hash_mismatch": "图片哈希不一致", "undecodable": "图片无法解码",
-    "placeholder": "占位图片不能作为动作示意图",
-}
 LIBRARY_TEXT = {
     "removal": "移除与恢复审核",
     "parent_missing": "（保留的父动作身份，当前目录缺项）",
@@ -337,7 +332,7 @@ FEEDBACK_VALUE_LABELS = {
 
 
 def label(mapping: dict, value) -> str:
-    return mapping.get(value, mapping.get(str(value), str(value)))
+    return mapping.get(value, mapping.get(str(value), f"未知选项（标识：{value}）"))
 
 
 def planned_set_text(item: dict, *, snapshot: bool = False) -> str:
@@ -395,385 +390,6 @@ def localize_dialog_buttons(buttons: QDialogButtonBox) -> None:
             button.setText(text)
 
 
-ERROR_TRANSLATIONS = {
-    "An unfinished historical upgrade is unsupported. Create a new empty "
-    "data root; the original root and files are preserved.":
-        "此数据目录有未完成的历史升级，当前版本不再续做。请新建空数据目录；原目录和文件已保留。",
-    "An unfinished historical reset is unsupported. Create a new empty "
-    "data root; the original root and files are preserved.":
-        "此数据目录有未完成的历史重置，当前版本不再续做。请新建空数据目录；原目录和文件已保留。",
-    "This root has interrupted uninstall cleanup. Reinstall the current program "
-    "and retry cleanup; the remaining files are preserved.":
-        "此目录有未完成的卸载数据清理。请重新安装当前程序后重试清理；剩余文件已保留。",
-    "Only plan format version 4 is accepted.":
-        "此计划文件不是当前支持的格式。请使用当前版本导出的计划文件（格式版本 4）。",
-    "The displayed plan revision changed.": "当前草稿已被修改，请重新打开后核对。",
-    "A plan base number must be between 001 and 999.": "计划编号必须是 001 至 999 的整数。",
-    "That plan base number is already in use.": "这个计划编号已经使用，请输入其他编号。",
-    "A plan with this name already exists.": "这个计划名称已经使用，请输入其他名称。",
-    "An unchanged copy cannot be saved as a new upgrade.": (
-        "计划内容没有变化，不能另存为新升级版本。"
-    ),
-    "The active plan changed; reopen the upgrade draft.": (
-        "当前启用计划已改变，请重新打开升级草稿。"
-    ),
-    "Only the latest active revision can be upgraded.": "只能升级当前最新的启用计划。",
-    "An upgrade draft already exists; reopen it to continue.": (
-        "已有该计划的升级草稿，请打开草稿继续编辑。"
-    ),
-    "The activation preview changed. Review it again.":
-        "预览后计划或审核状态已变化，请重新查看并确认。",
-    "Plan item identities must be unique throughout the revision.": "计划内的条目身份不能重复。",
-    "The final set must use boundary rest, not set rest.":
-        "最后一组的组间休息应为零；请填写相应换侧、成员或退出休息。",
-    "Unilateral work requires an explicit first side.": "每侧训练需明确先做左侧还是右侧。",
-    "Bilateral work has no side or side-switch rest.": "非每侧训练不能设置起始侧或换侧休息。",
-    "Mixed or unknown positions require a transition instruction.":
-        "体位不同或未知时，请补充转换说明后启用。",
-    "External source does not belong to this data root.":
-        "外部答复引用的会话或导出不属于当前数据根。",
-    "A reused item identity cannot refer to another exercise.":
-        "已有条目身份不能改指另一个动作；请新建条目。",
-    "Select an exercise content revision.": "请选择动作。",
-    "Duplicate JSON keys are not allowed.": "计划 JSON 含重复字段，无法确定其含义。",
-    "Group name cannot be empty.": "动作组名称不能为空。",
-    "Set the group to one round explicitly before dissolving it.":
-        "请先明确把动作组改为一轮，再拆散为独立动作。",
-    "Removing this member requires explicit group dissolution.": "移除此成员需要明确拆散动作组。",
-    "Keep two members or explicitly dissolve the source group first.":
-        "来源动作组需保留至少两个成员，或先明确拆散。",
-    "Keep two members or remove/dissolve the group in the plan tree.":
-        "请保留至少两个成员，或在计划树中移除、拆散动作组。",
-    "Explicit confirmation is required.": "请明确确认本次操作。",
-    "Select at least one content revision.": "请选择至少一个动作。",
-    "The displayed content changed.": "所显示的内容已变化，请刷新后重新核对。",
-    "The displayed review changed.": "审核记录已变化，请刷新后重新核对。",
-    "The selected content changed; refresh the target.": "使用内容已变化，请核对后重试。",
-    "Select one content revision per exercise.": "同一动作只能选定一个使用内容。",
-    "Duplicate review targets are not allowed.": "请勿重复选择同一审核内容。",
-    "Exercise is not enabled.": "该动作尚未启用。",
-    "Unknown exercise identity.": "找不到指定的动作身份。",
-    "Image is unavailable or invalid.": "图片不可用或校验失败。",
-    "Image bytes cannot be decoded.": "所选文件无法解码为有效图片。",
-    "A real external reviewer type is required.": "请选择实际外部审核者类型。",
-    "Review source and note must be text.": "请填写真实审核来源，备注需为文本。",
-    "Repair unavailable illustrations before review.": "记录审核前请修复不可用的示意图。",
-    "Withdraw the prior review before recording another.": "请先撤销已有审核，再记录新的审核。",
-    "There is no current review to withdraw.": "没有可撤销的当前审核。",
-    "Names and aliases must be distinct.": "名称与别名不能重复。",
-    "A name or alias belongs to another exercise.": "名称或别名已属于另一个动作。",
-    "Unknown exercise family.": "找不到指定动作族。",
-    "Exercise parent must be in the same family.": "父动作必须存在且属于同一动作族。",
-    "Exercise family parent links cannot form a cycle.": "父动作关系不能形成循环。",
-    "An exercise cannot be its own parent.": "动作不能以自己为父动作。",
-    "Standalone exercises have no family or parent.": "独立动作不能指定动作族或父动作。",
-    "A base exercise cannot have a parent.": "基础动作不能指定父动作。",
-    "An open or paused session already exists.": "已经存在进行中或已暂停的训练。",
-    "An active plan revision is required to start training.": "开始训练前必须先启用计划版本。",
-    "A plan day must be selected before starting training.": "开始训练前必须选择计划。",
-    "The selected plan day was not found.": "没有找到所选计划的动作列表。",
-    "The session changed before it could be resumed.": "训练状态已发生变化，请重新打开训练。",
-    "The session changed before it could be updated.": "训练状态已发生变化，请刷新后重试。",
-    "Guidance revision has already been reviewed.": (
-        "该指导已经审核过了；要重新审核请先撤销此次审核。"
-    ),
-    "Guidance recorded in training history cannot return to review.": (
-        "该指导已经被训练记录引用，不能撤销审核；需要修改内容请编辑后另存。"
-    ),
-    "Complete review evidence is required.": "审核证据不完整，无法记录这次审核。",
-    "Complete guidance is required before recording a review.": (
-        "请先补全动作指导内容，再记录这次审核。"
-    ),
-    "Guidance content must be complete before it can be used.": (
-        "指导内容不完整，不能投入使用。"
-    ),
-    "No open or paused session was found.": "没有找到进行中或已暂停的训练。",
-    "Only an open or paused session can record results.": "只有进行中或已暂停的训练才能记录结果。",
-    "A recorded action result cannot be changed.": "已记录的动作结果不能在普通训练流程中修改。",
-    "Only an open or paused session can finish.": "只有进行中或已暂停的训练才能完成。",
-    "Only an open or paused session can retract results.": "训练已结束，不能撤回动作结果。",
-    "Select a recorded action to retract.": "请选择一个已记录结果的动作。",
-    "Every exercise must have a result before finishing.": "完成训练前必须为每个动作记录结果。",
-    "An abort reason is required.": "中止训练必须选择原因。",
-    "Actual dose is required for exceeded or partial results.": (
-        "超额或部分完成时必须填写实际剂量。"
-    ),
-    "This session is not eligible for next-day feedback.": "这次训练目前不符合填写次日反馈的条件。",
-    "Next-day feedback has already been submitted.": "这次训练的次日反馈已经提交。",
-    "Feedback must be submitted before its note is corrected.": "提交反馈后才能修正备注。",
-    "Only supported note fields can be corrected.": "只能修正允许的备注字段。",
-    "Session was not found.": "没有找到这次训练。",
-    "Session action was not found.": "没有找到这项训练动作。",
-    "Guidance JSON must be an object.": "动作指导 JSON 必须是对象。",
-    "Guidance must be an object.": "动作指导内容格式无效。",
-    "Canonical name cannot be empty.": "标准名称不能为空。",
-    "Alias cannot be empty.": "别名不能为空。",
-    "Body area cannot be empty.": "身体部位不能为空。",
-    "Duplicate alias values are not allowed.": "别名不能重复。",
-    "Duplicate body area values are not allowed.": "身体部位不能重复。",
-    "The canonical name and aliases must be distinct.": "标准名称与别名不能相同。",
-    "The canonical name or alias is already in use.": "该标准名称或别名已被其他动作使用。",
-    "Exercise was not found.": "没有找到指定的训练动作。",
-    "Select at least one guidance revision to review.": "请至少选择一个要复核的动作。",
-    "Select at least one guidance revision to return to review.": (
-        "请至少选择一个要撤销审核的动作。"
-    ),
-    "Explicit user confirmation is required.": "必须明确确认。",
-    "Unknown bundled exercise selection.": "所选内置动作不存在，请重新打开预览。",
-    "Each bundled exercise requires a different local exercise.": (
-        "每项内置指导必须对应不同的本地动作，请检查目标选择。"
-    ),
-    "Selected exercise was not found.": "没有找到所选本地动作，请重新打开预览。",
-    "Selected exercise is linked to different bundled content.": (
-        "所选动作已关联其他内置指导，请选择对应的本地动作。"
-    ),
-    "Exercise is already linked to different bundled content.": (
-        "该动作已关联其他内置指导，无法重复关联。"
-    ),
-    "Bundled exercise is already linked to another exercise.": (
-        "这项内置指导已关联其他本地动作，请使用已关联的目标。"
-    ),
-    "Bundled guidance is incomplete.": "内置指导内容不完整，无法接收此草稿。",
-    "Step order must be a positive integer.": "动作步骤顺序必须是正整数。",
-    "Guidance revision was not found.": "没有找到指定的动作指导。",
-    "No reviewable guidance revision is selected.": "请选择一个可复核的动作。",
-    "Reviewer type and source are required.": "审核人类型和来源不能为空。",
-    "Explicit user approval is required.": "必须明确批准。",
-    "Review time is required.": "审核时间不能为空。",
-    "Review occurrence must be a valid date or timezone-aware datetime.": (
-        "请填写有效的审核发生日期，或包含时区的日期时间；只知道日期时无需补填时刻。"
-    ),
-    "The displayed plan revision has changed. Reopen its preview.": (
-        "所显示的计划版本已发生变化，请重新打开预览、核对内容后再启用。"
-    ),
-    "Database is not open.": "数据库尚未打开。",
-    "Training session was not found.": "没有找到指定的训练会话。",
-    "Unsupported external plan schema.": "不支持此外部计划格式。",
-    "Unsupported external plan schema version.": "不支持此外部计划格式版本。",
-    "External plan content is missing.": "外部计划缺少计划内容。",
-    "External plan must contain at least one day.": "外部计划必须包含动作列表。",
-    "External rationale must contain text.": "外部调整理由不能为空。",
-    "The selected path is not an empty directory.": "所选路径不是空目录，无法在此创建数据目录。",
-    "The selected directory is not empty.": "所选目录不是空目录，无法在此创建数据目录。",
-    "This is already a data root. Open it explicitly.": (
-        "该目录已是有效数据目录，请选择「打开已有数据目录」并直接选中它。"
-    ),
-    "Choose one valid Windows directory name.": "请输入单个有效的 Windows 目录名称。",
-    "Choose an existing parent directory.": "请选择已存在的父目录。",
-    "The directory is not a TrainingFeedback data root.": "所选目录不是训练反馈数据目录。",
-    "The data-root metadata is incomplete or invalid.": "所选目录的数据信息不完整或已损坏。",
-    "The data-root metadata cannot be read.": "所选目录的标记或配置文件无法读取，可能已损坏。",
-    "The selected directory is empty. Create a new data root instead.": (
-        "所选目录是空目录。请改选「创建新的数据目录」，在此新建数据目录。"
-    ),
-    "Cannot create the data root.": "无法在所选位置创建数据目录，请检查磁盘权限。",
-    "The data root requires a newer version of TrainingFeedback.": (
-        "该数据目录由更新版本的应用创建，请升级应用后再打开。"
-    ),
-    "The database requires a newer version of TrainingFeedback.": (
-        "该数据库由更新版本的应用创建，请升级应用后再打开。"
-    ),
-    "This development data version is outside the support window. Reinstall the "
-    "current application version and create a new data directory; the original data "
-    "directory is preserved and will not be deleted or reset.": (
-        "此开发数据版本已超出支持范围，请重新安装当前版本并新建数据目录。"
-        "原数据目录已保留，不会自动删除或重置。"
-    ),
-    "The data-root configuration belongs to another application.": "所选目录的配置属于其他应用。",
-    "The selected path is not a directory.": "所选路径不是目录。",
-    "The data root does not contain its database.": "所选数据目录缺少数据库文件。",
-    "The TrainingFeedback database is invalid.": "数据目录中的数据库无效或已损坏。",
-    "The data root is in use; close it before upgrading.":
-        "数据目录正在使用中，请先关闭使用它的窗口，再重试升级。",
-    "An interrupted data upgrade must be recovered before opening this root.":
-        "此数据目录的升级曾中断，需要完成内部恢复后才能打开。",
-    "Cannot record the data-root location.": "无法记录数据目录位置，请检查磁盘权限。",
-    "Pause the active training session before switching data roots.": (
-        "请先暂停当前训练，再切换数据目录。"
-    ),
-    "The source data root does not exist.": "源数据目录不存在。",
-    "A backup destination cannot be inside the source data root.": "备份目录不能位于数据目录内部。",
-    "The backup destination must be empty.": "备份目录必须是空目录。",
-    "Cannot create the backup destination.": "无法创建备份目录，请检查磁盘权限。",
-    "The data-root backup could not be completed.": "备份未能完成，已清理不完整副本。",
-}
-
-
-ERROR_TRANSLATIONS.update({
-    "An abort reason is required.": "请明确选择一个中止原因。",
-    "An unfinished session already exists. Resume it first.": "已有未结束训练，请先恢复并处理。",
-    "Select a day from the displayed plan revision.": "请选择当前计划版本。",
-    "The start preview changed. Review it again.": "开始训练的依据已变化，请重新预览。",
-    "The session changed. Reload the displayed session.": "训练记录已变化，请重新载入已保存状态。",
-    "Only an open session accepts this action.": "只有进行中的训练可以执行此操作。",
-    "Record only the displayed occurrence.": "请在当前显示的训练位置记录结果。",
-    "This occurrence already has a saved result.": "当前训练位置已保存结果，请先明确撤回。",
-    "The current occurrence is not in an action group.": "当前是独立动作，不能按整轮记录。",
-    "This round has no unrecorded occurrences.": "当前轮次没有尚未记录的成员。",
-    "The round preview changed. Review it again.": "本轮完成范围已变化，请重新预览。",
-    "Every occurrence needs a saved result before finishing.":
-        "请为每个训练位置保存结果后再完成训练。",
-    "Actual dose must be finite and non-negative.": "实际剂量必须是有限的非负数字。",
-    "Actual dose cannot be unknown; free work needs an explanation.":
-        "请填写实际剂量；自由剂量不填数字时，必须填写具体说明。",
-    "Actual side must match this occurrence; record the other side there.":
-        "实际剂量只能属于当前侧；另一侧请在对应训练位置记录。",
-    "This batch was already retracted or changed.": "此批次已撤回或变化，请重新载入。",
-    "Retract this result using its complete batch.": "此结果属于整轮批次，请撤回该完整批次。",
-    "This occurrence has no saved result.": "当前训练位置尚未保存结果。",
-    "The note changed. Reload the displayed session.": "备注已变化，请重新载入后再修正。",
-    "Only terminal session notes can be corrected.": "只有已结束训练的备注可以审计式修正。",
-    "Feedback has not been submitted.": "次日反馈尚未提交。",
-})
-
-
-LIFECYCLE_TEXT = {
-    "no_decision": "尚无已应用决定", "enabled": "当前已启用", "disabled": "当前未启用",
-    "batch_targets": "本批全部动作",
-    "prior_impact": "此前保存的影响依据",
-    "remove": "移除", "restore": "恢复", "new_request": "新建移除／恢复申请",
-    "target": "动作", "disposition": "可用状态",
-    "plan_revision": "计划版本",
-    "catalog_version": "目录版本",
-    "reason": "申请原因（原文）", "note": "本次决定备注（原文）",
-    "preview": "预览全部影响", "submit": "提交申请", "close": "关闭", "error": "操作未完成",
-    "confirm_request": "我已查看全部动作与引用影响，确认提交此申请",
-    "confirm_decision": "我已查看当前范围和影响，确认执行所选决定",
-    "consequence": "移除后禁止新用，保留计划、图片与历史；未结束训练可继续。恢复须重新启用，"
-                   "受影响计划须另行编辑并确认新版本。变体不会连带移除。",
-    "plans": "引用计划", "groups": "引用组合与成员", "sessions": "引用训练",
-    "reviews": "指导审核记录", "variants": "依赖变体", "exports": "已有导出",
-    "draft": "草稿", "active": "活动", "superseded": "已被替代", "open": "进行中",
-    "paused": "暂停", "completed": "完成", "partial": "部分完成", "aborted": "已中止",
-    "requested": "已申请", "under_review": "审核中", "approved": "已批准",
-    "applied": "已应用", "rejected": "已驳回", "cancelled": "已取消",
-    "withdrawn": "已撤回", "removed": "已移除／撤回", "restored": "已恢复",
-    "available": "可访问", "unknown": "文件不可读，影响未知", "missing": "当前目录已缺项",
-    "reload": "重新载入申请", "request": "申请", "status": "审核状态",
-    "local": "本数据目录的决定", "publisher": "发行方目录记录",
-    "publisher_note": "这里只记录当前程序目录的可用性和本机观察时间，不推测发行方决定发生时间。"
-                      "发行方撤回不能用本地恢复覆盖。",
-    "self": "填入我本人", "self_source": "用户本人明确决定", "source": "决定来源",
-    "occurred": "决定实际发生时间",
-    "button_preview": "预览当前影响", "button_under_review": "进入／刷新审核",
-    "button_approved": "批准", "button_approve_apply": "批准并应用",
-    "button_applied": "应用已批准决定", "button_rejected": "驳回", "button_cancelled": "取消申请",
-}
-
-ERROR_TRANSLATIONS.update({
-    "Exercise is removed or withdrawn; edit the plan explicitly.":
-        "动作已移除或撤回，请在新计划版本中明确编辑替换。",
-    "This plan was affected by removal; confirm a new plan revision.":
-        "此计划曾受动作移除影响，请编辑并确认新的计划版本后再开始训练。",
-    "This lifecycle transition is not allowed.": "当前申请状态不允许此操作。",
-    "Lifecycle request was not found.": "未找到此移除／恢复申请。",
-    "Unknown lifecycle operation.": "未知的移除／恢复操作。",
-    "The local removal state does not match this operation.":
-        "动作当前移除状态已变化，请核对移除或恢复的范围。",
-    "Publisher withdrawal cannot be restored by a local decision.":
-        "当前发行方目录已撤回或缺少此动作，不能用本地决定恢复。",
-    "Repair current content and images before restoration.": "请先补全当前内容并修复图片后再恢复。",
-    "A decision source and a text note are required.": "请填写真实决定来源，备注可留空。",
-    "A lifecycle reason is required.": "请填写移除或恢复的申请原因。",
-    "An unfinished lifecycle request already exists for this exercise.":
-        "此动作已有待处理申请，请先处理或取消该申请。",
-    "The removal impact changed. Refresh and review it again.":
-        "影响依据已变化或尚未预览，请预览当前影响、进入／刷新审核后重新批准。",
-    "The lifecycle content changed. Cancel and submit a new request.":
-        "动作内容或选用状态已变化，请取消原申请并重新提交，保留原审核过程。",
-    "The lifecycle request changed. Reload its history.":
-        "申请已有新决定，请重新载入历史后再操作。",
-    "Unknown library model; this data root needs a newer application.":
-        "此数据目录由更新版本的应用创建，请升级应用后再打开。",
-    "An unmarked root already contains current-model work.":
-        "此数据目录已包含当前模型的数据但未完成升级登记，请从备份恢复后再打开。",
-    "Conversion marker and configuration disagree.":
-        "此数据目录的升级登记与配置不一致，请从备份恢复后再打开。",
-    "The upgrade data root does not exist.": "要升级的数据目录不存在。",
-    "The data-root lock path is invalid.": "数据目录的锁文件路径无效，请不要手动改动数据目录。",
-    "There is not enough free space for a recoverable upgrade.":
-        "磁盘剩余空间不足，无法安全升级数据目录；请释放空间后重试。",
-    "Upgrade resources cannot contain linked paths.":
-        "数据目录中包含链接路径，无法安全升级；请移除链接后重试。",
-    "An upgrade resource is not a regular file.": "数据目录中存在非常规文件，无法安全升级。",
-    "Data-root resources changed during upgrade backup.":
-        "升级备份期间数据目录内容发生变化，请关闭其他程序后重试。",
-    "The upgrade recovery journal or manifest is unreadable.":
-        "升级恢复信息无法读取，请不要手动改动数据目录；仍失败请从备份恢复。",
-    "The upgrade recovery journal is invalid.":
-        "升级恢复信息无效，请不要手动改动数据目录；仍失败请从备份恢复。",
-    "The upgrade recovery manifest hash does not match.":
-        "升级恢复快照的校验信息不匹配，请从备份恢复后再打开。",
-    "The upgrade recovery manifest format is invalid.":
-        "升级恢复快照的格式无效，请从备份恢复后再打开。",
-    "Upgrade resource hashes or inventory do not match.":
-        "升级前后的文件校验不一致，请从备份恢复后再打开。",
-    "Converted references failed validation.":
-        "升级后的数据引用未通过校验，请从备份恢复后再打开。",
-    "Converted model configuration is missing.":
-        "升级后的数据目录缺少模型配置，请从备份恢复后再打开。",
-    "Conversion facts are missing.": "升级登记缺失，请从备份恢复后再打开。",
-    "Original managed resource bytes changed during conversion.":
-        "升级过程中原始文件内容发生变化，请关闭其他程序后重试。",
-    "Original conversion facts failed preservation validation.":
-        "升级未能完整保留原始数据，请从备份恢复后再打开。",
-    "Obsolete live tables remain after conversion.":
-        "升级后仍残留旧数据表，请从备份恢复后再打开。",
-    "Converted external identities do not match original facts.":
-        "升级后的数据身份与原始记录不一致，请从备份恢复后再打开。",
-    "Converted facts do not match their original records.":
-        "升级后的数据与原始记录不一致，请从备份恢复后再打开。",
-    "A guidance revision was not converted.": "有动作指导未被升级收录，请从备份恢复后再打开。",
-    "An unfinished session has no recorded prescription.":
-        "升级后的未完结训练缺少处方记录，请从备份恢复后再打开。",
-})
-
-
-ACTIVATION_REASONS = {
-    "was not found": "动作不存在",
-    "is not enabled": "动作未启用",
-    "has no guidance in use": "动作尚未投入使用",
-    "has incomplete guidance in use": "动作的使用内容不完整",
-}
-
-
-def _activation_reasons(detail: str) -> str:
-    """把逐动作的激活阻塞原因翻成中文；无法识别时保留原文，不吞掉信息。"""
-    reasons = []
-    for exercise_id, reason in re.findall(r"Exercise (\d+) ([^.]+)\.", detail):
-        reasons.append(f"动作 {exercise_id} {ACTIVATION_REASONS.get(reason, reason)}")
-    return "；".join(reasons) if reasons else detail.strip()
-
-
-def user_message(message: str) -> str:
-    if message.startswith("Invalid plan v4 at "):
-        detail = message[len("Invalid plan v4 at "):]
-        return "计划文件格式不完整或字段无效（格式版本 4），请核对：" + detail
-    if message.startswith("Content is not eligible: "):
-        return "当前内容不可用：" + "；".join(
-            LIBRARY_REASON_LABELS.get(reason, reason)
-            for reason in message.partition(": ")[2].split(", ")
-        )
-    translated = ERROR_TRANSLATIONS.get(message)
-    if translated is not None:
-        return translated
-    if message.startswith("Exercise ") and message.endswith(" was not found."):
-        return "没有找到指定的训练动作。"
-    if message.startswith("Plan revision cannot be activated:"):
-        return "计划版本无法启用：" + _activation_reasons(message.partition(":")[2])
-    if message.startswith("The data-root upgrade could not be completed: "):
-        detail = message.partition(": ")[2]
-        return (
-            "数据目录升级未能完成，原始数据保持不变；请关闭其他使用此目录的程序后重试。"
-            "原因：" + (ERROR_TRANSLATIONS.get(detail) or detail)
-        )
-    if message.startswith("The interrupted upgrade could not be recovered: "):
-        detail = message.partition(": ")[2]
-        return (
-            "上次中断的升级无法自动恢复，请从备份恢复数据目录后再打开。"
-            "原因：" + (ERROR_TRANSLATIONS.get(detail) or detail)
-        )
-    return message
 
 
 def confirm(parent, title: str, message: str) -> bool:

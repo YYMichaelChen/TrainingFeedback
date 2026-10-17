@@ -94,7 +94,31 @@ class LibraryLifecycleRepository:
 
     def impacts(self, exercise):
         plans, groups, sessions, reviews, exports = [], [], [], [], []
+        for row in self.connection.execute("SELECT * FROM plan_edit_document ORDER BY id"):
+            payload = json.loads(row["payload_json"])
+            if contains_exercise(payload, exercise):
+                matches = []
+                for day in payload["plan"]["days"]:
+                    for item in day["items"]:
+                        for action in item.get("members", [item]):
+                            if action.get("exercise") == exercise:
+                                matches.append({"item_id": action["item_id"],
+                                                "day_order": day["order"],
+                                                "content": action["content"]})
+                                if item["kind"] == "group":
+                                    groups.append({"revision_id": row["id"],
+                                                   "group_id": item["item_id"],
+                                                   "name": item["name"],
+                                                   "member_id": action["item_id"],
+                                                   "day_order": day["order"]})
+                plans.append({"id": row["id"], "plan_id": row["revision_id"],
+                              "name": payload["plan"]["name"], "revision_number": None,
+                              "status": "draft", "edit_token": row["edit_token"],
+                              "items": matches, "editing_document": True})
         for revision in self.connection.execute("SELECT * FROM group_plan_revision ORDER BY id"):
+            if self.connection.execute("SELECT 1 FROM plan_edit_document WHERE revision_id=?",
+                                       (revision["id"],)).fetchone():
+                continue
             matches = []
             for item in self.connection.execute(
                 "SELECT i.*,d.day_order,p.item_key AS group_key,"

@@ -7,6 +7,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from PySide6.QtCore import QLibraryInfo
 
 project_root = Path(SPECPATH).parent
 icon_path = project_root / "icon" / "TrainingFeedback.ico"
@@ -98,6 +99,9 @@ a = Analysis(
     datas=[
         (str(project_root / "src/training_feedback/ui/chevron.svg"), "training_feedback/ui"),
         (str(project_root / "src/training_feedback/data/schema24.sql"), "training_feedback/data"),
+        (str(project_root / "src/training_feedback/data/draft_documents.sql"), "training_feedback/data"),
+        (str(Path(QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)) / "qtbase_zh_CN.qm"),
+         "training_feedback/ui"),
         (str(project_root / "src/training_feedback/ui/TrainingFeedback.ico"), "training_feedback/ui"),
         (str(project_root / "src/training_feedback/catalog"), "training_feedback/catalog"),
         (str(project_root / "src/training_feedback/contracts"), "training_feedback/contracts"),

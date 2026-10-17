@@ -28,6 +28,7 @@ from .guidance_widgets import GuidanceView
 from .illustrations import IllustrationLabel
 from .labels import (
     ABORT_REASON_LABELS,
+    OPERATION_ERRORS,
     RESULT_LABELS,
     SESSION_STATUS_LABELS,
     confirm,
@@ -303,8 +304,8 @@ class GroupTrainingPage(QWidget):
         self.setEnabled(False)
         try:
             action()
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             return False
         else:
             self.render()
@@ -402,8 +403,8 @@ class GroupTrainingPage(QWidget):
             return
         try:
             preview = self.controller.preview_round()
-        except ValueError as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             return
         text = T["round_hint"] + "\n\n" + "\n\n".join(
             occurrence_title(row) + "\n" + occurrence_prescription(row)
@@ -439,8 +440,8 @@ class GroupTrainingPage(QWidget):
     def finish(self):
         try:
             status = self.controller.service.proposed_status(self.controller.session["id"])
-        except ValueError as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             return
         if confirm(self, T["finish"], T["finish_hint"] + SESSION_STATUS_LABELS[status]):
             self.run(lambda: self.controller.finish(user_confirmed=True), end=True)

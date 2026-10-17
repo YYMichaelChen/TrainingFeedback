@@ -42,8 +42,7 @@ QLabel#actionTitle { font-size: 1.25u; font-weight: 700; }
 QLabel#dialogTitle { font-size: 1.4u; font-weight: 700; }
 QToolButton { min-height: 2.5u; min-width: 2.5u; }
 QCheckBox::indicator, QRadioButton::indicator { width: 1.25u; height: 1.25u; }
-QTreeWidget#planActions::item { min-height: 2.5u; padding: 0.25u 0.5u; }
-QTreeWidget#planActions::item:selected { background: #ecf5f4; border-left: 0.2u solid #0f8175; }
+QTreeWidget#planActions::item { padding: 0; margin: 0; border: none; }
 QPushButton#actionCapsule { border-radius: 1.25u; min-width: 0; }
 QPushButton#actionCapsule:checked { background: #ecf5f4; border-color: #0f8175; }
 QPushButton#tableActionButton { min-width: 0; padding: 0.5u; }

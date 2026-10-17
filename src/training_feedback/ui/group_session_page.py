@@ -23,6 +23,7 @@ from .group_training_page import ExecutionPreview, FrozenGuidanceDialog
 from .labels import EXECUTION_TEXT as T
 from .labels import (
     FEEDBACK_VALUE_LABELS,
+    OPERATION_ERRORS,
     SESSION_STATUS_LABELS,
     localize_dialog_buttons,
     occurrence_prescription,
@@ -73,8 +74,8 @@ class GroupFeedbackDialog(QDialog):
                                          {name: widget.currentData()
                                           for name, widget in self.areas.items()},
                                          self.note.toPlainText())
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
             return
         self.accept()
 
@@ -238,8 +239,8 @@ class GroupSessionPage(QWidget):
             controller = self.context.session_controller()
             controller.start(revision, expected_preview=preview["token"], user_confirmed=True)
             self.open_training(controller)
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
 
     def resume(self):
         if self.training_window and self.training_window.isVisible():
@@ -250,8 +251,8 @@ class GroupSessionPage(QWidget):
             controller = self.context.session_controller()
             controller.resume()
             self.open_training(controller)
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
 
     def export(self):
         identifier = self.history.currentData()
@@ -260,8 +261,8 @@ class GroupSessionPage(QWidget):
         try:
             path = self.context.session_handoff.export(identifier)
             QMessageBox.information(self, T["export"], T["exported"] + str(path))
-        except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, T["error"], user_message(str(exc)))
+        except OPERATION_ERRORS as exc:
+            QMessageBox.warning(self, T["error"], user_message(exc))
 
     def feedback(self):
         identifier = self.history.currentData()
@@ -311,5 +312,5 @@ class GroupSessionPage(QWidget):
                 self.service.correct_note(identifier, target,
                                           edit.toPlainText(), expected_value=old_value)
                 self.refresh()
-            except (ValueError, OSError) as exc:
-                QMessageBox.warning(self, T["error"], user_message(str(exc)))
+            except OPERATION_ERRORS as exc:
+                QMessageBox.warning(self, T["error"], user_message(exc))

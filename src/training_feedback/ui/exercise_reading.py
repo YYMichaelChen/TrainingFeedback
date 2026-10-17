@@ -374,7 +374,7 @@ class IllustrationPanel(QWidget):
                 raise ValueError("图片文件损坏或格式无法读取。")
         except (OSError, ValueError, KeyError, TypeError) as exc:
             source = QPixmap()
-            message = f"图片不可用：{user_message(str(exc))}\n动作指导仍可阅读。"
+            message = f"图片不可用：{user_message(exc)}\n动作指导仍可阅读。"
         self.image.set_source(source, message)
         self.page.setText(f"{self.index + 1} / {len(self.declarations)}")
         self.previous.setEnabled(self.index > 0)

@@ -74,6 +74,9 @@ class SettingsPage(QWidget):
         backup_button.clicked.connect(self._create_backup)
         root_actions.addWidget(backup_button)
         layout.addWidget(root_actions)
+        diagnostic = QPushButton("复制最近错误诊断")
+        diagnostic.clicked.connect(self._copy_diagnostic)
+        layout.addWidget(diagnostic)
         update_group = QGroupBox("应用更新")
         update_layout = QVBoxLayout(update_group)
         update_layout.addWidget(QLabel(f"当前版本：{__version__}"))
@@ -93,6 +96,11 @@ class SettingsPage(QWidget):
             update_coordinator.result_changed.connect(self._show_update_status)
             self._show_update_status(update_coordinator.result)
         layout.addStretch()
+
+    def _copy_diagnostic(self):
+        from ..error_messages import latest_diagnostic
+        QApplication.clipboard().setText(latest_diagnostic())
+        QMessageBox.information(self, "错误诊断", "最近错误诊断已复制，可粘贴到反馈中。")
 
     def _scale_group(self):
         group = QGroupBox("界面缩放")
@@ -191,7 +199,7 @@ class SettingsPage(QWidget):
         try:
             switched = self.switch_request(dialog.selected_path(), dialog.creates_new_root())
         except (DataRootError, ValueError) as exc:
-            QMessageBox.warning(self, "无法切换数据目录", user_message(str(exc)))
+            QMessageBox.warning(self, "无法切换数据目录", user_message(exc))
             return
         if not switched:
             QMessageBox.information(self, "数据目录未变化", "所选目录已是当前数据目录。")
@@ -217,7 +225,7 @@ class SettingsPage(QWidget):
                 self.context.database.connection,
             )
         except BackupError as exc:
-            QMessageBox.warning(self, "备份失败", user_message(str(exc)))
+            QMessageBox.warning(self, "备份失败", user_message(exc))
         else:
             QMessageBox.information(
                 self, "备份完成", "完整的数据目录已成功备份。"
