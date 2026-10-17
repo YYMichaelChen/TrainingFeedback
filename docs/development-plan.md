@@ -181,9 +181,13 @@ controls repetition of that sequence under the selected side order. This example
 does not supply user doses or rest values automatically. Equal-set entry
 is an optional collapsible batch-fill tool, with explicit confirmation before
 replacing current values and notes. Opening or closing that tool does not change
-the table. Invalid values block saving without losing the input. The plan footer
-also handles pending additions, using explicit complete-add/discard-add labels
-before returning to plan save/cancel; nested forms do not show duplicate footers.
+the table. Incomplete or invalid input remains saveable as an internal draft under
+Section 12.11. While adding an action or group, the plan footer offers a separate
+“添加到计划” button that only adds the unsaved node to the left-hand list and returns
+to editing; it never opens plan-save confirmation or persists the plan. “保存草稿”
+remains a separate explicit action and may include unfinished additions. The cancel
+button says “放弃添加” during an addition and returns to “取消” afterward; nested forms
+do not show duplicate footers.
 Ordering updates the document once and moves existing navigation rows without
 recreating the selected editor or reloading its guidance. Drag insertion uses the
 upper/lower half of the hovered sibling and a matching insertion line; it adjusts
@@ -485,6 +489,14 @@ A valid preview shows the complete prescription and activation warnings; only
 confirmation writes that exact snapshot, with state rechecked transactionally.
 Original-file cleanup is separate from database rollback and reports its failures.
 The UI provides saveable current schema instructions and a synthetic example.
+Beside plan import, “新建计划文件” opens a read-only, in-memory JSON template using
+the current contract and available exercise references. Opening, closing or cancelling
+Save As creates no file or plan record. Only explicit Save As writes a UTF-8 JSON
+copy at the user's chosen location, then asks the system to open that copy for external
+editing. The UI tells the user to save it in their own folder, edit it with a text
+editor and import it afterward; example doses are format references, not training
+recommendations. No numbered template copies or persistent template cache accumulate.
+Saving a template neither imports nor activates it; normal strict import still applies.
 Clipboard import is outside current scope. Validation and saving never
 imply activation or approval. Section 12.8 owns the detailed wire contract.
 

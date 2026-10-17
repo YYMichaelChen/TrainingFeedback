@@ -925,10 +925,16 @@ class GroupPlanEditor(QDialog):
         check.clicked.connect(self.check_for_activation)
         commands.addWidget(check)
         commands.addStretch()
+        self.add_to_plan_button = QPushButton("添加到计划")
+        self.add_to_plan_button.setAutoDefault(False)
+        self.add_to_plan_button.setToolTip("仅加入左侧计划动作列表，继续编辑；不会保存草稿。")
+        self.add_to_plan_button.clicked.connect(self._complete_add)
+        commands.addWidget(self.add_to_plan_button)
         self.buttons = dialog_buttons(self, self.save)
         self.buttons.rejected.disconnect(self.reject)
         self.buttons.rejected.connect(self._cancel_editing)
         commands.addWidget(self.buttons)
+        self._update_footer()
         layout.addLayout(commands)
         manager = scale_manager()
         if manager is not None:
@@ -1337,10 +1343,18 @@ class GroupPlanEditor(QDialog):
         else:
             self.reject()
 
+    def _complete_add(self):
+        # Accept only the inline form. Plan persistence belongs to save().
+        if self.pending_add:
+            self.inline_editor.save()
+
     def _update_footer(self):
-        self.buttons.button(QDialogButtonBox.StandardButton.Save).setText(
-            "保存草稿"
-        )
+        self.add_to_plan_button.setVisible(self.pending_add)
+        save = self.buttons.button(QDialogButtonBox.StandardButton.Save)
+        save.setText("保存草稿")
+        save.setAutoDefault(not self.pending_add)
+        save.setDefault(not self.pending_add)
+        self.add_to_plan_button.setDefault(self.pending_add)
         self.buttons.button(QDialogButtonBox.StandardButton.Cancel).setText(
             "放弃添加" if self.pending_add else "取消"
         )
@@ -1388,7 +1402,7 @@ class GroupPlanEditor(QDialog):
 
     def save(self):
         if self.pending_add:
-            self.inline_editor.save()
+            self._complete_add()
             if self.pending_add:
                 return
         if not self._commit_editors():
@@ -1806,10 +1820,11 @@ class GroupPlanPage(QWidget):
         layout.addWidget(splitter, 1)
         row = ActionBar()
         self.buttons = {}
-        for name in ("new", "edit", "clone", "upgrade", "activate", "import", "format", "export",
-                     "delete"):
-            button = QPushButton({"format": "导入格式说明", "delete": "删除草稿"}.get(
-                name, T.get(name, name)).replace("…", ""))
+        for name in ("new", "edit", "clone", "upgrade", "activate", "import", "new_file",
+                     "format", "export", "delete"):
+            button = QPushButton({
+                "new_file": "新建计划文件", "format": "导入格式说明", "delete": "删除草稿",
+            }.get(name, T.get(name, name)).replace("…", ""))
             button.setObjectName(f"planCommand_{name}")
             button.clicked.connect(lambda checked=False, command=name: self.command(command))
             row.addWidget(button)
@@ -2015,6 +2030,70 @@ class GroupPlanPage(QWidget):
         self.buttons["export"].setEnabled(available)
         self.buttons["delete"].setEnabled(status == "draft")
 
+    def _new_plan_file(self):
+        import json
+
+        from PySide6.QtCore import QIODevice, QSaveFile, QUrl
+        from PySide6.QtGui import QDesktopServices
+
+        # Keep the template in memory until the user explicitly chooses a file.
+        template = json.dumps(self.handoff.example_payload(), ensure_ascii=False, indent=2)
+        content = (template + "\n").encode("utf-8")
+        dialog = QDialog(self)
+        dialog.setWindowTitle("新建计划文件")
+        fit_dialog(dialog)
+        layout = QVBoxLayout(dialog)
+        instructions = QLabel(
+            "这是只读模板，尚未创建文件。请先点击“另存为计划文件”，保存到你自己的文件夹，"
+            "再用文本编辑器修改名称、动作和训练安排。编辑完成后，回到这里点击“导入计划文件”。\n"
+            "示例剂量仅供格式参考，不是训练建议；打开或另存模板都不会创建应用内计划。"
+        )
+        instructions.setWordWrap(True)
+        layout.addWidget(instructions)
+        preview = QPlainTextEdit(template)
+        preview.setReadOnly(True)
+        layout.addWidget(preview, 1)
+        saved_path = QLabel()
+        saved_path.setWordWrap(True)
+        saved_path.setTextFormat(Qt.TextFormat.PlainText)
+        saved_path.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(saved_path)
+        buttons = QHBoxLayout()
+        save_as = QPushButton("另存为计划文件")
+
+        def save_template():
+            target, _ = QFileDialog.getSaveFileName(
+                dialog, "另存为计划文件", "新训练计划.json", T["json_filter"])
+            if not target:
+                return
+            output = QSaveFile(target)
+            if not output.open(QIODevice.OpenModeFlag.WriteOnly):
+                QMessageBox.warning(dialog, "无法另存文件", "无法写入所选位置，请换一个文件夹。")
+                return
+            if output.write(content) != len(content):
+                output.cancelWriting()
+                QMessageBox.warning(dialog, "无法另存文件", "文件写入失败，请检查可用空间后重试。")
+                return
+            if not output.commit():
+                QMessageBox.warning(dialog, "无法另存文件", "未能完成保存，请检查文件权限后重试。")
+                return
+            saved_path.setText("已另存：" + target + "\n请用文本编辑器修改此文件，保存后再导入。")
+            if not QDesktopServices.openUrl(QUrl.fromLocalFile(target)):
+                QMessageBox.information(
+                    dialog, "文件已另存", "无法自动打开，请用文本编辑器打开以下文件：\n" + target)
+
+        save_as.clicked.connect(save_template)
+        buttons.addWidget(save_as)
+        buttons.addStretch()
+        close = QPushButton("关闭")
+        close.clicked.connect(dialog.accept)
+        buttons.addWidget(close)
+        layout.addLayout(buttons)
+        try:
+            dialog.exec()
+        finally:
+            dialog.deleteLater()
+
     def command(self, command):
         selected = self.revisions.currentItem()
         identifier = selected.data(Qt.ItemDataRole.UserRole) if selected else None
@@ -2023,6 +2102,9 @@ class GroupPlanPage(QWidget):
                 self.dialog = GroupPlanEditor(self.service, parent=self)
                 self.dialog.exec()
                 identifier = self.dialog.saved_id
+            elif command == "new_file":
+                self._new_plan_file()
+                return
             elif command == "import":
                 path, _ = QFileDialog.getOpenFileName(self, T["import"], "", T["json_filter"])
                 if path:
