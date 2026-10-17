@@ -38,8 +38,27 @@
 
 ## 候选与分发
 
-待从已提交的干净源码用 packaging/build.ps1 构建安装包并记录精确清单和哈希，
-随后发布唯一 Setup 到稳定 v0.8.19、核对公开 latest 响应。此段准备不是成功证据。
+源码 `2d0e78793719d61953eaa985ecb3d7a7469ec048` 已提交并推送 main。从干净工作树
+使用 packaging/build.ps1 构建安装包一次成功；未运行程序或 Setup。
+
+| 项目 | 实际值 |
+| --- | --- |
+| Setup | `dist/installer/TrainingFeedback-0.8.19-Setup.exe` |
+| SHA-256 | `b379a509025db8d011a0697eda90c3ace4f343f3180c90d527cb29d8c09791ec` |
+| 大小 | 85,845,925 bytes |
+| 签名 | NotSigned |
+| 干净源码 | `2d0e78793719d61953eaa985ecb3d7a7469ec048` |
+| 载荷构建时间 UTC | `2026-10-17T16:40:09Z` |
+| Setup 构建时间 UTC | `2026-10-17T16:40:31Z` |
+| Setup 构建时间 Asia/Shanghai | 2026-10-18 00:40:31 |
+| Python / PySide6 | 3.12.14 / 6.11.2 |
+| 载荷文件数 | 300 |
+| 源码状态 | `source_dirty=false` |
+
+[载荷清单](payload-build-manifest.json)与[安装包清单](installer-build-manifest.json)
+保留完整候选身份；实际 Setup 哈希、大小、未签名状态及源码身份与清单一致。
+构建核对受控工具链、必需资源和程序所有权载荷，不增加应用或人工场景。
+下一步为此唯一 Setup 创建稳定 v0.8.19 并核对公开 latest 响应，完成后记录实际结果。
 既有候选不覆盖本版本；GitHub 分发不声明正式兼容支持、公共验收、内容审核、W4、
 个人数据转移或个人使用就绪。
 
