@@ -1,4 +1,4 @@
-"""V4 plan validation, identity-based diffs and editable document operations."""
+"""Versioned plan validation, identity-based diffs and editable document operations."""
 
 from __future__ import annotations
 
@@ -12,21 +12,23 @@ from jsonschema import Draft202012Validator
 
 from .action_groups import ActionGroup, GroupMember
 from .catalog import ExerciseReference, require_classification
+from .execution_modes import execution_mode, upgrade_payload, validate_execution
 from .models import require_non_negative_finite
 from .plans import PlannedSet, ensure_orders
 
-PLAN_IMPORT_SCHEMA_VERSION = 4
-EVIDENCE_SCHEMA_VERSION = 4
+PLAN_IMPORT_SCHEMA_VERSION = 5
+EVIDENCE_SCHEMA_VERSION = 5
 
 
 def validate_plan_payload(payload: dict, schema: dict, *, activation: bool = False) -> dict:
-    if not isinstance(payload, dict) or payload.get("schema_version") != PLAN_IMPORT_SCHEMA_VERSION:
-        raise ValueError("Only plan format version 4 is accepted.")
+    expected_version = schema["properties"]["schema_version"]["const"]
+    if not isinstance(payload, dict) or payload.get("schema_version") != expected_version:
+        raise ValueError("Only plan format version 5 is accepted.")
     errors = list(Draft202012Validator(schema).iter_errors(payload))
     if errors:
         error = errors[0]
         path = "/".join(str(part) for part in error.absolute_path)
-        raise ValueError(f"Invalid plan v4 at {path}: {error.message}") from error
+        raise ValueError(f"Invalid plan v{expected_version} at {path}: {error.message}") from error
     _require_finite(payload)
     plan = payload["plan"]
     ensure_orders((day["order"] for day in plan["days"]), "Day")
@@ -47,7 +49,7 @@ def validate_plan_payload(payload: dict, schema: dict, *, activation: bool = Fal
                     validate_action(member)
             else:
                 validate_action(item)
-                unilateral = item["sets"][0]["per_side"]
+                unilateral = execution_mode(item) == "separate_sides"
                 if unilateral and item["first_side"] not in ("left", "right"):
                     raise ValueError("Unilateral work requires an explicit first side.")
                 if not unilateral and (
@@ -73,6 +75,8 @@ def validate_stored_plan(payload, schema, originals, *, activation=False):
         for key in ("exercise", "dose_scope"):
             if action.get(key) != prior.get(key):
                 raise ValueError("Migration identity or dose scope cannot be changed implicitly.")
+        if execution_mode(action) != execution_mode(prior):
+            raise ValueError("Migration identity or dose scope cannot be changed implicitly.")
         projection = migration_validation_projection(action)
         action.clear()
         action.update(projection)
@@ -111,6 +115,7 @@ def _require_finite(value):
 
 
 def validate_action(action):
+    validate_execution(action)
     require_classification(action["classification"], ExerciseReference(**action["exercise"]))
     sets = tuple(
         PlannedSet(row["order"], row["unit"], row["value"], row["per_side"], row["note"])
@@ -133,7 +138,7 @@ def validate_action(action):
         if field in action:
             require_non_negative_finite(action[field], "Invalid boundary rest.")
     if action.get("kind") == "action":
-        unilateral = sets[0].per_side
+        unilateral = execution_mode(action) == "separate_sides"
         if unilateral and action["first_side"] not in ("left", "right"):
             raise ValueError("Unilateral work requires an explicit first side.")
         if not unilateral and (
@@ -159,6 +164,7 @@ def group_from_item(item) -> ActionGroup:
                 ),
                 member["classification"]["starting_position_class"],
                 member["rest_after_member_seconds"],
+                execution_mode(member),
             )
             for member in item["members"]
         ),
@@ -196,11 +202,12 @@ def continuous_plan_day(plan):
     return {"order": 1, "items": items}
 
 
-def prescription_rest_applicability(sets, *, aggregate=False):
+def prescription_rest_applicability(sets, *, aggregate=False, mode=None):
     """Applicable set rests and side-switch boundary, independent of widgets."""
     return {
         "set_rests": [aggregate or index < len(sets) - 1 for index in range(len(sets))],
-        "side_rest": aggregate or any(dose["per_side"] for dose in sets),
+        "side_rest": aggregate or (mode == "separate_sides" if mode else
+                                   any(dose["per_side"] for dose in sets)),
     }
 
 
@@ -214,10 +221,18 @@ def normalize_inapplicable_rest(action):
         return action
     if action["sets"]:
         action["sets"][-1]["rest_after_set_seconds"] = 0
-    if action.get("kind") == "action" and not any(dose["per_side"] for dose in action["sets"]):
+    if action.get("kind") == "action" and execution_mode(action) != "separate_sides":
         action["first_side"] = None
         action["rest_between_sides_seconds"] = 0
     return action
+
+
+def normalize_group_side_fields(group):
+    group = deepcopy(group)
+    if not any(execution_mode(member) == "separate_sides" for member in group["members"]):
+        group["first_side"] = None
+        group["rest_between_sides_seconds"] = 0
+    return group
 
 
 def identity_rows(plan):
@@ -237,6 +252,8 @@ def identity_rows(plan):
 def diff_plans(before, after):
     if before is None:
         return [{"item_id": None, "path": "plan", "before": None, "after": deepcopy(after)}]
+    before = upgrade_payload({"schema_version": 4, "plan": before})["plan"]
+    after = upgrade_payload({"schema_version": 4, "plan": after})["plan"]
     changes = []
     for key in ("name", "purpose", "target_plan_name"):
         if before.get(key) != after.get(key):
@@ -280,6 +297,8 @@ def _structure_value(value):
         return [_structure_value(item) for item in value]
     if not isinstance(value, dict):
         return value
+    if "exercise" in value and "sets" in value:
+        value = {"execution_mode": execution_mode(value), "alternating_start": None, **value}
     if "items" in value and "order" in value:
         return {"order": value["order"], "items": _structure_value(value["items"])}
     return {
@@ -355,9 +374,10 @@ class PlanDocument:
                 kind="action",
                 order=group["order"],
                 phase=group["phase"],
-                first_side=group["first_side"] if survivor["sets"][0]["per_side"] else None,
+                first_side=(group["first_side"]
+                            if execution_mode(survivor) == "separate_sides" else None),
                 rest_between_sides_seconds=group["rest_between_sides_seconds"]
-                if survivor["sets"][0]["per_side"]
+                if execution_mode(survivor) == "separate_sides"
                 else 0,
                 rest_after_action_seconds=group["rest_after_group_seconds"],
             )
@@ -387,7 +407,8 @@ class PlanDocument:
 
 
 def action_from_choice(choice, *, member=False):
-    action = {**deepcopy(choice), "item_id": new_item_id(), "order": 1, "sets": [], "note": ""}
+    action = {**deepcopy(choice), "item_id": new_item_id(), "order": 1, "sets": [], "note": "",
+              "execution_mode": "whole", "alternating_start": None}
     if member:
         action["rest_after_member_seconds"] = 0
     else:

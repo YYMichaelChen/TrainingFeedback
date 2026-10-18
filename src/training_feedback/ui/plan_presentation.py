@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..domain.execution_modes import alternating_explanation, execution_mode
 from ..domain.group_plans import continuous_plan_day, prescription_rest_applicability
 from .labels import (
     DOSE_UNIT_LABELS,
@@ -11,8 +12,8 @@ from .labels import (
 )
 
 SIDE_SEQUENCE_LABELS = {
-    "member_each_side": "每个成员完成两侧后继续",
-    "same_side_then_switch": "同侧完成各轮后换侧",
+    "member_each_side": "逐个成员完成",
+    "same_side_then_switch": "每轮同侧完成各成员后换侧",
     "all_rounds_then_switch": "完成全部轮次后换侧",
 }
 _ABSENT = "not_applicable"
@@ -44,6 +45,8 @@ def _sets(action, *, every_round=False):
                 )
             ),
             "per_side": dose["per_side"],
+            "counting": (alternating_explanation(action, dose)
+                         if execution_mode(action) == "alternating" else ""),
             "note": dose["note"],
             "rest": (_boundary(dose, "rest_after_set_seconds")
                      if rest_applicability[index] else "不适用"),
@@ -56,6 +59,7 @@ def _sets(action, *, every_round=False):
 def _action(action, *, every_round=False):
     return {
         "name": action["exercise_name"],
+        "execution_mode": execution_mode(action),
         "phase": PLAN_PHASE_LABELS[action.get("phase", "main")],
         "note": action["note"],
         "sets": _sets(action, every_round=every_round),
@@ -64,7 +68,8 @@ def _action(action, *, every_round=False):
             if "rest_after_member_seconds" in action
             else _boundary(action, "rest_after_action_seconds")
         ),
-        "rest_between_sides": _boundary(action, "rest_between_sides_seconds"),
+        "rest_between_sides": (_boundary(action, "rest_between_sides_seconds")
+            if execution_mode(action) == "separate_sides" else "不适用"),
         "first_side": action.get("first_side", _ABSENT),
     }
 

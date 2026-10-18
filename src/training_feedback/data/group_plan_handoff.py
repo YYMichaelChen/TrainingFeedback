@@ -1,4 +1,4 @@
-"""Portable v4 plan/evidence files with retained illustration bytes and managed provenance."""
+"""Portable v5 files and strict v4 conversion with retained bytes and provenance."""
 
 from __future__ import annotations
 
@@ -14,18 +14,21 @@ from pathlib import Path
 from .. import __version__
 from ..application.library_workflow import LibraryTarget
 from ..domain.catalog import ExerciseReference
+from ..domain.execution_modes import alternating_explanation, execution_mode, upgrade_payload
 from ..domain.group_plans import (
     EVIDENCE_SCHEMA_VERSION,
     continuous_plan_day,
     diff_plans,
     plan_actions,
     revision_code_for_change,
+    validate_plan_payload,
 )
-from ..domain.plan_editing import PlanIssue, PlanIssues
+from ..domain.plan_editing import PlanIssue, PlanIssues, payload_issues
 from .catalog_resources import managed_path
 from .conversion_repository import ConversionRepository
 from .group_session_handoff import known
 from .library_images import image_file_extension
+from .plan_contract import plan_v4_schema
 
 
 def _strict_json(raw):
@@ -51,6 +54,7 @@ class PlanImportPreview:
     warnings: tuple
     target_token: str
     changes: tuple
+    conversion_note: str = ""
 
 
 class GroupPlanHandoff:
@@ -79,6 +83,13 @@ class GroupPlanHandoff:
 
     def _check_import(self, payload):
         from ..domain.catalog import content_sha256
+        if isinstance(payload, dict) and payload.get("schema_version") == 4:
+            schema = plan_v4_schema()
+            issues = payload_issues(payload, schema)
+            if issues:
+                raise PlanIssues(issues)
+            validate_plan_payload(payload, schema)
+            payload = upgrade_payload(payload)
         candidate, issues = self.service.input_issues(payload)
         state = None
         if isinstance(candidate, dict):
@@ -109,7 +120,13 @@ class GroupPlanHandoff:
                 elif self.service.repository.find_plan(candidate["plan"]["name"]) is not None:
                     raise ValueError("A plan with this name already exists.")
             except ValueError as exc:
-                issues.append(PlanIssue("rule", ("plan", "name"), detail=str(exc)))
+                path = (("plan", "name") if str(exc) == "A plan with this name already exists."
+                        else ("target_base_number",) if str(exc) in {
+                            "Target plan base code was not found.",
+                            "The target plan has no active revision to upgrade.",
+                            "An upgrade draft already exists; reopen it to continue.",
+                        } else ("plan",))
+                issues.append(PlanIssue("rule", path, detail=str(exc)))
         if issues:
             raise PlanIssues(issues)
         warnings = []
@@ -128,19 +145,25 @@ class GroupPlanHandoff:
     def preview_file(self, source):
         raw = Path(source).read_bytes()
         _text, payload = self._parse(raw)
+        legacy = isinstance(payload, dict) and payload.get("schema_version") == 4
         payload, warnings, token, changes = self._check_import(payload)
         return PlanImportPreview(raw, hashlib.sha256(raw).hexdigest(), payload, warnings,
-                                 token, changes)
+                                 token, changes, "v4 文件将按原有整体／分侧语义转换为 v5 草稿；"
+                                 "原始文件保留，不自动改为左右交替。" if legacy else "")
 
     def format_help(self):
-        return ("仅支持 UTF-8 编码的 training_feedback.plan JSON v4。\n"
+        return ("新文件使用 UTF-8 编码的 training_feedback.plan JSON v5。\n"
+                "本产品 v4 文件先严格校验，再按原有整体／分侧语义转换为新草稿，保留原件。\n"
+                "execution_mode 为 whole／separate_sides／alternating，分别表示整体／分侧／交替。\n"
+                "alternating_start 交替时为 left／right／either，其它模式为 null。\n"
+                "交替仅支持非负整数次；per_side=true 为每侧次数，false 为总次数。\n"
                 "新建：intent 为 new；升级：intent 为 upgrade，填写 target_base_number。\n"
                 "名称、动作精确身份、内容哈希、分类、剂量及适用休息必须完整。\n"
                 "数字须为有限非负数，顺序为不重复正整数；单侧动作须选择先做侧。\n"
                 "自由剂量可用 value=null、unit=free，但必须写明备注。\n"
                 "来源引用须属于当前数据目录；动作和内容身份必须与目录精确匹配。\n"
                 "文件整体合格后仅导入为草稿，不会自动启用动作、审核内容或启用计划。\n"
-                "旧版、未来版、训练证据、Excel、Word 和自然语言文件不能导入。\n"
+                "v2/v3、未来版、训练证据、Excel、Word 和自然语言文件不能导入。\n"
                 "以下 schema 是完整字段说明；示例剂量只供格式参考，不是个人训练建议。\n\n"
                 + json.dumps(self.service.schema, ensure_ascii=False, indent=2))
 
@@ -152,7 +175,7 @@ class GroupPlanHandoff:
         action = action_from_choice(choices[0])
         action["sets"] = [{"order": 1, "unit": "reps", "value": 1, "per_side": False,
                            "rest_after_set_seconds": 0, "note": "仅为格式示例"}]
-        return {"schema": "training_feedback.plan", "schema_version": 4, "intent": "new",
+        return {"schema": "training_feedback.plan", "schema_version": 5, "intent": "new",
                 "rationale": "仅为文件格式示例，不是个人事实或训练建议。",
                 "plan": {"name": "格式参考计划（请自行修改）", "purpose": "",
                          "days": [{"order": 1, "items": [action]}]}}
@@ -160,7 +183,8 @@ class GroupPlanHandoff:
     def import_preview(self, preview):
         raw = preview.raw
         text, payload = self._parse(raw)
-        path = managed_path(self.root, f"imports/plan-v4-{uuid.uuid4().hex}.json")
+        version = payload.get("schema_version") if isinstance(payload, dict) else "unknown"
+        path = managed_path(self.root, f"imports/plan-v{version}-{uuid.uuid4().hex}.json")
         try:
             with self.service.library._action():
                 payload, _warnings, token, _changes = self._check_import(payload)
@@ -221,7 +245,7 @@ class GroupPlanHandoff:
             raise
 
     def export(self, revision_id, *, session_service=None, session_id=None):
-        stem = ("session" if session_service else "plan") + "-evidence-v4-" + uuid.uuid4().hex
+        stem = ("session" if session_service else "plan") + "-evidence-v5-" + uuid.uuid4().hex
         destination = managed_path(self.root, f"exports/{stem}")
         staged = managed_path(self.root, f"exports/.{stem}.staging")
         staged.mkdir(parents=True)
@@ -254,7 +278,9 @@ class GroupPlanHandoff:
                     "revision": revision,
                     "contents": [],
                     "assets": [],
-                    "plan_import_schema": self.service.schema,
+                    "plan_import_schema": (plan_v4_schema()
+                        if revision["payload"]["schema_version"] == 4 else self.service.schema),
+                    "execution_semantics_version": revision["payload"]["schema_version"],
                     "conversion_registrations": ConversionRepository(
                         self.service.repository.connection
                     ).registrations(revision_id, session_id),
@@ -348,7 +374,7 @@ def render_plan_evidence(evidence):
     """Readable hierarchy followed by verbatim JSON facts (no inference or missing-field loss)."""
     revision = evidence["revision"]
     lines = [
-            "# TrainingFeedback " + ("训练" if "session" in evidence else "计划") + "证据 v4",
+            "# TrainingFeedback " + ("训练" if "session" in evidence else "计划") + "证据 v5",
         "",
         revision["name"],
         "",
@@ -379,6 +405,8 @@ def render_plan_evidence(evidence):
                 else:
                     lines.append(f"  - 成员后休息：{action['rest_after_member_seconds']} 秒")
                 for dose in action["sets"]:
+                    if execution_mode(action) == "alternating":
+                        lines.append("  - " + alternating_explanation(action, dose))
                     lines.append(
                         f"  - {dose['order']}: {dose['value']} {dose['unit']}"
                         f"; per_side={dose['per_side']}; {dose['note']}"

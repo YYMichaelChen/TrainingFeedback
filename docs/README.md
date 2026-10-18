@@ -5,11 +5,11 @@ routes current execution work; this file routes tracked project authority.
 
 ## Current state
 
-- Current application: `0.8.20`
-- Current database schema: `25`
-- Current plan/evidence contract: `4`
+- Current application: `0.8.21`
+- Current database schema: `26`
+- Current plan/evidence contract: `5`
 - Current catalog: `070-illustrated-3`
-- Current development release: [`0.8.20`](releases/0.8.20/design.md)
+- Current development release: [`0.8.21`](designs/alternating-side-prescriptions.md)
 - GitHub distribution: `v0.8.20`
 - Formal compatibility baseline declared: no
 
@@ -28,7 +28,7 @@ routes current execution work; this file routes tracked project authority.
 | --- | --- |
 | Product, domain, data-root and release rules | [Product specification](development-plan.md) |
 | Catalog content and initial-plan proposal | [Catalog and plan specification](initial-exercises-and-plan.md) |
-| Current release design | [v0.8.20 design](releases/0.8.20/design.md) |
+| Current release design | [v0.8.21 alternating-side design](designs/alternating-side-prescriptions.md) |
 | Separate action addition and plan saving; Save As plan-file templates | [0.8.20 开发记录](history/0.8.20/development.md) |
 | Action-detail and guidance reading design implemented in v0.8.11 source | [动作详情与指导阅读重新设计](designs/exercise-reading-redesign.md) |
 | Plan editor sizing and local scale source follow-up | [计划界面相对尺寸与缩放](designs/plan-interface-scaling.md) |
@@ -40,6 +40,7 @@ routes current execution work; this file routes tracked project authority.
 | Long names, switch overhead, drag insertion, group doses and bounded save confirmation | [计划编辑源码跟进](history/0.8.18/plan-editor-follow-up-2026-10-17.md) |
 | Chinese client errors, validation locations and system-error presentation | [报错中文映射源码跟进](history/0.8.18/error-localization-2026-10-17.md) |
 | Incomplete drafts, strict plan-file import and Chinese client text | [功能设计](designs/plan-drafts-import-and-chinese.md), [0.8.19 开发记录](history/0.8.19/development.md) |
+| Alternating actions: counting, execution order and actual records | [左右交替动作设计](designs/alternating-side-prescriptions.md)、[0.8.21 开发记录](history/0.8.21/development.md) |
 | Development, verification, version rotation and release close | [Development workflow](development-workflow.md) |
 | Pytest tiers, scopes and budget accounting | [Test instructions](../tests/README.md) |
 | Minimal startup observation; dormant public acceptance | [Packaged acceptance runbook](packaged-acceptance-runbook.md) |

@@ -39,10 +39,14 @@ class GroupSessionRepository:
             value = dict(occurrence)
             value.update(json.loads(value.pop("snapshot_json")))
             value["actual_sets"] = [dict(dose) for dose in self.connection.execute(
-                'SELECT set_order AS "order",value,unit,side,note,provenance,per_side '
+                'SELECT set_order AS "order",value,unit,side,note,provenance,per_side, '
+                'planned_set_order,recording_scope '
                 "FROM group_actual_set WHERE occurrence_id=? ORDER BY set_order", (value["id"],)
             )]
             for dose in value["actual_sets"]:
+                if dose["recording_scope"] is None:
+                    dose.pop("recording_scope")
+                    dose.pop("planned_set_order")
                 if dose["per_side"] is None and dose["provenance"] != "stored_actual":
                     dose.pop("per_side")
                 elif dose["per_side"] is not None:
@@ -103,9 +107,12 @@ class GroupSessionRepository:
         )
         for dose in actual:
             self.connection.execute(
-                "INSERT INTO group_actual_set VALUES (?,?,?,?,?,?,?,?)",
+                "INSERT INTO group_actual_set (occurrence_id,set_order,value,unit,side,note,"
+                "provenance,per_side,planned_set_order,recording_scope) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?)",
                 (occurrence_id, dose["order"], dose["value"], dose["unit"], dose["side"],
-                 dose["note"], dose["provenance"], dose.get("per_side")),
+                 dose["note"], dose["provenance"], dose.get("per_side"),
+                 dose.get("planned_set_order"), dose.get("recording_scope")),
             )
 
     def batch(self, identifier, token, members, now):

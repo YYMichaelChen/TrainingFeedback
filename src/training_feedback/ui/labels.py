@@ -3,6 +3,7 @@
 from PySide6.QtWidgets import QComboBox, QDialogButtonBox, QMessageBox
 
 from ..domain.enums import AbortReason, DoseUnit, ExerciseResult, FeedbackValue, SessionStatus
+from ..domain.execution_modes import alternating_explanation, execution_mode
 from ..domain.plans import PlanPhase
 from ..error_messages import ERROR_TRANSLATIONS as ERROR_TRANSLATIONS
 from ..error_messages import LIBRARY_REASON_LABELS as LIBRARY_REASON_LABELS
@@ -87,9 +88,10 @@ GROUP_PLAN_TEXT = {
     ),
     "member_rest": "成员后休息秒", "side_rest": "换侧休息秒", "round_rest": "轮间休息秒",
     "exit_rest": "动作结束后休息（秒）", "first_side": "先做哪一侧", "rounds": "轮数",
+    "execution_mode": "执行方式", "alternating_start": "每组先到哪一侧",
     "sequence": "换侧顺序", "transition": "体位 / 支撑转换说明", "group_name": "动作组名称",
     "none": "不适用", "left": "左侧", "right": "右侧",
-    "member_each_side": "每个成员分别完成两侧", "same_side_then_switch": "每轮先同侧序列再换侧",
+    "member_each_side": "逐个成员完成", "same_side_then_switch": "每轮先同侧序列再换侧",
     "all_rounds_then_switch": "先一侧全部轮次再换侧", "save": "保存草稿", "error": "无法完成操作",
     "preview": "完整计划、差异与执行顺序", "confirm": "确认启用当前计划及列出的未审核指导",
     "unreviewed": "未审核指导", "diff": "变更明细", "new_revision": "新计划或新版本",
@@ -165,6 +167,8 @@ def occurrence_title(row):
 
 
 def occurrence_side_text(row):
+    if execution_mode(row["action"]) == "alternating":
+        return "左右交替（每组连续完成）"
     if row.get("dose_scope") == "per_side_aggregate":
         return EXECUTION_TEXT["per_side_aggregate"]
     return EXECUTION_TEXT.get(row["side"], EXECUTION_TEXT["both"])
@@ -177,6 +181,8 @@ def seconds_text(value):
 def occurrence_prescription(row):
     lines = [EXECUTION_TEXT["prescription"]]
     for dose in sorted(row["action"]["sets"], key=lambda item: item["order"]):
+        if execution_mode(row["action"]) == "alternating":
+            lines.append(f"第 {dose['order']} 组：" + alternating_explanation(row["action"], dose))
         value = "按说明" if dose["value"] is None else f"{dose['value']:g}"
         scope = ("每侧 " if row.get("dose_scope") == "per_side_aggregate"
                  and dose["per_side"] else "")
@@ -204,7 +210,10 @@ def occurrence_result_text(row):
         side = ("每侧" if dose.get("per_side") else "侧别未知"
                 if "per_side" in dose and dose["per_side"] is None
                 else EXECUTION_TEXT.get(dose["side"], EXECUTION_TEXT["both"]))
-        lines.append(f"{EXECUTION_TEXT['performed']}第 {dose['order']} 组：{value} "
+        if dose.get("recording_scope") == "total":
+            side = "交替总次数（实际左右次数及起始侧未记录）"
+        order = dose.get("planned_set_order", dose["order"])
+        lines.append(f"{EXECUTION_TEXT['performed']}第 {order} 组：{value} "
                      f"{label(DOSE_UNIT_LABELS, dose['unit'])} · "
                       f"{side} · "
                      f"{EXECUTION_TEXT[source]}；{dose['note']}")

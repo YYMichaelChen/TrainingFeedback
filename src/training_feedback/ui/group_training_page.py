@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..domain.enums import AbortReason
+from ..domain.execution_modes import execution_mode
 from .compact_widgets import ActionBar
 from .exercise_reading import ExerciseReading
 from .guidance_widgets import GuidanceView
@@ -191,9 +192,14 @@ class GroupTrainingPage(QWidget):
         self.actual_panel = QWidget()
         actual_layout = QVBoxLayout(self.actual_panel)
         actual_layout.addWidget(QLabel(T["actual"]))
-        self.actual = QTableWidget(0, 4)
+        self.actual_hint = QLabel("每行选择计划剂量组，再选只记总次数或分别记录的一侧。"
+                                 "同组两种口径不能混用；只填左／右时另一侧保持未记录，空白不是零。")
+        self.actual_hint.setWordWrap(True)
+        actual_layout.addWidget(self.actual_hint)
+        self.actual = QTableWidget(0, 5)
         self.actual.setHorizontalHeaderLabels([T[key] for key in
-                                               ("value", "unit", "side_column", "set_note")])
+                                               ("value", "unit", "side_column", "set_note")]
+                                              + ["计划剂量组"])
         self.actual.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.actual.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         actual_layout.addWidget(self.actual)
@@ -352,6 +358,10 @@ class GroupTrainingPage(QWidget):
         needs_actual = result in ("partial", "exceeded")
         self.actual_panel.setVisible(needs_actual)
         self.actual.setRowCount(0)
+        self.actual_hint.setVisible(execution_mode(
+            self.controller.current["action"]) == "alternating")
+        self.actual.setColumnHidden(4, execution_mode(
+            self.controller.current["action"]) != "alternating")
         if needs_actual:
             self.add_actual()
 
@@ -361,7 +371,19 @@ class GroupTrainingPage(QWidget):
         self.actual.setItem(row, 0, QTableWidgetItem(""))
         unit = self.controller.current["action"]["sets"][0]["unit"]
         self.actual.setCellWidget(row, 1, make_unit_combo(unit))
-        if self.controller.current.get("dose_scope") == "per_side_aggregate":
+        if execution_mode(self.controller.current["action"]) == "alternating":
+            side = QComboBox()
+            for key, text in (("total", "只记总次数"), ("left", "分别记录：左侧"),
+                              ("right", "分别记录：右侧")):
+                side.addItem(text, key)
+            side.setCurrentIndex(-1)
+            self.actual.setCellWidget(row, 2, side)
+            planned = QComboBox()
+            for dose in self.controller.current["action"]["sets"]:
+                planned.addItem(f"第 {dose['order']} 组", dose["order"])
+            planned.setCurrentIndex(-1)
+            self.actual.setCellWidget(row, 4, planned)
+        elif self.controller.current.get("dose_scope") == "per_side_aggregate":
             side = QComboBox()
             side.addItem(T["per_side_aggregate"], True)
             side.addItem(T["both"], False)
@@ -386,6 +408,12 @@ class GroupTrainingPage(QWidget):
                                 "note": self.actual.item(index, 3).text()})
                 if self.controller.current.get("dose_scope") == "per_side_aggregate":
                     actual[-1]["per_side"] = self.actual.cellWidget(index, 2).currentData()
+                elif execution_mode(self.controller.current["action"]) == "alternating":
+                    side = self.actual.cellWidget(index, 2).currentData()
+                    actual[-1].update(
+                        planned_set_order=self.actual.cellWidget(index, 4).currentData(),
+                        recording_scope="total" if side == "total" else "sides",
+                        side=side if side != "total" else None)
         except ValueError:
             QMessageBox.warning(self, T["error"], user_message(
                 "Actual dose must be finite and non-negative."))

@@ -22,7 +22,7 @@ class GroupPlanRepository:
         if row is None:
             raise ValueError("没有找到草稿编辑文档。")
         document = dict(row)
-        if document["format_version"] != 1:
+        if document["format_version"] != 2:
             raise ValueError("草稿格式不受支持，请使用支持此格式的程序版本。")
         document["payload"] = json.loads(document.pop("payload_json"))
         return document
@@ -42,7 +42,7 @@ class GroupPlanRepository:
             self.connection.execute(
                 "INSERT INTO plan_edit_document(id,format_version,purpose,revision_id,"
                 "source_revision_id,requested_base_number,payload_json,created_at,updated_at) "
-                "VALUES (?,1,?,?,?,?,?,?,?)",
+                "VALUES (?,2,?,?,?,?,?,?,?)",
                 (identifier, purpose, revision_id, source_revision_id, requested_base_number,
                  raw, now, now),
             )
@@ -131,7 +131,7 @@ class GroupPlanRepository:
             plan["days"].append({"order": day["day_order"], "items": items})
         revision["payload"] = {
             "schema": "training_feedback.plan",
-            "schema_version": 4,
+            "schema_version": row["format_version"],
             "intent": "new",
             "rationale": row["rationale"],
             "change_description": row["change_description"],
@@ -242,6 +242,8 @@ class GroupPlanRepository:
                 now,
             ),
         ).lastrowid
+        self.connection.execute("UPDATE group_plan_revision SET format_version=? WHERE id=?",
+                                (payload["schema_version"], identifier))
         self._children(identifier, plan)
         return identifier
 
@@ -279,6 +281,9 @@ class GroupPlanRepository:
             ),
         )
         self._children(identifier, plan)
+
+        self.connection.execute("UPDATE group_plan_revision SET format_version=? WHERE id=?",
+                                (payload["schema_version"], identifier))
 
     def _children(self, identifier, plan):
         for day in plan["days"]:

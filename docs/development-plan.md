@@ -196,11 +196,21 @@ wrapped height at the current column width, indentation and font size.
 Action choices are loaded once per plan-editor lifetime, existing forms are reused,
 hidden capsule navigation is built only when needed, and dose-table population
 performs one final size calculation instead of recalculating after every cell.
-Draft and upgrade-save confirmation initially shows only a short explanation and
-the target plan code. Full changes are optional, collapsed by default, and rendered
+Draft and upgrade-save confirmation shows a short explanation and the target plan
+code when available. When validation reports incomplete fields, it immediately
+shows only the numbered issues with Chinese locations, reasons and field paths;
+the issue list must not be replaced by a full plan dump or revision diff.
+Without issues, full changes are optional, collapsed by default, and rendered
 on demand in a read-only scroll area within a screen-bounded dialog. Save-draft and
 cancel buttons remain outside that area; long plans cannot stretch the confirmation
 into an unbounded message box or push its footer below the screen.
+Save results and blocked import/export/activation operations also show the actual
+issues, with wording specific to whether data was saved and which operation failed.
+Import eligibility warnings precede the prescription preview. Problem lists remain
+scrollable and selectable, including on the draft detail page. Clicking an editable
+issue focuses its field or containing list when the list itself is incomplete.
+Dose validation reports independently identifiable missing values/notes at their
+set paths; activation content blockers identify the affected action and reason.
 Revision diffs cover action additions,
 removals and ordering, phase, rest, notes, set values, units, per-side flags,
 and plan purpose without mutating either revision.
@@ -475,9 +485,10 @@ Applying it creates a new immutable plan revision and records:
 No active plan is silently overwritten.
 
 The application owns the versioned contract; it is not tied to a particular AI
-provider. New imports use `training_feedback.plan` v4 and new evidence uses
-`training_feedback.evidence` v4. The canonical runtime schema is
-`src/training_feedback/contracts/plan-v4.schema.json`;
+provider. New files use `training_feedback.plan` v5 and new evidence uses
+`training_feedback.evidence` v5. Product v4 files are strictly validated against
+their retained schema before conversion into v5 drafts, preserving original bytes.
+The canonical runtime schema is `src/training_feedback/contracts/plan-v5.schema.json`;
 `src/training_feedback/data/plan_contract.py` loads it, domain/application code
 validates it, and the handoff repositories produce portable evidence.
 The UI imports JSON files into drafts and retains original bytes in managed
@@ -1084,6 +1095,31 @@ inherited by child movements.
 
 ### 12.3 Plan Action Groups And Dose Semantics
 
+应用 0.8.21 将执行方式与计量口径分开。动作／组内成员的 `execution_mode` 必须明确为
+`whole`（整体完成）、`separate_sides`（分侧完成）或 `alternating`（左右交替）。
+整体的 `per_side=false`，分侧为 true；交替允许总次数 false 或每侧次数 true。
+同一动作各组单位和计量口径一致。改变执行方式属于 AA 结构修订；改变剂量属于 DD，
+格式转换本身不算执行结构变化。不根据动作名称猜测模式或自动改写已有90/90计划。
+
+交替仅支持有限非负整数“次”，空白和小数不能启用但可保留原文为草稿。
+`alternating_start` 必须明确选 left／right／either（每组先左／先右／任选），其它模式
+为 null。每组重新遵循起始规则；摆位和回中不计次，到达目标侧才计一次，具体动作
+定义继续由精确内容版本的指导解释。每侧 N 次合计 2N；总 N 次按交替推算计划分配，
+奇数及任选不生成实际侧别。切换计量口径保留原数值并立即解释新含义，不自动乘除二。
+切换模式时保留不适用输入的内部缓存，缓存不参与有效处方。交替无逐次换侧休息。
+
+独立交替动作各组在一个连续步骤中执行；组内逐个成员完成允许整体、分侧、交替混合，
+交替成员每轮仅出现一次。其余两种组侧序只允许分侧成员，冲突须定位成员和组侧序，
+不自动改动。只有分侧成员需要组起始侧／换侧休息；其它边界仍只应用一次。
+
+新会话冻结执行语义版本、模式、口径、每组目标、起始规则和精确计次指导内容引用。
+按计划完成交替每侧 N 时记录左右各 N、来源为用户确认处方；总量口径只记总量。
+部分／超额完成按计划组号选择只记总量或分别记左右，不混用或重复累计。同组只填
+一侧时另一侧未记录，明确零保留零，不推算另一侧、不要求实际仍严格交替或相等。
+未完成不生成零剂量。起始侧未实际记录时保持未知。批量完成调用相同规则，撤回恢复
+原记录，暂停继续不重新展开。历史、摘要和导出须区分交替总量、左右实填和历史每侧
+汇总；不把交替无单一侧别显示为双侧同时完成。
+
 The logical structure is plan → ordered items (single action or action
 group) → ordered member actions → per-round dose sets. Preserve standalone
 action behavior. A group has a stable plan-item identity, display name, phase,
@@ -1437,11 +1473,11 @@ are `001`–`999`, are unique within the root and never wrap or silently reuse.
 Internal revision IDs/ordinals remain for associations, but the plan page shows
 the code rather than automatic `v1`/`v2` labels.
 
-Database schema 25 uses the current plan/evidence wire contracts v4.
+Database schema 26 uses the current plan/evidence wire contracts v5.
 The existing `days` wire/storage envelope remains an internal representation;
-the external wire shape is unchanged. Internal editing format 1 is stored in
+the v5 wire adds explicit execution fields. Internal editing format 2 is stored in
 `plan_edit_document`, separate from prescription tables and external contracts.
-Incomplete documents have no exchange format and cannot be exported as valid v4
+Incomplete documents have no exchange format and cannot be exported as valid v5
 plans or training evidence. New manual drafts use one container.
 Reading and whole-plan execution concatenate existing containers by their order
 and each item's order. Editing projects this sequence into one unsaved container,
@@ -1453,15 +1489,24 @@ original source revision; existing sessions resume their original frozen scope.
 Schema upgrades do not rewrite active revisions or history.
 The plan-import rationale may be empty. A new import receives a root-local base
 number; an upgrade import identifies the target by base code and follows the
-same difference classification. Only v4 is accepted; v2/v3 imports receive
-the current-format error. JSON/Markdown evidence and new training snapshots
+same difference classification. New files use v5; this product's v4 files undergo
+strict original validation before whole/separate-sides conversion to v5 drafts.
+The import preview explains conversion and retains source bytes. v2/v3 and future
+formats are rejected before writes. JSON/Markdown evidence and new training snapshots
 show the complete code consistently. Saving a draft never activates it, and
 activation retains the existing eligibility and explicit confirmation gates.
 
-Schema 24 roots add the internal edit table/index in one transaction to reach 25.
-Retained schema 23 roots perform the historical day-name column removal and add
-the edit store in that same transaction, recording 24 and 25. Plans, training
-history, feedback and review records remain. Failure rolls back the complete upgrade.
+Supported schema 23/24/25 roots reach 26 transactionally. Schema 23 retains its
+historical day-name removal; 23/24 add the edit store. Schema 25 rebuilds the
+edit table as format2 and converts only editable raw documents, preserving numeric
+text, unknowns, caches and notes. Revision format markers default existing facts
+to v4; new writes use v5. Actual-dose rows add planned-set association and
+total/sides recording scope. Immutable revisions, original imports and paused or
+completed session snapshots are not rewritten. Historical per-side aggregates
+remain aggregates, never alternating; v5 evidence carries the frozen semantic
+version and embeds the matching retained plan schema. New roots have the same
+schema26 structure. Failure rolls back the complete upgrade. Unsupported and
+future roots are rejected before writes; this creates no formal support promise.
 
 程序提供的客户端文案（包括 Qt 默认按钮、菜单和对话框）使用中文，不依赖系统语言。
 导航、状态、校验、预览、设置和自有安装／卸载提示均适用。产品／品牌名、必要技术

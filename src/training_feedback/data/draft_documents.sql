@@ -1,6 +1,6 @@
 CREATE TABLE plan_edit_document (
     id TEXT PRIMARY KEY,
-    format_version INTEGER NOT NULL CHECK(format_version = 1),
+    format_version INTEGER NOT NULL CHECK(format_version = 2),
     edit_token INTEGER NOT NULL DEFAULT 1,
     purpose TEXT NOT NULL CHECK(purpose IN ('new','clone','edit','upgrade')),
     revision_id INTEGER UNIQUE REFERENCES group_plan_revision(id),

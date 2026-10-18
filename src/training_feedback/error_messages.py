@@ -20,11 +20,13 @@ def issue_text(issue):
     labels = {"plan": "计划", "days": "动作列表", "items": "动作", "members": "成员",
               "sets": "剂量组", "value": "数值", "unit": "单位", "name": "名称",
               "purpose": "训练目的", "first_side": "先做哪一侧", "round_count": "轮数",
+              "requested_base_number": "复制计划编号",
               "exercise": "动作身份", "content": "内容身份", "source": "来源引用"}
     parts = [str(part + 1) if isinstance(part, int)
              else labels.get(part, FIELD_LABELS.get(part, part)) for part in issue.path]
     reasons = {"number": "请填写有限的非负数；轮数须为正整数，空白仍表示未知",
-               "format": "只支持 UTF-8 的计划 JSON v4；训练证据及旧／未来版本不能导入",
+               "format": "请使用 UTF-8 的计划 JSON v5；本产品 v4 可转换，"
+                         "训练证据及其它版本不能导入",
                "required": "尚未填写此必需字段", "orders": "顺序须为不重复的正整数",
                "identity": "条目标识重复，请为不同条目使用不同标识",
                "schema.type": "字段类型不符或尚未填写",
@@ -38,6 +40,10 @@ def issue_text(issue):
                "schema.not": "该字段不适用于当前操作，请对照格式说明修正"}
     reason = user_message(issue.detail) if issue.code == "rule" else reasons.get(
         issue.code, "字段结构或取值不符合格式要求，请对照当前格式说明修正")
+    if issue.code.startswith("content."):
+        code = issue.code.removeprefix("content.")
+        reason = "动作「" + issue.detail + "」：" + LIBRARY_REASON_LABELS.get(
+            code, "内容不可用（" + code + "）") + "；请到动作库处理后重新预览。"
     path = "/".join(map(str, issue.path))
     return ((" → ".join(parts) or "计划文件") + "：" + reason
             + (f"\n字段路径：{path}" if path else ""))
@@ -52,6 +58,16 @@ LIBRARY_REASON_LABELS = {
 }
 
 ERROR_TRANSLATIONS = {
+    "Only plan format version 5 is accepted.": "请使用当前计划格式 v5；v4 文件请通过导入入口转换。",
+    "Choose an execution mode.": "请选择整体完成、分侧完成或左右交替。",
+    "Alternating work requires a starting rule for every set.":
+        "请选择每组先左、先右或任选；未选择不能代替任选。",
+    "Alternating work requires reps.": "左右交替目前仅支持“次”，请修改此组单位；原输入仍保留。",
+    "Alternating reps must be non-negative integers.":
+        "左右交替次数须为有限的非负整数；空白不是零。",
+    "Only alternating work has an alternating starting rule.": "仅左右交替可指定每组起始规则。",
+    "Dose convention conflicts with execution mode.":
+        "计量口径与执行方式冲突：整体使用整体剂量，分侧使用每侧剂量。",
     "An unfinished historical upgrade is unsupported. Create a new empty "
     "data root; the original root and files are preserved.":
         "此数据目录有未完成的历史升级，当前版本不再续做。请新建空数据目录；原目录和文件已保留。",
@@ -795,6 +811,7 @@ def _activation_reasons(detail: str) -> str:
 
 
 FIELD_LABELS = {
+    "execution_mode": "执行方式", "alternating_start": "每组先到哪一侧",
     "plan": "计划", "days": "动作列表", "items": "计划条目", "members": "动作组成员",
     "sets": "剂量组", "name": "名称", "purpose": "训练目的", "note": "备注",
     "value": "数值", "unit": "单位", "order": "顺序", "per_side": "每侧",
@@ -913,7 +930,7 @@ def user_message(error: str | BaseException) -> str:
         translated = _system_error(error)
         if translated is not None:
             return translated
-    if message.startswith("Invalid plan v4 at "):
+    if message.startswith(("Invalid plan v4 at ", "Invalid plan v5 at ")):
         path, _, detail = message[len("Invalid plan v4 at "):].partition(": ")
         cause = error.__cause__ if isinstance(error, BaseException) else None
         if cause is not None and hasattr(cause, "validator"):

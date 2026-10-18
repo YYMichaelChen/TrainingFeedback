@@ -38,6 +38,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..domain.execution_modes import (
+    ALTERNATING_START_LABELS,
+    EXECUTION_MODE_LABELS,
+    alternating_explanation,
+    execution_mode,
+    upgrade_payload,
+)
 from ..domain.group_plans import (
     PlanDocument,
     action_from_choice,
@@ -45,6 +52,7 @@ from ..domain.group_plans import (
     continuous_plan_day,
     diff_plans,
     group_from_item,
+    normalize_group_side_fields,
     normalize_inapplicable_rest,
     prescription_rest_applicability,
 )
@@ -97,9 +105,9 @@ def text(edit, original):
     return original if current == original.replace("\r\n", "\n").replace("\r", "\n") else current
 
 
-def error(parent, exc):
+def error(parent, exc, *, issue_summary=None):
     if isinstance(exc, PlanIssues):
-        dialog = PlanProblemDialog(exc.issues, parent=parent)
+        dialog = PlanProblemDialog(exc.issues, parent=parent, summary=issue_summary)
         dialog.exec()
         return
     QMessageBox.warning(parent, T["error"], user_message(exc))
@@ -123,11 +131,12 @@ def number(edit, label, *, optional=False):
 def action_editor_state(dialog):
     return (
         dialog.exercise.currentData(), dialog.exercise.currentText(),
+        dialog.mode.currentData(), dialog.alternating_start.currentData(),
         dialog.phase.currentData(), dialog.side.currentData(),
         dialog.side_rest.text(), dialog.rest.text(), dialog.note.toPlainText(),
         [(dialog.sets.item(row, 0).text(),
           dialog.sets.cellWidget(row, 1).currentData(),
-          dialog.sets.cellWidget(row, 2).isChecked(),
+          dialog.sets.cellWidget(row, 2).currentData(),
           dialog.sets.item(row, 3).text(), dialog.sets.item(row, 4).text())
          for row in range(dialog.sets.rowCount())],
     )
@@ -190,6 +199,14 @@ class ActionPrescriptionDialog(QDialog):
                     self.exercise.setCurrentIndex(i)
                     break
         form.addRow(T["choose"], self.exercise)
+        self.mode = combo({None: "未选择", **EXECUTION_MODE_LABELS},
+                          execution_mode(action) if action else "whole")
+        self.alternating_start = combo(ALTERNATING_START_LABELS,
+                                       action.get("alternating_start") if action else None)
+        if action and "provenance" in action:
+            self.mode.setEnabled(False)
+        form.addRow("执行方式", self.mode)
+        form.addRow("每组先到哪一侧", self.alternating_start)
         self.phase = combo(PLAN_PHASE_LABELS, action.get("phase", "main") if action else "main")
         self.side = combo(
             {None: T["none"], "left": T["left"], "right": T["right"]},
@@ -218,18 +235,25 @@ class ActionPrescriptionDialog(QDialog):
         self.sets = RelativeTable([5, 4, 3, 6, 4, 4, 4, 2],
                                   compact_columns=(0, 1, 2, 3, 5, 6, 7))
         self.sets.setHorizontalHeaderLabels(
-            [T[key] for key in ("value", "unit", "per_side", "set_rest", "note")]
+            [T["value"], T["unit"], "计量口径", T["set_rest"], T["note"]]
             + [T["set_order"], "操作", "#"]
         )
         self.sets.horizontalHeader().setSectionsMovable(False)
         self.sets.horizontalHeader().moveSection(5, 0)
         self.sets.horizontalHeader().moveSection(7, 0)
         self.exercise.currentIndexChanged.connect(self.refresh_rest_fields)
+        self.mode.currentIndexChanged.connect(self.refresh_rest_fields)
+        self.alternating_start.currentIndexChanged.connect(self.refresh_rest_fields)
         with self.sets.batch_metrics():
             for dose in action["sets"] if action else []:
                 self._append_set(dose)
             self.refresh_rest_fields()
         fields.addWidget(self.sets)
+        self.counting_hint = QLabel()
+        self.counting_hint.setWordWrap(True)
+        fields.addWidget(self.counting_hint)
+        self.sets.itemChanged.connect(self.refresh_counting_hint)
+        self.refresh_counting_hint()
         controls = ActionBar()
         add = QPushButton(T["add_set"])
         add.clicked.connect(lambda: self.add_set())
@@ -268,9 +292,15 @@ class ActionPrescriptionDialog(QDialog):
                 self.exercise.setEditText(cache["exercise_search"])
             self.side_rest.setProperty("applicableText", cache.get("side_rest", ""))
             self.side.setProperty("applicableSide", cache.get("side"))
+            if action.get("execution_mode") != "alternating":
+                self.alternating_start.setCurrentIndex(
+                    self.alternating_start.findData(cache.get("alternating_start")))
             for row, raw in enumerate(cache.get("set_rests", [])):
                 if row < self.sets.rowCount():
                     self.sets.item(row, 3).setData(Qt.ItemDataRole.UserRole, raw)
+            for row, raw in enumerate(cache.get("alternating_measures", [])):
+                if row < self.sets.rowCount():
+                    self.sets.cellWidget(row, 2).setProperty("alternatingMeasure", raw)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -320,9 +350,12 @@ class ActionPrescriptionDialog(QDialog):
         self.sets.setCellWidget(row, 1, combo(
             {unit.value: label for unit, label in DOSE_UNIT_LABELS.items()}, dose["unit"]
         ))
-        check = QCheckBox()
-        check.setChecked(dose["per_side"])
-        check.stateChanged.connect(self.refresh_rest_fields)
+        self.sets.cellWidget(row, 1).currentIndexChanged.connect(self.refresh_counting_hint)
+        alternating = self.mode.currentData() == "alternating"
+        check = combo({False: "总次数" if alternating else "整体剂量",
+                       True: "每侧次数" if alternating else "每侧剂量"},
+                      dose["per_side"])
+        check.currentIndexChanged.connect(self.refresh_rest_fields)
         self.sets.setCellWidget(row, 2, check)
         self.sets.setItem(row, 3, QTableWidgetItem(
             "" if dose["rest_after_set_seconds"] is None else str(dose["rest_after_set_seconds"])))
@@ -360,13 +393,32 @@ class ActionPrescriptionDialog(QDialog):
             self._refresh_rest_fields()
 
     def _refresh_rest_fields(self):
+        mode = self.mode.currentData()
+        self.alternating_start.setEnabled(mode == "alternating")
+        for row in range(self.sets.rowCount()):
+            measure = self.sets.cellWidget(row, 2)
+            with QSignalBlocker(measure):
+                if getattr(self, "_previous_mode", None) == "alternating" and mode != "alternating":
+                    measure.setProperty("alternatingMeasure", measure.currentData())
+                elif (getattr(self, "_previous_mode", None) != "alternating"
+                      and mode == "alternating"):
+                    cached = measure.property("alternatingMeasure")
+                    if cached is not None:
+                        measure.setCurrentIndex(measure.findData(cached))
+                measure.setItemText(0, "总次数" if mode == "alternating" else "整体剂量")
+                measure.setItemText(1, "每侧次数" if mode == "alternating" else "每侧剂量")
+                if mode in ("whole", "separate_sides"):
+                    measure.setCurrentIndex(measure.findData(mode == "separate_sides"))
+                measure.setEnabled(mode == "alternating")
+        self._previous_mode = mode
         choice = self.exercise.currentData()
         aggregate = bool(self.source and "provenance" in self.source and choice
                          and choice["exercise"] == self.source["exercise"])
         applicability = prescription_rest_applicability(
-            [{"per_side": self.sets.cellWidget(row, 2).isChecked()}
+            [{"per_side": self.sets.cellWidget(row, 2).currentData()}
              for row in range(self.sets.rowCount())],
             aggregate=aggregate,
+            mode=mode,
         )
         for row, applicable in enumerate(applicability["set_rests"]):
             item = self.sets.item(row, 3)
@@ -404,6 +456,22 @@ class ActionPrescriptionDialog(QDialog):
             self.side.setEnabled(applicable and not aggregate)
             self.side_rest.setPlaceholderText(T["unknown"] if applicable else T["none"])
         self.sets.update_metrics()
+        self.refresh_counting_hint()
+
+    def refresh_counting_hint(self):
+        if not hasattr(self, "counting_hint"):
+            return
+        alternating = self.mode.currentData() == "alternating"
+        self.counting_hint.setVisible(alternating)
+        if alternating:
+            action = {"alternating_start": self.alternating_start.currentData()}
+            self.counting_hint.setText("\n".join(
+                f"第 {row + 1} 组：" + alternating_explanation(action, {
+                    "value": self.sets.item(row, 0).text(),
+                    "unit": self.sets.cellWidget(row, 1).currentData(),
+                    "per_side": self.sets.cellWidget(row, 2).currentData()})
+                for row in range(self.sets.rowCount())
+                if self.sets.item(row, 0) and self.sets.cellWidget(row, 2)))
 
     def fill_equal_sets(self):
         source = self.sets.currentRow()
@@ -420,7 +488,7 @@ class ActionPrescriptionDialog(QDialog):
             return
         value = self.sets.item(source, 0).text()
         unit = self.sets.cellWidget(source, 1).currentData()
-        per_side = self.sets.cellWidget(source, 2).isChecked()
+        per_side = self.sets.cellWidget(source, 2).currentData()
         rest_item = self.sets.item(source, 3)
         rest = rest_item.text() if rest_item.flags() & Qt.ItemFlag.ItemIsEditable else None
         note = self.sets.item(source, 4).text()
@@ -431,7 +499,8 @@ class ActionPrescriptionDialog(QDialog):
             self.sets.cellWidget(row, 1).setCurrentIndex(
                 self.sets.cellWidget(row, 1).findData(unit)
             )
-            self.sets.cellWidget(row, 2).setChecked(per_side)
+            self.sets.cellWidget(row, 2).setCurrentIndex(
+                self.sets.cellWidget(row, 2).findData(per_side))
             target_rest = self.sets.item(row, 3)
             if rest is not None and target_rest.flags() & Qt.ItemFlag.ItemIsEditable:
                 target_rest.setText(rest)
@@ -461,7 +530,7 @@ class ActionPrescriptionDialog(QDialog):
                         "value": number(self.sets.item(row, 0), f"第 {row + 1} 组数值",
                                         optional=True),
                         "unit": self.sets.cellWidget(row, 1).currentData(),
-                        "per_side": self.sets.cellWidget(row, 2).isChecked(),
+                        "per_side": self.sets.cellWidget(row, 2).currentData(),
                         "rest_after_set_seconds": (
                             number(self.sets.item(row, 3), f"第 {row + 1} 组的组间休息秒",
                                    optional="provenance" in action)
@@ -471,6 +540,9 @@ class ActionPrescriptionDialog(QDialog):
                     }
                 )
             action["sets"] = doses
+            action["execution_mode"] = self.mode.currentData()
+            action["alternating_start"] = (self.alternating_start.currentData()
+                if self.mode.currentData() == "alternating" else None)
             action["note"] = text(self.note, self.source["note"] if self.source else "")
             action["rest_after_member_seconds" if self.member else "rest_after_action_seconds"] = (
                 number(self.rest, T["member_rest"] if self.member else T["exit_rest"],
@@ -487,6 +559,11 @@ class ActionPrescriptionDialog(QDialog):
                 )
             action = normalize_inapplicable_rest(action)
             action["_input"] = {
+                "alternating_measures": [self.sets.cellWidget(row, 2).currentData()
+                    if self.mode.currentData() == "alternating"
+                    else self.sets.cellWidget(row, 2).property("alternatingMeasure")
+                    for row in range(self.sets.rowCount())],
+                "alternating_start": self.alternating_start.currentData(),
                 "side_rest": (self.side_rest.text() if self.side_rest.isEnabled()
                               else self.side_rest.property("applicableText") or ""),
                 "side": (self.side.currentData() if self.side.isEnabled()
@@ -554,6 +631,11 @@ class GroupPrescriptionDialog(QDialog):
                 "" if self.group[key] is None else str(self.group[key])
             )
             form.addRow(T[label], self.fields[key])
+        cache = self.group.get("_input", {})
+        self.side.setProperty("applicableSide", cache.get("side", self.group["first_side"]))
+        self.fields["rest_between_sides_seconds"].setProperty(
+            "applicableText", cache.get(
+                "side_rest", self.fields["rest_between_sides_seconds"].text()))
         self.transition = ResizableTextEdit(self.group["transition"])
         self.note = ResizableTextEdit(self.group["note"])
         for label, widget in (
@@ -616,7 +698,24 @@ class GroupPrescriptionDialog(QDialog):
         self.members.setCurrentIndex(max(0, index) if self.members.count() else -1)
         del blocker
         self.edit_member()
+        self.refresh_side_fields()
         self.members_changed.emit()
+
+    def refresh_side_fields(self):
+        separate = any((self.member_editors[member["item_id"]].mode.currentData()
+                        if member["item_id"] in self.member_editors else execution_mode(member))
+                       == "separate_sides" for member in self.group["members"])
+        rest = self.fields["rest_between_sides_seconds"]
+        if rest.isEnabled() and not separate:
+            rest.setProperty("applicableText", rest.text())
+            self.side.setProperty("applicableSide", self.side.currentData())
+            rest.setText("不适用")
+            self.side.setCurrentIndex(self.side.findData(None))
+        elif not rest.isEnabled() and separate:
+            rest.setText(rest.property("applicableText") or "")
+            self.side.setCurrentIndex(self.side.findData(self.side.property("applicableSide")))
+        rest.setEnabled(separate)
+        self.side.setEnabled(separate)
 
     def add_member(self):
         dialog = ActionPrescriptionDialog(self.choices, member=True, parent=self,
@@ -646,6 +745,7 @@ class GroupPrescriptionDialog(QDialog):
             self.member_editors[key] = dialog
             self.member_states[key] = action_editor_state(dialog)
             dialog.exercise.currentIndexChanged.connect(self.show_guidance)
+            dialog.mode.currentIndexChanged.connect(self.refresh_side_fields)
         self.member_stack.setCurrentWidget(self.member_editors[key])
         if self.tabs.currentIndex() == 1:
             self.selection_changed.emit(index)
@@ -731,8 +831,15 @@ class GroupPrescriptionDialog(QDialog):
                 "transition": text(self.transition, self.group["transition"]),
                 "note": text(self.note, self.group["note"]),
             }
-            group.update({key: number(edit, T[key]) for key, edit in self.fields.items()})
-            self.value = group
+            group.update({key: number(edit, T[key]) if edit.isEnabled() else 0
+                          for key, edit in self.fields.items()})
+            group["_input"] = {
+                "side": self.side.currentData() if self.side.isEnabled()
+                        else self.side.property("applicableSide"),
+                "side_rest": self.fields["rest_between_sides_seconds"].text()
+                    if self.fields["rest_between_sides_seconds"].isEnabled()
+                    else self.fields["rest_between_sides_seconds"].property("applicableText") or ""}
+            self.value = normalize_group_side_fields(group)
         except OPERATION_ERRORS as exc:
             self.tabs.setCurrentIndex(0)
             error(self, exc)
@@ -807,13 +914,14 @@ class GroupPlanEditor(QDialog):
             if upgrade_source
             else {
                 "schema": "training_feedback.plan",
-                "schema_version": 4,
+                "schema_version": 5,
                 "intent": "new",
                 "rationale": "",
                 "change_description": "",
                 "plan": {"name": "", "purpose": "", "days": []},
             }
         )
+        self.source = upgrade_payload(self.source)
         self.source.setdefault("intent", "new")
         self.source.setdefault("change_description", "")
         if self.upgrade_source:
@@ -1431,7 +1539,8 @@ class GroupPlanEditor(QDialog):
             summary += f"。有 {len(preview['issues'])} 处待完善，仍可保存草稿。"
             confirmation = DraftSaveConfirmation(
                 T["save"], summary,
-                diff_plans(before, payload["plan"]), self,
+                [] if preview["issues"] else diff_plans(before, payload["plan"]),
+                self, issues=preview["issues"],
             )
             if confirmation.exec() != QDialog.DialogCode.Accepted:
                 return False
@@ -1446,10 +1555,13 @@ class GroupPlanEditor(QDialog):
                 requested_base_number=base,
             )
             self.saved_id = result["id"]
-            QMessageBox.information(
-                self, "草稿已保存", "已保存，有 " + str(len(result["issues"])) + " 处待完善。"
-                if result["issues"] else "草稿已保存，可预览并启用。",
-            )
+            if result["issues"]:
+                PlanProblemDialog(
+                    result["issues"], parent=self, title="草稿已保存",
+                    summary="草稿已保存。以下内容仍需完善后才能启用；可重新打开草稿继续编辑。",
+                ).exec()
+            else:
+                QMessageBox.information(self, "草稿已保存", "草稿已保存，可预览并启用。")
         except OPERATION_ERRORS as exc:
             error(self, exc)
             return
@@ -1471,6 +1583,13 @@ class GroupPlanEditor(QDialog):
 
     def focus_issue(self, issue):
         path = issue.path
+        def row_after(key):
+            if key not in path:
+                return None
+            position = path.index(key) + 1
+            return (path[position] if position < len(path)
+                    and isinstance(path[position], int) else None)
+
         if path[:2] == ("plan", "name"):
             self.name.setFocus()
             return
@@ -1480,24 +1599,37 @@ class GroupPlanEditor(QDialog):
             return
         if "items" not in path:
             self.basic_toggle.setChecked(True)
-            self.rationale.setFocus()
+            field = path[-1] if path else ""
+            {"purpose": self.purpose, "rationale": self.rationale,
+             "change_description": self.change_description}.get(field, self.tree).setFocus()
             return
-        i = path[path.index("items") + 1]
+        i = row_after("items")
+        if i is None:
+            self.tree.setFocus()
+            return
+        m = row_after("members")
+        if issue.node_id:
+            for _key, (_d, item_index, member_index), item in self._locations():
+                if item["item_id"] == issue.node_id:
+                    i, m = item_index, member_index
+                    break
         node = self.tree.topLevelItem(i)
         if node is None:
             return
-        if "members" in path:
-            m = path[path.index("members") + 1]
+        if m is not None:
             node = node.child(m) or node
         self.tree.setCurrentItem(node)
         dialog = self.inline_editor
-        if isinstance(dialog, GroupPrescriptionDialog) and "members" in path:
+        if isinstance(dialog, GroupPrescriptionDialog) and m is not None:
             dialog.select_member(m)
             dialog = dialog.member_stack.currentWidget()
         field = path[-1] if path else ""
         if isinstance(dialog, ActionPrescriptionDialog):
-            if "sets" in path and isinstance(path[path.index("sets") + 1], int):
-                row = path[path.index("sets") + 1]
+            row = row_after("sets")
+            if "sets" in path and (row is None or row >= dialog.sets.rowCount()):
+                dialog.sets.setFocus()
+                return
+            if row is not None:
                 column = {"value": 0, "unit": 1, "per_side": 2,
                           "rest_after_set_seconds": 3, "note": 4}.get(field, 0)
                 dialog.sets.setCurrentCell(row, column)
@@ -1511,34 +1643,51 @@ class GroupPlanEditor(QDialog):
                         dialog.sets.editItem(cell)
                 return
             widget = {"first_side": dialog.side, "rest_between_sides_seconds": dialog.side_rest,
+                      "execution_mode": dialog.mode, "alternating_start": dialog.alternating_start,
                       "rest_after_action_seconds": dialog.rest,
-                      "rest_after_member_seconds": dialog.rest, "note": dialog.note}.get(
+                      "rest_after_member_seconds": dialog.rest, "note": dialog.note,
+                      "phase": dialog.phase}.get(
                           field, dialog.exercise)
             widget.setFocus()
         elif isinstance(dialog, GroupPrescriptionDialog):
+            if "members" in path:
+                dialog.tabs.setCurrentIndex(1)
+                dialog.members.setFocus()
+                return
             dialog.tabs.setCurrentIndex(0)
             widget = {"name": dialog.name, "round_count": dialog.rounds,
                       "first_side": dialog.side, "side_sequence": dialog.sequence,
-                      "transition": dialog.transition, **dialog.fields}.get(field, dialog.name)
+                      "transition": dialog.transition, "note": dialog.note,
+                      "phase": dialog.phase, **dialog.fields}.get(field, dialog.name)
             widget.setFocus()
 
     def check_for_activation(self):
         if self.pending_add:
             self.inline_editor.save()
+            if self.pending_add:
+                return
         if not self._commit_editors():
             return
         payload = deepcopy(self.source)
         payload["plan"] = deepcopy(self.document.plan)
         payload["plan"]["name"] = self.name.text()
-        preview = self.service.preview_document(
-            payload, revision=self.revision,
-            purpose=("upgrade" if self.upgrade_source
-                     else "clone" if self.clone_source else "new"),
-            source_id=self.upgrade_source["id"] if self.upgrade_source else None,
-            base=self.clone_base_input.text() if self.clone_base_input else None,
-        )
-        _candidate, issues = self.service.input_issues(payload, raw=True, activation=True,
-                                                      stored=self.revision)
+        payload["plan"]["purpose"] = text(self.purpose, self.source["plan"]["purpose"])
+        payload["rationale"] = text(self.rationale, self.source["rationale"])
+        payload["change_description"] = text(
+            self.change_description, self.source["change_description"])
+        try:
+            preview = self.service.preview_document(
+                payload, revision=self.revision,
+                purpose=("upgrade" if self.upgrade_source
+                         else "clone" if self.clone_source else "new"),
+                source_id=self.upgrade_source["id"] if self.upgrade_source else None,
+                base=self.clone_base_input.text() if self.clone_base_input else None,
+            )
+            _candidate, issues = self.service.input_issues(payload, raw=True, activation=True,
+                                                          stored=self.revision)
+        except OPERATION_ERRORS as exc:
+            error(self, exc)
+            return
         issues = list(dict.fromkeys([*preview["issues"], *issues]))
         if issues:
             PlanProblemDialog(issues, self.focus_issue, self).exec()
@@ -1548,17 +1697,20 @@ class GroupPlanEditor(QDialog):
 
 
 class PlanProblemDialog(QDialog):
-    def __init__(self, issues, focus=None, parent=None):
+    def __init__(self, issues, focus=None, parent=None, *, summary=None, title="待完善内容"):
         super().__init__(parent)
-        self.setWindowTitle("待完善内容")
+        self.setWindowTitle(title)
         fit_dialog(self)
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("点击问题可定位编辑字段；修改后请重新检查。" if focus
-                                else "尚未保存计划。请按问题清单修正文件后重新选择。"))
+        explanation = QLabel(summary or (
+            "点击问题可定位编辑字段；修改后请重新检查。" if focus
+            else "请按以下位置和原因处理；可复制问题清单。"))
+        explanation.setWordWrap(True)
+        layout.addWidget(explanation)
         rows = CardList()
         rows.setWordWrap(True)
-        for issue in issues:
-            item = QListWidgetItem(issue_text(issue))
+        for index, issue in enumerate(issues, 1):
+            item = QListWidgetItem(f"{index}. {issue_text(issue)}")
             item.setData(Qt.ItemDataRole.UserRole, issue)
             rows.addItem(item)
         if focus:
@@ -1612,6 +1764,7 @@ def render_fields(value, indent=0, field=None):
         "unit": DOSE_UNIT_LABELS, "phase": PLAN_PHASE_LABELS,
         "starting_position_class": POSITION_LABELS, "variant_role": VARIANT_LABELS,
         "kind": T, "first_side": T, "side_sequence": T,
+        "execution_mode": EXECUTION_MODE_LABELS, "alternating_start": ALTERNATING_START_LABELS,
         "source": EXERCISE_SOURCE_LABELS,
     }.get(field, {})
     return str(mapping.get(value, value))
@@ -1627,21 +1780,22 @@ def render_changes(changes):
 
 
 class DraftSaveConfirmation(QDialog):
-    """Keep save/cancel visible regardless of the size of the optional diff."""
+    """Show actionable issues first and keep save/cancel outside the scroll area."""
 
-    def __init__(self, title, summary, changes, parent=None):
+    def __init__(self, title, summary, changes, parent=None, *, issues=()):
         super().__init__(parent)
         self.setWindowTitle(title)
         self.changes = changes
+        self.issues = tuple(issues)
         self._details_loaded = False
         self.layout_body = QVBoxLayout(self)
         summary_label = QLabel(summary)
         summary_label.setTextFormat(Qt.TextFormat.PlainText)
         summary_label.setWordWrap(True)
         self.layout_body.addWidget(summary_label)
-        self.toggle = QPushButton("查看变更详情")
+        self.toggle = QPushButton("查看待完善内容" if self.issues else "查看变更详情")
         self.toggle.setCheckable(True)
-        self.toggle.setVisible(bool(changes))
+        self.toggle.setVisible(bool(self.issues or changes))
         self.toggle.setAutoDefault(False)
         self.toggle.toggled.connect(self._toggle_details)
         self.layout_body.addWidget(self.toggle, 0, Qt.AlignmentFlag.AlignLeft)
@@ -1663,13 +1817,20 @@ class DraftSaveConfirmation(QDialog):
         self.layout_body.addWidget(self.buttons)
         bind_units(self.layout_body, "setContentsMargins", 1, 1, 1, 1)
         initial_size(self, 44, 12)
+        if self.issues:
+            self.toggle.setChecked(True)
 
     def _toggle_details(self, expanded):
         if expanded and not self._details_loaded:
-            self.details.setPlainText(render_changes(self.changes))
+            self.details.setPlainText(
+                "\n\n".join(f"{index}. {issue_text(issue)}"
+                            for index, issue in enumerate(self.issues, 1))
+                if self.issues else render_changes(self.changes)
+            )
             self._details_loaded = True
         self.details.setVisible(expanded)
-        self.toggle.setText("收起变更详情" if expanded else "查看变更详情")
+        subject = "待完善内容" if self.issues else "变更详情"
+        self.toggle.setText(("收起" if expanded else "查看") + subject)
         self.layout_body.setStretch(3, 0 if expanded else 1)
         initial_size(self, 44, 32 if expanded else 12)
 
@@ -1684,18 +1845,26 @@ def render_plan(plan, adjustment=None, plan_code=None):
         for item in day["items"]:
             lines.append(f"{item['order']}. {item.get('name', item.get('exercise_name'))}")
             lines.append(render_fields(item))
+            for action in item.get("members", [item]):
+                if execution_mode(action) == "alternating":
+                    lines.extend(f"{action['exercise_name']} · 第 {dose['order']} 组："
+                                 + alternating_explanation(action, dose) for dose in action["sets"])
             if item["kind"] == "group":
                 lines.append(T["expanded"])
                 member_names = {member["item_id"]: member["exercise_name"]
                                 for member in item.get("members", [])}
+                member_modes = {member["item_id"]: execution_mode(member)
+                                for member in item.get("members", [])}
                 occurrences = list(islice(group_from_item(item).occurrences(), 301))
                 for occurrence in occurrences[:300]:
+                    side_label = ("左右交替" if member_modes[occurrence.member_id] == "alternating"
+                                  else T.get(occurrence.side, T["none"]))
                     rest = occurrence.rest_after_seconds
                     rest_text = f"{rest:g}" if rest is not None else T["unknown"]
                     lines.append(
                         f"{T['rounds']} {occurrence.round_number} · "
                         f"{member_names.get(occurrence.member_id, T['unknown'])} · "
-                        f"{T.get(occurrence.side, T['none'])} · "
+                        f"{side_label} · "
                         f"{T['rest_seconds'].format(value=rest_text)}"
                     )
                 if len(occurrences) > 300:
@@ -1791,8 +1960,10 @@ class GroupPlanPage(QWidget):
         )
         self.adjustment_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         detail_layout.addWidget(self.adjustment_label)
-        self.issues_label = QLabel()
-        self.issues_label.setWordWrap(True)
+        self.issues_label = QPlainTextEdit()
+        self.issues_label.setReadOnly(True)
+        self.issues_label.setMinimumSize(0, 0)
+        bind_units(self.issues_label, "setMaximumHeight", 12)
         self.issues_label.setSizePolicy(
             QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
         )
@@ -1908,17 +2079,21 @@ class GroupPlanPage(QWidget):
             repeat = "每轮 · " if every_round else ""
             suffix = " · 每侧" if dose["per_side"] else ""
             if not dose["per_side"]:
-                suffix = " · 整体"
+                suffix = (" · 总次数" if action.get("execution_mode") == "alternating"
+                          else " · 整体")
             layout.addWidget(self._label(
                 f"{prefix}{repeat}第 {dose['order']} 组  {dose['dose']}{suffix}"
             ))
+            if dose.get("counting"):
+                layout.addWidget(self._label(dose["counting"]))
             if dose["note"]:
                 layout.addWidget(self._label(f"{T['note']}：{dose['note']}"))
             layout.addWidget(self._label(f"本组后休息：{dose['rest']}"))
 
     def _action_card(self, item):
         card, box = self._card(f"{item['order']}. {item['name']} · {item['phase']}")
-        unilateral = any(dose["per_side"] for dose in item["sets"])
+        unilateral = item["execution_mode"] == "separate_sides"
+        box.addWidget(self._label("执行方式：" + EXECUTION_MODE_LABELS[item["execution_mode"]]))
         box.addWidget(self._label(
             f"先做：{self._side_text(item['first_side'], unilateral=unilateral)} · "
             f"换侧休息：{item['rest_between_sides']}"
@@ -1933,7 +2108,7 @@ class GroupPlanPage(QWidget):
         card, box = self._card(f"{item['order']}. {item['name']} · {item['phase']}")
         box.addWidget(self._label(f"轮数：{item['round_count']} · 侧序：{item['side_sequence']}"))
         unilateral = any(
-            dose["per_side"] for member in item["members"] for dose in member["sets"]
+            member["execution_mode"] == "separate_sides" for member in item["members"]
         )
         box.addWidget(self._label(
             f"先做：{self._side_text(item['first_side'], unilateral=unilateral)} · "
@@ -1947,6 +2122,8 @@ class GroupPlanPage(QWidget):
             member_card, member_box = self._card(
                 f"成员 {member['order']}. {member['name']}", level=1
             )
+            member_box.addWidget(self._label(
+                "执行方式：" + EXECUTION_MODE_LABELS[member["execution_mode"]]))
             if member["note"]:
                 member_box.addWidget(self._label(f"{T['note']}：{member['note']}"))
             self._add_set_rows(
@@ -1971,7 +2148,7 @@ class GroupPlanPage(QWidget):
                 issues = self.service.preview_document(
                     revision["payload"], revision=revision,
                     base=doc["requested_base_number"])["issues"]
-                self.issues_label.setText("草稿 · 待完善\n" + "\n".join(
+                self.issues_label.setPlainText("草稿 · 待完善\n" + "\n\n".join(
                     issue_text(issue) for issue in issues) if issues else "草稿 · 可预览并启用")
                 self.issues_label.show()
                 self.empty_label.hide()
@@ -1990,7 +2167,7 @@ class GroupPlanPage(QWidget):
                 f"{T['rationale']}：{self.presentation['adjustment']}"
                 if self.presentation["adjustment"] else ""
             )
-            self.issues_label.setText("\n".join(
+            self.issues_label.setPlainText("\n\n".join(
                 issue["name"] + "：" + "、".join(issue["reasons"])
                 for issue in self.presentation["issues"]
             ))
@@ -2112,8 +2289,10 @@ class GroupPlanPage(QWidget):
                     warnings = "\n".join(name + "：" + "；".join(
                         user_message("Content is not eligible: " + reason) for reason in reasons)
                         for name, reasons in preview.warnings)
-                    summary = render_plan(preview.payload["plan"]) + (
-                        "\n\n启用前须处理：\n" + warnings if warnings else "")
+                    summary = (("启用前须处理：\n" + warnings + "\n\n") if warnings else "")
+                    if preview.conversion_note:
+                        summary += preview.conversion_note + "\n\n"
+                    summary += render_plan(preview.payload["plan"])
                     summary += "\n\n变更明细：\n" + render_changes(preview.changes)
                     dialog = DraftSaveConfirmation(
                         "导入预览", "完整文件已校验；确认后仅保存为草稿。", [], self)
@@ -2228,6 +2407,9 @@ class GroupPlanPage(QWidget):
                     self.service.delete_draft(identifier, revision["edit_token"])
                     identifier = None
         except OPERATION_ERRORS as exc:
-            error(self, exc)
+            error(self, exc, issue_summary={
+                "import": "导入失败，尚未保存计划。请按问题清单修正文件后重新选择。",
+                "export": "尚未导出文件。请打开草稿，按以下问题完善并保存后再导出。",
+            }.get(command))
             return
         self.refresh(identifier)

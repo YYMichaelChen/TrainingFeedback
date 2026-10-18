@@ -2,6 +2,8 @@
 
 import json
 
+from ..domain.execution_modes import execution_mode
+
 
 def known(value):
     return "未知（未记录）" if value is None else str(value)
@@ -29,6 +31,7 @@ def render_session_summary(session):
         state = row["start_review"]["eligibility"]["reviewed"]
         reviewed = "未知（未记录）" if state is None else "已审核" if state else "未审核"
         side = ("每侧汇总（侧序未记录）" if row.get("dose_scope") == "per_side_aggregate"
+                else "左右交替（每组连续完成）" if execution_mode(row["action"]) == "alternating"
                 else row["side"] or "双侧/不分侧")
         lines.extend([
             "",
@@ -49,7 +52,10 @@ def render_session_summary(session):
                      "无数值（自由剂量）" if dose["unit"] == "free" else "未知（未记录）")
             side = ("每侧" if dose.get("per_side") else "未知" if dose.get("per_side") is None
                     and "per_side" in dose else dose["side"] or "不分侧")
-            lines.append(f"- 实际第 {dose['order']} 组：{value} {dose['unit']}；"
+            if dose.get("recording_scope") == "total":
+                side = "交替总次数（实际左右次数及起始侧未记录）"
+            order = dose.get("planned_set_order", dose["order"])
+            lines.append(f"- 实际第 {order} 组：{value} {dose['unit']}；"
                          f"侧别 {side}；来源 {dose['provenance']}；"
                          + dose["note"])
     lines.extend(["", "### 暂停、中止、撤回及备注修正"])

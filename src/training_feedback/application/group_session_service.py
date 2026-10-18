@@ -90,6 +90,7 @@ class GroupSessionService:
                                            for name, primary in entry["content"]["body_areas"]],
                                activation_review=pin["review"], start_review=reviews[key])
         value = {"revision": revision, "day": day, "occurrences": occurrences,
+                 "execution_semantics_version": revision["payload"]["schema_version"],
                  "unreviewed": list(unreviewed), "training_date": self.clock.today().isoformat(),
                  "catalog_version": self.library.catalog.version}
         return {**value, "token": content_sha256(value)}

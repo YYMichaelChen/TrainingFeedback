@@ -6,9 +6,11 @@ from math import isfinite
 
 from jsonschema import Draft202012Validator
 
+from .execution_modes import execution_mode
 from .group_plans import group_from_item, validate_action
+from .plans import PlannedSet
 
-EDIT_FORMAT_VERSION = 1
+EDIT_FORMAT_VERSION = 2
 NUMBERS = {"value", "round_count", "rest_after_set_seconds", "rest_after_member_seconds",
            "rest_after_action_seconds", "rest_between_sides_seconds",
            "rest_between_rounds_seconds", "rest_after_group_seconds"}
@@ -65,7 +67,7 @@ def compile_input(raw):
 def payload_issues(payload, schema, *, activation=False):
     """Collect independent structural and domain errors; invalid parents stop descent."""
     if not isinstance(payload, dict) or payload.get("schema") != "training_feedback.plan" \
-            or payload.get("schema_version") != 4:
+            or payload.get("schema_version") != schema["properties"]["schema_version"]["const"]:
         return [PlanIssue("format")]
     issues = []
     def finite(value, path=()):
@@ -145,12 +147,44 @@ def payload_issues(payload, schema, *, activation=False):
                 ):
                     continue
                 check_order(action.get("sets"), (*action_path, "sets"))
+                dose_issues = []
+                for s, dose in enumerate(action["sets"]):
+                    if execution_mode(action) == "alternating":
+                        if dose["unit"] != "reps":
+                            dose_issues.append(PlanIssue("rule", (*action_path, "sets", s, "unit"),
+                                action.get("item_id"), "Alternating work requires reps."))
+                        value = dose["value"]
+                        if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                                or not isfinite(value) or value < 0 or int(value) != value):
+                            dose_issues.append(PlanIssue("rule", (*action_path, "sets", s, "value"),
+                                action.get("item_id"),
+                                "Alternating reps must be non-negative integers."))
+                    try:
+                        PlannedSet(dose["order"], dose["unit"], dose["value"],
+                                   dose["per_side"], dose["note"])
+                    except ValueError as exc:
+                        field = ("note" if str(exc) == "Free doses without a value require a note."
+                                 else "value")
+                        dose_issues.append(PlanIssue(
+                            "rule", (*action_path, "sets", s, field),
+                            action.get("item_id"), str(exc)))
+                if dose_issues:
+                    issues.extend(dose_issues)
+                    continue
                 try:
                     validate_action(action)
                 except (ValueError, TypeError, KeyError) as exc:
                     issues.append(rule_issue(exc, action_path, action.get("item_id"), action))
+            if item.get("kind") == "group" and item.get("side_sequence") in (
+                    "same_side_then_switch", "all_rounds_then_switch"):
+                for m, member in enumerate(actions):
+                    if isinstance(member, dict) and member.get("execution_mode") in (
+                            "whole", "alternating"):
+                        issues.append(PlanIssue("rule", (*path, "members", m, "execution_mode"),
+                            member.get("item_id"),
+                            "该成员与组侧序冲突：请改为逐个成员完成或移出动作组。"))
             if item.get("kind") == "group" and not any(
-                p[:len(path)] == path for p in invalid_paths
+                issue.path[:len(path)] == path for issue in issues
             ):
                 try:
                     group = group_from_item(item)
@@ -164,6 +198,15 @@ def payload_issues(payload, schema, *, activation=False):
 def rule_issue(exc, path, node, row):
     message = str(exc)
     suffix = {
+        "Choose an execution mode.": ("execution_mode",),
+        "Alternating work requires a starting rule for every set.": ("alternating_start",),
+        "Alternating work requires reps.": ("sets", 0, "unit"),
+        "Alternating reps must be non-negative integers.": ("sets", 0, "value"),
+        "Only alternating work has an alternating starting rule.": ("alternating_start",),
+        "Dose convention conflicts with execution mode.": ("sets", 0, "per_side"),
+        "A plan with this name already exists.": ("plan", "name"),
+        "A plan base number must be between 001 and 999.": ("requested_base_number",),
+        "That plan base number is already in use.": ("requested_base_number",),
         "Unilateral work requires an explicit first side.": ("first_side",),
         "Bilateral work has no side or side-switch rest.": ("rest_between_sides_seconds",),
         "Bilateral work has no first side.": ("first_side",),
@@ -178,4 +221,13 @@ def rule_issue(exc, path, node, row):
         "The final member uses side, round or exit rest instead.": (
             "members", max(0, len(row.get("members", [])) - 1), "rest_after_member_seconds"),
     }.get(message, ())
+    inconsistent_field = {
+        "One member must use one dose unit.": "unit",
+        "One member must use one per-side convention.": "per_side",
+    }.get(message)
+    if inconsistent_field and row.get("sets"):
+        first = row["sets"][0][inconsistent_field]
+        index = next((i for i, dose in enumerate(row["sets"])
+                      if dose[inconsistent_field] != first), 0)
+        suffix = ("sets", index, inconsistent_field)
     return PlanIssue("rule", (*path, *suffix), node, message)

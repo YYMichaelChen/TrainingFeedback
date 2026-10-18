@@ -4,8 +4,9 @@ from copy import deepcopy
 from dataclasses import asdict
 
 from ..data.library_images import inspect_images
-from ..data.plan_contract import plan_v4_schema
+from ..data.plan_contract import plan_v4_schema, plan_v5_schema
 from ..domain.catalog import ExerciseReference, content_sha256
+from ..domain.execution_modes import upgrade_payload
 from ..domain.group_plans import (
     diff_plans,
     identity_rows,
@@ -14,14 +15,14 @@ from ..domain.group_plans import (
     validate_plan_payload,
     validate_stored_plan,
 )
-from ..domain.plan_editing import PlanIssue, PlanIssues, compile_input, payload_issues
+from ..domain.plan_editing import PlanIssue, PlanIssues, compile_input, payload_issues, rule_issue
 from .library_workflow import LibraryTarget
 
 
 class GroupPlanService:
     def __init__(self, repository, library):
         self.repository, self.library = repository, library
-        self.schema = plan_v4_schema()
+        self.schema = plan_v5_schema()
 
     def list_plans(self):
         return self.repository.list_plans() + [
@@ -65,7 +66,9 @@ class GroupPlanService:
             except (ValueError, TypeError, KeyError) as exc:
                 issues.append(PlanIssue("rule", detail=str(exc)))
             return candidate, issues
-        issues.extend(payload_issues(candidate, self.schema, activation=activation))
+        invalid_numbers = {issue.path for issue in issues}
+        validation_issues = payload_issues(candidate, self.schema, activation=activation)
+        issues.extend(issue for issue in validation_issues if issue.path not in invalid_numbers)
         if isinstance(candidate, dict) and isinstance(candidate.get("plan"), dict) \
                 and isinstance(candidate["plan"].get("days"), list):
             # Schema-valid nodes can be checked independently against exact library facts.
@@ -157,7 +160,7 @@ class GroupPlanService:
                         raise ValueError("All plan base numbers 001–999 are in use.")
                     code = f"plan-{number:03d}.01.00"
             except ValueError as exc:
-                issues.append(PlanIssue("rule", detail=str(exc)))
+                issues.append(rule_issue(exc, (), None, {}))
         return {"issues": issues, "plan_code": code}
 
     def save_document(self, payload, *, identifier=None, expected_token=None, purpose="new",
@@ -205,7 +208,7 @@ class GroupPlanService:
                     target = self._document_target(candidate, purpose, source_revision_id,
                                                    requested_base_number, stored)
                 except ValueError as exc:
-                    issues.append(PlanIssue("rule", detail=str(exc)))
+                    issues.append(rule_issue(exc, (), None, {}))
             now = self.library.clock.now().isoformat()
             identifier = self.repository.put_document(
                 payload, now, identifier=identifier, expected_token=expected_token,
@@ -244,7 +247,7 @@ class GroupPlanService:
                 self._document_target(candidate, doc["purpose"], doc["source_revision_id"],
                                       doc["requested_base_number"], stored)
             except ValueError as exc:
-                issues.append(PlanIssue("rule", detail=str(exc)))
+                issues.append(rule_issue(exc, (), None, {}))
         if issues:
             raise PlanIssues(issues)
         if stored is None or stored["payload"]["plan"] != candidate["plan"]:
@@ -292,8 +295,11 @@ class GroupPlanService:
         return issues
 
     def validate(self, payload, *, activation=False, stored=None):
-        validated = (validate_plan_payload(payload, self.schema, activation=activation)
-                     if stored is None else validate_stored_plan(payload, self.schema, {
+        schema = plan_v4_schema() if payload.get("schema_version") == 4 else self.schema
+        if payload.get("schema_version") == 4 and stored is None:
+            raise ValueError("Only plan format version 5 is accepted.")
+        validated = (validate_plan_payload(payload, schema, activation=activation)
+                     if stored is None else validate_stored_plan(payload, schema, {
                          action["item_id"]: action for _, _, action in
                          plan_actions(stored["payload"]["plan"])
                      }, activation=activation))
@@ -375,7 +381,7 @@ class GroupPlanService:
             raise ValueError("A distinct plan name and unused base number are required.")
         with self.library._action():
             source = self.get(revision_id)
-            payload = deepcopy(source["payload"] if payload is None else payload)
+            payload = upgrade_payload(source["payload"] if payload is None else payload)
             payload["intent"] = "new"
             payload.pop("target_base_number", None)
             payload["plan"]["name"] = name
@@ -459,6 +465,21 @@ class GroupPlanService:
         if revision["status"] != "draft":
             raise ValueError("Only draft revisions can be activated.")
         payload = self.validate(revision["payload"], activation=True, stored=revision)
+        content_issues = {issue["item_id"]: issue for issue in self.content_issues(revision_id)}
+        issues = []
+        for d, day in enumerate(payload["plan"]["days"]):
+            for i, item in enumerate(day["items"]):
+                for m, action in enumerate(item.get("members", [item])):
+                    issue = content_issues.get(action["item_id"])
+                    if issue:
+                        path = ("plan", "days", d, "items", i)
+                        if item["kind"] == "group":
+                            path += ("members", m)
+                        issues.extend(PlanIssue("content." + reason, path,
+                                                action["item_id"], action["exercise_name"])
+                                      for reason in issue["reasons"])
+        if issues:
+            raise PlanIssues(issues)
         targets = self._targets(payload)
         unreviewed = self.library.require_for_activation(targets)
         active = self.repository.active(revision["plan_id"])

@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 from .enums import DoseUnit, ExerciseResult
+from .execution_modes import execution_mode
 from .group_plans import group_from_item
 from .models import derive_final_status, require_non_negative_finite
 from .next_day import feedback_areas
@@ -41,8 +42,9 @@ def expand_day(day):
                 continue
             sides = (item["first_side"],
                      "right" if item["first_side"] == "left" else "left")
-            for index, side in enumerate(sides if item["sets"][0]["per_side"] else (None,)):
-                switch = item["sets"][0]["per_side"] and index == 0
+            separate = execution_mode(item) == "separate_sides"
+            for index, side in enumerate(sides if separate else (None,)):
+                switch = separate and index == 0
                 occurrences.append(_snapshot(
                     day, item, item, side, None,
                     item["rest_between_sides_seconds"] if switch
@@ -65,6 +67,9 @@ def _snapshot(day, item, action, side, round_number, rest, boundary):
     })
     if action.get("dose_scope"):
         value["dose_scope"] = action["dose_scope"]
+    if "execution_mode" in action:
+        value["execution_semantics_version"] = 5
+        value["counting_definition_reference"] = deepcopy(action["content"])
     return value
 
 
@@ -86,6 +91,8 @@ def actual_doses(occurrence, result, actual, note):
     result = ExerciseResult(result)
     if not isinstance(note, str):
         raise ValueError("Result notes must be text.")
+    if execution_mode(occurrence["action"]) == "alternating":
+        return _alternating_actual(occurrence, result, actual)
     if result in (ExerciseResult.COMPLETED, ExerciseResult.NOT_COMPLETED):
         if actual:
             raise ValueError("This result cannot contain entered actual dose.")
@@ -120,6 +127,48 @@ def actual_doses(occurrence, result, actual, note):
             raise ValueError("Actual side must match this occurrence; record the other side there.")
         values.append({**dose, "order": index, "unit": unit.value, "provenance": "user_entered"})
     return values
+
+
+def _alternating_actual(occurrence, result, actual):
+    sets = {dose["order"]: dose for dose in occurrence["action"]["sets"]}
+    if result in (ExerciseResult.COMPLETED, ExerciseResult.NOT_COMPLETED):
+        if actual:
+            raise ValueError("This result cannot contain entered actual dose.")
+        if result == ExerciseResult.NOT_COMPLETED:
+            return []
+        rows = []
+        for order, dose in sorted(sets.items()):
+            for side in (("left", "right") if dose["per_side"] else (None,)):
+                rows.append({"order": len(rows) + 1, "planned_set_order": order,
+                             "recording_scope": "sides" if dose["per_side"] else "total",
+                             "value": dose["value"], "unit": "reps", "side": side,
+                             "note": dose["note"], "provenance": "prescription_confirmed"})
+        return rows
+    if not actual:
+        raise ValueError("Actual dose is required for exceeded or partial results.")
+    rows, seen, scopes = [], set(), {}
+    for dose in actual:
+        if set(dose) != {"planned_set_order", "recording_scope", "value", "unit", "side", "note"}:
+            raise ValueError("交替实际记录须包含计划组号、记录口径、次数、侧别和备注。")
+        order, scope, side = dose["planned_set_order"], dose["recording_scope"], dose["side"]
+        if type(order) is not int or order not in sets:
+            raise ValueError("请选择本步骤中的计划剂量组。")
+        if scope not in ("total", "sides") or (scope == "total" and side is not None) or (
+                scope == "sides" and side not in ("left", "right")):
+            raise ValueError("只记总次数时不填侧别；分别记左右时须明确所记一侧。")
+        if (order, side) in seen or (order in scopes and scopes[order] != scope):
+            raise ValueError("同一组不能重复记录同一侧或同时记录总次数和左右次数。")
+        value = dose["value"]
+        require_non_negative_finite(value, "Actual dose must be finite and non-negative.")
+        if (value is None or isinstance(value, bool) or dose["unit"] != "reps"
+                or int(value) != value):
+            raise ValueError("Alternating reps must be non-negative integers.")
+        if not isinstance(dose["note"], str):
+            raise ValueError("Actual dose notes must be text.")
+        seen.add((order, side))
+        scopes[order] = scope
+        rows.append({**dose, "order": len(rows) + 1, "provenance": "user_entered"})
+    return rows
 
 
 def final_status(session):

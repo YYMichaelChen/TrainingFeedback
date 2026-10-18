@@ -24,6 +24,7 @@ class GroupMember:
     sets: tuple[PlannedSet, ...]
     starting_position: StartingPosition
     rest_after_member_seconds: float
+    execution_mode: str | None = None
 
     def __post_init__(self) -> None:
         require_stable_key(self.item_id)
@@ -43,6 +44,11 @@ class GroupMember:
     @property
     def per_side(self) -> bool:
         return self.sets[0].per_side
+
+    @property
+    def separate_sides(self) -> bool:
+        return (self.execution_mode == "separate_sides"
+                if self.execution_mode else self.sets[0].per_side)
 
 
 @dataclass(frozen=True)
@@ -76,13 +82,13 @@ class ActionGroup:
             raise ValueError("Group and member item identities must be unique.")
         if not is_positive_int(self.round_count):
             raise ValueError("Round count must be a positive integer.")
-        unilateral = any(member.per_side for member in self.members)
+        unilateral = any(member.separate_sides for member in self.members)
         if unilateral and self.first_side not in ("left", "right"):
             raise ValueError("Unilateral work requires an explicit first side.")
         if not unilateral and self.first_side is not None:
             raise ValueError("Bilateral work has no first side.")
         if self.side_sequence != SideSequence.MEMBER_EACH_SIDE and not all(
-            member.per_side for member in self.members
+            member.separate_sides for member in self.members
         ):
             raise ValueError("This side sequence requires all members to be per-side.")
         for seconds in (
@@ -138,7 +144,7 @@ class ActionGroup:
         if self.side_sequence == SideSequence.MEMBER_EACH_SIDE:
             for round_number in rounds:
                 for member in members:
-                    for side in sides if member.per_side else (None,):
+                    for side in sides if member.separate_sides else (None,):
                         yield round_number, member, side
         elif self.side_sequence == SideSequence.SAME_SIDE_THEN_SWITCH:
             for round_number in rounds:
