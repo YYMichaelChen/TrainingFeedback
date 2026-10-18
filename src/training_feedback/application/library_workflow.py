@@ -153,9 +153,8 @@ class LibraryWorkflowService(LibraryService):
         try:
             with transaction(self.user.connection, immediate=True):
                 yield
-        except Exception:
-            with transaction(self.user.connection, immediate=True):
-                self.assets.recover_unreferenced(self.user.asset_hashes())
+        except Exception as error:
+            self._recover_unreferenced_after_failure(error)
             raise
 
     def _retain_target(self, target: LibraryTarget) -> int:
@@ -265,9 +264,16 @@ class LibraryWorkflowService(LibraryService):
                             "original_name": attachment.original_name,
                         },
                     })
-        except Exception:
+        except Exception as error:
             if attachment is not None:
-                attachment.remove_from(self.data_root)
+                try:
+                    attachment.remove_from(self.data_root)
+                except OSError as cleanup_error:
+                    error.add_note(
+                        "The copied review attachment could not be removed after the "
+                        "failed database action; its managed path is "
+                        f"{attachment.relative_path}: {cleanup_error}"
+                    )
             raise
 
     def withdraw_review(self, target: LibraryTarget, expected_event_id: int,
@@ -304,9 +310,15 @@ class LibraryWorkflowService(LibraryService):
             "sha256": digest, "caption": caption, "required": True, "status": "available"}]
         try:
             return self.save_override(target.exercise, content, target.content)
-        except Exception:
+        except Exception as error:
             if created:
-                path.unlink(missing_ok=True)
+                try:
+                    path.unlink(missing_ok=True)
+                except OSError as cleanup_error:
+                    error.add_note(
+                        "The newly copied illustration could not be removed after the "
+                        f"failed database action; its managed path is {path}: {cleanup_error}"
+                    )
             raise
 
     def _local_entry(self, content):

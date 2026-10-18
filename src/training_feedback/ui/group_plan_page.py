@@ -1581,6 +1581,13 @@ class GroupPlanEditor(QDialog):
         elif box.clickedButton() is discard:
             super().reject()
 
+    def prepare_update_exit(self) -> bool:
+        """Offer save/discard/continue and report whether update handoff may proceed."""
+        if not self.isVisible():
+            return True
+        self.reject()
+        return not self.isVisible()
+
     def focus_issue(self, issue):
         path = issue.path
         def row_after(key):

@@ -165,11 +165,21 @@ class LibraryService:
         try:
             with transaction(connection, immediate=True):
                 return self._retain_in_transaction(entry, origin, provenance, read_image)
-        except Exception:
-            # A crash leaves unreferenced bytes only; reopen performs the same cleanup.
-            with transaction(connection, immediate=True):
-                self.assets.recover_unreferenced(self.user.asset_hashes())
+        except Exception as error:
+            self._recover_unreferenced_after_failure(error)
             raise
+
+    def _recover_unreferenced_after_failure(self, error: Exception) -> None:
+        """Best-effort cleanup that never replaces the action's original failure."""
+        try:
+            with transaction(self.user.connection, immediate=True):
+                self.assets.recover_unreferenced(self.user.asset_hashes())
+        except Exception as cleanup_error:
+            error.add_note(
+                "Snapshot cleanup after the failed action was deferred until the next "
+                "data-root opening because cleanup also failed: "
+                f"{type(cleanup_error).__name__}: {cleanup_error}"
+            )
 
     def _retain_in_transaction(self, entry, origin, provenance, read_image):
         resources = {}

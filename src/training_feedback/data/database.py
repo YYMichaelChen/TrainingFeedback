@@ -81,8 +81,27 @@ def transaction(
     connection.execute("BEGIN IMMEDIATE" if immediate else "BEGIN")
     try:
         yield connection
-    except Exception:
-        connection.rollback()
-        raise
-    else:
         connection.commit()
+    except BaseException as error:
+        try:
+            connection.rollback()
+        except BaseException as rollback_error:
+            closed = False
+            try:
+                connection.close()
+                closed = True
+            except BaseException as close_error:
+                rollback_error.add_note(
+                    "Closing the SQLite connection after rollback failure also failed: "
+                    f"{type(close_error).__name__}: {close_error}"
+                )
+            state = (
+                "The SQLite connection was closed and must not be reused."
+                if closed
+                else "The SQLite connection could not be proven reusable and must be abandoned."
+            )
+            error.add_note(
+                "Rollback failed while converging the failed transaction. " + state
+            )
+            raise error from rollback_error
+        raise

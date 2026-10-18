@@ -5,15 +5,100 @@ import json
 import logging
 import re
 import sqlite3
+from datetime import datetime
 
 # Known failures of client operations; unexpected programmer exceptions are not
 # swallowed here. The UI presents these after the service has unwound its work.
 OPERATION_ERRORS = (ValueError, OSError, sqlite3.Error)
-_last_diagnostic = "尚无未识别错误诊断。"
+_last_diagnostic = "尚无错误诊断。"
+_DIAGNOSTIC_LIMIT = 4096
+_DIAGNOSTIC_CHAIN_LIMIT = 8
 
 
 def latest_diagnostic():
     return _last_diagnostic
+
+
+def _diagnostic_detail(error: BaseException) -> str:
+    """Return bounded technical context without serializing arbitrary user content."""
+    details = []
+    if isinstance(error, OSError):
+        for label, value in (
+            ("errno", error.errno),
+            ("winerror", getattr(error, "winerror", None)),
+            ("path", error.filename),
+            ("target_path", error.filename2),
+        ):
+            if value is not None:
+                details.append(f"{label}={value}")
+    if isinstance(error, sqlite3.Error):
+        for label, value in (
+            ("sqlite_errorcode", getattr(error, "sqlite_errorcode", None)),
+            ("sqlite_errorname", getattr(error, "sqlite_errorname", None)),
+        ):
+            if value is not None:
+                details.append(f"{label}={value}")
+    if isinstance(
+        error,
+        (AssertionError, AttributeError, ImportError, NameError, RuntimeError, TypeError),
+    ):
+        message = " ".join(str(error).split())
+        if message:
+            details.append("message=" + message[:500])
+    notes = getattr(error, "__notes__", ())
+    for note in notes[:4]:
+        compact = " ".join(str(note).split())
+        if compact:
+            details.append("note=" + compact[:500])
+    return "; ".join(details)
+
+
+def _diagnostic_chain(error: BaseException) -> list[str]:
+    rows = []
+    seen = set()
+    current = error
+    for index in range(_DIAGNOSTIC_CHAIN_LIMIT):
+        if id(current) in seen:
+            rows.append(f"{index + 1}. [异常链循环已停止]")
+            break
+        seen.add(id(current))
+        detail = _diagnostic_detail(current)
+        rows.append(
+            f"{index + 1}. {type(current).__module__}.{type(current).__qualname__}"
+            + (f" | {detail}" if detail else "")
+        )
+        next_error = current.__cause__
+        if next_error is None and not current.__suppress_context__:
+            next_error = current.__context__
+        if not isinstance(next_error, BaseException):
+            break
+        current = next_error
+    return rows
+
+
+def record_diagnostic(error: BaseException, *, operation: str = "客户端操作") -> None:
+    """Replace the latest diagnostic only after a privacy-safe record is complete."""
+    global _last_diagnostic
+    try:
+        from . import __version__
+
+        timestamp = datetime.now().astimezone().isoformat(timespec="seconds")
+        safe_operation = " ".join(str(operation).split())[:120] or "客户端操作"
+        rows = [
+            f"时间：{timestamp}",
+            f"操作：{safe_operation}",
+            f"应用版本：{__version__}",
+            "异常链：",
+            *_diagnostic_chain(error),
+            "说明：诊断不包含完整计划、训练备注、审核原件或堆栈。",
+        ]
+        value = "\n".join(rows)
+        if len(value) > _DIAGNOSTIC_LIMIT:
+            value = value[: _DIAGNOSTIC_LIMIT - 12] + "\n[已截断]"
+    except Exception:
+        logging.getLogger(__name__).exception("无法生成客户端错误诊断")
+        return
+    _last_diagnostic = value
 
 
 def issue_text(issue):
@@ -917,9 +1002,10 @@ def _system_error(error):
     return None
 
 
-def user_message(error: str | BaseException) -> str:
+def user_message(error: str | BaseException, *, operation: str = "客户端操作") -> str:
     """Translate errors only, never arbitrary user-authored names or notes."""
-    global _last_diagnostic
+    if isinstance(error, BaseException):
+        record_diagnostic(error, operation=operation)
     if hasattr(error, "issues"):
         return "存在待完善内容：\n" + "\n".join(issue_text(issue) for issue in error.issues)
     message = str(error)
@@ -1010,6 +1096,5 @@ def user_message(error: str | BaseException) -> str:
     if not message.strip():
         return "操作未完成，程序未提供具体原因。请反馈当时进行的操作。"
     logging.getLogger(__name__).error("未识别的客户端错误：%s", message)
-    _last_diagnostic = repr(error)
     return "操作未完成，遇到了未识别的错误。请在设置中复制最近错误诊断，并反馈当时进行的操作。"
 

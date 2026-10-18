@@ -5,15 +5,22 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import re
 import shutil
 import tempfile
+import uuid
+from ctypes import byref, get_last_error, wintypes
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from .update_launcher import LAUNCHER_LOG_FILENAME, LAUNCHER_READY_FILENAME
+from .update_launcher import (
+    LAUNCHER_LOG_FILENAME,
+    LAUNCHER_READY_FILENAME,
+    UPDATE_LEASE_FILENAME,
+)
 
 REPOSITORY = "YYMichaelChen/TrainingFeedback"
 LATEST_RELEASE_URL = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
@@ -21,6 +28,8 @@ MAX_RELEASE_RESPONSE_BYTES = 1_048_576
 UPDATE_DIRECTORY_PREFIX = "TrainingFeedback-update-"
 UPDATE_MARKER_FILENAME = ".training-feedback-update"
 UPDATE_MARKER_CONTENT = "TrainingFeedback update download\n"
+UPDATE_LEASE_VERSION = 1
+MAX_UPDATE_LEASE_BYTES = 4096
 
 _VERSION = re.compile(r"^(?:v)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 _DIGEST = re.compile(r"^sha256:([0-9a-fA-F]{64})$")
@@ -81,6 +90,21 @@ def create_update_directory(temp_root: Path | None = None) -> Path:
         dir=None if temp_root is None else temp_root,
     ))
     try:
+        identity = _process_identity(os.getpid())
+        if identity is None:
+            raise OSError("无法建立更新任务租约。")
+        (directory / UPDATE_LEASE_FILENAME).write_text(
+            json.dumps(
+                {
+                    "version": UPDATE_LEASE_VERSION,
+                    "task": uuid.uuid4().hex,
+                    "owners": [{"pid": os.getpid(), "created": identity}],
+                },
+                separators=(",", ":"),
+            ),
+            encoding="utf-8",
+        )
+        # Publish the recognizable marker only after cleanup can prove this task is live.
         (directory / UPDATE_MARKER_FILENAME).write_text(
             UPDATE_MARKER_CONTENT, encoding="ascii", newline="\n"
         )
@@ -88,6 +112,89 @@ def create_update_directory(temp_root: Path | None = None) -> Path:
         shutil.rmtree(directory, ignore_errors=True)
         raise
     return directory
+
+
+def _process_identity(process_id: int) -> int | None:
+    """Return the Windows process creation FILETIME, or None when unavailable."""
+    if os.name != "nt":
+        return None
+    import ctypes
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel.OpenProcess.restype = wintypes.HANDLE
+    kernel.GetProcessTimes.argtypes = [
+        wintypes.HANDLE,
+        ctypes.POINTER(wintypes.FILETIME),
+        ctypes.POINTER(wintypes.FILETIME),
+        ctypes.POINTER(wintypes.FILETIME),
+        ctypes.POINTER(wintypes.FILETIME),
+    ]
+    kernel.GetProcessTimes.restype = wintypes.BOOL
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    handle = kernel.OpenProcess(0x1000, False, process_id)
+    if not handle:
+        return None
+    try:
+        created, exited, kernel_time, user_time = (
+            wintypes.FILETIME(),
+            wintypes.FILETIME(),
+            wintypes.FILETIME(),
+            wintypes.FILETIME(),
+        )
+        if not kernel.GetProcessTimes(
+            handle,
+            byref(created),
+            byref(exited),
+            byref(kernel_time),
+            byref(user_time),
+        ):
+            return None
+        return (created.dwHighDateTime << 32) | created.dwLowDateTime
+    finally:
+        kernel.CloseHandle(handle)
+
+
+def _owner_is_active(owner: dict) -> bool | None:
+    """Return True/False for an exact process identity; None means fail safe."""
+    process_id = owner.get("pid")
+    created = owner.get("created")
+    if type(process_id) is not int or process_id <= 0 or type(created) is not int or created <= 0:
+        return None
+    identity = _process_identity(process_id)
+    if identity is not None:
+        return identity == created
+    if os.name != "nt":
+        return None
+    error = get_last_error()
+    if error in {87, 1168}:  # Invalid parameter / element not found: the process is gone.
+        return False
+    return None
+
+
+def _lease_allows_cleanup(path: Path) -> bool:
+    """Only a valid lease whose exact owners have exited can be treated as stale."""
+    try:
+        raw = path.read_bytes()
+        if len(raw) > MAX_UPDATE_LEASE_BYTES:
+            return False
+        value = json.loads(raw.decode("utf-8"))
+        if not isinstance(value, dict):
+            return False
+        owners = value.get("owners")
+        if (
+            value.get("version") != UPDATE_LEASE_VERSION
+            or not isinstance(value.get("task"), str)
+            or re.fullmatch(r"[0-9a-f]{32}", value["task"]) is None
+            or not isinstance(owners, list)
+            or not owners
+        ):
+            return False
+        states = [_owner_is_active(owner) if isinstance(owner, dict) else None for owner in owners]
+    except (OSError, UnicodeError, ValueError, TypeError):
+        return False
+    return all(state is False for state in states)
 
 
 def cleanup_stale_update_directories(temp_root: Path | None = None) -> int:
@@ -119,7 +226,10 @@ def cleanup_stale_update_directories(temp_root: Path | None = None) -> int:
                 entry.is_file()
                 and not entry.is_symlink()
                 and (entry.name in (
-                    UPDATE_MARKER_FILENAME, LAUNCHER_READY_FILENAME, LAUNCHER_LOG_FILENAME,
+                    UPDATE_MARKER_FILENAME,
+                    UPDATE_LEASE_FILENAME,
+                    LAUNCHER_READY_FILENAME,
+                    LAUNCHER_LOG_FILENAME,
                 ) or _UPDATE_FILE.fullmatch(entry.name))
                 for entry in entries
             ):
@@ -132,6 +242,9 @@ def cleanup_stale_update_directories(temp_root: Path | None = None) -> int:
                     for entry in entries)
                 or not any(_UPDATE_FILE.fullmatch(entry.name) for entry in entries)
             ):
+                continue
+            lease = directory / UPDATE_LEASE_FILENAME
+            if lease in entries and not _lease_allows_cleanup(lease):
                 continue
         except (OSError, UnicodeError):
             continue

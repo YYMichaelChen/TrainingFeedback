@@ -854,20 +854,27 @@ After the user chooses **download and install**, the application streams the
 Setup into a unique temporary directory without touching the selected data root.
 It must match both the declared byte size and SHA-256 before execution. A
 download, write, size, digest or launch failure never executes the file and
-keeps retry and browser-download choices available. On successful validation,
-the application hands Setup to a detached Windows launcher, exits completely,
-and only then starts Setup. The launcher must be ready before the application
-requests normal exit. It holds an inherited wait/terminate handle to that exact
+keeps retry and browser-download choices available. After successful validation,
+all visible edit or confirmation windows must finish their save/discard/continue
+decision before the external launcher starts. Continuing to edit, a failed save
+or an unresolved modal window keeps the verified Setup for retry and must not arm
+an exit timeout. Once coordination succeeds, editing is frozen while the
+application hands Setup to a detached Windows launcher, exits completely, and
+only then starts Setup. Launcher preparation failure restores editing and leaves
+the application open. The launcher must be ready before the application requests
+normal exit. It holds an inherited wait/terminate handle to that exact
 application process; after a 10-second normal-exit grace period it can terminate
 that process independently of Qt, Python threads or interpreter shutdown. It
 must confirm process termination before starting Setup, and must not terminate
-other instances or select targets by executable name. Launcher preparation
-failure leaves the application open. The launcher waits for Setup to finish and removes
+other instances or select targets by executable name. The application process and
+launcher register exact process-creation identities in the update task lease;
+the launcher retains ownership while it waits for Setup to finish, then removes
 that exact application-owned temporary update directory. On later startup, the
 application also makes a best-effort cleanup of direct, non-link temporary
 directories whose names and complete contents strictly match its updater
-artifacts; it never treats this as permission to sweep other temporary content
-or any data root. A handoff failure does not exit and keeps the retry and
+artifacts and whose valid lease proves every owner has exited. An active,
+unreadable or malformed lease is preserved; cleanup never sweeps other temporary
+content or any data root. A handoff failure does not exit and keeps the retry and
 browser-download choices available. Opening the GitHub Release or downloading
 through the system browser remains an explicit secondary choice, not the default
 path. The installer is still interactive: existing installer ownership,
@@ -1513,7 +1520,10 @@ future roots are rejected before writes; this creates no formal support promise.
 专名、动作专名、用户及引用原文、路径／网址／版本／编号／字段路径／哈希／错误码
 保留原样；内部合同键及枚举不变，显示时集中映射。未知枚举用中文兜底并附标识。
 未知异常正文用中文解释，原始技术信息仅记日志或在设置中复制最近错误诊断，不在
-客户端正文或展开详情倾倒英文堆栈。外部网站及系统界面不属于程序自有文案。
+客户端正文或展开详情倾倒英文堆栈。每次显示异常都替换为与本次错误对应的有界诊断，
+包含本地时间、操作、应用版本和异常链；默认不写入完整计划、训练备注、审核原件或
+堆栈，诊断生成失败也不能覆盖原错误。启动组装失败须释放已打开上下文并退出，不能
+继续使用半初始化状态。外部网站及系统界面不属于程序自有文案。
 
 ### 12.12 Action Detail And Guidance Reading
 

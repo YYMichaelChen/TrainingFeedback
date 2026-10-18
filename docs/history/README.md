@@ -7,13 +7,19 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.21**
+- Application: **0.8.22**
 - Database schema: **26**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **5**
 - GitHub distribution: **v0.8.21**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.21](../designs/alternating-side-prescriptions.md)
+- Current development version: [0.8.22](../designs/project-review-roadmap-2026-10.md)
+
+应用 0.8.22 收敛运行时提交／回滚失败，统一有界错误诊断，并在更新启动器开始退出
+计时前处理编辑窗口；更新临时目录使用精确进程创建身份租约，活跃下载、退出等待或
+安装任务不被其它实例清理。schema26、内部编辑格式2、合同v5、catalog 均不变；
+源码范围、实际验证与限制见 [0.8.22 开发记录](0.8.22/development.md)。当前仅为源码
+开发，不含候选构建或 GitHub 分发；latest 仍为 v0.8.21。
 
 应用 0.8.21 源码贯通左右交替动作、总／每侧口径、连续执行、按组实际记录和历史证据。
 schema26、内部编辑格式2、合同v5，catalog 不变；v4 原件严格校验后转换为新草稿，
@@ -67,6 +73,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.22 | 26 | Transaction convergence, bounded matching diagnostics, guarded updater exit and active-task leases | Source development only; no candidate build or distribution |
 | 0.8.21 | 26 | Explicit execution modes, alternating counting, set-associated actual records, v5 exchange | GitHub Release `v0.8.21`; clean Setup from `bd8f1e7`; SHA-256 `cb9f2af8997563c2a755bd05089bbff567b6204e871935771ee8c8b48759a605`; unsigned; 2 development startup scenarios passed, manual tests 0 |
 | 0.8.20 | 25 | Separate action addition from plan save; in-memory plan-file template with explicit Save As | GitHub Release `v0.8.20`; clean Setup from `f71bee5`; SHA-256 `daed4069ce5cf45327c5880a4a556933af7871038a4562c48af8eeceb5e4064c`; unsigned; application and manual tests 0 |
 | 0.8.19 | 25 | Persistent incomplete edit documents, strict v4 import preview and Chinese client presentation | GitHub Release `v0.8.19`; clean Setup from `2d0e787`; SHA-256 `b379a509025db8d011a0697eda90c3ace4f343f3180c90d527cb29d8c09791ec`; unsigned; 2 startup scenarios passed, manual tests 0 |

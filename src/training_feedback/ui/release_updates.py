@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import (
@@ -86,6 +87,8 @@ class ReleaseUpdateCoordinator(QObject):
         self._download_target: Path | None = None
         self._download_error = ""
         self._detached_launcher: subprocess.Popen | None = None
+        self._prepare_exit: Callable[[], bool] | None = None
+        self._cancel_prepared_exit: Callable[[], None] | None = None
         self._launcher_deadline = 0.0
         self._handoff_timer = QTimer(self)
         self._handoff_timer.setInterval(100)
@@ -111,6 +114,23 @@ class ReleaseUpdateCoordinator(QObject):
     @property
     def download_error(self) -> str:
         return self._download_error
+
+    @property
+    def verified_download_ready(self) -> bool:
+        return (
+            self._download_target is not None
+            and self._download_target.is_file()
+            and self._download_verifier is None
+        )
+
+    def set_exit_guard(
+        self,
+        prepare: Callable[[], bool],
+        cancel: Callable[[], None],
+    ) -> None:
+        """Bind the current main window's pre-handoff edit coordination."""
+        self._prepare_exit = prepare
+        self._cancel_prepared_exit = cancel
 
     def start_once(self) -> bool:
         if self._automatic_started:
@@ -166,6 +186,8 @@ class ReleaseUpdateCoordinator(QObject):
             or self._detached_launcher is not None
         ):
             return False
+        if self.verified_download_ready:
+            return self._begin_installer_handoff()
         self._download_error = ""
         directory: Path | None = None
         try:
@@ -261,17 +283,53 @@ class ReleaseUpdateCoordinator(QObject):
             self._discard_download()
             self.download_failed.emit(self._download_error)
             return
+        self._download_verifier = None
+        self._download_part = None
+        self._begin_installer_handoff()
+
+    def _begin_installer_handoff(self) -> bool:
+        target = self._download_target
+        if target is None or not target.is_file():
+            self._download_error = "安装包临时路径丢失。"
+            self._discard_download()
+            self.download_failed.emit(self._download_error)
+            return False
+        if self._prepare_exit is None:
+            self._download_error = "安装包已校验，但应用未建立退出前编辑保护；未启动安装程序。"
+            self.download_failed.emit(self._download_error)
+            return False
+        try:
+            prepared = self._prepare_exit()
+        except Exception as exc:
+            self._download_error = (
+                "安装包已校验，但退出前无法检查编辑状态："
+                f"{user_message(exc, operation='更新：协调退出前编辑')}"
+            )
+            self.download_failed.emit(self._download_error)
+            return False
+        if not prepared:
+            self._download_error = (
+                "安装包已校验，但仍有内容正在编辑或保存未完成；未启动退出计时。"
+                "完成处理后可再次点击安装。"
+            )
+            self.download_failed.emit(self._download_error)
+            return False
+        self._download_error = ""
         try:
             self._detached_launcher = start_update_launcher(target)
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            if self._cancel_prepared_exit is not None:
+                self._cancel_prepared_exit()
             self._download_error = (
-                f"无法安排安装程序启动：{user_message(exc)}。请重试或使用浏览器下载。"
+                "无法安排安装程序启动："
+                f"{user_message(exc, operation='更新：启动外部安装交接')}。"
+                "请重试或使用浏览器下载。"
             )
-            self._discard_download()
             self.download_failed.emit(self._download_error)
-            return
+            return False
         self._launcher_deadline = time.monotonic() + 15
         self._handoff_timer.start()
+        return True
 
     def _check_launcher_ready(self) -> None:
         process = self._detached_launcher
@@ -301,6 +359,8 @@ class ReleaseUpdateCoordinator(QObject):
                 self.download_failed.emit(self._download_error)
                 return
             self._detached_launcher = None
+            if self._cancel_prepared_exit is not None:
+                self._cancel_prepared_exit()
             # Preserve the owned Setup/log for diagnostics and safe later cleanup.
             self._download_error = "更新启动程序未能就绪，应用未退出；请重试或使用浏览器下载。"
             self.download_failed.emit(self._download_error)
@@ -324,6 +384,7 @@ class ReleaseDetailsDialog(QDialog):
 
     def __init__(self, coordinator: ReleaseUpdateCoordinator, parent=None):
         super().__init__(parent)
+        self.setProperty("updateHandoffExempt", True)
         result = coordinator.result
         release = result.release
         if release is None:
@@ -406,9 +467,13 @@ class ReleaseDetailsDialog(QDialog):
                 coordinator.download_received, coordinator.download_total
             )
         elif coordinator.download_error:
+            action = "继续安装" if coordinator.verified_download_ready else "重新下载并安装"
+            self.install_button.setText(action)
             self.instruction.setText(
                 f"上次应用内更新失败：{coordinator.download_error}\n"
-                "可以重试，或改用浏览器下载。"
+                + ("安装包已经校验，可以处理编辑内容后继续安装。"
+                   if coordinator.verified_download_ready
+                   else "可以重试，或改用浏览器下载。")
             )
 
     def _install(self) -> None:
@@ -428,9 +493,14 @@ class ReleaseDetailsDialog(QDialog):
 
     def _download_failed(self, message: str) -> None:
         self.install_button.setEnabled(self.release.setup is not None)
-        self.install_button.setText("重新下载并安装")
+        verified = self.coordinator.verified_download_ready
+        self.install_button.setText("继续安装" if verified else "重新下载并安装")
         self.progress.setVisible(False)
-        self.instruction.setText("应用内更新未完成，可以重试，或改用浏览器下载。")
+        self.instruction.setText(
+            "安装包已经校验；请先处理仍在编辑的内容，然后点击“继续安装”。"
+            if verified
+            else "应用内更新未完成，可以重试，或改用浏览器下载。"
+        )
         QMessageBox.warning(self, "更新失败", user_message(message))
 
     def _installer_handoff_started(self, _path: str) -> None:

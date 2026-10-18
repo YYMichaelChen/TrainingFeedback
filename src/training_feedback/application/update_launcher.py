@@ -11,6 +11,7 @@ from pathlib import Path
 
 LAUNCHER_READY_FILENAME = ".update-launcher-ready"
 LAUNCHER_LOG_FILENAME = "update-launcher.log"
+UPDATE_LEASE_FILENAME = ".update-task-lease.json"
 
 # The inherited handle pins this exact process, including after its PID is reused.
 # No executable-name lookup, process-tree termination or data-root access is used.
@@ -41,6 +42,14 @@ public static class TrainingFeedbackUpdateParent {
 '@
     $state = [TrainingFeedbackUpdateParent]::WaitForSingleObject($parentHandle, 0)
     if ($state -ne 0 -and $state -ne 258) { throw 'Invalid application handle.' }
+    $leasePath = Join-Path $directory '.update-task-lease.json'
+    $lease = Get-Content -LiteralPath $leasePath -Raw | ConvertFrom-Json
+    $owners = @($lease.owners) + @(@{
+        pid = $PID
+        created = (Get-Process -Id $PID).StartTime.ToFileTimeUtc()
+    })
+    $lease.owners = $owners
+    [IO.File]::WriteAllText($leasePath, ($lease | ConvertTo-Json -Compress -Depth 4))
     [IO.File]::WriteAllText((Join-Path $directory '.update-launcher-ready'), 'ready')
     $state = [TrainingFeedbackUpdateParent]::WaitForSingleObject($parentHandle, 10000)
     if ($state -eq 258) {

@@ -2,11 +2,13 @@
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
+    QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QMainWindow,
+    QMessageBox,
     QStackedWidget,
     QToolButton,
     QVBoxLayout,
@@ -28,7 +30,7 @@ class _PageOpenError(QWidget):
     def __init__(self, name, exc, parent=None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
-        detail = user_message(exc).strip() or type(exc).__name__
+        detail = user_message(exc, operation=f"打开页面：{name}").strip() or type(exc).__name__
         message = QLabel(MAIN_WINDOW_TEXT["page_open_failed"].format(name=name, message=detail))
         message.setWordWrap(True)
         message.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -109,6 +111,11 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.pages, 1)
         self.setCentralWidget(container)
         self.update_coordinator = update_coordinator
+        if update_coordinator is not None:
+            update_coordinator.set_exit_guard(
+                self.prepare_update_exit,
+                self.cancel_prepared_update_exit,
+            )
         self._update_start_scheduled = False
         if update_coordinator is not None:
             update_coordinator.result_changed.connect(self._update_release_notice)
@@ -162,6 +169,38 @@ class MainWindow(QMainWindow):
         refresh = getattr(self.pages.currentWidget(), "refresh", None)
         if refresh is not None:
             refresh()
+
+    def prepare_update_exit(self) -> bool:
+        """Resolve edit windows before an external update watchdog is started."""
+        for widget in QApplication.topLevelWidgets():
+            if (
+                widget is self
+                or not widget.isVisible()
+                or widget.property("updateHandoffExempt")
+            ):
+                continue
+            prepare = getattr(widget, "prepare_update_exit", None)
+            if prepare is not None:
+                if not prepare():
+                    return False
+                continue
+            if widget.isModal():
+                QMessageBox.information(
+                    widget,
+                    "更新暂缓",
+                    "还有编辑或确认窗口尚未处理。请先完成或关闭该窗口，再次点击安装。",
+                )
+                widget.raise_()
+                widget.activateWindow()
+                return False
+        self.setEnabled(False)
+        return True
+
+    def cancel_prepared_update_exit(self) -> None:
+        """Restore editing only after a not-yet-armed launcher is known to be stopped."""
+        self.setEnabled(True)
+        self.raise_()
+        self.activateWindow()
 
     def closeEvent(self, event):
         for index in range(self.pages.count()):

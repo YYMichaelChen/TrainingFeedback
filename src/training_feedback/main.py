@@ -32,41 +32,78 @@ def main() -> int:
     from training_feedback.ui.window_icon import apply_application_icon
 
     application = QApplication(sys.argv)
-    install_chinese(application)
-    apply_application_icon(application)
-    apply_theme(application)
-    locator = Locator(default_locator_path())
+    context = None
+    switcher = None
+    try:
+        install_chinese(application)
+        apply_application_icon(application)
+        apply_theme(application)
+        locator = Locator(default_locator_path())
 
-    def report_error(error: DataRootError) -> None:
-        QMessageBox.warning(None, "无法打开数据目录", user_message(error))
+        def report_error(error: DataRootError) -> None:
+            QMessageBox.warning(
+                None,
+                "无法打开数据目录",
+                user_message(error, operation="启动：打开数据目录"),
+            )
 
-    context = open_from_locator(locator, report_error)
-    if context is None:
+        context = open_from_locator(locator, report_error)
+        if context is None:
 
-        def choose() -> tuple[Path, bool] | None:
-            # 首启（或 locator 失效）时给出文档目录下的默认位置建议；切换数据目录不预填。
-            dialog = DataRootDialog(suggested_path=suggested_data_root())
-            if dialog.exec() != DataRootDialog.DialogCode.Accepted:
-                return None
-            return dialog.selected_path(), dialog.creates_new_root()
+            def choose() -> tuple[Path, bool] | None:
+                # 首启（或 locator 失效）时给出文档目录下的默认位置建议；切换数据目录不预填。
+                dialog = DataRootDialog(suggested_path=suggested_data_root())
+                if dialog.exec() != DataRootDialog.DialogCode.Accepted:
+                    return None
+                return dialog.selected_path(), dialog.creates_new_root()
 
-        context = choose_data_root(locator, choose, report_error)
-    if context is None:
-        return 0
-    switcher = DataRootSwitcher(context, locator)
-    update_coordinator = ReleaseUpdateCoordinator(__version__, application)
+            context = choose_data_root(locator, choose, report_error)
+        if context is None:
+            return 0
+        switcher = DataRootSwitcher(context, locator)
+        update_coordinator = ReleaseUpdateCoordinator(__version__, application)
 
-    def build_window(ctx: LibraryContext) -> MainWindow:
-        return MainWindow(ctx, request_switch, update_coordinator)
+        def build_window(ctx: LibraryContext) -> MainWindow:
+            return MainWindow(ctx, request_switch, update_coordinator)
 
-    def request_switch(path, create) -> bool:
-        return switcher.switch(path, create, build_window)
+        def request_switch(path, create) -> bool:
+            return switcher.switch(path, create, build_window)
 
-    switcher.attach(build_window(context))
-    switcher.window.show()
-    result = application.exec()
-    switcher.context.close()
-    return result
+        switcher.attach(build_window(context))
+        switcher.window.show()
+    except Exception as error:
+        if switcher is not None:
+            context = switcher.context
+        if context is not None:
+            try:
+                context.close()
+            except Exception as close_error:
+                error.add_note(
+                    "Closing the partially assembled application context also failed: "
+                    f"{type(close_error).__name__}: {close_error}"
+                )
+        QMessageBox.critical(
+            None,
+            "启动失败",
+            user_message(error, operation="启动：组装应用"),
+        )
+        return 1
+
+    previous_exception_hook = sys.excepthook
+
+    def report_unhandled(error_type, error, traceback) -> None:
+        try:
+            message = user_message(error, operation="运行：未处理的客户端操作")
+            QMessageBox.critical(switcher.window, "操作未完成", message)
+        finally:
+            previous_exception_hook(error_type, error, traceback)
+
+    sys.excepthook = report_unhandled
+    try:
+        return application.exec()
+    finally:
+        sys.excepthook = previous_exception_hook
+        switcher.context.close()
 
 
 if __name__ == "__main__":
