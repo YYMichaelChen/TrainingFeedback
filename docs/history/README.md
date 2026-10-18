@@ -11,14 +11,15 @@ the [development workflow](../development-workflow.md) owns version rotation.
 - Database schema: **26**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **5**
-- GitHub distribution: **v0.8.20**
+- GitHub distribution: **v0.8.21**
 - Formal compatibility baseline declared: **no**
 - Current development version: [0.8.21](../designs/alternating-side-prescriptions.md)
 
 应用 0.8.21 源码贯通左右交替动作、总／每侧口径、连续执行、按组实际记录和历史证据。
 schema26、内部编辑格式2、合同v5，catalog 不变；v4 原件严格校验后转换为新草稿，
-冻结记录保留原语义。当前仅源码开发，未构建或发布 0.8.21；GitHub 分发仍为 v0.8.20。
-文件范围、实际验证与限制见 [0.8.21 开发记录](0.8.21/development.md)。
+冻结记录保留原语义。用户随后授权提交推送及分发，GitHub 稳定/latest 已为 v0.8.21。
+文件范围、实际验证与限制见 [0.8.21 开发记录](0.8.21/development.md)；精确安装包身份
+见 [0.8.21 发布记录](0.8.21/github-release-2026-10-18.md)。
 
 应用 0.8.20 将“添加到计划”与整份草稿保存分开，并提供先预览、由用户另存后编辑的
 计划 JSON 模板。schema 25、内部编辑格式 1、catalog 和外部合同均不变；既有
@@ -66,7 +67,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
-| 0.8.21 | 26 | Explicit execution modes, alternating counting, set-associated actual records, v5 exchange | Source only; no 0.8.21 installer or distribution |
+| 0.8.21 | 26 | Explicit execution modes, alternating counting, set-associated actual records, v5 exchange | GitHub Release `v0.8.21`; clean Setup from `bd8f1e7`; SHA-256 `cb9f2af8997563c2a755bd05089bbff567b6204e871935771ee8c8b48759a605`; unsigned; 2 development startup scenarios passed, manual tests 0 |
 | 0.8.20 | 25 | Separate action addition from plan save; in-memory plan-file template with explicit Save As | GitHub Release `v0.8.20`; clean Setup from `f71bee5`; SHA-256 `daed4069ce5cf45327c5880a4a556933af7871038a4562c48af8eeceb5e4064c`; unsigned; application and manual tests 0 |
 | 0.8.19 | 25 | Persistent incomplete edit documents, strict v4 import preview and Chinese client presentation | GitHub Release `v0.8.19`; clean Setup from `2d0e787`; SHA-256 `b379a509025db8d011a0697eda90c3ace4f343f3180c90d527cb29d8c09791ec`; unsigned; 2 startup scenarios passed, manual tests 0 |
 | 0.8.18 | 24 | Compact prescription columns, table-local horizontal scrolling and clear plan-editor labels | GitHub Release `v0.8.18`; clean Setup from `905b534`; SHA-256 `774751f0392362cf200d19cb58aab6ae9b039407903997734944711a9533b6d7`; unsigned; application and manual tests 0 |

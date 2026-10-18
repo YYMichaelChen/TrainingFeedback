@@ -10,7 +10,7 @@ routes current execution work; this file routes tracked project authority.
 - Current plan/evidence contract: `5`
 - Current catalog: `070-illustrated-3`
 - Current development release: [`0.8.21`](designs/alternating-side-prescriptions.md)
-- GitHub distribution: `v0.8.20`
+- GitHub distribution: `v0.8.21`
 - Formal compatibility baseline declared: no
 
 ## 当前验证政策

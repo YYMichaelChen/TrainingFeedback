@@ -9,7 +9,7 @@ database, Streamlit UI, wardrobe data, and submission format.
 - Application: `0.8.21`
 - Database schema: `26`
 - Current development release: [`0.8.21`](docs/designs/alternating-side-prescriptions.md)
-- Latest GitHub distribution: [`v0.8.20`](https://github.com/YYMichaelChen/TrainingFeedback/releases/tag/v0.8.20)
+- Latest GitHub distribution: [`v0.8.21`](https://github.com/YYMichaelChen/TrainingFeedback/releases/tag/v0.8.21)
 - Version and candidate status: [`docs/history/README.md`](docs/history/README.md)
 
 ## Run
