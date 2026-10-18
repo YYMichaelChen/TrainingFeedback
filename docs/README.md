@@ -13,6 +13,13 @@ routes current execution work; this file routes tracked project authority.
 - GitHub distribution: `v0.8.21`
 - Formal compatibility baseline declared: no
 
+## 后续版本安排
+
+已分配、尚未实施的 `0.8.22`–`0.8.25` 见
+[全项目审视与版本安排](designs/project-review-roadmap-2026-10.md)：依次处理事务／更新保护、
+备份／导入、计划编辑、长期读取／维护配置。预留版本不改变上述当前身份；实施时才
+逐期打开活动计划，实际交付事实仍归版本历史。
+
 ## 当前验证政策
 
 本项目长期供用户本人使用。安装和更新统一通过 GitHub Releases 分发；
@@ -27,6 +34,7 @@ routes current execution work; this file routes tracked project authority.
 | Need | Authoritative document |
 | --- | --- |
 | Product, domain, data-root and release rules | [Product specification](development-plan.md) |
+| Review findings and assigned future versions 0.8.22–0.8.25 | [全项目审视与版本安排](designs/project-review-roadmap-2026-10.md) |
 | Catalog content and initial-plan proposal | [Catalog and plan specification](initial-exercises-and-plan.md) |
 | Current release design | [v0.8.21 alternating-side design](designs/alternating-side-prescriptions.md) |
 | Separate action addition and plan saving; Save As plan-file templates | [0.8.20 开发记录](history/0.8.20/development.md) |
