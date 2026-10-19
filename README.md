@@ -6,9 +6,9 @@ database, Streamlit UI, wardrobe data, and submission format.
 
 ## Current status
 
-- Application: `0.8.23`
+- Application: `0.8.24`
 - Database schema: `26`
-- Current development release: [`0.8.23`](docs/designs/project-review-roadmap-2026-10.md)
+- Current development release: [`0.8.24`](docs/designs/project-review-roadmap-2026-10.md)
 - Latest GitHub distribution: [`v0.8.21`](https://github.com/YYMichaelChen/TrainingFeedback/releases/tag/v0.8.21)
 - Version and candidate status: [`docs/history/README.md`](docs/history/README.md)
 

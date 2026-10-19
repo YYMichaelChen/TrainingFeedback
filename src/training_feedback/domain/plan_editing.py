@@ -7,7 +7,7 @@ from math import isfinite
 from jsonschema import Draft202012Validator
 
 from .execution_modes import execution_mode
-from .group_plans import group_from_item, validate_action
+from .group_plans import diff_plans, group_from_item, validate_action
 from .plans import PlannedSet
 
 EDIT_FORMAT_VERSION = 2
@@ -28,6 +28,20 @@ class PlanIssues(ValueError):
     def __init__(self, issues):
         self.issues = issues
         super().__init__("Plan input has unresolved issues.")
+
+
+def diff_plan_input(before, after):
+    """Diff savable raw editor input without compiling or validating it."""
+    changes = diff_plans(before.get("plan"), after.get("plan"))
+    for key in ("rationale", "change_description"):
+        if before.get(key) != after.get(key):
+            changes.append({
+                "item_id": None,
+                "path": key,
+                "before": deepcopy(before.get(key)),
+                "after": deepcopy(after.get(key)),
+            })
+    return changes
 
 
 def compile_input(raw):

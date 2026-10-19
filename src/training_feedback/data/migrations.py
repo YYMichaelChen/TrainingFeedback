@@ -12,7 +12,7 @@ from ..domain.execution_modes import upgrade_payload
 LATEST_SCHEMA_VERSION = 26
 OLDEST_SUPPORTED_SCHEMA_VERSION = 23
 SUPPORTED_SCHEMA_APPLICATIONS = {23: "0.8.1", 24: "0.8.2-0.8.18", 25: "0.8.19-0.8.20",
-                                 26: "0.8.21-0.8.23"}
+                                 26: "0.8.21-0.8.24"}
 
 
 def _install26(connection, *, old_documents=False):

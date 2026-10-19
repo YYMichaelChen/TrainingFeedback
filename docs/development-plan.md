@@ -198,10 +198,12 @@ hidden capsule navigation is built only when needed, and dose-table population
 performs one final size calculation instead of recalculating after every cell.
 Draft and upgrade-save confirmation shows a short explanation and the target plan
 code when available. When validation reports incomplete fields, it immediately
-shows only the numbered issues with Chinese locations, reasons and field paths;
-the issue list must not be replaced by a full plan dump or revision diff.
-Without issues, full changes are optional, collapsed by default, and rendered
-on demand in a read-only scroll area within a screen-bounded dialog. Save-draft and
+shows the numbered issues with Chinese locations, reasons and field paths together
+with a separate “本次修改” section derived from the savable original input. The
+change section never requires a valid prescription and does not invent a formal
+plan number for incomplete input. The combined detail remains collapsed when there
+are no issues and opens immediately when issues exist; it is rendered on demand in
+a read-only scroll area within a screen-bounded dialog. Save-draft and
 cancel buttons remain outside that area; long plans cannot stretch the confirmation
 into an unbounded message box or push its footer below the screen.
 Save results and blocked import/export/activation operations also show the actual
@@ -1473,8 +1475,13 @@ Lists show one current editing entry, including an unnamed-draft label and saved
 time without inserting placeholder names into user text. Invalid latest input
 blocks activation/export of any older linked snapshot. Preview rechecks document
 tokens, lineage and current active source. Problem lists are copyable and locate
-action/group/member/set fields. Closing offers save, discard or continue; no timer
-autosave is introduced. Draft deletion preserves active/history/original-import
+action/group/member/set fields. Closing an editor whose savable original input still
+equals its opening snapshot exits directly; a changed new draft and changed existing
+draft retain save, discard and continue. Structural delete, reorder and group-member
+changes have session-local undo and redo. Structural history uses stable node IDs
+and preserves current original text and incomplete numeric input on surviving nodes;
+it does not persist an operation log, replace a text control's own undo, activate a
+plan or rewrite completed training facts. No timer autosave is introduced. Draft deletion preserves active/history/original-import
 and exported evidence records, and refuses referenced drafts rather than erasing
 their provenance. Root backup/restore includes edit documents with the database;
 reference impact also includes their current action/group references.

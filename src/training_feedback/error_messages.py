@@ -163,7 +163,7 @@ ERROR_TRANSLATIONS = {
     "and retry cleanup; the remaining files are preserved.":
         "此目录有未完成的卸载数据清理。请重新安装当前程序后重试清理；剩余文件已保留。",
     "Only plan format version 4 is accepted.":
-        "此计划文件不是当前支持的格式。请使用当前版本导出的计划文件（格式版本 4）。",
+        "此操作只接受格式版本 4；当前计划格式为 v5，v4 文件只能通过导入入口严格转换。",
     "The displayed plan revision changed.": "当前草稿已被修改，请重新打开后核对。",
     "A plan base number must be between 001 and 999.":
         "计划编号必须是 001 至 999 的整数。",
@@ -1037,8 +1037,9 @@ def user_message(error: str | BaseException, *, operation: str = "客户端操�
         translated = _system_error(error)
         if translated is not None:
             return translated
-    if message.startswith(("Invalid plan v4 at ", "Invalid plan v5 at ")):
-        path, _, detail = message[len("Invalid plan v4 at "):].partition(": ")
+    invalid_plan = re.fullmatch(r"Invalid plan v(4|5) at (.*?): (.*)", message)
+    if invalid_plan:
+        version, path, detail = invalid_plan.groups()
         cause = error.__cause__ if isinstance(error, BaseException) else None
         if cause is not None and hasattr(cause, "validator"):
             reason = _schema_reason(cause)
@@ -1046,7 +1047,10 @@ def user_message(error: str | BaseException, *, operation: str = "客户端操�
             missing = re.fullmatch(r"'([^']+)' is a required property", detail)
             reason = ("缺少必填字段：" + FIELD_LABELS.get(missing[1], missing[1]) if missing
                       else "字段类型、取值或结构不符合当前格式要求")
-        return f"计划文件格式有误（格式版本 4）。\n位置：{_field_path(path)}\n原因：{reason}。"
+        return (
+            f"计划文件格式有误（格式版本 {version}）。\n"
+            f"位置：{_field_path(path)}\n原因：{reason}。"
+        )
     if message.startswith("Content is not eligible: "):
         return "当前内容不可用：" + "；".join(
             LIBRARY_REASON_LABELS.get(reason, f"内容状态异常（状态码：{reason}）")

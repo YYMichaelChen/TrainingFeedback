@@ -7,13 +7,21 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.23**
+- Application: **0.8.24**
 - Database schema: **26**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **5**
 - GitHub distribution: **v0.8.21**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.23](0.8.23/development.md)
+- Current development version: [0.8.24](0.8.24/development.md)
+
+应用 0.8.24 将计划编辑问题／差异展示和结构历史拆为独立职责；不完整草稿保存确认
+同时显示基于可保存原始输入的“本次修改”和“待完善内容”，未修改编辑器直接关闭。
+删除、重排和动作组成员结构调整可在当前编辑会话内撤销／重做，并按稳定节点身份保留
+仍存在节点的原文和未完成数值。计划格式错误显示实际 v4/v5；schema26、内部编辑格式2、
+合同v5、catalog 均不变。源码范围、实际验证与未运行边界见
+[0.8.24 开发记录](0.8.24/development.md)。当前仅为源码开发，没有候选构建或
+GitHub 分发；stable/latest 仍为 v0.8.21。
 
 应用 0.8.23 将完整根备份移到后台线程，以数据根写入租约和 SQLite 写入保留统一
 数据库／附件快照；不完整副本带打开拒绝标记，完成后才发布。计划导入按 4 MiB、
@@ -80,6 +88,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.24 | 26 | Plan-editor state, session-local structural undo/redo, raw-input differences and accurate contract diagnostics | Source development only; application/manual tests 0; no candidate build or distribution |
 | 0.8.23 | 26 | Staged complete-root backup, background lifecycle guards and bounded plan/review input | Source development only; 1 startup scenario passed on final source after 1 environment-only and 1 directly affected rerun; no candidate build or distribution |
 | 0.8.22 | 26 | Transaction convergence, bounded matching diagnostics, guarded updater exit and active-task leases | Source development only; no candidate build or distribution |
 | 0.8.21 | 26 | Explicit execution modes, alternating counting, set-associated actual records, v5 exchange | GitHub Release `v0.8.21`; clean Setup from `bd8f1e7`; SHA-256 `cb9f2af8997563c2a755bd05089bbff567b6204e871935771ee8c8b48759a605`; unsigned; 2 development startup scenarios passed, manual tests 0 |
@@ -113,6 +122,12 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.24 development record](0.8.24/development.md) identifies source-only
+plan-editor work. No concrete startup risk was introduced, so application and manual
+tests are zero. Plan editing, differences, undo/redo and close behavior remain
+unobserved client behavior. No candidate was built, so existing installer evidence
+does not certify 0.8.24.
 
 The [0.8.23 development record](0.8.23/development.md) identifies source-only
 backup/input work. One current-root startup scenario passed after correcting an
@@ -293,6 +308,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.24 development record](0.8.24/development.md)
 - [0.8.23 development record](0.8.23/development.md)
 - [0.8.22 development record](0.8.22/development.md)
 - [0.8.21 GitHub Release record](0.8.21/github-release-2026-10-18.md)
