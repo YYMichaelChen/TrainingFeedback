@@ -7,13 +7,20 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.22**
+- Application: **0.8.23**
 - Database schema: **26**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **5**
 - GitHub distribution: **v0.8.21**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.22](../designs/project-review-roadmap-2026-10.md)
+- Current development version: [0.8.23](0.8.23/development.md)
+
+应用 0.8.23 将完整根备份移到后台线程，以数据根写入租约和 SQLite 写入保留统一
+数据库／附件快照；不完整副本带打开拒绝标记，完成后才发布。计划导入按 4 MiB、
+64 层／50000 值限制，审核附件在读取中执行既有 8 MiB 上限。schema26、内部编辑
+格式2、合同v5、catalog 均不变；源码范围、唯一启动场景和未运行边界见
+[0.8.23 开发记录](0.8.23/development.md)。当前仅为源码开发，没有候选构建或
+GitHub 分发；stable/latest 仍为 v0.8.21。
 
 应用 0.8.22 收敛运行时提交／回滚失败，统一有界错误诊断，并在更新启动器开始退出
 计时前处理编辑窗口；更新临时目录使用精确进程创建身份租约，活跃下载、退出等待或
@@ -73,6 +80,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.23 | 26 | Staged complete-root backup, background lifecycle guards and bounded plan/review input | Source development only; 1 startup scenario passed on final source after 1 environment-only and 1 directly affected rerun; no candidate build or distribution |
 | 0.8.22 | 26 | Transaction convergence, bounded matching diagnostics, guarded updater exit and active-task leases | Source development only; no candidate build or distribution |
 | 0.8.21 | 26 | Explicit execution modes, alternating counting, set-associated actual records, v5 exchange | GitHub Release `v0.8.21`; clean Setup from `bd8f1e7`; SHA-256 `cb9f2af8997563c2a755bd05089bbff567b6204e871935771ee8c8b48759a605`; unsigned; 2 development startup scenarios passed, manual tests 0 |
 | 0.8.20 | 25 | Separate action addition from plan save; in-memory plan-file template with explicit Save As | GitHub Release `v0.8.20`; clean Setup from `f71bee5`; SHA-256 `daed4069ce5cf45327c5880a4a556933af7871038a4562c48af8eeceb5e4064c`; unsigned; application and manual tests 0 |
@@ -105,6 +113,13 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.23 development record](0.8.23/development.md) identifies source-only
+backup/input work. One current-root startup scenario passed after correcting an
+ambient-interpreter dependency failure and passed again after the final directly
+affected source refinement; application tests contain no backup/import/UI functional
+result and manual tests are zero. No candidate was built, so existing installer
+evidence does not certify 0.8.23.
 
 The [0.8.20 development record](0.8.20/development.md) carries both plan UI follow-ups
 into a clean Setup from `f71bee5`. Application and manual tests remain zero; client
@@ -278,6 +293,10 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.23 development record](0.8.23/development.md)
+- [0.8.22 development record](0.8.22/development.md)
+- [0.8.21 GitHub Release record](0.8.21/github-release-2026-10-18.md)
+- [0.8.21 development record](0.8.21/development.md)
 - [0.8.20 GitHub Release record](0.8.20/github-release-2026-10-18.md)
 - [0.8.20 development record](0.8.20/development.md)
 - [0.8.19 GitHub Release record](0.8.19/github-release-2026-10-18.md)

@@ -1,9 +1,10 @@
 """设置页：数据目录信息、切换数据目录、打开目录、手动备份。"""
 
+import threading
 from pathlib import Path
 from typing import Callable
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -22,13 +23,39 @@ from PySide6.QtWidgets import (
 
 from .. import __version__
 from ..application.release_updates import UpdateStatus
-from ..data.backup import BackupError, create_backup
+from ..data.backup import BackupCancelled
 from ..data.data_root import DataRootError
 from .compact_widgets import ActionBar
 from .data_root_dialog import DataRootDialog, suggested_data_root
 from .labels import user_message
 from .relative_widgets import AdaptiveFields, LocalScrollArea
 from .sizing import bind_units, scale_manager
+
+
+class _BackupWorker(QObject):
+    completed = Signal(str)
+    cancelled = Signal()
+    failed = Signal(object)
+
+    def __init__(self, service, destination: Path, cancel_event: threading.Event):
+        super().__init__()
+        self.service = service
+        self.destination = destination
+        self.cancel_event = cancel_event
+
+    @Slot()
+    def run(self) -> None:
+        try:
+            result = self.service.create(
+                self.destination,
+                cancelled=self.cancel_event.is_set,
+            )
+        except BackupCancelled:
+            self.cancelled.emit()
+        except Exception as exc:
+            self.failed.emit(exc)
+        else:
+            self.completed.emit(str(result))
 
 
 class SettingsPage(QWidget):
@@ -46,6 +73,9 @@ class SettingsPage(QWidget):
         self.backup_picker = backup_picker
         self.switch_request = switch_request
         self.update_coordinator = update_coordinator
+        self._backup_thread = None
+        self._backup_worker = None
+        self._backup_cancel_event = None
         outer = QVBoxLayout(self)
         scroll = LocalScrollArea()
         body = QWidget()
@@ -70,10 +100,18 @@ class SettingsPage(QWidget):
             self.switch_button = QPushButton("切换到其他数据目录…")
             self.switch_button.clicked.connect(self._switch_root)
             root_actions.addWidget(self.switch_button)
-        backup_button = QPushButton("立即创建备份")
-        backup_button.clicked.connect(self._create_backup)
-        root_actions.addWidget(backup_button)
+        self.backup_button = QPushButton("立即创建备份")
+        self.backup_button.clicked.connect(self._create_backup)
+        root_actions.addWidget(self.backup_button)
+        self.backup_cancel_button = QPushButton("取消备份")
+        self.backup_cancel_button.setEnabled(False)
+        self.backup_cancel_button.clicked.connect(self._cancel_backup)
+        root_actions.addWidget(self.backup_cancel_button)
         layout.addWidget(root_actions)
+        self.backup_status = QLabel("尚未创建备份")
+        self.backup_status.setObjectName("muted")
+        self.backup_status.setWordWrap(True)
+        layout.addWidget(self.backup_status)
         diagnostic = QPushButton("复制最近错误诊断")
         diagnostic.clicked.connect(self._copy_diagnostic)
         layout.addWidget(diagnostic)
@@ -211,6 +249,8 @@ class SettingsPage(QWidget):
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.context.data_root.path)))
 
     def _create_backup(self) -> None:
+        if self.backup_active:
+            return
         destination = (
             self.backup_picker()
             if self.backup_picker
@@ -218,15 +258,70 @@ class SettingsPage(QWidget):
         )
         if not destination:
             return
-        try:
-            create_backup(
-                self.context.data_root.path,
-                Path(destination),
-                self.context.database.connection,
-            )
-        except BackupError as exc:
-            QMessageBox.warning(self, "备份失败", user_message(exc))
-        else:
-            QMessageBox.information(
-                self, "备份完成", "完整的数据目录已成功备份。"
-            )
+        self._backup_cancel_event = threading.Event()
+        thread = QThread(self)
+        worker = _BackupWorker(
+            self.context.backups,
+            Path(destination),
+            self._backup_cancel_event,
+        )
+        worker.moveToThread(thread)
+        thread.started.connect(worker.run)
+        worker.completed.connect(self._backup_completed)
+        worker.cancelled.connect(self._backup_cancelled)
+        worker.failed.connect(self._backup_failed)
+        worker.completed.connect(thread.quit)
+        worker.cancelled.connect(thread.quit)
+        worker.failed.connect(thread.quit)
+        worker.completed.connect(worker.deleteLater)
+        worker.cancelled.connect(worker.deleteLater)
+        worker.failed.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(self._backup_thread_finished)
+        self._backup_thread = thread
+        self._backup_worker = worker
+        self.backup_button.setEnabled(False)
+        self.backup_cancel_button.setEnabled(True)
+        if hasattr(self, "switch_button"):
+            self.switch_button.setEnabled(False)
+        self.backup_status.setText("正在创建完整备份…可以继续查看页面；保存操作请稍后重试。")
+        thread.start()
+
+    @property
+    def backup_active(self) -> bool:
+        return self._backup_thread is not None
+
+    def _cancel_backup(self) -> None:
+        if self._backup_cancel_event is None:
+            return
+        self._backup_cancel_event.set()
+        self.backup_cancel_button.setEnabled(False)
+        self.backup_status.setText("正在取消备份…未完成副本不会发布为可恢复备份。")
+
+    @Slot(str)
+    def _backup_completed(self, destination: str) -> None:
+        self.backup_status.setText("备份完成：" + destination)
+        QMessageBox.information(
+            self,
+            "备份完成",
+            "完整的数据目录已成功备份到：\n" + destination,
+        )
+
+    @Slot()
+    def _backup_cancelled(self) -> None:
+        self.backup_status.setText("备份已取消；未发布不完整副本。")
+
+    @Slot(object)
+    def _backup_failed(self, exc: Exception) -> None:
+        self.backup_status.setText("备份失败；未发布不完整副本。")
+        QMessageBox.warning(self, "备份失败", user_message(exc))
+
+    @Slot()
+    def _backup_thread_finished(self) -> None:
+        self._backup_thread = None
+        self._backup_worker = None
+        self._backup_cancel_event = None
+        self.backup_button.setEnabled(True)
+        self.backup_cancel_button.setEnabled(False)
+        if hasattr(self, "switch_button"):
+            self.switch_button.setEnabled(True)

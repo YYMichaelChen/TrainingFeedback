@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Iterator
 
 from .migrations import apply_migrations
-from .root_lock import RootLease, require_no_pending_upgrade
+from .root_lock import RootLease, RootMutationLease, require_no_pending_upgrade
 
 
 class Database:
@@ -29,7 +29,8 @@ class Database:
             self.connection.execute("PRAGMA busy_timeout = 5000")
             if self.connection.execute("PRAGMA foreign_keys").fetchone()[0] != 1:
                 raise sqlite3.DatabaseError("SQLite foreign keys could not be enabled.")
-            apply_migrations(self.connection)
+            with RootMutationLease(self.path.parent):
+                apply_migrations(self.connection)
             return self.connection
         except Exception:
             self.close()
@@ -78,30 +79,42 @@ def transaction(
     connection: sqlite3.Connection, immediate: bool = False
 ) -> Iterator[sqlite3.Connection]:
     """Run one runtime write transaction with a consistent rollback boundary."""
-    connection.execute("BEGIN IMMEDIATE" if immediate else "BEGIN")
+    database_path = next(
+        (row[2] for row in connection.execute("PRAGMA database_list") if row[1] == "main"),
+        "",
+    )
+    root = Path(database_path).resolve().parent if database_path else None
+    lease = RootMutationLease(root) if root is not None else None
+    if lease is not None:
+        lease.__enter__()
     try:
-        yield connection
-        connection.commit()
-    except BaseException as error:
+        connection.execute("BEGIN IMMEDIATE" if immediate else "BEGIN")
         try:
-            connection.rollback()
-        except BaseException as rollback_error:
-            closed = False
+            yield connection
+            connection.commit()
+        except BaseException as error:
             try:
-                connection.close()
-                closed = True
-            except BaseException as close_error:
-                rollback_error.add_note(
-                    "Closing the SQLite connection after rollback failure also failed: "
-                    f"{type(close_error).__name__}: {close_error}"
+                connection.rollback()
+            except BaseException as rollback_error:
+                closed = False
+                try:
+                    connection.close()
+                    closed = True
+                except BaseException as close_error:
+                    rollback_error.add_note(
+                        "Closing the SQLite connection after rollback failure also failed: "
+                        f"{type(close_error).__name__}: {close_error}"
+                    )
+                state = (
+                    "The SQLite connection was closed and must not be reused."
+                    if closed
+                    else "The SQLite connection could not be proven reusable and must be abandoned."
                 )
-            state = (
-                "The SQLite connection was closed and must not be reused."
-                if closed
-                else "The SQLite connection could not be proven reusable and must be abandoned."
-            )
-            error.add_note(
-                "Rollback failed while converging the failed transaction. " + state
-            )
-            raise error from rollback_error
-        raise
+                error.add_note(
+                    "Rollback failed while converging the failed transaction. " + state
+                )
+                raise error from rollback_error
+            raise
+    finally:
+        if lease is not None:
+            lease.close()

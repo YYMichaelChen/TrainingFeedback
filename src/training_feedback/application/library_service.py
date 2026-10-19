@@ -7,6 +7,7 @@ from copy import deepcopy
 
 from ..data.catalog_resources import CatalogError, checked_bytes
 from ..data.database import transaction
+from ..data.root_lock import RootMutationLease
 from ..domain.catalog import (
     ExerciseReference,
     ExerciseSource,
@@ -162,12 +163,13 @@ class LibraryService:
 
     def _retain(self, entry, origin, provenance, read_image):
         connection = self.user.connection
-        try:
-            with transaction(connection, immediate=True):
-                return self._retain_in_transaction(entry, origin, provenance, read_image)
-        except Exception as error:
-            self._recover_unreferenced_after_failure(error)
-            raise
+        with RootMutationLease(self.data_root):
+            try:
+                with transaction(connection, immediate=True):
+                    return self._retain_in_transaction(entry, origin, provenance, read_image)
+            except Exception as error:
+                self._recover_unreferenced_after_failure(error)
+                raise
 
     def _recover_unreferenced_after_failure(self, error: Exception) -> None:
         """Best-effort cleanup that never replaces the action's original failure."""

@@ -372,6 +372,10 @@ ERROR_TRANSLATIONS = {
     "The TrainingFeedback database is invalid.": "数据目录中的数据库无效或已损坏。",
     "The data root is in use; close it before upgrading.":
         "数据目录正在使用中，请先关闭使用它的窗口，再重试升级。",
+    "The data root is busy with another save or backup; retry when it finishes.":
+        "数据目录正在保存或备份，请等待当前操作完成后重试。",
+    "This directory is an incomplete backup and cannot be opened.":
+        "此目录是不完整的备份，不能作为数据目录打开。请重新创建备份。",
     "An interrupted data upgrade must be recovered before opening this root.":
         "此数据目录的升级曾中断，需要完成内部恢复后才能打开。",
     "Cannot record the data-root location.": "无法记录数据目录位置，请检查磁盘权限。",
@@ -383,8 +387,16 @@ ERROR_TRANSLATIONS = {
         "备份目录不能位于数据目录内部。",
     "The backup destination must be empty.": "备份目录必须是空目录。",
     "Cannot create the backup destination.": "无法创建备份目录，请检查磁盘权限。",
+    "The source data root does not contain its database.": "源数据目录缺少数据库文件。",
+    "The data root contains a linked path that cannot be backed up.":
+        "数据目录中包含链接路径，无法安全创建完整备份。",
+    "The data root contains a non-file resource that cannot be backed up.":
+        "数据目录中包含无法复制的特殊资源，未创建备份。",
+    "The data-root backup was cancelled.": "备份已取消，未发布不完整副本。",
+    "The completed backup could not be published and remains marked incomplete.":
+        "备份内容已复制，但无法发布为可恢复备份；目录仍标记为不完整，请重新创建备份。",
     "The data-root backup could not be completed.":
-        "备份未能完成，已清理不完整副本。",
+        "备份未能完成，不完整副本未发布。",
 }
 
 
@@ -728,6 +740,14 @@ ERROR_TRANSLATIONS.update({
     "Plan classification does not match the exact content revision.":
         "计划中的动作分类与所选内容版本不一致，请重新选择动作。",
     "Plan name cannot be empty.": "计划名称不能为空。",
+    "The selected plan file could not be read.":
+        "无法读取所选计划文件，请检查文件是否存在及是否可访问。",
+    "The plan file is too large to import.":
+        "计划文件超过 4 MiB 上限，尚未导入；不会截断文件内容。",
+    "The plan file JSON is nested too deeply.":
+        "计划文件的 JSON 嵌套超过 64 层，尚未导入。",
+    "The plan file contains too many JSON values.":
+        "计划文件的 JSON 值超过 50000 个，尚未导入。",
     "Plan numbers must be finite.": "计划数值必须是有限数字，不能使用无穷大或 NaN。",
     "Plan revision was not found.": "没有找到指定的计划版本。",
     "Program files changed after preflight; stopped.":
@@ -818,7 +838,8 @@ ERROR_TRANSLATIONS.update({
         "无法读取审核答复原件，请检查文件是否可访问。",
     "The review answer file could not be stored.":
         "无法保存审核答复原件，请检查磁盘空间和权限。",
-    "The review answer file is too large to store.": "审核答复原件过大，无法保存。",
+    "The review answer file is too large to store.":
+        "审核答复原件超过 8 MiB 上限，尚未保存。",
     "The root configuration belongs to another application.":
         "此数据目录的配置属于其他应用。",
     "The root metadata is incomplete.": "数据目录的基本信息不完整。",

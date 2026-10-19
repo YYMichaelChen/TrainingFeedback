@@ -496,6 +496,10 @@ imports. Import first reads one immutable UTF-8 byte snapshot, rejects duplicate
 keys, non-finite numbers and malformed JSON, then collects independently checkable
 schema/domain/identity/source/target issues in Chinese with field paths. Parse
 failures include line/column where available. Invalid files create no draft.
+The read itself is capped at 4 MiB plus one overflow-detection byte. Parsed JSON
+may contain at most 50,000 values and 64 nesting levels. Crossing any limit is a
+Chinese rejection before preview or persistence; the application never truncates
+the file or user text. These are runtime resource limits, not a new wire version.
 A valid preview shows the complete prescription and activation warnings; only
 confirmation writes that exact snapshot, with state rechecked transactionally.
 Original-file cleanup is separate from database rollback and reports its failures.
@@ -668,10 +672,26 @@ A backup copies the complete data root, including marker, configuration, images,
 exports, and imports, to an explicitly selected empty destination outside the
 source root. The running application uses SQLite's online backup API for a
 consistent database copy, rather than copying an open database file directly.
-Failures are reported, never delete the source, and clean up the incomplete
-copy so a partial backup is never presented as successful. Recovery uses the
-normal open/switch flow: select the backup copy as the data root. There is no
-overwrite-style restore.
+All current-root writes use one re-entrant process and OS-held mutation lease;
+the backup worker owns separate SQLite connections and holds both that lease and
+an immediate SQLite writer reservation while it copies the database plus managed
+files. Live SQLite journals/sidecars and lock files are not backup content.
+
+Backup runs outside the UI thread and shows running, cancelling, completed or
+failed state. While it runs, reads remain available; a save reports the busy root
+instead of waiting on the UI thread. Root switching, update handoff and application
+close wait for completion or explicit cancellation. Copying is cancellable between
+bounded chunks and SQLite backup steps; cancellation never publishes completion.
+
+Output is first written to a uniquely owned sibling staging directory carrying
+`.training-feedback-backup-incomplete`. Ordinary open/switch rejects any root with
+that marker before database access or writes. After every copy and database
+integrity check succeeds, the complete staging directory replaces the still-empty
+destination and only then loses the incomplete marker. Failures never delete the
+source or unknown destination content; owned staging is removed when safe, and any
+unremovable remainder stays visibly non-openable rather than being reported as a
+backup. Recovery uses the normal open/switch flow by selecting the completed copy;
+there is no overwrite-style restore.
 
 Current settings provide catalog information, location display/open, complete
 backup and root switching; evidence export belongs to plan/session pages.
@@ -1201,6 +1221,9 @@ Review evidence binds a content hash and the reviewed image-set hashes. A new
 or edited text/image version starts unreviewed. The reviewer must inspect support
 points, moving side, direction, sequence and agreement between illustration and
 text; a picture's mere presence never produces approval.
+An optional review-answer original is read as one immutable snapshot with the
+existing 8 MiB maximum enforced during the read. Oversize input is rejected in
+Chinese before any managed copy or review row is saved; content is never truncated.
 
 | Selected revision | Select for use / enable | Plan activation / new-session start |
 | --- | --- | --- |
@@ -1343,18 +1366,21 @@ backup and restore remain separate user actions outside that one-time reset.
 
 ### 12.8 External Handoff Contract
 
-Use `training_feedback.plan` version 4 for new imports and
-`training_feedback.evidence` version 4 for new exports; define their version
-constants independently. Only the current plan-import contract is accepted. A
-newly supplied older-format file gets a clear current-format error and the
-current schema, not a compatibility converter or version selector. Plans
-already stored in a usable current root retain their frozen facts; their
-original imported files and original exports are not rewritten or re-imported.
+Use `training_feedback.plan` version 5 for new imports and
+`training_feedback.evidence` version 5 for new exports; define their version
+constants independently. Product v4 plan files are strictly validated against
+their retained schema, then converted to v5 drafts while retaining the exact
+original bytes. V2/v3, future versions and evidence files are rejected with a
+clear current-format message; there is no compatibility selector. Plans already
+stored in a usable current root retain their frozen facts, and original imports
+or exports are never rewritten or silently re-imported.
 
-V4 carries namespaced action keys, exact content references, family/variant
-identity, ordered standalone/group items, rounds, side order, per-round sets,
-all rest boundaries and source rationale. Training days have order and items;
-they have no user-defined name. Imports create drafts only and cannot
+V5 carries namespaced action keys, exact content references, family/variant
+identity, ordered standalone/group items, rounds, explicit whole／separate-side／
+alternating execution mode, alternating start, total-versus-per-side counting,
+set-associated actual-dose semantics, all rest boundaries and source rationale.
+Training days have order and items; they have no user-defined name. Imports create
+drafts only and cannot
 create approval, enablement, deletion decisions or plan activation. Schema and
 domain validation enforce identical invariants and reject unknown identities
 without silent substitutions. An identity for removed content resolves to

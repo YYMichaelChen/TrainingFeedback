@@ -172,6 +172,16 @@ class MainWindow(QMainWindow):
 
     def prepare_update_exit(self) -> bool:
         """Resolve edit windows before an external update watchdog is started."""
+        if any(
+            getattr(self.pages.widget(index), "backup_active", False)
+            for index in range(self.pages.count())
+        ):
+            QMessageBox.information(
+                self,
+                "更新暂缓",
+                "完整备份仍在进行。请等待完成或在设置中取消备份后，再次点击安装。",
+            )
+            return False
         for widget in QApplication.topLevelWidgets():
             if (
                 widget is self
@@ -203,6 +213,17 @@ class MainWindow(QMainWindow):
         self.activateWindow()
 
     def closeEvent(self, event):
+        if any(
+            getattr(self.pages.widget(index), "backup_active", False)
+            for index in range(self.pages.count())
+        ):
+            QMessageBox.information(
+                self,
+                "备份仍在进行",
+                "请等待完整备份完成，或在设置中点击“取消备份”，再关闭应用。",
+            )
+            event.ignore()
+            return
         for index in range(self.pages.count()):
             cancel = getattr(self.pages.widget(index), "cancel_loading", None)
             if cancel is not None:

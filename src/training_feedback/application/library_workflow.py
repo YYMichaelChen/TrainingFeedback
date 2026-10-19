@@ -12,6 +12,7 @@ from ..data.catalog_resources import CatalogError, managed_path
 from ..data.database import transaction
 from ..data.library_images import decode_image_size, inspect_images
 from ..data.review_attachments import store_review_answer
+from ..data.root_lock import RootMutationLease
 from ..domain.catalog import ExerciseReference, require_content_envelope
 from ..domain.exercises import normalize_name, require_review_occurrence
 from ..domain.library_eligibility import assess_eligibility, image_hashes
@@ -150,12 +151,13 @@ class LibraryWorkflowService(LibraryService):
 
     @contextmanager
     def _action(self):
-        try:
-            with transaction(self.user.connection, immediate=True):
-                yield
-        except Exception as error:
-            self._recover_unreferenced_after_failure(error)
-            raise
+        with RootMutationLease(self.data_root):
+            try:
+                with transaction(self.user.connection, immediate=True):
+                    yield
+            except Exception as error:
+                self._recover_unreferenced_after_failure(error)
+                raise
 
     def _retain_target(self, target: LibraryTarget) -> int:
         entry = self.target_entry(target)
@@ -232,6 +234,20 @@ class LibraryWorkflowService(LibraryService):
     def record_review(self, targets: list[LibraryTarget], *, reviewer_type: str,
                       source: str, occurred_at: str, note: str, user_confirmed: bool,
                       answer_file: Path | None = None) -> None:
+        with RootMutationLease(self.data_root):
+            self._record_review(
+                targets,
+                reviewer_type=reviewer_type,
+                source=source,
+                occurred_at=occurred_at,
+                note=note,
+                user_confirmed=user_confirmed,
+                answer_file=answer_file,
+            )
+
+    def _record_review(self, targets: list[LibraryTarget], *, reviewer_type: str,
+                       source: str, occurred_at: str, note: str, user_confirmed: bool,
+                       answer_file: Path | None = None) -> None:
         self._require_confirmation(targets, user_confirmed)
         if reviewer_type not in {"external_ai_expert", "human_expert"}:
             raise CatalogError("A real external reviewer type is required.")
@@ -296,6 +312,10 @@ class LibraryWorkflowService(LibraryService):
             })
 
     def attach_illustration(self, target: LibraryTarget, source: Path, caption: str) -> int:
+        with RootMutationLease(self.data_root):
+            return self._attach_illustration(target, source, caption)
+
+    def _attach_illustration(self, target: LibraryTarget, source: Path, caption: str) -> int:
         content = deepcopy(self.target_entry(target)["content"])
         data = Path(source).read_bytes()
         decode_image_size(data)

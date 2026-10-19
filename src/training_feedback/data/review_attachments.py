@@ -13,6 +13,7 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
+from .bounded_files import FileTooLargeError, read_limited_bytes
 from .data_root import DataRootError
 
 REVIEWS_DIRECTORY = "reviews"
@@ -48,11 +49,11 @@ def store_review_answer(data_root: Path, source: Path) -> ReviewAttachment:
     if not source.is_file():
         raise ReviewAttachmentError("The selected review answer file was not found.")
     try:
-        payload = source.read_bytes()
+        payload = read_limited_bytes(source, MAX_ATTACHMENT_BYTES)
+    except FileTooLargeError:
+        raise ReviewAttachmentError("The review answer file is too large to store.") from None
     except OSError as exc:
         raise ReviewAttachmentError("The review answer file could not be read.") from exc
-    if len(payload) > MAX_ATTACHMENT_BYTES:
-        raise ReviewAttachmentError("The review answer file is too large to store.")
     reviews = Path(data_root) / REVIEWS_DIRECTORY
     try:
         reviews.mkdir(parents=True, exist_ok=True)

@@ -20,12 +20,14 @@ from .data.data_root import (
 )
 from .data.database import Database
 from .data.locator import Locator
+from .data.root_lock import MUTATION_LOCK_FILENAME
 
 
 class LibraryContext:
     """当前模型的桌面组合根：打开根目录不播种，服务/页面工厂集中在这里。"""
 
     def __init__(self, data_root, database, catalog):
+        from .application.backup_service import BackupService
         from .application.group_plan_service import GroupPlanService
         from .application.group_session_service import GroupSessionService
         from .application.library_lifecycle_service import LibraryLifecycleService
@@ -42,6 +44,7 @@ class LibraryContext:
         self.data_root = data_root
         self.database = database
         self.catalog = catalog
+        self.backups = BackupService(data_root.path)
         self.user_library = LibraryRepository(database.connection)
         self.snapshot_assets = SnapshotAssets(data_root.path)
         with transaction(database.connection, immediate=True):
@@ -201,6 +204,7 @@ class RootCreation:
         # Only remove names created by root initialization. Never sweep unknown files.
         for name in (MARKER_FILENAME, DATABASE_FILENAME + "-shm", DATABASE_FILENAME + "-wal",
                      DATABASE_FILENAME + "-journal", ".training-feedback.lock",
+                     MUTATION_LOCK_FILENAME,
                      DATABASE_FILENAME, CONFIG_FILENAME):
             path = self.target / name
             if path.is_file() or path.is_symlink():

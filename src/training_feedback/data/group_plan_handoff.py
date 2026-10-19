@@ -24,11 +24,17 @@ from ..domain.group_plans import (
     validate_plan_payload,
 )
 from ..domain.plan_editing import PlanIssue, PlanIssues, payload_issues
+from .bounded_files import FileTooLargeError, read_limited_bytes
 from .catalog_resources import managed_path
 from .conversion_repository import ConversionRepository
 from .group_session_handoff import known
 from .library_images import image_file_extension
 from .plan_contract import plan_v4_schema
+from .root_lock import RootMutationLease
+
+MAX_PLAN_IMPORT_BYTES = 4 * 1024 * 1024
+MAX_PLAN_JSON_DEPTH = 64
+MAX_PLAN_JSON_VALUES = 50_000
 
 
 def _strict_json(raw):
@@ -44,6 +50,22 @@ def _strict_json(raw):
         raise ValueError("Plan numbers must be finite: " + value)
 
     return json.loads(raw, object_pairs_hook=pairs, parse_constant=nonfinite)
+
+
+def _require_bounded_json(payload) -> None:
+    stack = [(payload, 1)]
+    values = 0
+    while stack:
+        value, depth = stack.pop()
+        values += 1
+        if values > MAX_PLAN_JSON_VALUES:
+            raise ValueError("The plan file contains too many JSON values.")
+        if depth > MAX_PLAN_JSON_DEPTH:
+            raise ValueError("The plan file JSON is nested too deeply.")
+        if isinstance(value, dict):
+            stack.extend((item, depth + 1) for item in value.values())
+        elif isinstance(value, list):
+            stack.extend((item, depth + 1) for item in value)
 
 
 @dataclass(frozen=True)
@@ -73,12 +95,15 @@ class GroupPlanHandoff:
                              "请另存后重新选择。") from None
         try:
             payload = _strict_json(text)
+        except RecursionError:
+            raise ValueError("The plan file JSON is nested too deeply.") from None
         except json.JSONDecodeError as exc:
             raise ValueError(f"导入失败，尚未保存计划。JSON 语法有误：第 {exc.lineno} 行、"
                              f"第 {exc.colno} 列，请检查引号、逗号和括号。") from None
         except ValueError as exc:
             from ..error_messages import user_message
             raise ValueError("导入失败，尚未保存计划。" + user_message(exc)) from None
+        _require_bounded_json(payload)
         return text, payload
 
     def _check_import(self, payload):
@@ -143,7 +168,12 @@ class GroupPlanHandoff:
                 tuple(diff_plans(state["payload"]["plan"] if state else None, candidate["plan"])))
 
     def preview_file(self, source):
-        raw = Path(source).read_bytes()
+        try:
+            raw = read_limited_bytes(Path(source), MAX_PLAN_IMPORT_BYTES)
+        except FileTooLargeError:
+            raise ValueError("The plan file is too large to import.") from None
+        except OSError as exc:
+            raise ValueError("The selected plan file could not be read.") from exc
         _text, payload = self._parse(raw)
         legacy = isinstance(payload, dict) and payload.get("schema_version") == 4
         payload, warnings, token, changes = self._check_import(payload)
@@ -162,6 +192,7 @@ class GroupPlanHandoff:
                 "数字须为有限非负数，顺序为不重复正整数；单侧动作须选择先做侧。\n"
                 "自由剂量可用 value=null、unit=free，但必须写明备注。\n"
                 "来源引用须属于当前数据目录；动作和内容身份必须与目录精确匹配。\n"
+                "导入文件最多 4 MiB；JSON 最深 64 层、最多 50000 个值，超限不会截断。\n"
                 "文件整体合格后仅导入为草稿，不会自动启用动作、审核内容或启用计划。\n"
                 "v2/v3、未来版、训练证据、Excel、Word 和自然语言文件不能导入。\n"
                 "以下 schema 是完整字段说明；示例剂量只供格式参考，不是个人训练建议。\n\n"
@@ -181,6 +212,10 @@ class GroupPlanHandoff:
                          "days": [{"order": 1, "items": [action]}]}}
 
     def import_preview(self, preview):
+        with RootMutationLease(self.root):
+            return self._import_preview(preview)
+
+    def _import_preview(self, preview):
         raw = preview.raw
         text, payload = self._parse(raw)
         version = payload.get("schema_version") if isinstance(payload, dict) else "unknown"
@@ -245,6 +280,14 @@ class GroupPlanHandoff:
             raise
 
     def export(self, revision_id, *, session_service=None, session_id=None):
+        with RootMutationLease(self.root):
+            return self._export(
+                revision_id,
+                session_service=session_service,
+                session_id=session_id,
+            )
+
+    def _export(self, revision_id, *, session_service=None, session_id=None):
         stem = ("session" if session_service else "plan") + "-evidence-v5-" + uuid.uuid4().hex
         destination = managed_path(self.root, f"exports/{stem}")
         staged = managed_path(self.root, f"exports/.{stem}.staging")

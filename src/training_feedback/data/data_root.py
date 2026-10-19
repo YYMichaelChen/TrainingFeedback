@@ -21,6 +21,7 @@ CONFIG_VERSION = 1
 MARKER_FILENAME = "training_feedback.marker.json"
 CONFIG_FILENAME = "app_config.json"
 DATABASE_FILENAME = "training_feedback.sqlite3"
+BACKUP_INCOMPLETE_FILENAME = ".training-feedback-backup-incomplete"
 # exercise-images 保存动作指导引用的受管图片；数据库仅保存相对数据根的引用。
 MANAGED_DIRECTORIES = ("backups", "exercise-images", "exports", "imports")
 
@@ -179,6 +180,10 @@ def create_new(root_path: Path) -> DataRoot:
 def inspect_existing(root_path: Path) -> DataRoot:
     """Validate without migrating or creating files; usable before a recovery snapshot."""
     root = Path(root_path)
+    if (root / BACKUP_INCOMPLETE_FILENAME).exists():
+        raise DataRootAccessError(
+            "This directory is an incomplete backup and cannot be opened."
+        )
     if (root / CLEANUP_MARKER_FILENAME).exists():
         raise DataRootAccessError(
             "This root has interrupted uninstall cleanup. Reinstall the current program "
