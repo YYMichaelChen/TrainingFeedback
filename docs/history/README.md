@@ -7,21 +7,20 @@ the [development workflow](../development-workflow.md) owns version rotation.
 
 ## Current implementation
 
-- Application: **0.8.24**
+- Application: **0.8.25**
 - Database schema: **26**
 - Catalog: **070-illustrated-3**
 - Current plan/evidence contract: **5**
 - GitHub distribution: **v0.8.21**
 - Formal compatibility baseline declared: **no**
-- Current development version: [0.8.24](0.8.24/development.md)
+- Current development version: [0.8.25](0.8.25/development.md)
 
-应用 0.8.24 将计划编辑问题／差异展示和结构历史拆为独立职责；不完整草稿保存确认
-同时显示基于可保存原始输入的“本次修改”和“待完善内容”，未修改编辑器直接关闭。
-删除、重排和动作组成员结构调整可在当前编辑会话内撤销／重做，并按稳定节点身份保留
-仍存在节点的原文和未完成数值。计划格式错误显示实际 v4/v5；schema26、内部编辑格式2、
-合同v5、catalog 均不变。源码范围、实际验证与未运行边界见
-[0.8.24 开发记录](0.8.24/development.md)。当前仅为源码开发，没有候选构建或
-GitHub 分发；stable/latest 仍为 v0.8.21。
+应用 0.8.25 将历史列表改为摘要读取、选中后读取完整详情，并用当前会话的最小冻结事实
+判断反馈资格；现有根启动改为单次协调准备和唯一实际数据库连接。setuptools 补齐图标
+资源，pytest 当前执行硬限制为最多 3 个显式节点；规范旧编辑格式文案同步为格式2。
+schema26、合同v5、catalog 均不变。源码范围、唯一启动场景与未运行边界见
+[0.8.25 开发记录](0.8.25/development.md)。候选和分发身份将在精确源码提交后补记；
+在此之前 stable/latest 仍为 v0.8.21。
 
 应用 0.8.23 将完整根备份移到后台线程，以数据根写入租约和 SQLite 写入保留统一
 数据库／附件快照；不完整副本带打开拒绝标记，完成后才发布。计划导入按 4 MiB、
@@ -88,6 +87,7 @@ current support promise.
 
 | Application | Database schema | Role | Candidate status |
 | --- | ---: | --- | --- |
+| 0.8.25 | 26 | Summary/detail history reads, coordinated root opening, package-resource and current test-policy maintenance | 1 startup scenario passed; candidate build and distribution pending exact source commit |
 | 0.8.24 | 26 | Plan-editor state, session-local structural undo/redo, raw-input differences and accurate contract diagnostics | Source development only; application/manual tests 0; no candidate build or distribution |
 | 0.8.23 | 26 | Staged complete-root backup, background lifecycle guards and bounded plan/review input | Source development only; 1 startup scenario passed on final source after 1 environment-only and 1 directly affected rerun; no candidate build or distribution |
 | 0.8.22 | 26 | Transaction convergence, bounded matching diagnostics, guarded updater exit and active-task leases | Source development only; no candidate build or distribution |
@@ -122,6 +122,12 @@ Intermediate schemas and retired development versions retain their original
 identities in Git history; they do not imply application releases or support.
 
 ## Candidate status
+
+The [0.8.25 development record](0.8.25/development.md) identifies the history-read,
+root-opening and maintenance source update. One isolated locator/current-root startup
+scenario passed; history, feedback, package installation and other client behavior
+remain unobserved. Candidate and GitHub Release identity are pending the exact clean
+source commit and do not inherit evidence from v0.8.21 or any other build.
 
 The [0.8.24 development record](0.8.24/development.md) identifies source-only
 plan-editor work. No concrete startup risk was introduced, so application and manual
@@ -308,6 +314,7 @@ it never transfers to a later version.
 
 ## Historical records
 
+- [0.8.25 development record](0.8.25/development.md)
 - [0.8.24 development record](0.8.24/development.md)
 - [0.8.23 development record](0.8.23/development.md)
 - [0.8.22 development record](0.8.22/development.md)

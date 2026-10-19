@@ -6,9 +6,9 @@ database, Streamlit UI, wardrobe data, and submission format.
 
 ## Current status
 
-- Application: `0.8.24`
+- Application: `0.8.25`
 - Database schema: `26`
-- Current development release: [`0.8.24`](docs/designs/project-review-roadmap-2026-10.md)
+- Current development release: [`0.8.25`](docs/designs/project-review-roadmap-2026-10.md)
 - Latest GitHub distribution: [`v0.8.21`](https://github.com/YYMichaelChen/TrainingFeedback/releases/tag/v0.8.21)
 - Version and candidate status: [`docs/history/README.md`](docs/history/README.md)
 
@@ -35,7 +35,9 @@ Install development dependencies as needed:
 Do not run bare pytest, default regression profiles or full version suites.
 When a concrete startup risk exists, select only the relevant node IDs under
 one stable update scope, following [test instructions](tests/README.md).
-The existing larger tool budgets are not permission to execute more cases.
+The test plugin rejects execution without explicit node IDs and enforces the shared
+three-case maximum; retained larger historical profile capacities are not permission
+to execute more cases.
 Documentation-only work uses link/consistency and diff checks, with no app tests.
 
 See the [development workflow](docs/development-workflow.md) for the short

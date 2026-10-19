@@ -38,6 +38,9 @@ class GroupSessionService:
     def history(self):
         return self.repository.history()
 
+    def history_summaries(self):
+        return self.repository.history_summaries()
+
     def image(self, occurrence, index):
         entry = self.library.user.content(occurrence["content_id"])
         declaration = occurrence["content"]["guidance"]["images"][index]
@@ -261,10 +264,14 @@ class GroupSessionService:
         return session_feedback_areas(session)
 
     def pending_feedback(self):
-        return [session for session in self.history()
-                if is_terminal_session(session["status"])
-                and session["training_date"] < self.clock.today().isoformat()
-                and session["feedback"] is None and self.feedback_areas(session)]
+        return [self.get(summary["id"]) for summary in self.history_summaries()
+                if self.is_feedback_pending(summary["id"])]
+
+    def is_feedback_pending(self, identifier):
+        occurrences = self.repository.feedback_basis(
+            identifier, self.clock.today().isoformat(),
+        )
+        return bool(occurrences and self.feedback_areas({"occurrences": occurrences}))
 
     def submit_feedback(self, identifier, values, note):
         with self._transaction():

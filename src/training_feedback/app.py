@@ -16,7 +16,8 @@ from .data.data_root import (
     ExistingDataRootError,
     create_new,
     inspect_existing,
-    open_existing,
+    open_existing_database,
+    prepare_existing,
 )
 from .data.database import Database
 from .data.locator import Locator
@@ -81,13 +82,16 @@ class LibraryContext:
         from .data.catalog_repository import CatalogRepository
         from .data.library_root import require_library_root
 
-        inspect_existing(path)
-        require_library_root(path)
-        catalog = CatalogRepository(catalog_path)
+        root = prepare_existing(path, validate_before_open=require_library_root)
+        database = open_existing_database(root)
+        catalog = None
         try:
-            return cls._connect(open_existing(path), catalog)
+            catalog = CatalogRepository(catalog_path)
+            return cls(root, database, catalog)
         except Exception:
-            catalog.close()
+            if catalog is not None:
+                catalog.close()
+            database.close()
             raise
 
     @classmethod

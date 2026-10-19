@@ -192,10 +192,10 @@ class GroupSessionPage(QWidget):
         selected = self.history.currentData()
         self.history.blockSignals(True)
         self.history.clear()
-        for session in self.service.history():
+        for session in self.service.history_summaries():
             self.history.addItem(f"{session['training_date']} · "
                                   f"{SESSION_STATUS_LABELS[session['status']]} · "
-                                  f"{session['snapshot']['revision']['name']}", session["id"])
+                                  f"{session['revision_name']}", session["id"])
         index = self.history.findData(selected)
         self.history.setCurrentIndex(max(0, index))
         self.history.blockSignals(False)
@@ -212,8 +212,7 @@ class GroupSessionPage(QWidget):
             return
         session = self.service.get(identifier)
         self.detail.setPlainText(session_history_text(session))
-        self.feedback_button.setEnabled(any(row["id"] == identifier
-                                             for row in self.service.pending_feedback()))
+        self.feedback_button.setEnabled(self.service.is_feedback_pending(identifier))
         self.correct_button.setEnabled(session["status"] not in ("open", "paused"))
 
     def open_training(self, controller):

@@ -22,6 +22,40 @@ class GroupSessionRepository:
             "SELECT id FROM group_session ORDER BY training_date DESC,id DESC"
         )]
 
+    def history_summaries(self):
+        """Return only the fields needed to populate the history selector."""
+        summaries = []
+        for row in self.connection.execute(
+            "SELECT id,training_date,status,snapshot_json FROM group_session "
+            "ORDER BY training_date DESC,id DESC"
+        ):
+            value = dict(row)
+            snapshot = json.loads(value.pop("snapshot_json"))
+            value["revision_name"] = snapshot["revision"]["name"]
+            summaries.append(value)
+        return summaries
+
+    def feedback_basis(self, identifier, before_date):
+        """Load the frozen occurrence facts needed for one feedback eligibility check."""
+        rows = self.connection.execute(
+            "SELECT o.snapshot_json,r.result FROM group_session s "
+            "JOIN group_session_occurrence o ON o.session_id=s.id "
+            "LEFT JOIN group_occurrence_result r ON r.occurrence_id=o.id "
+            "LEFT JOIN group_session_feedback f ON f.session_id=s.id "
+            "WHERE s.id=? AND s.status IN ('completed','partial','aborted') "
+            "AND s.training_date<? AND f.session_id IS NULL ORDER BY o.position",
+            (identifier, before_date),
+        ).fetchall()
+        return [
+            {
+                "result": row["result"],
+                "phase": snapshot["phase"],
+                "body_areas": snapshot["body_areas"],
+            }
+            for row in rows
+            for snapshot in (json.loads(row["snapshot_json"]),)
+        ]
+
     def get(self, identifier):
         row = self.connection.execute(
             "SELECT * FROM group_session WHERE id=?", (identifier,)

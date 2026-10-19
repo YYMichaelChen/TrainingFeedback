@@ -5,20 +5,19 @@ routes current execution work; this file routes tracked project authority.
 
 ## Current state
 
-- Current application: `0.8.24`
+- Current application: `0.8.25`
 - Current database schema: `26`
 - Current plan/evidence contract: `5`
 - Current catalog: `070-illustrated-3`
-- Current development release: [`0.8.24`](designs/project-review-roadmap-2026-10.md)
+- Current development release: [`0.8.25`](designs/project-review-roadmap-2026-10.md)
 - GitHub distribution: `v0.8.21`
 - Formal compatibility baseline declared: no
 
 ## 后续版本安排
 
-`0.8.24` 已按[全项目审视与版本安排](designs/project-review-roadmap-2026-10.md)
-实施计划编辑会话状态、结构撤销／重做、原始输入差异和合同版本文案；后续
-`0.8.25` 处理长期读取／维护配置。预留版本不改变当前实现身份；逐期只打开一个
-活动计划，实际交付事实仍归版本历史。
+`0.8.25` 按[全项目审视与版本安排](designs/project-review-roadmap-2026-10.md)
+处理历史摘要读取、根打开协调、包资源声明、当前测试硬限制和规范一致性。
+实际交付事实归版本历史；规划文档不代替实现与候选证据。
 
 ## 当前验证政策
 
@@ -36,7 +35,7 @@ routes current execution work; this file routes tracked project authority.
 | Product, domain, data-root and release rules | [Product specification](development-plan.md) |
 | Review findings and assigned future versions 0.8.22–0.8.25 | [全项目审视与版本安排](designs/project-review-roadmap-2026-10.md) |
 | Catalog content and initial-plan proposal | [Catalog and plan specification](initial-exercises-and-plan.md) |
-| Current release design | [v0.8.24 plan-editor scope](designs/project-review-roadmap-2026-10.md) |
+| Current release design | [v0.8.25 long-term reading and maintenance scope](designs/project-review-roadmap-2026-10.md) |
 | Separate action addition and plan saving; Save As plan-file templates | [0.8.20 开发记录](history/0.8.20/development.md) |
 | Action-detail and guidance reading design implemented in v0.8.11 source | [动作详情与指导阅读重新设计](designs/exercise-reading-redesign.md) |
 | Plan editor sizing and local scale source follow-up | [计划界面相对尺寸与缩放](designs/plan-interface-scaling.md) |

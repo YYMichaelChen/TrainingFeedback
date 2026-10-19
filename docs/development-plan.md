@@ -669,6 +669,14 @@ configuration. Opening validates the marker and configuration before accessing
 the database. Future schemas and development schemas outside the applicable
 support boundary are rejected unchanged; the historical schema 22 exception is in
 Section 13.4. The current application/schema map is in the version history index.
+Existing-root startup has one coordinated preparation path: perform the read-only
+root/database inspection, validate the current library-model marker and historical
+recovery state, then let the owning database connection acquire its leases and
+recheck the live schema before any migration write. Application composition must
+not repeat the complete inspection or open a throwaway migrating connection, and
+must not treat an earlier inspection as cached permission to write if the root
+changes before the owning connection opens. Failed preparation closes every opened
+catalog/database resource and never records the locator.
 
 A backup copies the complete data root, including marker, configuration, images,
 exports, and imports, to an explicitly selected empty destination outside the
@@ -1296,6 +1304,14 @@ group name, round, current side, current/next member and boundary-specific rest;
 pause/abort/finish controls stay outside scrolling. Finish requires an outcome
 for every occurrence. Next-day feedback is deduplicated from actually performed
 member snapshots, never from all catalog-family members or unanswered work.
+History selectors read only session identity, date, status and the frozen plan name;
+choosing one entry loads that session's complete detail. Rebuilding the selector
+keeps the selected session ID when it still exists, while an absent selection falls
+back to the newest summary. Feedback-button eligibility reads only the selected
+session's terminal/date/submission state and the frozen occurrence facts needed for
+body-area derivation; it does not reconstruct every historical session. Full history
+rendering, guidance, correction and export still load the exact stored session,
+including original text, frozen interpretation, events, batches and actual sets.
 
 Already open/paused sessions remain finishable from their original snapshots
 after upgrade or removal. This is a current-model execution rule for frozen work,
@@ -1467,7 +1483,7 @@ values or notes only after confirmation. It copies rest only when both the
 source and target set have applicable set rest; selecting a terminal set does
 not erase other sets' prescribed rest. Incomplete or invalid input never blocks
 saving an internal draft, including a wholly empty plan or pending add/member node.
-Saving commits the version-1 edit document first and updates a normalized draft
+Saving commits the format-2 edit document first and updates a normalized draft
 only when complete validation succeeds, within one transaction. Documents carry
 stable IDs, optimistic edit tokens, creation/update times, new/clone/edit/upgrade
 purpose and source/normalized revision links. Future document formats are refused.

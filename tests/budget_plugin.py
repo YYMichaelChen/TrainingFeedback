@@ -1,4 +1,4 @@
-"""Small, explicit regression profiles and a per-task union budget."""
+"""Historical profiles plus the current explicit-node, three-scenario guard."""
 
 import json
 import re
@@ -9,12 +9,14 @@ import pytest
 
 LIMITS = {"dev": 30, "patch": 50, "minor": 100, "major": 300}
 TIERS = tuple(LIMITS)
+CURRENT_POLICY = "startup-only-explicit-3"
+CURRENT_LIMIT = 3
 
 
 def pytest_addoption(parser):
     group = parser.getgroup("regression budget")
     group.addoption("--test-tier", choices=TIERS, default="dev",
-                    help="Verification stage: dev (30), patch (50), minor (100), major (300).")
+                    help="Historical ledger tier; current execution is capped at 3 cases.")
     group.addoption("--test-scope", help="Stable task/release ID shared by every test command.")
     for tier in TIERS[:-1]:
         parser.addini(f"regression_{tier}", f"Additional {tier} profile test function names",
@@ -31,11 +33,10 @@ def profile_names(config, tier):
 
 def check_budget(tier, nodeids, previous=()):
     combined = sorted(set(previous) | set(nodeids))
-    limit = LIMITS[tier]
-    if len(combined) > limit:
+    if len(combined) > CURRENT_LIMIT:
         raise pytest.UsageError(
-            f"{tier} test budget exceeded: {len(combined)} unique cases > {limit}. "
-            "Narrow the selection or remove redundant cases; do not split/reset the scope."
+            f"Current test budget exceeded: {len(combined)} unique cases > {CURRENT_LIMIT}. "
+            "Only explicit startup-risk nodes are allowed; do not split/reset the scope."
         )
     return combined
 
@@ -56,6 +57,7 @@ def scope_lock(path):
 
 def reserve_scope(path, tier, nodeids):
     previous = []
+    legacy = False
     if path.exists():
         try:
             saved = json.loads(path.read_text(encoding="utf-8"))
@@ -64,31 +66,54 @@ def reserve_scope(path, tier, nodeids):
             previous = saved["nodeids"]
             if not isinstance(previous, list) or not all(isinstance(n, str) for n in previous):
                 raise ValueError("nodeids must be a list of strings")
+            legacy = saved.get("policy") != CURRENT_POLICY
         except (ValueError, KeyError, TypeError) as exc:
             raise pytest.UsageError(f"Invalid test budget ledger: {path}") from exc
+    if legacy:
+        added = sorted(set(nodeids) - set(previous))
+        if added:
+            raise pytest.UsageError(
+                "A historical test scope may only rerun its recorded nodes; "
+                "use one new scope for genuinely new work."
+            )
+        return len(set(previous))
     combined = check_budget(tier, nodeids, previous)
     staging = path.with_suffix(".new")
-    staging.write_text(json.dumps({"tier": tier, "nodeids": combined}, indent=2) + "\n",
-                       encoding="utf-8")
+    staging.write_text(
+        json.dumps(
+            {"tier": tier, "policy": CURRENT_POLICY, "limit": CURRENT_LIMIT,
+             "nodeids": combined},
+            indent=2,
+        ) + "\n",
+        encoding="utf-8",
+    )
     staging.replace(path)
     return len(combined)
 
 
 @pytest.hookimpl(wrapper=True, tryfirst=True)
 def pytest_collection_modifyitems(config, items):
-    # Built-in -k/-m deselection must finish before counting the requested selection.
+    # Built-in deselection must finish before counting the requested selection.
     yield
     tier = config.getoption("test_tier")
-    explicit = (config.args_source == pytest.Config.ArgsSource.ARGS
-                or config.getoption("keyword") or config.getoption("markexpr"))
-    scope = config.getoption("test_scope") or ""
-    if scope.startswith("release-") and not explicit and not config.getoption("collectonly"):
+    collect_only = config.getoption("collectonly")
+    explicit_nodes = (
+        config.args_source == pytest.Config.ArgsSource.ARGS
+        and bool(config.args)
+        and all("::" in str(argument) for argument in config.args)
+    )
+    if not collect_only and not explicit_nodes:
         raise pytest.UsageError(
-            "Release verification requires an explicit risk-selected path, node ID, -k, or -m; "
-            "the default regression profile is not an acceptance selection."
+            "Execution requires explicit pytest node IDs containing '::'. "
+            "Bare pytest, files, directories, default profiles and -k/-m-only selection "
+            "are not permitted by the current startup-risk policy."
         )
-    if not explicit:
-        check_budget("major", [item.nodeid for item in items])
+    if not explicit_nodes:
+        if len(items) > LIMITS["major"]:
+            raise pytest.UsageError(
+                f"Historical major collection exceeds its retained capacity: "
+                f"{len(items)} cases > {LIMITS['major']}."
+            )
         configured = profile_names(config, "minor")
         available = {item.originalname or item.name for item in items}
         missing = configured - available
@@ -101,10 +126,16 @@ def pytest_collection_modifyitems(config, items):
                 (selected if (item.originalname or item.name) in names else deselected).append(item)
             config.hook.pytest_deselected(items=deselected)
             items[:] = selected
-    check_budget(tier, [item.nodeid for item in items])
+    if not collect_only:
+        check_budget(tier, [item.nodeid for item in items])
     reporter = config.pluginmanager.getplugin("terminalreporter")
     if reporter:
-        reporter.write_line(f"Test budget: {tier} {len(items)}/{LIMITS[tier]} selected")
+        if collect_only:
+            reporter.write_line(f"Historical collection profile: {tier} ({len(items)} nodes)")
+        else:
+            reporter.write_line(
+                f"Current test budget: {len(items)}/{CURRENT_LIMIT} explicit nodes selected"
+            )
 
 
 @pytest.hookimpl(wrapper=True, tryfirst=True)

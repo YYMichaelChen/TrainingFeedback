@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Callable
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
@@ -230,13 +231,23 @@ def inspect_existing(root_path: Path) -> DataRoot:
     return DataRoot(root, database_path)
 
 
-def open_existing(root_path: Path) -> DataRoot:
-    """Validate and open an existing application-owned data root."""
+def prepare_existing(
+    root_path: Path,
+    *,
+    validate_before_open: Callable[[Path], None] | None = None,
+) -> DataRoot:
+    """Coordinate read-only root checks immediately before the owning database open.
+
+    The caller opens the returned database through :class:`Database`, whose schema
+    guard rechecks the live version while holding the root leases.  This is not an
+    "already checked" cache: a concurrent future-schema change is still refused by
+    the database layer before migrations can write.
+    """
     root = inspect_existing(root_path)
+    if validate_before_open is not None:
+        validate_before_open(root.path)
     try:
         prepare_existing_root(root.path)
-        with Database(root.database_path):
-            pass
     except FutureSchemaError as exc:
         raise UnsupportedDataFormatError(
             "The database requires a newer version of TrainingFeedback."
@@ -248,3 +259,27 @@ def open_existing(root_path: Path) -> DataRoot:
     except Exception as exc:
         raise InvalidDataRootError("The TrainingFeedback database is invalid.") from exc
     return root
+
+
+def open_existing(root_path: Path) -> DataRoot:
+    """Validate, migrate if needed, and close an existing application-owned root."""
+    root = prepare_existing(root_path)
+    database = open_existing_database(root)
+    database.close()
+    return root
+
+
+def open_existing_database(root: DataRoot) -> Database:
+    """Open the one owning database connection for a prepared existing root."""
+    database = Database(root.database_path)
+    try:
+        database.__enter__()
+    except FutureSchemaError as exc:
+        raise UnsupportedDataFormatError(
+            "The database requires a newer version of TrainingFeedback."
+        ) from exc
+    except RootBusyError as exc:
+        raise DataRootAccessError(str(exc)) from exc
+    except Exception as exc:
+        raise InvalidDataRootError("The TrainingFeedback database is invalid.") from exc
+    return database
