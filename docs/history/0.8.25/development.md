@@ -46,5 +46,13 @@ scope 账本。达到所选风险结果后停止。
 
 ## 候选与分发
 
-本节在精确源码提交完成后补记构建和 GitHub Release 身份。任何候选仅证明其自身来源
-和静态清单；签名、公开 metadata 与未运行边界必须在单独发布记录中如实保存。
+源码提交 `7a7d76e1e22cb0052009558b074c70a7b97b7bb6` 先推送到 `origin/main`，工作树
+干净后一次完成目录载荷与 Inno Setup 构建。候选含 301 个载荷文件；安装包为
+`TrainingFeedback-0.8.25-Setup.exe`，85,905,339 字节，SHA-256
+`7df906756e883eedd284d5285adbf972f70f58a0ec32331a597b66fb6d963aee`，Authenticode
+状态 NotSigned。构建过程确认包内包含 `training_feedback/ui/TrainingFeedback.ico`，
+未运行安装包或客户端。
+
+用户授权的稳定 [GitHub Release v0.8.25](github-release-2026-10-20.md) 已发布为 latest，
+tag 指向同一构建提交且只有一个 Setup 附件；公共未授权 API 返回的名称、大小和 digest
+与本地清单一致。分发不改变本节验证数量，也不声明正式兼容或公共验收。

@@ -10,7 +10,7 @@ routes current execution work; this file routes tracked project authority.
 - Current plan/evidence contract: `5`
 - Current catalog: `070-illustrated-3`
 - Current development release: [`0.8.25`](designs/project-review-roadmap-2026-10.md)
-- GitHub distribution: `v0.8.21`
+- GitHub distribution: `v0.8.25`
 - Formal compatibility baseline declared: no
 
 ## 后续版本安排
